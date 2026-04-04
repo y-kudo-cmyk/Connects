@@ -1,0 +1,29 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:app.connectsplus.net)",
+      "Bash(npx next:*)",
+      "Bash(taskkill /PID 21804 /F)",
+      "Bash(npm --prefix /c/Users/D-LINE/connects-plus run dev)",
+      "Bash(cmd /c \"taskkill /PID 21804 /F\")",
+      "Bash(npm run:*)",
+      "Bash(npx kill-port:*)",
+      "Bash(cmd /c \"npx kill-port 3000 3001\")",
+      "Bash(cmd /c \"taskkill /PID 26904 /F\")",
+      "Bash(powershell -Command \"Stop-Process -Id 26904 -Force\")",
+      "Bash(powershell:*)",
+      "Bash(npx tsc:*)",
+      "Read(//tmp/**)",
+      "Bash(npm install:*)",
+      "Bash(ls C:\\\\Users\\\\D-LINE\\\\connects-plus\\\\.env*)",
+      "Read(//c/Users/D-LINE/AppData/Local/Temp/claude/C--Users-D-LINE-connects-plus/91b216c0-d6a2-4a45-aba3-d8ed19b29f7e/tasks/**)",
+      "Bash(wmic process:*)",
+      "Bash(taskkill /PID 11376 /F)",
+      "Bash(taskkill /PID 12280 /F)",
+      "Bash(taskkill //PID 11376 //F)",
+      "Bash(taskkill //PID 12280 //F)",
+      "Bash(taskkill:*)",
+      "Bash(netstat -ano)"
+    ]
+  }
+}
