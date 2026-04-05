@@ -16,15 +16,6 @@ export default function LoginPage() {
     if (!loading && user) router.replace('/')
   }, [loading, user, router])
 
-  useEffect(() => {
-    try {
-      if (!localStorage.getItem('cp-onboarding-lang-done')) {
-        router.replace('/onboarding')
-      }
-    } catch {}
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
-
   const handleEmailLogin = async () => {
     if (!email.trim() || !email.includes('@')) {
       setEmailError('メールアドレスを正しく入力してください')
