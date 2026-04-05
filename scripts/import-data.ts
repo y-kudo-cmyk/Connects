@@ -97,10 +97,7 @@ function readCSV(filename: string): Record<string, string>[] {
   }
   // BOM除去
   if (content.charCodeAt(0) === 0xFEFF) content = content.slice(1)
-  // SCHEDULE_DB の先頭カラム "a," を除去（カンマ入り引用符フィールドがパーサーを壊す）
-  if (filename === 'SCHEDULE_DB.csv') {
-    content = content.replace(/^"a,",/gm, ',')
-  }
+  // SCHEDULE_DB_CLEAN は前処理済みなのでスキップ
   return parseCSV(content)
 }
 
@@ -119,6 +116,15 @@ function parseDate(raw: string): string | null {
   // "YYYY-MM-DD HH:MM:SS" or "YYYY-MM-DD"
   if (raw.match(/^\d{4}-\d{2}-\d{2}/)) {
     return raw.replace(' ', 'T') + (raw.includes('T') || raw.includes(' ') ? '' : 'T00:00:00')
+  }
+  // "YYYY/M/D H:MM" or "YYYY/MM/DD HH:MM"
+  const slashMatch = raw.match(/^(\d{4})\/(\d{1,2})\/(\d{1,2})\s*(\d{1,2}:\d{2})?/)
+  if (slashMatch) {
+    const y = slashMatch[1]
+    const m = slashMatch[2].padStart(2, '0')
+    const d = slashMatch[3].padStart(2, '0')
+    const t = slashMatch[4] ?? '00:00'
+    return `${y}-${m}-${d}T${t}:00`
   }
   // "MM/DD HH:MM" — 年がない場合は2026年を仮定
   const match = raw.match(/^(\d{1,2})\/(\d{1,2})\s*(\d{1,2}:\d{2})?/)
@@ -245,62 +251,34 @@ async function importScheduleTags() {
 
 async function importSchedules() {
   console.log('\n📅 Importing schedules...')
-  const rows = readCSV('SCHEDULE_DB.csv')
+  const rows = readCSV('SCHEDULE_FINAL.csv')
 
   const events: any[] = []
   let skippedRows = 0
 
   for (const r of rows) {
-    // CSVカラムずれ対策: "a," カラムで1列ずれるケースがある
-    // 正常: post_type=schedule, status=PUBLISHED, tag=LIVE
-    // ずれ: status=schedule, tag=PUBLISHED, ikon=LIVE → 1列シフトして読み直す
-    let status = r.status
-    let tag_raw = r.tag
-    let ikon = r.ikon
-    let artist = r.artist_name
-    let related = r.related_artists
-    let title = r.event_title
-    let subTitle = r.sub_event_title
-    let startDateRaw = r.start_date
-    let endDateRaw = r.end_date
-    let fStart = r['F)start_date']
-    let fEnd = r['F)end_date']
-    let displayDate = r.display_date
-    let spotName = r.spot_name
-    let spotAddress = r.spot_address
-    let imageUrl = r['1)image_url']
-    let sourceUrl = r.source_url
-    let notes = r.notes
-    let country = r.Country
-    let verifiedRaw = r.verified_count
-
-    if (r.post_type === 'PUBLISHED' || (status === 'schedule' && tag_raw === 'PUBLISHED')) {
-      // 1列ずれ: post_type にstatusが、status にpost_typeが入っている
-      status = r.post_type === 'PUBLISHED' ? 'PUBLISHED' : 'PUBLISHED'
-      tag_raw = r.ikon || ''
-      ikon = r.artist_name || ''
-      artist = r.related_artists || ''
-      related = r.event_title || ''
-      title = r.sub_event_title || ''
-      subTitle = r.start_date || ''
-      startDateRaw = r.end_date || ''
-      endDateRaw = r['F)start_date'] || ''
-      fStart = r['F)end_date'] || ''
-      fEnd = r.display_date || ''
-      displayDate = r.spot_id || ''
-      spotName = r.spot_name || ''
-      spotAddress = r.spot_address || ''
-      imageUrl = r['2)image_url'] || ''
-      sourceUrl = r['3)image_url'] || ''
-      notes = r.source_url || ''
-      country = ''
-      verifiedRaw = ''
-    }
+    const status = r.status
+    const tag_raw = r.tag
+    const title = r.event_title
+    const subTitle = r.sub_event_title
+    const startDateRaw = r.start_date
+    const endDateRaw = r.end_date
+    const fStart = r['F)start_date']
+    const fEnd = r['F)end_date']
+    const displayDate = r.display_date
+    const spotName = r.spot_name
+    const spotAddress = r.spot_address
+    const imageUrl = r['1)image_url']
+    const sourceUrl = r.source_url
+    const notes = r.notes
+    const related = r.related_artists
+    const country = r.Country
+    const verifiedRaw = r.verified_count
 
     // PUBLISHED のみ
     if (status !== 'PUBLISHED') { skippedRows++; continue }
-    // 誕生日は除外（テキスト・絵文字両方）
-    if (tag_raw === '誕生日' || tag_raw === '🎂' || ikon === '🎂') { skippedRows++; continue }
+    // 誕生日は除外
+    if (tag_raw === '誕生日') { skippedRows++; continue }
     // タイトル必須
     if (!title) { skippedRows++; continue }
 
