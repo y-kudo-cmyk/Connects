@@ -1,6 +1,7 @@
 'use client'
 
-import { Event, tagConfig } from '@/lib/mockData'
+import { scheduleTagConfig, type ScheduleTag } from '@/lib/config/tags'
+import type { AppEvent } from '@/lib/supabase/adapters'
 import { useMyEntries } from '@/lib/useMyEntries'
 import { countryFlag, cityToCountryCode } from '@/lib/countryUtils'
 
@@ -24,14 +25,14 @@ export default function EventDetailModal({
   onClose,
   showConfirmButton = true,
 }: {
-  event: Event
+  event: AppEvent
   onClose: () => void
   showConfirmButton?: boolean
 }) {
   const { addEntry, hasEntry } = useMyEntries()
-  const firstTag = event.tags?.[0]
-  const cfg = firstTag
-    ? tagConfig[firstTag]
+  const firstTag = event.tags?.[0] as ScheduleTag | undefined
+  const cfg = firstTag && scheduleTagConfig[firstTag]
+    ? scheduleTagConfig[firstTag]
     : { label: 'EVENT', icon: '📌', color: '#8E8E93', bg: 'rgba(142,142,147,0.15)' }
   const isPeriod = !!event.dateEnd
   const dateTime = formatDateTime(event.date, event.time, event.dateEnd, event.timeEnd)
@@ -114,7 +115,7 @@ export default function EventDetailModal({
           {/* タグ */}
           <div className="flex items-center gap-1.5 flex-wrap mb-2">
             {(event.tags ?? []).map((tag) => {
-              const tc = tagConfig[tag]
+              const tc = scheduleTagConfig[tag as ScheduleTag] ?? { label: tag, icon: '📌', color: '#8E8E93', bg: 'rgba(142,142,147,0.15)' }
               return (
                 <span
                   key={tag}

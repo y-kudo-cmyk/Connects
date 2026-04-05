@@ -2,7 +2,9 @@
 
 import { useMemo, useState } from 'react'
 import Link from 'next/link'
-import { events, tagConfig, Event } from '@/lib/mockData'
+import { scheduleTagConfig, type ScheduleTag } from '@/lib/config/tags'
+import { useSupabaseData } from './SupabaseDataProvider'
+import type { AppEvent } from '@/lib/supabase/adapters'
 import EventDetailModal from './EventDetailModal'
 
 const DAY_JA = ['日', '月', '火', '水', '木', '金', '土']
@@ -14,10 +16,11 @@ function md(s: string) {
 }
 
 export default function TodayScheduleSection({ today }: { today: string }) {
-  const [detailEvent, setDetailEvent] = useState<Event | null>(null)
+  const { events: allEvents } = useSupabaseData()
+  const [detailEvent, setDetailEvent] = useState<AppEvent | null>(null)
 
   const todayEvents = useMemo(() => {
-    const filtered = events.filter((e) => e.date <= today && (!e.dateEnd || e.dateEnd >= today))
+    const filtered = allEvents.filter((e) => e.date <= today && (!e.dateEnd || e.dateEnd >= today))
     // Sort: LIVE first, then today-only, then period
     return filtered.sort((a, b) => {
       const aIsLive = a.tags?.includes('LIVE') ? 0 : 1
@@ -91,8 +94,8 @@ export default function TodayScheduleSection({ today }: { today: string }) {
         ) : (
           <div className="flex flex-col gap-2">
             {todayEvents.map((event) => {
-              const primaryTag = event.tags?.[0]
-              const cfg = primaryTag ? tagConfig[primaryTag] : { label: 'EVENT', icon: '📌', color: '#8E8E93', bg: 'rgba(142,142,147,0.15)' }
+              const primaryTag = event.tags?.[0] as ScheduleTag | undefined
+              const cfg = primaryTag && scheduleTagConfig[primaryTag] ? scheduleTagConfig[primaryTag] : { label: 'EVENT', icon: '📌', color: '#8E8E93', bg: 'rgba(142,142,147,0.15)' }
               const isPeriod = !!event.dateEnd
               const hasTime = event.time && event.time !== '00:00'
               const dateStr = isPeriod

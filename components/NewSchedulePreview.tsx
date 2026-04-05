@@ -1,18 +1,21 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { events, tagConfig, Event } from '@/lib/mockData'
+import { scheduleTagConfig, type ScheduleTag } from '@/lib/config/tags'
+import { useSupabaseData } from './SupabaseDataProvider'
+import type { AppEvent } from '@/lib/supabase/adapters'
 import { useMyEntries } from '@/lib/useMyEntries'
 import EventDetailModal from './EventDetailModal'
 
-const TODAY = '2026-04-02'
+const TODAY = new Date().toISOString().slice(0, 10)
 const DISMISSED_KEY = 'cp-dismissed'
 
 const MONTH_SHORT = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
 
 export default function NewSchedulePreview() {
   const [dismissed, setDismissed] = useState<Set<string>>(new Set())
-  const [detailEvent, setDetailEvent] = useState<Event | null>(null)
+  const { events } = useSupabaseData()
+  const [detailEvent, setDetailEvent] = useState<AppEvent | null>(null)
   const { addEntry, hasEntry } = useMyEntries()
 
   useEffect(() => {
@@ -31,7 +34,7 @@ export default function NewSchedulePreview() {
     })
   }
 
-  const importAndDismiss = (event: Event) => {
+  const importAndDismiss = (event: AppEvent) => {
     if (!hasEntry(event.id)) {
       addEntry({
         id: Date.now().toString(),
@@ -77,8 +80,8 @@ export default function NewSchedulePreview() {
 
         <div className="flex gap-3 overflow-x-auto px-4 pb-1" style={{ scrollbarWidth: 'none' }}>
           {upcoming.map((event) => {
-            const primaryTag = event.tags?.[0]
-            const cfg = primaryTag ? tagConfig[primaryTag] : { label: 'EVENT', icon: '📌', color: '#8E8E93', bg: 'rgba(142,142,147,0.15)' }
+            const primaryTag = event.tags?.[0] as ScheduleTag | undefined
+            const cfg = primaryTag && scheduleTagConfig[primaryTag] ? scheduleTagConfig[primaryTag] : { label: 'EVENT', icon: '📌', color: '#8E8E93', bg: 'rgba(142,142,147,0.15)' }
             const d = new Date(event.date)
             const imported = hasEntry(event.id)
 
