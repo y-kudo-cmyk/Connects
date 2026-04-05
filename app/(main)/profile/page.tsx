@@ -3,6 +3,7 @@
 import { useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/lib/supabase/useAuth'
+import { useTranslation } from '@/lib/i18n/useTranslation'
 import { useProfile, FanClubMembership, NotifSettings } from '@/lib/useProfile'
 import { compressImage } from '@/lib/useMyEntries'
 import { useReferral } from '@/lib/useReferral'
@@ -45,6 +46,7 @@ async function loadImage(files: FileList | null, maxPx: number): Promise<string 
 export default function ProfilePage() {
   const { profile, update, addFanClub, updateFanClub, removeFanClub } = useProfile()
   const { signOut } = useAuth()
+  const { t } = useTranslation()
 
   const bannerRef = useRef<HTMLInputElement>(null)
   const avatarRef = useRef<HTMLInputElement>(null)
@@ -264,14 +266,14 @@ export default function ProfilePage() {
               style={{ background: '#FFFFFF', border: '1px solid #F3B4E3', color: '#1C1C1E' }}
             />
             <div className="flex gap-2 mt-1.5">
-              <button onClick={saveBio} className="px-4 py-2.5 rounded-lg text-xs font-bold" style={{ background: '#F3B4E3', color: '#FFFFFF' }}>保存</button>
-              <button onClick={() => setEditingBio(false)} className="px-4 py-2.5 rounded-lg text-xs font-semibold" style={{ background: '#F0F0F5', color: '#636366' }}>キャンセル</button>
+              <button onClick={saveBio} className="px-4 py-2.5 rounded-lg text-xs font-bold" style={{ background: '#F3B4E3', color: '#FFFFFF' }}>{t('save')}</button>
+              <button onClick={() => setEditingBio(false)} className="px-4 py-2.5 rounded-lg text-xs font-semibold" style={{ background: '#F0F0F5', color: '#636366' }}>{t('cancel')}</button>
             </div>
           </div>
         ) : (
           <button className="text-left w-full mb-3" onClick={startEditBio}>
             <p className="text-sm leading-relaxed" style={{ color: profile.bio ? '#1C1C1E' : '#9A9A9F' }}>
-              {profile.bio || '自己紹介を追加...'}
+              {profile.bio || t('profileBio')}
             </p>
           </button>
         )}
@@ -281,10 +283,10 @@ export default function ProfilePage() {
       <div className="mx-4 mb-4">
         <div className="grid grid-cols-4 rounded-2xl overflow-hidden" style={{ background: '#EFEFEF' }}>
           {[
-            { label: '投稿', value: stats.posts },
-            { label: '承認', value: stats.approvals },
-            { label: '編集', value: stats.edits },
-            { label: '紹介', value: stats.referrals },
+            { label: t('statPosts'), value: stats.posts },
+            { label: t('statApprovals'), value: stats.approvals },
+            { label: t('statEdits'), value: stats.edits },
+            { label: t('statReferrals'), value: stats.referrals },
           ].map((s) => (
             <div key={s.label} className="flex flex-col items-center py-3">
               <span className="text-xl font-black" style={{ color: '#F3B4E3' }}>{s.value}</span>
@@ -296,7 +298,7 @@ export default function ProfilePage() {
 
       {/* ─── 会員ランク ─── */}
       <div className="px-4 mb-4">
-        <p className="text-xs font-semibold mb-2" style={{ color: '#8E8E93' }}>会員ランク</p>
+        <p className="text-xs font-semibold mb-2" style={{ color: '#8E8E93' }}>{t('memberRank')}</p>
         <div className="px-4 py-3 rounded-xl" style={{ background: '#FFFFFF' }}>
           {/* ランク名とアイコン */}
           <div className="flex items-center gap-3 mb-3">
@@ -313,7 +315,7 @@ export default function ProfilePage() {
                   次のランクまで あと {nextRank.min - score} pt
                 </p>
               ) : (
-                <p className="text-[10px]" style={{ color: '#8E8E93' }}>最高ランク達成</p>
+                <p className="text-[10px]" style={{ color: '#8E8E93' }}>{t('maxRank')}</p>
               )}
             </div>
             <span className="text-xs font-mono font-bold" style={{ color: '#C7C7CC' }}>{score} pt</span>
@@ -359,7 +361,7 @@ export default function ProfilePage() {
 
       {/* ─── 推しアーティスト ─── */}
       <div className="px-4 mb-4">
-        <p className="text-xs font-semibold mb-2" style={{ color: '#8E8E93' }}>推しアーティスト</p>
+        <p className="text-xs font-semibold mb-2" style={{ color: '#8E8E93' }}>{t('favArtist')}</p>
         <div className="flex items-center gap-3 px-4 py-3 rounded-xl" style={{ background: '#FFFFFF' }}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/seventeen.png" alt="SEVENTEEN" className="w-10 h-10 rounded-xl object-cover flex-shrink-0" />
@@ -375,7 +377,7 @@ export default function ProfilePage() {
 
       {/* ─── 紹介コード ─── */}
       <div className="px-4 mb-4">
-        <p className="text-xs font-semibold mb-2" style={{ color: '#8E8E93' }}>あなたの紹介コード</p>
+        <p className="text-xs font-semibold mb-2" style={{ color: '#8E8E93' }}>{t('yourRefCode')}</p>
         <div className="rounded-2xl p-4" style={{ background: '#FFFFFF' }}>
           <div className="flex items-center justify-between mb-3">
             <span className="text-2xl font-black font-mono tracking-widest" style={{ color: '#F3B4E3' }}>
@@ -390,7 +392,7 @@ export default function ProfilePage() {
               className="px-3 py-2 rounded-xl text-xs font-bold"
               style={{ background: copied ? '#06C75520' : '#F3B4E320', color: copied ? '#06C755' : '#F3B4E3' }}
             >
-              {copied ? 'コピー済み ✓' : 'コピー'}
+              {copied ? t('copied') : t('copy')}
             </button>
           </div>
           <button
@@ -407,10 +409,10 @@ export default function ProfilePage() {
               <path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/>
               <path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/>
             </svg>
-            <span>紹介URLをコピー</span>
+            <span>{t('copyRefUrl')}</span>
           </button>
           <p className="text-[10px] mt-2" style={{ color: '#636366' }}>
-            友達にこのコードまたはURLを共有してください
+            {t('shareCodeMsg')}
           </p>
         </div>
       </div>
@@ -418,7 +420,7 @@ export default function ProfilePage() {
       {/* ─── ファンクラブ会員番号 ─── */}
       <div className="px-4 mb-4">
         <div className="flex items-center justify-between mb-2">
-          <p className="text-xs font-semibold" style={{ color: '#8E8E93' }}>ファンクラブ会員番号</p>
+          <p className="text-xs font-semibold" style={{ color: '#8E8E93' }}>{t('fanClub')}</p>
           <button
             onClick={openNewFc}
             className="flex items-center gap-1 px-3 py-2.5 rounded-full text-xs font-bold"
@@ -427,7 +429,7 @@ export default function ProfilePage() {
             <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
               <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
             </svg>
-            追加
+            {t('add')}
           </button>
         </div>
 
@@ -440,7 +442,7 @@ export default function ProfilePage() {
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
               <rect x="2" y="5" width="20" height="14" rx="2" /><line x1="2" y1="10" x2="22" y2="10" />
             </svg>
-            <span className="text-xs">会員番号を登録する</span>
+            <span className="text-xs">{t('fanClubAdd')}</span>
           </button>
         ) : (
           <div className="flex flex-col gap-2">
@@ -471,7 +473,7 @@ export default function ProfilePage() {
 
       {/* ─── アプリ設定 ─── */}
       <div className="px-4 mb-4">
-        <p className="text-xs font-semibold mb-2" style={{ color: '#8E8E93' }}>アプリ設定</p>
+        <p className="text-xs font-semibold mb-2" style={{ color: '#8E8E93' }}>{t('appSettings')}</p>
         <div className="rounded-xl overflow-hidden" style={{ background: '#FFFFFF' }}>
 
           {/* 通知 */}
@@ -480,7 +482,7 @@ export default function ProfilePage() {
             className="w-full flex items-center gap-3 px-4 py-3.5"
           >
             <span className="text-base w-6 text-center">🔔</span>
-            <span className="flex-1 text-sm font-medium text-left" style={{ color: '#1C1C1E' }}>通知設定</span>
+            <span className="flex-1 text-sm font-medium text-left" style={{ color: '#1C1C1E' }}>{t('notifSettings')}</span>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#636366" strokeWidth="2"
               style={{ transform: notifExpanded ? 'rotate(90deg)' : 'none', transition: 'transform 0.2s' }}>
               <polyline points="9 18 15 12 9 6" />
@@ -491,7 +493,7 @@ export default function ProfilePage() {
             <div style={{ borderTop: '1px solid #F0F0F5', background: '#FAFAFA' }}>
               {/* 朝の通知 */}
               <div className="px-5 py-3 flex items-center gap-3">
-                <span className="text-sm flex-1" style={{ color: '#1C1C1E' }}>朝の通知（今日の予定）</span>
+                <span className="text-sm flex-1" style={{ color: '#1C1C1E' }}>{t('notifMorning')}</span>
                 <Toggle
                   on={profile.notif.morningOn}
                   onChange={(v) => updateNotif({ morningOn: v })}
@@ -499,7 +501,7 @@ export default function ProfilePage() {
               </div>
               {profile.notif.morningOn && (
                 <div className="px-5 pb-3 flex items-center gap-2">
-                  <span className="text-xs" style={{ color: '#8E8E93' }}>時刻</span>
+                  <span className="text-xs" style={{ color: '#8E8E93' }}>{t('notifTime')}</span>
                   <input
                     type="time"
                     value={profile.notif.morningTime}
@@ -512,7 +514,7 @@ export default function ProfilePage() {
 
               {/* 夜の通知 */}
               <div className="px-5 py-3 flex items-center gap-3" style={{ borderTop: '1px solid #F0F0F5' }}>
-                <span className="text-sm flex-1" style={{ color: '#1C1C1E' }}>夜の通知（明日の予定）</span>
+                <span className="text-sm flex-1" style={{ color: '#1C1C1E' }}>{t('notifEvening')}</span>
                 <Toggle
                   on={profile.notif.eveningOn}
                   onChange={(v) => updateNotif({ eveningOn: v })}
@@ -520,7 +522,7 @@ export default function ProfilePage() {
               </div>
               {profile.notif.eveningOn && (
                 <div className="px-5 pb-3 flex items-center gap-2">
-                  <span className="text-xs" style={{ color: '#8E8E93' }}>時刻</span>
+                  <span className="text-xs" style={{ color: '#8E8E93' }}>{t('notifTime')}</span>
                   <input
                     type="time"
                     value={profile.notif.eveningTime}
@@ -533,7 +535,7 @@ export default function ProfilePage() {
 
               {/* MYイベント前 */}
               <div className="px-5 py-3 flex items-center gap-3" style={{ borderTop: '1px solid #F0F0F5' }}>
-                <span className="text-sm flex-1" style={{ color: '#1C1C1E' }}>MYイベント開始1時間前</span>
+                <span className="text-sm flex-1" style={{ color: '#1C1C1E' }}>{t('notifReminder')}</span>
                 <Toggle
                   on={profile.notif.myEventReminder}
                   onChange={(v) => updateNotif({ myEventReminder: v })}
@@ -546,7 +548,7 @@ export default function ProfilePage() {
           <div className="flex items-center gap-3 px-4 py-3.5" style={{ borderTop: '1px solid #F0F0F5' }}>
             <div className="w-6 h-6 rounded flex items-center justify-center text-[10px] font-black flex-shrink-0"
               style={{ background: '#06C755', color: '#FFFFFF' }}>L</div>
-            <span className="flex-1 text-sm font-medium" style={{ color: '#1C1C1E' }}>LINE連携</span>
+            <span className="flex-1 text-sm font-medium" style={{ color: '#1C1C1E' }}>{t('linkLine')}</span>
             <button
               onClick={() => update({ lineLinked: !profile.lineLinked })}
               className="px-3 py-1.5 rounded-full text-xs font-bold"
@@ -555,7 +557,7 @@ export default function ProfilePage() {
                 : { background: '#06C75520', color: '#06C755' }
               }
             >
-              {profile.lineLinked ? '解除' : '連携する'}
+              {profile.lineLinked ? t('linked') : t('linkNow')}
             </button>
           </div>
 
@@ -567,7 +569,7 @@ export default function ProfilePage() {
                 <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.744l7.73-8.835L1.254 2.25H8.08l4.253 5.622 5.912-5.622zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
               </svg>
             </div>
-            <span className="flex-1 text-sm font-medium" style={{ color: '#1C1C1E' }}>X（Twitter）連携</span>
+            <span className="flex-1 text-sm font-medium" style={{ color: '#1C1C1E' }}>{t('linkX')}</span>
             <button
               onClick={() => update({ xLinked: !profile.xLinked })}
               className="px-3 py-1.5 rounded-full text-xs font-bold"
@@ -576,7 +578,7 @@ export default function ProfilePage() {
                 : { background: '#00000010', color: '#1C1C1E' }
               }
             >
-              {profile.xLinked ? '解除' : '連携する'}
+              {profile.xLinked ? t('linked') : t('linkNow')}
             </button>
           </div>
 
@@ -587,7 +589,7 @@ export default function ProfilePage() {
             style={{ borderTop: '1px solid #F0F0F5' }}
           >
             <span className="text-base w-6 text-center">🌐</span>
-            <span className="flex-1 text-sm font-medium text-left" style={{ color: '#1C1C1E' }}>言語</span>
+            <span className="flex-1 text-sm font-medium text-left" style={{ color: '#1C1C1E' }}>{t('language')}</span>
             <span className="text-xs mr-1" style={{ color: '#8E8E93' }}>
               {LANGUAGES.find((l) => l.code === profile.language)?.flag}{' '}
               {LANGUAGES.find((l) => l.code === profile.language)?.label}
@@ -606,7 +608,7 @@ export default function ProfilePage() {
             <span className="text-base w-6 text-center">
               {countryFlag(profile.country)}
             </span>
-            <span className="flex-1 text-sm font-medium text-left" style={{ color: '#1C1C1E' }}>居住国</span>
+            <span className="flex-1 text-sm font-medium text-left" style={{ color: '#1C1C1E' }}>{t('country')}</span>
             <span className="text-xs mr-1" style={{ color: '#8E8E93' }}>
               {COUNTRIES.find((c) => c.code === profile.country)?.nameJa ?? profile.country}
             </span>

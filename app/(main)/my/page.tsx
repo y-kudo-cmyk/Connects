@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect, type ReactNode } from 'react'
 import { useMyEntries, MyEntry, compressImage, SeatInfo } from '@/lib/useMyEntries'
 import { eventTypeConfig } from '@/lib/mockData'
+import { useTranslation } from '@/lib/i18n/useTranslation'
 import SeatInfoForm from '@/components/SeatInfoForm'
 import SeatViewPreview from '@/components/SeatViewPreview'
 import TodoSection from '@/components/TodoSection'
@@ -65,6 +66,7 @@ export default function MyPage() {
   const gridRef = useRef<HTMLDivElement>(null)
 
   const { entries, updateEntry, removeEntry } = useMyEntries()
+  const { t } = useTranslation()
 
   // 週/日ビューに切り替えたとき現在時刻にスクロール
   useEffect(() => {
@@ -122,7 +124,7 @@ export default function MyPage() {
                     ? { background: '#F3B4E3', color: '#FFFFFF' }
                     : { color: '#8E8E93' }
                   }>
-                  {v === 'month' ? '月' : v === 'week' ? '週' : '日'}
+                  {v === 'month' ? t('viewMonth') : v === 'week' ? t('viewWeek') : t('viewDay')}
                 </button>
               ))}
             </div>
@@ -136,7 +138,7 @@ export default function MyPage() {
               ? { background: '#FFFFFF', color: '#1C1C1E' }
               : { color: '#8E8E93' }
             }>
-            スケジュール記録
+            {t('scheduleRecord')}
           </button>
           <button onClick={() => setTab('todos')}
             className="flex-1 py-2.5 rounded-lg text-sm font-bold transition-all"
@@ -218,7 +220,7 @@ export default function MyPage() {
               {/* 選択日のエントリ */}
               <div className="pb-28">
                 <p className="text-xs font-semibold mb-3" style={{ color: '#8E8E93' }}>
-                  {md(selectedDate)} · {dayEntries.length}件
+                  {md(selectedDate)} · {dayEntries.length}{t('items')}
                 </p>
                 {dayEntries.length === 0 ? (
                   <div className="flex flex-col items-center justify-center py-10" style={{ color: '#8E8E93' }}>
@@ -228,7 +230,7 @@ export default function MyPage() {
                       <line x1="8" y1="2" x2="8" y2="6" />
                       <line x1="3" y1="10" x2="21" y2="10" />
                     </svg>
-                    <p className="text-sm">この日の記録はありません</p>
+                    <p className="text-sm">{t('noRecordThisDay')}</p>
                   </div>
                 ) : (
                   <div className="flex flex-col gap-3">
@@ -301,7 +303,7 @@ export default function MyPage() {
                   <div className="flex flex-shrink-0" style={{ borderBottom: '1px solid #E5E5EA', minHeight: 28 }}>
                     <div style={{ width: TIME_W, flexShrink: 0 }}
                       className="flex items-center justify-end pr-2">
-                      <span className="text-[9px]" style={{ color: '#8E8E93' }}>終日</span>
+                      <span className="text-[9px]" style={{ color: '#8E8E93' }}>{t('allDay')}</span>
                     </div>
                     {weekDates.map((ds) => {
                       const dayADE = allDayEntries.filter((e) =>
@@ -449,7 +451,7 @@ export default function MyPage() {
                 {allDayE.length > 0 && (
                   <div className="flex flex-wrap gap-2 px-4 pb-2 flex-shrink-0"
                     style={{ borderBottom: '1px solid #E5E5EA' }}>
-                    <span className="text-[10px] self-center" style={{ color: '#8E8E93' }}>終日</span>
+                    <span className="text-[10px] self-center" style={{ color: '#8E8E93' }}>{t('allDay')}</span>
                     {allDayE.map((e) => {
                       const cfg = eventTypeConfig[e.type as keyof typeof eventTypeConfig]
                       const col = cfg?.color ?? e.color
@@ -568,6 +570,7 @@ function EntryCard({ entry, onEdit, onRemove }: {
   onRemove: () => void
 }) {
   const [viewerSrc, setViewerSrc] = useState<string | null>(null)
+  const { t } = useTranslation()
   const cfg = eventTypeConfig[entry.type as keyof typeof eventTypeConfig]
   const color = cfg?.color ?? entry.color
   const label = cfg?.label ?? entry.type
@@ -615,7 +618,7 @@ function EntryCard({ entry, onEdit, onRemove }: {
                   style={{ background: cfg?.bg ?? color + '20', color }}>{label}</span>
                 {isPeriod && (
                   <span className="text-[10px] font-bold px-1.5 py-0.5 rounded"
-                    style={{ background: 'rgba(0,0,0,0.06)', color: '#8E8E93' }}>期間</span>
+                    style={{ background: 'rgba(0,0,0,0.06)', color: '#8E8E93' }}>{t('period')}</span>
                 )}
               </div>
               <p className="text-sm font-bold leading-snug" style={{ color: '#1C1C1E' }}>
@@ -673,6 +676,7 @@ function EditModal({ entry, onClose, onSave, onRemove }: {
   const [showConfirmRemove, setShowConfirmRemove] = useState(false)
   const ticketFileRef = useRef<HTMLInputElement>(null)
   const photoFileRef = useRef<HTMLInputElement>(null)
+  const { t } = useTranslation()
 
   const isPeriod = !!entry.dateEnd
   const cfg = eventTypeConfig[entry.type as keyof typeof eventTypeConfig]
@@ -859,12 +863,12 @@ function EditModal({ entry, onClose, onSave, onRemove }: {
                 style={{ background: '#FEE2E2', color: '#EF4444' }}>削除する</button>
               <button onClick={() => setShowConfirmRemove(false)}
                 className="flex-1 py-3 rounded-xl text-sm font-semibold"
-                style={{ background: '#F0F0F5', color: '#636366' }}>キャンセル</button>
+                style={{ background: '#F0F0F5', color: '#636366' }}>{t('cancel')}</button>
             </div>
           ) : (
             <button onClick={() => setShowConfirmRemove(true)}
               className="w-full py-2.5 rounded-xl text-sm font-semibold"
-              style={{ background: '#F0F0F5', color: '#EF4444' }}>この記録を削除</button>
+              style={{ background: '#F0F0F5', color: '#EF4444' }}>{t('delete')}</button>
           )}
         </div>
 
@@ -874,7 +878,7 @@ function EditModal({ entry, onClose, onSave, onRemove }: {
           <button onClick={handleSave}
             className="w-full py-4 rounded-xl text-base font-bold min-h-[52px]"
             style={{ background: '#F3B4E3', color: '#FFFFFF' }}>
-            保存
+            {t('save')}
           </button>
         </div>
       </div>
