@@ -13,9 +13,9 @@ import {
   getMapUrl,
   getMapAppName,
   isSpotComplete,
-  events,
 } from '@/lib/mockData'
 import EventCard from '@/components/EventCard'
+import { useSupabaseData } from '@/components/SupabaseDataProvider'
 import { useFavoriteSpots } from '@/lib/useFavoriteSpots'
 import { useSpotPhotos } from '@/lib/useSpotPhotos'
 import { compressImage } from '@/lib/useMyEntries'
@@ -46,6 +46,7 @@ const PLATFORM_CONFIG: Record<SpotPlatform, { label: string; color: string; icon
 const ALL_TAGS = ['SEVENTEEN', ...seventeenMembers.map((m) => m.name)]
 
 export default function MapPage() {
+  const { events } = useSupabaseData()
   const [search, setSearch] = useState('')
   const [memberFilter, setMemberFilter] = useState('ALL')
   const [limitedFilter, setLimitedFilter] = useState(false)

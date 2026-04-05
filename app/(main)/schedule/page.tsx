@@ -2,7 +2,9 @@
 
 import { useState, useRef } from 'react'
 import EventCard from '@/components/EventCard'
-import { events, tagConfig, TagType, Event } from '@/lib/mockData'
+import { useSupabaseData } from '@/components/SupabaseDataProvider'
+import { scheduleTagConfig, type ScheduleTag } from '@/lib/config/tags'
+import type { AppEvent } from '@/lib/supabase/adapters'
 import { useMyEntries } from '@/lib/useMyEntries'
 import { useProfile } from '@/lib/useProfile'
 import { countryFlag, COUNTRIES } from '@/lib/countryUtils'
@@ -18,16 +20,15 @@ const FULL_MONTH = ['January','February','March','April','May','June','July','Au
 const MONTH_SHORT = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
 const DAY_NAMES = ['S','M','T','W','T','F','S']
 
-const ALL_TAGS: TagType[] = ['LIVE','POPUP','TICKET','CD','GOODS','EVENT','TV','YOUTUBE','RADIO','LUCKYDRAW']
+const ALL_TAGS: ScheduleTag[] = ['LIVE','POPUP','TICKET','CD','MERCH','EVENT','TV','YOUTUBE','RADIO','LUCKY_DRAW']
 
-/** イベントが保有するタグ */
-function getEventTags(e: Event): TagType[] {
-  return e.tags ?? []
+function getEventTags(e: AppEvent): ScheduleTag[] {
+  return (e.tags ?? []) as ScheduleTag[]
 }
 
 type Region = 'HOME' | 'OVERSEAS'
 
-function matchRegion(e: Event, region: Region, homeCountry: string): boolean {
+function matchRegion(e: AppEvent, region: Region, homeCountry: string): boolean {
   if (!e.city) return true
   const code = e.city.split(', ').pop() ?? ''
   const isHome = code === homeCountry
@@ -35,15 +36,16 @@ function matchRegion(e: Event, region: Region, homeCountry: string): boolean {
 }
 
 export default function SchedulePage() {
+  const { events } = useSupabaseData()
   const now = new Date()
   const [selectedDate, setSelectedDate] = useState(TODAY)
   const [year, setYear] = useState(now.getFullYear())
   const [month, setMonth] = useState(now.getMonth())
-  const [tagFilter, setTagFilter] = useState<TagType | 'ALL'>('ALL')
+  const [tagFilter, setTagFilter] = useState<ScheduleTag | 'ALL'>('ALL')
   const [region, setRegion] = useState<Region>('HOME')
-  const [todoEvent, setTodoEvent] = useState<Event | null>(null)
+  const [todoEvent, setTodoEvent] = useState<AppEvent | null>(null)
   const [todoAddToMy, setTodoAddToMy] = useState(false)
-  const [reAddEvent, setReAddEvent] = useState<Event | null>(null)
+  const [reAddEvent, setReAddEvent] = useState<AppEvent | null>(null)
   const { profile } = useProfile()
   const homeCountry = profile.country || 'JP'
   const homeFlag = countryFlag(homeCountry)
@@ -52,7 +54,7 @@ export default function SchedulePage() {
   const { todos, addTodo, removeTodo, hasTodo } = useTodos()
   const eventsRef = useRef<HTMLDivElement>(null)
 
-  const addToMy = (event: Event) => {
+  const addToMy = (event: AppEvent) => {
     addEntry({
       id: Date.now().toString(),
       date: event.date,
@@ -71,7 +73,7 @@ export default function SchedulePage() {
     })
   }
 
-  const handleMyButton = (event: Event) => {
+  const handleMyButton = (event: AppEvent) => {
     if (hasEntry(event.id)) {
       setReAddEvent(event)
     } else {
@@ -251,7 +253,7 @@ export default function SchedulePage() {
             ALL
           </button>
           {ALL_TAGS.map((tag) => {
-            const cfg = tagConfig[tag]
+            const cfg = scheduleTagConfig[tag]
             return (
               <button
                 key={tag}

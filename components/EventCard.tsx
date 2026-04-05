@@ -1,8 +1,9 @@
-import { Event, tagConfig } from '@/lib/mockData'
+import { scheduleTagConfig, type ScheduleTag } from '@/lib/config/tags'
+import type { AppEvent } from '@/lib/supabase/adapters'
 import { countryFlag, cityToCountryCode } from '@/lib/countryUtils'
 
 interface EventCardProps {
-  event: Event
+  event: AppEvent
   compact?: boolean
 }
 
@@ -22,8 +23,8 @@ function formatDateTime(date: string, time: string, dateEnd?: string, timeEnd?: 
 }
 
 export default function EventCard({ event, compact = false }: EventCardProps) {
-  const firstTag = event.tags?.[0]
-  const cfg = firstTag ? tagConfig[firstTag] : { label: 'EVENT', icon: '📌', color: '#8E8E93', bg: 'rgba(142,142,147,0.15)' }
+  const firstTag = event.tags?.[0] as ScheduleTag | undefined
+  const cfg = firstTag && scheduleTagConfig[firstTag] ? scheduleTagConfig[firstTag] : { label: 'EVENT', icon: '📌', color: '#8E8E93', bg: 'rgba(142,142,147,0.15)' }
   const isPeriod = !!event.dateEnd
   const dateTime = formatDateTime(event.date, event.time, event.dateEnd, event.timeEnd)
 
@@ -42,7 +43,7 @@ export default function EventCard({ event, compact = false }: EventCardProps) {
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-1 flex-wrap">
             {(event.tags ?? []).map((tag) => {
-              const tc = tagConfig[tag]
+              const tc = scheduleTagConfig[tag as ScheduleTag] ?? { label: tag, icon: '📌', color: '#8E8E93', bg: 'rgba(142,142,147,0.15)' }
               return (
                 <span key={tag} className="text-[10px] font-bold px-1.5 py-0.5 rounded"
                   style={{ background: tc.bg, color: tc.color }}>
@@ -90,7 +91,7 @@ export default function EventCard({ event, compact = false }: EventCardProps) {
       <div className="flex-1 min-w-0 px-3 py-2.5 flex flex-col justify-center gap-1">
         <div className="flex items-center gap-1 flex-wrap">
           {(event.tags ?? []).map((tag) => {
-            const tc = tagConfig[tag]
+            const tc = scheduleTagConfig[tag as ScheduleTag] ?? { label: tag, icon: '📌', color: '#8E8E93', bg: 'rgba(142,142,147,0.15)' }
             return (
               <span key={tag}
                 className="text-[10px] font-bold px-1.5 py-0.5 rounded"
