@@ -1,6 +1,9 @@
 'use client'
 
+import { useTranslation } from '@/lib/i18n/useTranslation'
+
 export default function GoodsPage() {
+  const { t } = useTranslation()
   return (
     <div className="flex flex-col items-center justify-center" style={{ minHeight: '100vh', background: '#F8F9FA' }}>
       <div className="flex flex-col items-center gap-4 px-6">
@@ -16,13 +19,13 @@ export default function GoodsPage() {
         </div>
         <h1 className="text-xl font-black" style={{ color: '#1C1C1E' }}>GOODS</h1>
         <p className="text-sm text-center leading-relaxed" style={{ color: '#8E8E93' }}>
-          トレカ管理・交換機能を準備中です
+          {t('goodsComingSoon')}
         </p>
         <span
           className="text-xs font-bold px-4 py-2 rounded-full"
           style={{ background: 'rgba(243,180,227,0.12)', color: '#F3B4E3' }}
         >
-          COMING SOON
+          {t('comingSoon')}
         </span>
       </div>
     </div>

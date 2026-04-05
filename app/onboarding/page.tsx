@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { COUNTRIES, countryFlag } from '@/lib/countryUtils'
 import { useReferral } from '@/lib/useReferral'
+import { useTranslation } from '@/lib/i18n/useTranslation'
 
 type Lang = 'ja' | 'en' | 'ko'
 type Step = 'lang' | 'code'
@@ -17,6 +18,7 @@ const LANGUAGES: { code: Lang; flag: string; label: string; sub: string }[] = [
 export default function OnboardingPage() {
   const router = useRouter()
   const { verified, verify } = useReferral()
+  const { t } = useTranslation()
   const [step, setStep] = useState<Step>('lang')
   const [lang, setLang] = useState<Lang | null>(null)
   const [code, setCode] = useState('')
@@ -67,10 +69,10 @@ export default function OnboardingPage() {
         verify()
         finishOnboarding()
       } else {
-        setCodeError('無効なコードです。招待者に確認してください。')
+        setCodeError(t('onboardingCodeInvalid'))
       }
     } catch {
-      setCodeError('確認に失敗しました。再試行してください。')
+      setCodeError(t('onboardingCodeFailed'))
     }
     setCodeLoading(false)
   }
@@ -88,8 +90,8 @@ export default function OnboardingPage() {
       {step === 'lang' && (
         <>
           <div className="text-center mb-8">
-            <p className="text-xl font-black mb-1" style={{ color: '#1C1C1E' }}>言語を選択</p>
-            <p className="text-sm" style={{ color: '#8E8E93' }}>Select your language / 언어를 선택하세요</p>
+            <p className="text-xl font-black mb-1" style={{ color: '#1C1C1E' }}>{t('onboardingLang')}</p>
+            <p className="text-sm" style={{ color: '#8E8E93' }}>{t('onboardingLangSub')}</p>
           </div>
           <div className="w-full max-w-sm flex flex-col gap-3">
             {LANGUAGES.map((l) => (
@@ -114,15 +116,15 @@ export default function OnboardingPage() {
       {step === 'code' && (
         <>
           <div className="text-center mb-8">
-            <p className="text-xl font-black mb-1" style={{ color: '#1C1C1E' }}>招待コードを入力</p>
-            <p className="text-sm" style={{ color: '#8E8E93' }}>Connects+ は招待制アプリです</p>
+            <p className="text-xl font-black mb-1" style={{ color: '#1C1C1E' }}>{t('onboardingCode')}</p>
+            <p className="text-sm" style={{ color: '#8E8E93' }}>{t('onboardingCodeSub')}</p>
           </div>
           <div className="w-full max-w-sm flex flex-col gap-3">
             <input
               type="text"
               value={code}
               onChange={(e) => { setCode(e.target.value.toUpperCase()); setCodeError('') }}
-              placeholder="例: CPABCD12"
+              placeholder={t('onboardingCodePlaceholder')}
               maxLength={12}
               autoFocus
               className="w-full px-4 py-4 rounded-2xl text-base outline-none text-center font-mono tracking-widest"
@@ -143,14 +145,14 @@ export default function OnboardingPage() {
                 color: codeLoading ? '#8E8E93' : '#FFFFFF',
               }}
             >
-              {codeLoading ? '確認中...' : '確認する'}
+              {codeLoading ? t('onboardingCodeConfirming') : t('onboardingCodeConfirm')}
             </button>
             <button
               onClick={() => setStep('lang')}
               className="text-xs text-center py-2"
               style={{ color: '#8E8E93' }}
             >
-              ← 言語選択に戻る
+              {t('onboardingBackToLang')}
             </button>
           </div>
         </>

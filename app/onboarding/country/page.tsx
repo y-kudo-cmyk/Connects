@@ -3,9 +3,11 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { COUNTRIES, countryFlag } from '@/lib/countryUtils'
+import { useTranslation } from '@/lib/i18n/useTranslation'
 
 export default function CountryPage() {
   const router = useRouter()
+  const { t } = useTranslation()
   const [country, setCountry] = useState<string | null>(null)
 
   const finish = () => {
@@ -28,8 +30,8 @@ export default function CountryPage() {
       <img src="/logo.png" alt="Connects+" style={{ width: 56, height: 'auto', marginBottom: 28 }} />
 
       <div className="text-center mb-6">
-        <p className="text-xl font-black mb-1" style={{ color: '#1C1C1E' }}>居住国を選択</p>
-        <p className="text-sm" style={{ color: '#8E8E93' }}>スケジュールの表示に使用します</p>
+        <p className="text-xl font-black mb-1" style={{ color: '#1C1C1E' }}>{t('onboardingCountry')}</p>
+        <p className="text-sm" style={{ color: '#8E8E93' }}>{t('onboardingCountrySub')}</p>
       </div>
 
       <div className="w-full max-w-sm flex-1 overflow-y-auto pb-36">
@@ -73,7 +75,7 @@ export default function CountryPage() {
         >
           {country
             ? `${countryFlag(country)} ${COUNTRIES.find((c) => c.code === country)?.nameJa} で始める`
-            : '国を選択してください'}
+            : t('onboardingCountrySelect')}
         </button>
       </div>
     </div>

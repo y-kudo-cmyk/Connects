@@ -6,6 +6,7 @@ import { useSupabaseData } from './SupabaseDataProvider'
 import type { AppEvent } from '@/lib/supabase/adapters'
 import { useMyEntries } from '@/lib/useMyEntries'
 import EventDetailModal from './EventDetailModal'
+import { useTranslation } from '@/lib/i18n/useTranslation'
 
 const TODAY = new Date().toISOString().slice(0, 10)
 const DISMISSED_KEY = 'cp-dismissed'
@@ -13,6 +14,7 @@ const DISMISSED_KEY = 'cp-dismissed'
 const MONTH_SHORT = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
 
 export default function NewSchedulePreview() {
+  const { t } = useTranslation()
   const [dismissed, setDismissed] = useState<Set<string>>(new Set())
   const { events } = useSupabaseData()
   const [detailEvent, setDetailEvent] = useState<AppEvent | null>(null)
@@ -68,13 +70,13 @@ export default function NewSchedulePreview() {
         <div className="flex items-center justify-between px-4 mb-2">
           <div className="flex items-center gap-2">
             <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: '#F3B4E3' }} />
-            <h2 className="text-xs font-bold tracking-wider" style={{ color: '#636366' }}>新着スケジュール</h2>
+            <h2 className="text-xs font-bold tracking-wider" style={{ color: '#636366' }}>{t('newSchedule')}</h2>
           </div>
           <span
             className="text-[10px] font-bold px-2 py-0.5 rounded-full"
             style={{ background: 'rgba(243,180,227,0.12)', color: '#F3B4E3' }}
           >
-            {upcoming.length}件
+            {upcoming.length}{t('items')}
           </span>
         </div>
 
@@ -159,7 +161,7 @@ export default function NewSchedulePreview() {
                     className="flex-1 py-3 rounded-lg text-xs font-bold min-h-[44px]"
                     style={{ background: '#F0F0F5', color: '#636366' }}
                   >
-                    確認
+                    {t('confirm')}
                   </button>
                   <button
                     onClick={() => importAndDismiss(event)}

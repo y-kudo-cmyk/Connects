@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useTodos, Todo } from '@/lib/useTodos'
+import { useTranslation } from '@/lib/i18n/useTranslation'
 
 
 
@@ -24,6 +25,7 @@ const DUE_CONFIG = {
 }
 
 export default function TodoSection() {
+  const { t } = useTranslation()
   const { todos, addTodo, toggleDone, removeTodo, updateTodo } = useTodos()
   const [input, setInput] = useState('')
   const [dueDate, setDueDate] = useState('')
@@ -89,7 +91,7 @@ export default function TodoSection() {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && handleAdd()}
-            placeholder="TODOを追加..."
+            placeholder={t('todoAdd')}
             className="flex-1 py-1.5 text-sm outline-none"
             style={{ background: 'transparent', color: '#1C1C1E' }}
           />
@@ -105,7 +107,7 @@ export default function TodoSection() {
               <line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/>
               <line x1="3" y1="10" x2="21" y2="10"/>
             </svg>
-            {dueDate ? `${parseInt(dueDate.slice(5,7))}/${parseInt(dueDate.slice(8))}` : '期限'}
+            {dueDate ? `${parseInt(dueDate.slice(5,7))}/${parseInt(dueDate.slice(8))}` : t('todoDueDate')}
           </button>
           <button
             onClick={handleAdd}
@@ -130,7 +132,7 @@ export default function TodoSection() {
               <button onClick={() => setDueDate('')}
                 className="text-xs px-3 py-2 rounded-xl"
                 style={{ color: '#636366', background: '#F0F0F5' }}>
-                クリア
+                {t('clear')}
               </button>
             )}
           </div>
@@ -140,7 +142,7 @@ export default function TodoSection() {
       {/* リスト */}
       {sorted.length === 0 ? (
         <div className="flex items-center justify-center py-6" style={{ color: '#8E8E93' }}>
-          <p className="text-sm">やることを追加しよう</p>
+          <p className="text-sm">{t('todoEmpty')}</p>
         </div>
       ) : (
         <div className="flex flex-col gap-2">
@@ -165,6 +167,7 @@ function TodoRow({ todo, onToggle, onRemove, onMemoChange }: {
   onRemove: () => void
   onMemoChange: (memo: string) => void
 }) {
+  const { t } = useTranslation()
   const [expanded, setExpanded] = useState(false)
   const [editingMemo, setEditingMemo] = useState(false)
   const [memoVal, setMemoVal] = useState(todo.memo ?? '')
@@ -245,7 +248,7 @@ function TodoRow({ todo, onToggle, onRemove, onMemoChange }: {
               <textarea
                 value={memoVal}
                 onChange={(e) => setMemoVal(e.target.value)}
-                placeholder="メモを入力..."
+                placeholder={t('todoMemo')}
                 rows={3}
                 className="w-full px-3 py-2 text-sm rounded-xl outline-none resize-none"
                 style={{ background: '#F8F9FA', border: '1px solid #E5E5EA', color: '#1C1C1E' }}
@@ -255,12 +258,12 @@ function TodoRow({ todo, onToggle, onRemove, onMemoChange }: {
                   onClick={() => { onMemoChange(memoVal); setEditingMemo(false) }}
                   className="flex-1 py-2 rounded-xl text-xs font-bold"
                   style={{ background: '#F3B4E3', color: '#FFFFFF' }}
-                >保存</button>
+                >{t('save')}</button>
                 <button
                   onClick={() => { setMemoVal(todo.memo ?? ''); setEditingMemo(false) }}
                   className="px-4 py-2 rounded-xl text-xs"
                   style={{ background: '#F0F0F5', color: '#636366' }}
-                >キャンセル</button>
+                >{t('cancel')}</button>
               </div>
             </div>
           ) : (
@@ -273,7 +276,7 @@ function TodoRow({ todo, onToggle, onRemove, onMemoChange }: {
                 <path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/>
               </svg>
               <span className="text-xs" style={{ color: todo.memo ? '#1C1C1E' : '#C7C7CC', whiteSpace: 'pre-wrap' }}>
-                {todo.memo || 'メモを追加...'}
+                {todo.memo || t('todoMemoAdd')}
               </span>
             </button>
           )}

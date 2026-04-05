@@ -6,6 +6,7 @@ import { scheduleTagConfig, type ScheduleTag } from '@/lib/config/tags'
 import { useSupabaseData } from './SupabaseDataProvider'
 import type { AppEvent } from '@/lib/supabase/adapters'
 import EventDetailModal from './EventDetailModal'
+import { useTranslation } from '@/lib/i18n/useTranslation'
 
 const DAY_JA = ['日', '月', '火', '水', '木', '金', '土']
 const MONTH_SHORT = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
@@ -17,6 +18,7 @@ function md(s: string) {
 
 export default function TodayScheduleSection({ today }: { today: string }) {
   const { events: allEvents } = useSupabaseData()
+  const { t } = useTranslation()
   const [detailEvent, setDetailEvent] = useState<AppEvent | null>(null)
 
   const todayEvents = useMemo(() => {
@@ -72,7 +74,7 @@ export default function TodayScheduleSection({ today }: { today: string }) {
                 style={{ background: 'rgba(243,180,227,0.12)', color: '#F3B4E3' }}
               >
                 <span className="w-1.5 h-1.5 rounded-full bg-current animate-pulse" />
-                {todayEvents.length}件
+                {todayEvents.length}{t('items')}
               </span>
             )}
             <Link
@@ -80,7 +82,7 @@ export default function TodayScheduleSection({ today }: { today: string }) {
               className="text-xs font-bold"
               style={{ color: '#636366' }}
             >
-              すべて →
+              {t('seeAll')}
             </Link>
           </div>
         </div>
@@ -96,7 +98,7 @@ export default function TodayScheduleSection({ today }: { today: string }) {
               <line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/>
               <line x1="3" y1="10" x2="21" y2="10"/>
             </svg>
-            <p className="text-sm" style={{ color: '#C7C7CC' }}>今日の予定はありません</p>
+            <p className="text-sm" style={{ color: '#C7C7CC' }}>{t('noScheduleToday')}</p>
           </div>
         ) : (
           <div className="flex flex-col gap-2">
@@ -107,7 +109,7 @@ export default function TodayScheduleSection({ today }: { today: string }) {
               const hasTime = event.time && event.time !== '00:00'
               const dateStr = isPeriod
                 ? `${md(event.date)}${hasTime ? ` ${event.time}` : ''} 〜 ${md(event.dateEnd!)}${event.timeEnd && event.timeEnd !== '00:00' ? ` ${event.timeEnd}` : ''}`
-                : (hasTime ? `${md(event.date)} ${event.time}` : '終日')
+                : (hasTime ? `${md(event.date)} ${event.time}` : t('allDay'))
               return (
                 <button
                   key={event.id}
@@ -154,7 +156,7 @@ export default function TodayScheduleSection({ today }: { today: string }) {
                           className="text-[10px] font-bold px-1.5 py-0.5 rounded"
                           style={{ background: 'rgba(0,0,0,0.06)', color: '#8E8E93' }}
                         >
-                          期間
+                          {t('period')}
                         </span>
                       )}
                     </div>

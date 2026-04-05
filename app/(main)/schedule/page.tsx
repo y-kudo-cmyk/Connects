@@ -10,6 +10,7 @@ import { useProfile } from '@/lib/useProfile'
 import { countryFlag, COUNTRIES } from '@/lib/countryUtils'
 import MilCountdown from '@/components/MilCountdown'
 import { useTodos } from '@/lib/useTodos'
+import { useTranslation } from '@/lib/i18n/useTranslation'
 
 const TODAY = new Date().toISOString().slice(0, 10)
 
@@ -52,6 +53,7 @@ export default function SchedulePage() {
   const homeName = COUNTRIES.find((c) => c.code === homeCountry)?.nameJa ?? homeCountry
   const { addEntry, removeEntry, entries, hasEntry } = useMyEntries()
   const { todos, addTodo, removeTodo, hasTodo } = useTodos()
+  const { t } = useTranslation()
   const eventsRef = useRef<HTMLDivElement>(null)
 
   const addToMy = (event: AppEvent) => {
@@ -169,7 +171,7 @@ export default function SchedulePage() {
               : { color: '#8E8E93' }
             }
           >
-            🌍 海外
+            {t('overseas')}
           </button>
         </div>
 
@@ -274,7 +276,7 @@ export default function SchedulePage() {
       {/* 選択日のイベントリスト */}
       <div ref={eventsRef} className="px-4 pb-28">
         <p className="text-xs font-semibold mb-3" style={{ color: '#8E8E93' }}>
-          {MONTH_SHORT[parseInt(selectedDate.split('-')[1]) - 1]} {parseInt(selectedDate.split('-')[2])} · {dayEvents.length} 件
+          {MONTH_SHORT[parseInt(selectedDate.split('-')[1]) - 1]} {parseInt(selectedDate.split('-')[2])} · {dayEvents.length} {t('items')}
         </p>
 
         {dayEvents.length === 0 ? (
@@ -285,7 +287,7 @@ export default function SchedulePage() {
               <line x1="8" y1="2" x2="8" y2="6" />
               <line x1="3" y1="10" x2="21" y2="10" />
             </svg>
-            <p className="text-sm">この日の予定はありません</p>
+            <p className="text-sm">{t('noEventsThisDay')}</p>
           </div>
         ) : (
           <div className="flex flex-col gap-3">
@@ -375,22 +377,22 @@ export default function SchedulePage() {
                 <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
               </svg>
             </div>
-            <p className="text-base font-bold mb-1" style={{ color: '#1C1C1E' }}>MYに追加済みです</p>
+            <p className="text-base font-bold mb-1" style={{ color: '#1C1C1E' }}>{t('addedToMy')}</p>
             <p className="text-sm mb-4 leading-snug" style={{ color: '#8E8E93' }}>
-              {reAddEvent.title}<br />再度追加しますか？（同じイベントに複数回参戦する場合など）
+              {reAddEvent.title}<br />{t('reAddConfirm')}
             </p>
             <div className="flex gap-2">
               <button
                 onClick={() => { addToMy(reAddEvent); setReAddEvent(null) }}
                 className="flex-1 py-3 rounded-xl text-sm font-bold"
                 style={{ background: '#F3B4E3', color: '#FFFFFF' }}>
-                再度追加
+                {t('reAdd')}
               </button>
               <button
                 onClick={() => setReAddEvent(null)}
                 className="flex-1 py-3 rounded-xl text-sm font-semibold"
                 style={{ background: '#F0F0F5', color: '#636366' }}>
-                キャンセル
+                {t('cancel')}
               </button>
             </div>
           </div>
@@ -412,7 +414,7 @@ export default function SchedulePage() {
                   <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/>
                 </svg>
               </div>
-              <p className="text-base font-bold mb-1" style={{ color: '#1C1C1E' }}>TODOに追加</p>
+              <p className="text-base font-bold mb-1" style={{ color: '#1C1C1E' }}>{t('addToTodo')}</p>
               <p className="text-sm mb-1 leading-snug" style={{ color: '#1C1C1E' }}>{todoEvent.title}</p>
               <p className="text-xs mb-4" style={{ color: '#8E8E93' }}>
                 {todoEvent.dateEnd
@@ -426,8 +428,8 @@ export default function SchedulePage() {
                     <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
                   </svg>
                   <div className="flex-1">
-                    <p className="text-sm font-semibold" style={{ color: '#1C1C1E' }}>MYにも追加しますか？</p>
-                    <p className="text-xs" style={{ color: '#8E8E93' }}>チケット情報・メモを記録できます</p>
+                    <p className="text-sm font-semibold" style={{ color: '#1C1C1E' }}>{t('addToMyAlso')}</p>
+                    <p className="text-xs" style={{ color: '#8E8E93' }}>{t('addToMyDesc')}</p>
                   </div>
                   <Toggle on={todoAddToMy} onChange={setTodoAddToMy} />
                 </div>
@@ -437,7 +439,7 @@ export default function SchedulePage() {
                   onClick={() => { const t = todos.find(t => t.eventId === todoEvent.id); if (t) removeTodo(t.id); setTodoEvent(null) }}
                   className="w-full py-3 rounded-xl text-sm font-bold mb-2"
                   style={{ background: '#FEE2E2', color: '#EF4444' }}
-                >TODOから削除</button>
+                >{t('removeFromTodo')}</button>
               ) : (
                 <button
                   onClick={() => {
@@ -447,11 +449,11 @@ export default function SchedulePage() {
                   }}
                   className="w-full py-3 rounded-xl text-sm font-bold mb-2"
                   style={{ background: '#F3B4E3', color: '#FFFFFF' }}
-                >TODOに追加</button>
+                >{t('addToTodo')}</button>
               )}
               <button onClick={() => setTodoEvent(null)}
                 className="w-full py-2.5 rounded-xl text-sm font-semibold"
-                style={{ background: '#F0F0F5', color: '#636366' }}>キャンセル</button>
+                style={{ background: '#F0F0F5', color: '#636366' }}>{t('cancel')}</button>
             </div>
           </div>
         )

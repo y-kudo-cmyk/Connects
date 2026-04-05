@@ -3,6 +3,7 @@
 import { Suspense, useEffect, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useReferral } from '@/lib/useReferral'
+import { useTranslation } from '@/lib/i18n/useTranslation'
 
 const REFERRED_BY_KEY = 'cp-referred-by'
 
@@ -10,6 +11,7 @@ function JoinContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const { verified, verify } = useReferral()
+  const { t } = useTranslation()
 
   const [status, setStatus] = useState<'checking' | 'success' | 'invalid'>('checking')
   const ref = searchParams.get('ref')?.toUpperCase() ?? ''
@@ -59,7 +61,7 @@ function JoinContent() {
         <>
           <div className="w-8 h-8 rounded-full border-2 border-t-transparent animate-spin mb-4"
             style={{ borderColor: '#F3B4E3', borderTopColor: 'transparent' }} />
-          <p className="text-sm" style={{ color: '#8E8E93' }}>招待コードを確認中...</p>
+          <p className="text-sm" style={{ color: '#8E8E93' }}>{t('inviteChecking')}</p>
         </>
       )}
 
@@ -71,9 +73,9 @@ function JoinContent() {
               <polyline points="20 6 9 17 4 12" />
             </svg>
           </div>
-          <h2 className="text-xl font-black mb-2" style={{ color: '#1C1C1E' }}>招待を確認しました</h2>
-          <p className="text-sm mb-1" style={{ color: '#8E8E93' }}>Connects+ へようこそ！</p>
-          <p className="text-xs" style={{ color: '#636366' }}>ログイン画面に移動します...</p>
+          <h2 className="text-xl font-black mb-2" style={{ color: '#1C1C1E' }}>{t('inviteSuccess')}</h2>
+          <p className="text-sm mb-1" style={{ color: '#8E8E93' }}>{t('inviteWelcome')}</p>
+          <p className="text-xs" style={{ color: '#636366' }}>{t('inviteRedirect')}</p>
         </>
       )}
 
@@ -85,17 +87,16 @@ function JoinContent() {
               <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
             </svg>
           </div>
-          <h2 className="text-xl font-black mb-2" style={{ color: '#1C1C1E' }}>無効な招待リンクです</h2>
+          <h2 className="text-xl font-black mb-2" style={{ color: '#1C1C1E' }}>{t('inviteInvalid')}</h2>
           <p className="text-sm mb-6" style={{ color: '#8E8E93' }}>
-            リンクが無効か期限切れの可能性があります。
-            <br />招待者に再度共有を依頼してください。
+            {t('inviteExpired')}
           </p>
           <button
             onClick={() => router.push('/login')}
             className="px-6 py-3 rounded-2xl text-sm font-bold"
             style={{ background: '#1E1E22', color: '#F3B4E3', border: '1px solid #F3B4E340' }}
           >
-            ログイン画面へ
+            {t('inviteGoLogin')}
           </button>
         </>
       )}

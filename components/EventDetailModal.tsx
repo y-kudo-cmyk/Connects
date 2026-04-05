@@ -7,6 +7,7 @@ import { useMyEntries } from '@/lib/useMyEntries'
 import { useAuth } from '@/lib/supabase/useAuth'
 import { createClient } from '@/lib/supabase/client'
 import { countryFlag, cityToCountryCode } from '@/lib/countryUtils'
+import { useTranslation } from '@/lib/i18n/useTranslation'
 
 const supabase = createClient()
 
@@ -36,6 +37,7 @@ export default function EventDetailModal({
 }) {
   const { addEntry, hasEntry } = useMyEntries()
   const { user } = useAuth()
+  const { t } = useTranslation()
   const [voted, setVoted] = useState(false)
   const [voteCount, setVoteCount] = useState(event.verifiedCount)
   const [editing, setEditing] = useState(false)
@@ -199,12 +201,12 @@ export default function EventDetailModal({
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
                     <polyline points="20 6 9 17 4 12" />
                   </svg>
-                  承認済み
+                  {t('approved')}
                 </>
               ) : (
                 <>
                   <span className="font-black">{voteCount}/3</span>
-                  承認待ち
+                  {t('pendingApproval')}
                 </>
               )}
             </div>
@@ -222,7 +224,7 @@ export default function EventDetailModal({
           {/* 画像 */}
           {editing ? (
             <div className="mb-4">
-              <label className="text-xs font-bold mb-1.5 block" style={{ color: '#636366' }}>画像</label>
+              <label className="text-xs font-bold mb-1.5 block" style={{ color: '#636366' }}>{t('imageLabel')}</label>
               {editImageUrl ? (
                 <div className="relative rounded-2xl overflow-hidden">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -240,7 +242,7 @@ export default function EventDetailModal({
                   className="w-full h-32 rounded-2xl flex flex-col items-center justify-center gap-2"
                   style={{ border: '2px dashed #E5E5EA', color: '#8E8E93' }}>
                   <span className="text-3xl">📷</span>
-                  <span className="text-xs">タップして画像をアップロード</span>
+                  <span className="text-xs">{t('uploadImage')}</span>
                 </button>
               )}
               <input ref={imageFileRef} type="file" accept="image/*" className="hidden"
@@ -269,7 +271,7 @@ export default function EventDetailModal({
             })}
             {isPeriod && (
               <span className="text-[11px] font-bold px-2 py-1 rounded-lg"
-                style={{ background: 'rgba(0,0,0,0.06)', color: '#8E8E93' }}>期間</span>
+                style={{ background: 'rgba(0,0,0,0.06)', color: '#8E8E93' }}>{t('period')}</span>
             )}
           </div>
 
@@ -340,7 +342,7 @@ export default function EventDetailModal({
               <div className="flex-1">
                 {editing ? (
                   <input type="text" value={editVenue} onChange={(e) => setEditVenue(e.target.value)}
-                    placeholder="会場名"
+                    placeholder={t('venuePlaceholder')}
                     className="w-full text-sm font-bold px-3 py-2 rounded-xl outline-none"
                     style={{ color: '#1C1C1E', background: '#FFFFFF', border: '1.5px solid #F3B4E3' }} />
                 ) : (
@@ -370,7 +372,7 @@ export default function EventDetailModal({
                 <div className="flex-1">
                   {editing ? (
                     <textarea value={editNotes} onChange={(e) => setEditNotes(e.target.value)}
-                      placeholder="備考・メモ"
+                      placeholder={t('notesPlaceholder')}
                       rows={2}
                       className="w-full text-sm px-3 py-2 rounded-xl outline-none resize-none"
                       style={{ color: '#1C1C1E', background: '#FFFFFF', border: '1.5px solid #F3B4E3' }} />
@@ -400,12 +402,12 @@ export default function EventDetailModal({
                 ) : event.sourceUrl ? (
                   <a href={event.sourceUrl} target="_blank" rel="noopener noreferrer">
                     <p className="text-sm font-semibold" style={{ color: cfg.color }}>
-                      {event.sourceName ?? 'ソースを見る'}
+                      {event.sourceName ?? t('viewSource')}
                     </p>
                     <p className="text-[11px] truncate" style={{ color: '#8E8E93' }}>{event.sourceUrl}</p>
                   </a>
                 ) : (
-                  <p className="text-xs" style={{ color: '#C7C7CC' }}>ソースURLなし</p>
+                  <p className="text-xs" style={{ color: '#C7C7CC' }}>{t('noSourceUrl')}</p>
                 )}
               </div>
             </div>
@@ -424,12 +426,12 @@ export default function EventDetailModal({
                   <button onClick={() => setEditing(false)}
                     className="flex-1 py-3.5 rounded-xl text-sm font-bold"
                     style={{ background: '#F0F0F5', color: '#636366' }}>
-                    キャンセル
+                    {t('cancel')}
                   </button>
                   <button onClick={handleEditSave} disabled={editSaving}
                     className="flex-1 py-3.5 rounded-xl text-sm font-bold"
                     style={{ background: '#34D399', color: '#FFFFFF' }}>
-                    {editSaving ? '保存中...' : isConfirmed ? '修正依頼を送信' : '修正して承認'}
+                    {editSaving ? t('saving') : isConfirmed ? t('submitEditRequest') : t('editAndApprove')}
                   </button>
                 </>
               ) : (
@@ -441,7 +443,7 @@ export default function EventDetailModal({
                       <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" />
                       <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" />
                     </svg>
-                    {isConfirmed ? '修正依頼' : '修正'}
+                    {isConfirmed ? t('editRequest') : t('editButton')}
                   </button>
                   <button onClick={handleVote} disabled={voted}
                     className="flex-1 py-3.5 rounded-xl text-sm font-bold flex items-center justify-center gap-1.5"
@@ -454,7 +456,7 @@ export default function EventDetailModal({
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                           <polyline points="20 6 9 17 4 12" />
                         </svg>
-                        承認済み
+                        {t('approved')}
                       </>
                     ) : (
                       <>承認する（{voteCount}/3）</>
@@ -472,7 +474,7 @@ export default function EventDetailModal({
               ? { background: 'rgba(243,180,227,0.15)', color: '#F3B4E3' }
               : { background: '#F3B4E3', color: '#FFFFFF' }
             }>
-            {imported ? '✓ MYに追加済み' : '+ MYに追加'}
+            {imported ? t('addedToMyDone') : t('addToMy')}
           </button>
         </div>
       </div>
