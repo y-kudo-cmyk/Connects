@@ -61,7 +61,13 @@ export default function EventDetailModal({
   const isConfirmed = voteCount >= 3
 
   const handleVote = async () => {
-    if (!user || voted) return
+    if (voted) return
+    if (!user) {
+      // 未ログイン時はローカルのみ反映
+      setVoted(true)
+      setVoteCount(v => v + 1)
+      return
+    }
     const { error } = await supabase.from('event_votes').insert({
       event_id: event.id,
       user_id: user.id,
@@ -80,8 +86,8 @@ export default function EventDetailModal({
   }
 
   const handleEditSave = async () => {
-    if (!user) return
     setEditSaving(true)
+    const userId = user?.id
 
     // 日時の組み立て
     const newStartDate = editStartDate && editStartTime
@@ -106,7 +112,7 @@ export default function EventDetailModal({
         await supabase.from('edit_requests').insert({
           event_id: event.id,
           ...c,
-          submitted_by: user.id,
+          submitted_by: userId,
         })
       }
     } else {
