@@ -32,18 +32,24 @@ export type AppEvent = {
   subTitle?: string
 }
 
-export function toAppEvent(e: SupabaseEvent): AppEvent {
-  const startDate = e.start_date ? new Date(e.start_date) : null
-  const endDate = e.end_date ? new Date(e.end_date) : null
+// タイムゾーンずれを防ぐ: DBの日時文字列から直接 YYYY-MM-DD と HH:MM を取る
+function extractDateParts(isoStr: string): { date: string; time: string } {
+  // "2026-04-05T18:00:00+00:00" or "2026-04-05T18:00:00"
+  const match = isoStr.match(/^(\d{4}-\d{2}-\d{2})T(\d{2}:\d{2})/)
+  if (match) return { date: match[1], time: match[2] }
+  // "2026-04-05" only
+  if (isoStr.match(/^\d{4}-\d{2}-\d{2}$/)) return { date: isoStr, time: '00:00' }
+  return { date: '', time: '00:00' }
+}
 
-  const date = startDate ? startDate.toISOString().slice(0, 10) : ''
-  const dateEnd = endDate ? endDate.toISOString().slice(0, 10) : undefined
-  const time = startDate
-    ? `${String(startDate.getHours()).padStart(2, '0')}:${String(startDate.getMinutes()).padStart(2, '0')}`
-    : '00:00'
-  const timeEnd = endDate
-    ? `${String(endDate.getHours()).padStart(2, '0')}:${String(endDate.getMinutes()).padStart(2, '0')}`
-    : undefined
+export function toAppEvent(e: SupabaseEvent): AppEvent {
+  const start = e.start_date ? extractDateParts(e.start_date) : { date: '', time: '00:00' }
+  const end = e.end_date ? extractDateParts(e.end_date) : null
+
+  const date = start.date
+  const dateEnd = end?.date !== start.date ? end?.date : undefined
+  const time = start.time
+  const timeEnd = end?.time
 
   const tag = e.tag as ScheduleTag
   const cfg = scheduleTagConfig[tag]
@@ -61,7 +67,7 @@ export function toAppEvent(e: SupabaseEvent): AppEvent {
     venue: e.spot_name || undefined,
     city: e.country || undefined,
     tags: [tag],
-    image: e.image_url || undefined,
+    image: convertDriveUrl(e.image_url) || undefined,
     sourceUrl: e.source_url || undefined,
     sourceName: e.source_url ? extractSourceName(e.source_url) : undefined,
     notes: e.notes || undefined,
@@ -70,6 +76,19 @@ export function toAppEvent(e: SupabaseEvent): AppEvent {
     relatedArtists: e.related_artists,
     subTitle: e.sub_event_title || undefined,
   }
+}
+
+// Google Drive の共有リンクを直接表示可能なURLに変換
+function convertDriveUrl(url: string): string {
+  if (!url) return ''
+  // https://drive.google.com/file/d/XXXX/view... → https://lh3.googleusercontent.com/d/XXXX
+  const driveMatch = url.match(/drive\.google\.com\/file\/d\/([^/]+)/)
+  if (driveMatch) return `https://lh3.googleusercontent.com/d/${driveMatch[1]}`
+  // https://docs.google.com/uc?export=view&id=XXXX
+  const docsMatch = url.match(/docs\.google\.com\/uc\?export=view&id=([^&]+)/)
+  if (docsMatch) return `https://lh3.googleusercontent.com/d/${docsMatch[1]}`
+  // already lh3 or other URL
+  return url
 }
 
 function extractSourceName(url: string): string {
