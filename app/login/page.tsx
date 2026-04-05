@@ -34,8 +34,9 @@ export default function LoginPage() {
     try {
       await signInWithEmail(email.trim())
       setEmailSent(true)
-    } catch {
-      setEmailError('ログインに失敗しました')
+    } catch (e: any) {
+      console.error('Email login error:', e)
+      setEmailError(e?.message || 'ログインに失敗しました')
     }
     setEmailLoading(false)
   }
