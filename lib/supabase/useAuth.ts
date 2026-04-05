@@ -29,7 +29,7 @@ export function useAuth() {
   const signInWithGoogle = useCallback(async () => {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
-      options: { redirectTo: `${window.location.origin}/` },
+      options: { redirectTo: `${window.location.origin}/auth/callback` },
     })
     if (error) throw error
   }, [])
@@ -37,7 +37,7 @@ export function useAuth() {
   const signInWithTwitter = useCallback(async () => {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'twitter',
-      options: { redirectTo: `${window.location.origin}/` },
+      options: { redirectTo: `${window.location.origin}/auth/callback` },
     })
     if (error) throw error
   }, [])
@@ -45,7 +45,7 @@ export function useAuth() {
   const signInWithEmail = useCallback(async (email: string) => {
     const { error } = await supabase.auth.signInWithOtp({
       email,
-      options: { emailRedirectTo: `${window.location.origin}/` },
+      options: { emailRedirectTo: `${window.location.origin}/auth/callback` },
     })
     if (error) throw error
   }, [])

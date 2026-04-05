@@ -46,7 +46,9 @@
       "Bash(python3:*)",
       "Bash(grep -v '^$')",
       "Bash(npx tsx:*)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(git push:*)",
+      "Bash(git commit:*)"
     ]
   }
 }
