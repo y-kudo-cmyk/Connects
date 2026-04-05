@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { scheduleTagConfig, type ScheduleTag } from '@/lib/config/tags'
 import type { AppEvent } from '@/lib/supabase/adapters'
 import { useMyEntries } from '@/lib/useMyEntries'
@@ -48,6 +48,15 @@ export default function EventDetailModal({
   const [editSourceUrl, setEditSourceUrl] = useState(event.sourceUrl ?? '')
   const [editImageUrl, setEditImageUrl] = useState(event.image ?? '')
   const [editSaving, setEditSaving] = useState(false)
+  const imageFileRef = useRef<HTMLInputElement>(null)
+
+  const handleImageUpload = async (files: FileList | null) => {
+    if (!files || !files[0]) return
+    const file = files[0]
+    const reader = new FileReader()
+    reader.onload = () => setEditImageUrl(reader.result as string)
+    reader.readAsDataURL(file)
+  }
 
   const firstTag = event.tags?.[0] as ScheduleTag | undefined
   const cfg = firstTag && scheduleTagConfig[firstTag]
@@ -209,19 +218,29 @@ export default function EventDetailModal({
           {/* 画像 */}
           {editing ? (
             <div className="mb-4">
-              <label className="text-xs font-bold mb-1.5 block" style={{ color: '#636366' }}>画像URL</label>
-              <input type="url" value={editImageUrl} onChange={(e) => setEditImageUrl(e.target.value)}
-                placeholder="https://..."
-                className="w-full px-3 py-2.5 rounded-xl text-sm outline-none mb-2"
-                style={{ background: '#FFFFFF', border: '1.5px solid #F3B4E3', color: '#1C1C1E' }} />
-              {editImageUrl && (
-                <div className="rounded-2xl overflow-hidden">
+              <label className="text-xs font-bold mb-1.5 block" style={{ color: '#636366' }}>画像</label>
+              {editImageUrl ? (
+                <div className="relative rounded-2xl overflow-hidden">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={editImageUrl} alt="" className="w-full rounded-2xl"
-                    style={{ display: 'block' }}
-                    onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }} />
+                  <img src={editImageUrl} alt="" className="w-full rounded-2xl" style={{ display: 'block' }} />
+                  <button onClick={() => setEditImageUrl('')}
+                    className="absolute top-2 right-2 w-8 h-8 rounded-full flex items-center justify-center"
+                    style={{ background: 'rgba(0,0,0,0.7)' }}>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" strokeWidth="2">
+                      <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+                    </svg>
+                  </button>
                 </div>
+              ) : (
+                <button onClick={() => imageFileRef.current?.click()}
+                  className="w-full h-32 rounded-2xl flex flex-col items-center justify-center gap-2"
+                  style={{ border: '2px dashed #E5E5EA', color: '#8E8E93' }}>
+                  <span className="text-3xl">📷</span>
+                  <span className="text-xs">タップして画像をアップロード</span>
+                </button>
               )}
+              <input ref={imageFileRef} type="file" accept="image/*" className="hidden"
+                onChange={(e) => handleImageUpload(e.target.files)} />
             </div>
           ) : event.image ? (
             <div className="rounded-2xl overflow-hidden mb-4">
@@ -252,8 +271,9 @@ export default function EventDetailModal({
 
           {/* タイトル（編集可能） */}
           {editing ? (
-            <input type="text" value={editTitle} onChange={(e) => setEditTitle(e.target.value)}
-              className="w-full text-lg font-black leading-snug mb-2 px-3 py-2 rounded-xl outline-none"
+            <textarea value={editTitle} onChange={(e) => setEditTitle(e.target.value)}
+              rows={3}
+              className="w-full text-base font-black leading-snug mb-2 px-3 py-2.5 rounded-xl outline-none resize-none"
               style={{ color: '#1C1C1E', background: '#FFFFFF', border: '1.5px solid #F3B4E3' }} />
           ) : (
             <h2 className="text-lg font-black leading-snug mb-1" style={{ color: '#1C1C1E' }}>
