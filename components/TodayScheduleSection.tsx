@@ -20,7 +20,14 @@ export default function TodayScheduleSection({ today }: { today: string }) {
   const [detailEvent, setDetailEvent] = useState<AppEvent | null>(null)
 
   const todayEvents = useMemo(() => {
-    const filtered = allEvents.filter((e) => e.date <= today && (!e.dateEnd || e.dateEnd >= today))
+    const filtered = allEvents.filter((e) => {
+      if (e.dateEnd) {
+        // 期間イベント: 開始日〜終了日の範囲内
+        return e.date <= today && e.dateEnd >= today
+      }
+      // 単発: 当日のみ
+      return e.date === today
+    })
     // Sort: LIVE first, then today-only, then period
     return filtered.sort((a, b) => {
       const aIsLive = a.tags?.includes('LIVE') ? 0 : 1
