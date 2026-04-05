@@ -88,15 +88,20 @@ function splitCSVLine(line: string): string[] {
 
 function readCSV(filename: string): Record<string, string>[] {
   const path = resolve(__dirname, '..', 'data', 'glide-export', filename)
+  let content: string
   try {
-    const content = readFileSync(path, 'utf-8')
-    return parseCSV(content)
+    content = readFileSync(path, 'utf-8')
   } catch {
-    // fallback to Downloads
     const dlPath = resolve('C:/Users/D-LINE/Downloads', filename)
-    const content = readFileSync(dlPath, 'utf-8')
-    return parseCSV(content)
+    content = readFileSync(dlPath, 'utf-8')
   }
+  // BOM除去
+  if (content.charCodeAt(0) === 0xFEFF) content = content.slice(1)
+  // SCHEDULE_DB の先頭カラム "a," を除去（カンマ入り引用符フィールドがパーサーを壊す）
+  if (filename === 'SCHEDULE_DB.csv') {
+    content = content.replace(/^"a,",/gm, ',')
+  }
+  return parseCSV(content)
 }
 
 // ── メンバー色マップ ─────────────────────────────────────────
@@ -144,13 +149,18 @@ const TAG_MAP: Record<string, string> = {
   'LUCKY DRAW': 'LUCKY_DRAW',
   'POPUP': 'POPUP',
   'MERCH': 'MERCH',
+  'GOODS': 'MERCH',          // GOODS → MERCH に統合
   'RELEASE': 'RELEASE',
   '誕生日': 'BIRTHDAY',
   '雑誌': 'MAGAZINE',
+  '告知': 'EVENT',            // 告知 → EVENT に統合
   'EVENT': 'EVENT',
   'TV': 'TV',
   'YOUTUBE': 'YOUTUBE',
   'RADIO': 'RADIO',
+  'PUBLISHED': 'EVENT',      // CSVパースずれ対策
+  'PC': 'EVENT',              // PC → EVENT に統合
+  'LUCKYDRAW': 'LUCKY_DRAW',  // スペースなし対応
 }
 
 // ============================================================
@@ -237,71 +247,132 @@ async function importSchedules() {
   console.log('\n📅 Importing schedules...')
   const rows = readCSV('SCHEDULE_DB.csv')
 
-  // schedule + PUBLISHED のみ、誕生日は各メンバー1行だけ
-  const birthdaySeen = new Set<string>()
   const events: any[] = []
+  let skippedRows = 0
 
   for (const r of rows) {
-    if (r.post_type !== 'schedule' && r.status !== 'PUBLISHED') continue
-    if (!r.event_title) continue
+    // CSVカラムずれ対策: "a," カラムで1列ずれるケースがある
+    // 正常: post_type=schedule, status=PUBLISHED, tag=LIVE
+    // ずれ: status=schedule, tag=PUBLISHED, ikon=LIVE → 1列シフトして読み直す
+    let status = r.status
+    let tag_raw = r.tag
+    let ikon = r.ikon
+    let artist = r.artist_name
+    let related = r.related_artists
+    let title = r.event_title
+    let subTitle = r.sub_event_title
+    let startDateRaw = r.start_date
+    let endDateRaw = r.end_date
+    let fStart = r['F)start_date']
+    let fEnd = r['F)end_date']
+    let displayDate = r.display_date
+    let spotName = r.spot_name
+    let spotAddress = r.spot_address
+    let imageUrl = r['1)image_url']
+    let sourceUrl = r.source_url
+    let notes = r.notes
+    let country = r.Country
+    let verifiedRaw = r.verified_count
 
-    const tag = TAG_MAP[r.tag] || null
-    if (!tag) continue
-
-    // 誕生日: メンバーごとに1行のみ（最初の1行を採用）
-    if (tag === 'BIRTHDAY') {
-      const key = r.event_title
-      if (birthdaySeen.has(key)) continue
-      birthdaySeen.add(key)
+    if (r.post_type === 'PUBLISHED' || (status === 'schedule' && tag_raw === 'PUBLISHED')) {
+      // 1列ずれ: post_type にstatusが、status にpost_typeが入っている
+      status = r.post_type === 'PUBLISHED' ? 'PUBLISHED' : 'PUBLISHED'
+      tag_raw = r.ikon || ''
+      ikon = r.artist_name || ''
+      artist = r.related_artists || ''
+      related = r.event_title || ''
+      title = r.sub_event_title || ''
+      subTitle = r.start_date || ''
+      startDateRaw = r.end_date || ''
+      endDateRaw = r['F)start_date'] || ''
+      fStart = r['F)end_date'] || ''
+      fEnd = r.display_date || ''
+      displayDate = r.spot_id || ''
+      spotName = r.spot_name || ''
+      spotAddress = r.spot_address || ''
+      imageUrl = r['2)image_url'] || ''
+      sourceUrl = r['3)image_url'] || ''
+      notes = r.source_url || ''
+      country = ''
+      verifiedRaw = ''
     }
 
-    const startDate = parseDate(r.start_date || r['F)start_date'])
-    if (!startDate) continue
+    // PUBLISHED のみ
+    if (status !== 'PUBLISHED') { skippedRows++; continue }
+    // 誕生日は除外（テキスト・絵文字両方）
+    if (tag_raw === '誕生日' || tag_raw === '🎂' || ikon === '🎂') { skippedRows++; continue }
+    // タイトル必須
+    if (!title) { skippedRows++; continue }
 
-    // 誕生日の年を除去（毎年リピート用に月日のみ使う → 2000年ベースに）
-    let finalStartDate = startDate
-    if (tag === 'BIRTHDAY') {
-      const md = startDate.slice(5, 10) // MM-DD
-      finalStartDate = `2000-${md}T00:00:00`
+    const tag = TAG_MAP[tag_raw] || null
+    if (!tag) {
+      console.log(`  ⚠️ Unknown tag "${tag_raw}" for "${title}" - skipping`)
+      skippedRows++
+      continue
     }
 
-    const endDate = parseDate(r.end_date || r['F)end_date'])
-    const verified = r.verified_count ? parseInt(r.verified_count.replace('３', '3')) : 0
+    // 日付パース
+    let startDate = parseDate(startDateRaw) || parseDate(fStart)
+    let endDate = parseDate(endDateRaw) || parseDate(fEnd)
+
+    if (!startDate && displayDate) {
+      const parts = displayDate.split('〜').map((s: string) => s.trim())
+      startDate = parseDate(parts[0])
+      if (parts[1] && !endDate) endDate = parseDate(parts[1])
+    }
+    if (!endDate && displayDate && displayDate.includes('〜')) {
+      const parts = displayDate.split('〜')
+      if (parts[1]) endDate = parseDate(parts[1].trim())
+    }
+
+    if (!startDate) {
+      console.log(`  ⚠️ No date for "${title}" [raw=${startDateRaw}] [display=${displayDate}] - skipping`)
+      skippedRows++
+      continue
+    }
+
+    const verified = verifiedRaw
+      ? parseInt(String(verifiedRaw).replace('３', '3').replace(/[^0-9]/g, ''))
+      : 0
 
     events.push({
       tag,
-      artist_id: 'A000000', // SEVENTEEN
-      related_artists: parseRelatedArtists(r.related_artists || ''),
-      event_title: r.event_title,
-      sub_event_title: r.sub_event_title || '',
-      start_date: finalStartDate,
+      artist_id: 'A000000',
+      related_artists: parseRelatedArtists(related || ''),
+      event_title: title,
+      sub_event_title: subTitle || '',
+      start_date: startDate,
       end_date: endDate,
-      spot_name: r.spot_name || '',
-      spot_address: r.spot_address || '',
-      lat: r['緯度'] ? parseFloat(r['緯度']) : null,
-      lng: r['経度'] ? parseFloat(r['経度']) : null,
-      country: r.Country || '',
-      image_url: r['1)image_url'] || '',
-      source_url: r.source_url || '',
-      notes: r.notes || '',
+      spot_name: spotName || '',
+      spot_address: spotAddress || '',
+      lat: null,
+      lng: null,
+      country: country || '',
+      image_url: imageUrl || '',
+      source_url: sourceUrl || '',
+      notes: notes || '',
       status: verified >= 3 ? 'confirmed' : 'pending',
       verified_count: verified,
     })
   }
 
+  console.log(`  📋 ${events.length} events to import (${skippedRows} rows skipped)`)
+
   // 1件ずつ挿入（重複はスキップ）
   let inserted = 0
   let skipped = 0
+  let errors = 0
   for (const event of events) {
     const { error } = await supabase.from('events').insert(event)
     if (error) {
       if (error.message.includes('duplicate')) { skipped++; continue }
-      console.error(`  ❌ event "${event.event_title}":`, error.message)
+      console.error(`  ❌ "${event.event_title}":`, error.message)
+      errors++
     } else {
       inserted++
     }
   }
-  console.log(`  ✅ ${inserted} events imported, ${skipped} duplicates skipped (${birthdaySeen.size} birthdays deduplicated)`)
+  console.log(`  ✅ ${inserted} inserted, ${skipped} duplicates, ${errors} errors`)
 }
 
 async function importSpots() {
