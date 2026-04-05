@@ -1,9 +1,14 @@
 'use client'
 
+import { useState } from 'react'
 import { scheduleTagConfig, type ScheduleTag } from '@/lib/config/tags'
 import type { AppEvent } from '@/lib/supabase/adapters'
 import { useMyEntries } from '@/lib/useMyEntries'
+import { useAuth } from '@/lib/supabase/useAuth'
+import { createClient } from '@/lib/supabase/client'
 import { countryFlag, cityToCountryCode } from '@/lib/countryUtils'
+
+const supabase = createClient()
 
 function md(s: string) {
   const d = new Date(s)
@@ -30,6 +35,15 @@ export default function EventDetailModal({
   showConfirmButton?: boolean
 }) {
   const { addEntry, hasEntry } = useMyEntries()
+  const { user } = useAuth()
+  const [voted, setVoted] = useState(false)
+  const [voteCount, setVoteCount] = useState(event.verifiedCount)
+  const [editing, setEditing] = useState(false)
+  const [editTitle, setEditTitle] = useState(event.title)
+  const [editVenue, setEditVenue] = useState(event.venue ?? '')
+  const [editNotes, setEditNotes] = useState(event.notes ?? '')
+  const [editSaving, setEditSaving] = useState(false)
+
   const firstTag = event.tags?.[0] as ScheduleTag | undefined
   const cfg = firstTag && scheduleTagConfig[firstTag]
     ? scheduleTagConfig[firstTag]
@@ -39,6 +53,59 @@ export default function EventDetailModal({
   const startD = new Date(event.date)
   const dayJa = DAY_JA[startD.getDay()]
   const imported = hasEntry(event.id)
+  const isConfirmed = voteCount >= 3
+
+  const handleVote = async () => {
+    if (!user || voted) return
+    const { error } = await supabase.from('event_votes').insert({
+      event_id: event.id,
+      user_id: user.id,
+      vote: 'approve',
+    })
+    if (error) {
+      if (error.message.includes('duplicate')) {
+        setVoted(true)
+        return
+      }
+      console.error('Vote error:', error.message)
+      return
+    }
+    setVoted(true)
+    setVoteCount(v => v + 1)
+  }
+
+  const handleEditSave = async () => {
+    if (!user) return
+    setEditSaving(true)
+
+    if (isConfirmed) {
+      // 承認済み → 修正依頼として投稿
+      const changes = []
+      if (editTitle !== event.title) changes.push({ field_name: 'event_title', old_value: event.title, new_value: editTitle })
+      if (editVenue !== (event.venue ?? '')) changes.push({ field_name: 'spot_name', old_value: event.venue ?? '', new_value: editVenue })
+      if (editNotes !== (event.notes ?? '')) changes.push({ field_name: 'notes', old_value: event.notes ?? '', new_value: editNotes })
+
+      for (const c of changes) {
+        await supabase.from('edit_requests').insert({
+          event_id: event.id,
+          ...c,
+          submitted_by: user.id,
+        })
+      }
+    } else {
+      // 未承認 → 直接更新
+      await supabase.from('events').update({
+        event_title: editTitle,
+        spot_name: editVenue,
+        notes: editNotes,
+      }).eq('id', event.id)
+    }
+
+    setEditSaving(false)
+    setEditing(false)
+    // 承認も同時に
+    if (!voted) await handleVote()
+  }
 
   const handleAddToMy = () => {
     if (!imported) {
@@ -64,13 +131,10 @@ export default function EventDetailModal({
   return (
     <div className="fixed inset-0 z-[60] flex flex-col justify-end"
       onClick={onClose}>
-      <div
-        className="absolute inset-0"
-        style={{ background: 'rgba(0,0,0,0.55)' }}
-      />
+      <div className="absolute inset-0" style={{ background: 'rgba(0,0,0,0.55)' }} />
       <div
         className="relative flex flex-col rounded-t-2xl overflow-hidden"
-        style={{ background: '#F8F9FA', maxHeight: '85vh' }}
+        style={{ background: '#F8F9FA', maxHeight: '90vh' }}
         onClick={(e) => e.stopPropagation()}
       >
         {/* ドラッグハンドル */}
@@ -78,13 +142,33 @@ export default function EventDetailModal({
           <div className="w-10 h-1 rounded-full" style={{ background: '#C7C7CC' }} />
         </div>
 
-        {/* ヘッダー */}
-        <div className="flex items-start justify-between px-4 pt-1 pb-1 flex-shrink-0">
-          <div className="flex-1 min-w-0" />
-          <button
-            onClick={onClose}
-            className="w-11 h-11 flex items-center justify-center flex-shrink-0"
-          >
+        {/* ヘッダー: 承認ステータス + 閉じるボタン */}
+        <div className="flex items-center justify-between px-4 pt-1 pb-2 flex-shrink-0">
+          <div className="flex items-center gap-2">
+            {/* 承認バッジ */}
+            <div
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold"
+              style={isConfirmed
+                ? { background: 'rgba(52,211,153,0.15)', color: '#34D399' }
+                : { background: 'rgba(245,158,11,0.12)', color: '#F59E0B' }
+              }
+            >
+              {isConfirmed ? (
+                <>
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
+                    <polyline points="20 6 9 17 4 12" />
+                  </svg>
+                  承認済み
+                </>
+              ) : (
+                <>
+                  <span className="font-black">{voteCount}/3</span>
+                  承認待ち
+                </>
+              )}
+            </div>
+          </div>
+          <button onClick={onClose} className="w-11 h-11 flex items-center justify-center flex-shrink-0">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#636366" strokeWidth="2">
               <line x1="18" y1="6" x2="6" y2="18" />
               <line x1="6" y1="6" x2="18" y2="18" />
@@ -98,18 +182,11 @@ export default function EventDetailModal({
           {event.image ? (
             <div className="rounded-2xl overflow-hidden mb-4">
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={event.image}
-                alt={event.title}
-                className="w-full rounded-2xl"
-                style={{ display: 'block' }}
-              />
+              <img src={event.image} alt={event.title}
+                className="w-full rounded-2xl" style={{ display: 'block' }} />
             </div>
           ) : (
-            <div
-              className="rounded-2xl mb-4"
-              style={{ aspectRatio: '16/9', background: '#E5E5EA' }}
-            />
+            <div className="rounded-2xl mb-4" style={{ aspectRatio: '16/9', background: '#E5E5EA' }} />
           )}
 
           {/* タグ */}
@@ -117,45 +194,43 @@ export default function EventDetailModal({
             {(event.tags ?? []).map((tag) => {
               const tc = scheduleTagConfig[tag as ScheduleTag] ?? { label: tag, icon: '📌', color: '#8E8E93', bg: 'rgba(142,142,147,0.15)' }
               return (
-                <span
-                  key={tag}
-                  className="text-[11px] font-bold px-2 py-1 rounded-lg"
-                  style={{ background: tc.bg, color: tc.color }}
-                >
+                <span key={tag} className="text-[11px] font-bold px-2 py-1 rounded-lg"
+                  style={{ background: tc.bg, color: tc.color }}>
                   {tc.icon} {tc.label}
                 </span>
               )
             })}
             {isPeriod && (
-              <span
-                className="text-[11px] font-bold px-2 py-1 rounded-lg"
-                style={{ background: 'rgba(0,0,0,0.06)', color: '#8E8E93' }}
-              >
-                期間
-              </span>
+              <span className="text-[11px] font-bold px-2 py-1 rounded-lg"
+                style={{ background: 'rgba(0,0,0,0.06)', color: '#8E8E93' }}>期間</span>
             )}
           </div>
 
-          {/* タイトル */}
-          <h2
-            className="text-lg font-black leading-snug mb-2"
-            style={{ color: '#1C1C1E' }}
-          >
-            {event.title}
-          </h2>
+          {/* タイトル（編集可能） */}
+          {editing ? (
+            <input type="text" value={editTitle} onChange={(e) => setEditTitle(e.target.value)}
+              className="w-full text-lg font-black leading-snug mb-2 px-3 py-2 rounded-xl outline-none"
+              style={{ color: '#1C1C1E', background: '#FFFFFF', border: '1.5px solid #F3B4E3' }} />
+          ) : (
+            <h2 className="text-lg font-black leading-snug mb-1" style={{ color: '#1C1C1E' }}>
+              {event.title}
+            </h2>
+          )}
+
+          {/* サブタイトル */}
+          {event.subTitle && (
+            <p className="text-sm mb-2" style={{ color: '#636366' }}>{event.subTitle}</p>
+          )}
 
           {/* 詳細情報 */}
           <div className="flex flex-col gap-3 mt-3">
             {/* 日程 */}
             <div className="flex items-start gap-3">
-              <div
-                className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0"
-                style={{ background: cfg.color + '15' }}
-              >
+              <div className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0"
+                style={{ background: cfg.color + '15' }}>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={cfg.color} strokeWidth="2">
                   <rect x="3" y="4" width="18" height="18" rx="2" />
-                  <line x1="16" y1="2" x2="16" y2="6" />
-                  <line x1="8" y1="2" x2="8" y2="6" />
+                  <line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" />
                   <line x1="3" y1="10" x2="21" y2="10" />
                 </svg>
               </div>
@@ -163,37 +238,57 @@ export default function EventDetailModal({
                 <p className="text-sm font-bold" style={{ color: '#1C1C1E' }}>
                   {dateTime}（{dayJa}）
                 </p>
-                {isPeriod && (
-                  <p className="text-xs mt-0.5" style={{ color: '#8E8E93' }}>
-                    {md(event.date)}〜{md(event.dateEnd!)}
-                  </p>
+              </div>
+            </div>
+
+            {/* 場所（編集可能） */}
+            <div className="flex items-start gap-3">
+              <div className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0"
+                style={{ background: cfg.color + '15' }}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={cfg.color} strokeWidth="2">
+                  <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z" />
+                  <circle cx="12" cy="10" r="3" />
+                </svg>
+              </div>
+              <div className="flex-1">
+                {editing ? (
+                  <input type="text" value={editVenue} onChange={(e) => setEditVenue(e.target.value)}
+                    placeholder="会場名"
+                    className="w-full text-sm font-bold px-3 py-2 rounded-xl outline-none"
+                    style={{ color: '#1C1C1E', background: '#FFFFFF', border: '1.5px solid #F3B4E3' }} />
+                ) : (
+                  <>
+                    {event.venue && <p className="text-sm font-bold" style={{ color: '#1C1C1E' }}>{event.venue}</p>}
+                    {event.city && (
+                      <p className="text-xs mt-0.5 flex items-center gap-1" style={{ color: '#8E8E93' }}>
+                        <span>{countryFlag(cityToCountryCode(event.city))}</span>{event.city}
+                      </p>
+                    )}
+                  </>
                 )}
               </div>
             </div>
 
-            {/* 場所 */}
-            {(event.venue || event.city) && (
+            {/* 備考（編集可能） */}
+            {(event.notes || editing) && (
               <div className="flex items-start gap-3">
-                <div
-                  className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0"
-                  style={{ background: cfg.color + '15' }}
-                >
+                <div className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0"
+                  style={{ background: cfg.color + '15' }}>
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={cfg.color} strokeWidth="2">
-                    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z" />
-                    <circle cx="12" cy="10" r="3" />
+                    <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
+                    <polyline points="14 2 14 8 20 8" />
+                    <line x1="16" y1="13" x2="8" y2="13" /><line x1="16" y1="17" x2="8" y2="17" />
                   </svg>
                 </div>
                 <div className="flex-1">
-                  {event.venue && (
-                    <p className="text-sm font-bold" style={{ color: '#1C1C1E' }}>
-                      {event.venue}
-                    </p>
-                  )}
-                  {event.city && (
-                    <p className="text-xs mt-0.5 flex items-center gap-1" style={{ color: '#8E8E93' }}>
-                      <span>{countryFlag(cityToCountryCode(event.city))}</span>
-                      {event.city}
-                    </p>
+                  {editing ? (
+                    <textarea value={editNotes} onChange={(e) => setEditNotes(e.target.value)}
+                      placeholder="備考・メモ"
+                      rows={2}
+                      className="w-full text-sm px-3 py-2 rounded-xl outline-none resize-none"
+                      style={{ color: '#1C1C1E', background: '#FFFFFF', border: '1.5px solid #F3B4E3' }} />
+                  ) : (
+                    <p className="text-sm" style={{ color: '#636366', whiteSpace: 'pre-wrap' }}>{event.notes}</p>
                   )}
                 </div>
               </div>
@@ -201,16 +296,10 @@ export default function EventDetailModal({
 
             {/* ソース */}
             {event.sourceUrl && (
-              <a
-                href={event.sourceUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-3"
-              >
-                <div
-                  className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0"
-                  style={{ background: cfg.color + '15' }}
-                >
+              <a href={event.sourceUrl} target="_blank" rel="noopener noreferrer"
+                className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0"
+                  style={{ background: cfg.color + '15' }}>
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={cfg.color} strokeWidth="2">
                     <path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6" />
                     <polyline points="15 3 21 3 21 9" />
@@ -221,9 +310,7 @@ export default function EventDetailModal({
                   <p className="text-sm font-semibold" style={{ color: cfg.color }}>
                     {event.sourceName ?? 'ソースを見る'}
                   </p>
-                  <p className="text-[11px] truncate" style={{ color: '#8E8E93' }}>
-                    {event.sourceUrl}
-                  </p>
+                  <p className="text-[11px] truncate" style={{ color: '#8E8E93' }}>{event.sourceUrl}</p>
                 </div>
               </a>
             )}
@@ -231,31 +318,65 @@ export default function EventDetailModal({
         </div>
 
         {/* アクションボタン */}
-        <div
-          className={`px-4 pt-3 flex-shrink-0 ${showConfirmButton ? 'flex gap-3' : ''}`}
-          style={{
-            borderTop: '1px solid #E5E5EA',
-            paddingBottom: 'calc(80px + env(safe-area-inset-bottom, 0px))',
-          }}
-        >
+        <div className="px-4 pt-3 flex-shrink-0 flex flex-col gap-2"
+          style={{ borderTop: '1px solid #E5E5EA', paddingBottom: 'calc(80px + env(safe-area-inset-bottom, 0px))' }}>
+
+          {/* 承認 / 編集ボタン行 */}
           {showConfirmButton && (
-            <button
-              onClick={onClose}
-              className="flex-1 py-4 rounded-xl text-sm font-bold min-h-[52px]"
-              style={{ background: '#F0F0F5', color: '#636366' }}
-            >
-              確認
-            </button>
+            <div className="flex gap-2">
+              {editing ? (
+                <>
+                  <button onClick={() => setEditing(false)}
+                    className="flex-1 py-3.5 rounded-xl text-sm font-bold"
+                    style={{ background: '#F0F0F5', color: '#636366' }}>
+                    キャンセル
+                  </button>
+                  <button onClick={handleEditSave} disabled={editSaving}
+                    className="flex-1 py-3.5 rounded-xl text-sm font-bold"
+                    style={{ background: '#34D399', color: '#FFFFFF' }}>
+                    {editSaving ? '保存中...' : isConfirmed ? '修正依頼を送信' : '修正して承認'}
+                  </button>
+                </>
+              ) : (
+                <>
+                  <button onClick={() => setEditing(true)}
+                    className="flex-1 py-3.5 rounded-xl text-sm font-bold flex items-center justify-center gap-1.5"
+                    style={{ background: '#F0F0F5', color: '#636366' }}>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" />
+                      <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" />
+                    </svg>
+                    {isConfirmed ? '修正依頼' : '修正'}
+                  </button>
+                  <button onClick={handleVote} disabled={voted}
+                    className="flex-1 py-3.5 rounded-xl text-sm font-bold flex items-center justify-center gap-1.5"
+                    style={voted
+                      ? { background: 'rgba(52,211,153,0.15)', color: '#34D399' }
+                      : { background: '#34D399', color: '#FFFFFF' }
+                    }>
+                    {voted ? (
+                      <>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                          <polyline points="20 6 9 17 4 12" />
+                        </svg>
+                        承認済み
+                      </>
+                    ) : (
+                      <>承認する（{voteCount}/3）</>
+                    )}
+                  </button>
+                </>
+              )}
+            </div>
           )}
-          <button
-            onClick={handleAddToMy}
-            className={`${showConfirmButton ? 'flex-1' : 'w-full'} py-4 rounded-xl text-sm font-bold min-h-[52px]`}
-            style={
-              imported
-                ? { background: 'rgba(243,180,227,0.15)', color: '#F3B4E3' }
-                : { background: '#F3B4E3', color: '#FFFFFF' }
-            }
-          >
+
+          {/* MYに追加 */}
+          <button onClick={handleAddToMy}
+            className="w-full py-3.5 rounded-xl text-sm font-bold"
+            style={imported
+              ? { background: 'rgba(243,180,227,0.15)', color: '#F3B4E3' }
+              : { background: '#F3B4E3', color: '#FFFFFF' }
+            }>
             {imported ? '✓ MYに追加済み' : '+ MYに追加'}
           </button>
         </div>
