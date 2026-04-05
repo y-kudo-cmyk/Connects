@@ -125,23 +125,27 @@ export default function EventDetailModal({
         })
       }
     } else {
-      // 未承認 → 直接更新
+      // 直接更新 + カウントリセット
       const updates: Record<string, any> = {
         event_title: editTitle,
         spot_name: editVenue,
         notes: editNotes,
         source_url: editSourceUrl,
         image_url: editImageUrl,
+        verified_count: 0,
+        status: 'pending',
       }
       if (newStartDate) updates.start_date = newStartDate
       if (newEndDate !== null) updates.end_date = newEndDate || null
       await supabase.from('events').update(updates).eq('id', event.id)
+      // 既存の承認投票を削除
+      await supabase.from('event_votes').delete().eq('event_id', event.id)
     }
 
+    setVoteCount(0)
+    setVoted(false)
     setEditSaving(false)
     setEditing(false)
-    // 承認も同時に
-    if (!voted) await handleVote()
   }
 
   const handleAddToMy = () => {
