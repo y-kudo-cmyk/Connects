@@ -216,7 +216,7 @@ export default function MyPage() {
                 })}
               </div>
               {/* 選択日のエントリ */}
-              <div className="pb-6">
+              <div className="pb-28">
                 <p className="text-xs font-semibold mb-3" style={{ color: '#8E8E93' }}>
                   {md(selectedDate)} · {dayEntries.length}件
                 </p>
@@ -869,10 +869,10 @@ function EditModal({ entry, onClose, onSave, onRemove }: {
         </div>
 
         {/* 保存ボタン */}
-        <div className="px-4 py-3 flex-shrink-0"
-          style={{ borderTop: '1px solid #E5E5EA', paddingBottom: 'calc(12px + env(safe-area-inset-bottom, 0px))' }}>
+        <div className="px-4 pt-3 flex-shrink-0"
+          style={{ borderTop: '1px solid #E5E5EA', paddingBottom: 'calc(24px + env(safe-area-inset-bottom, 0px))' }}>
           <button onClick={handleSave}
-            className="w-full py-3.5 rounded-xl text-sm font-bold"
+            className="w-full py-4 rounded-xl text-base font-bold min-h-[52px]"
             style={{ background: '#F3B4E3', color: '#FFFFFF' }}>
             保存
           </button>

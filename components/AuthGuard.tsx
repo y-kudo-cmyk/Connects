@@ -2,20 +2,19 @@
 
 import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { useSession } from 'next-auth/react'
+import { useAuth } from '@/lib/supabase/useAuth'
 
 export default function AuthGuard({ children }: { children: React.ReactNode }) {
-  const { status } = useSession()
+  const { user, loading } = useAuth()
   const router = useRouter()
 
   useEffect(() => {
-    if (status === 'unauthenticated') {
+    if (!loading && !user) {
       router.replace('/login')
     }
-    if (status === 'authenticated') {
+    if (!loading && user) {
       try {
         if (!localStorage.getItem('cp-onboarding-country-done')) {
-          // 既にプロフィールに国が設定されていればフラグだけ立てる
           const raw = localStorage.getItem('cp-profile')
           const country = raw ? JSON.parse(raw)?.country : null
           if (country) {
@@ -26,9 +25,9 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
         }
       } catch {}
     }
-  }, [status, router])
+  }, [loading, user, router])
 
-  if (status === 'loading' || status === 'unauthenticated') {
+  if (loading || !user) {
     return (
       <div
         className="min-h-screen flex items-center justify-center"

@@ -23,7 +23,30 @@
       "Bash(taskkill //PID 11376 //F)",
       "Bash(taskkill //PID 12280 //F)",
       "Bash(taskkill:*)",
-      "Bash(netstat -ano)"
+      "Bash(netstat -ano)",
+      "Bash(node:*)",
+      "Bash(xxd)",
+      "Bash(npx swc:*)",
+      "Bash(npx -y @swc/cli@latest app/\\\\\\(main\\\\\\)/map/page.tsx --out-file /dev/null)",
+      "Bash(curl -s http://localhost:3456/map)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:3456/)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:3456/my)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:3456/schedule)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:3456/profile)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:3456/goods)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:3456/api/auth/session)",
+      "Bash(curl -s http://localhost:3456/api/auth/session)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:3456/login)",
+      "Bash(pkill -f \"next dev\")",
+      "Bash(ls .env*)",
+      "Bash(ipconfig)",
+      "Bash(curl:*)",
+      "Bash(unzip:*)",
+      "Bash(ls:*)",
+      "Bash(python3:*)",
+      "Bash(grep -v '^$')",
+      "Bash(npx tsx:*)",
+      "Bash(git add:*)"
     ]
   }
 }

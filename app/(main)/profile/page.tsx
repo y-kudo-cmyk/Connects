@@ -2,7 +2,7 @@
 
 import { useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
-import { signOut } from 'next-auth/react'
+import { useAuth } from '@/lib/supabase/useAuth'
 import { useProfile, FanClubMembership, NotifSettings } from '@/lib/useProfile'
 import { compressImage } from '@/lib/useMyEntries'
 import { useReferral } from '@/lib/useReferral'
@@ -44,6 +44,7 @@ async function loadImage(files: FileList | null, maxPx: number): Promise<string 
 
 export default function ProfilePage() {
   const { profile, update, addFanClub, updateFanClub, removeFanClub } = useProfile()
+  const { signOut } = useAuth()
 
   const bannerRef = useRef<HTMLInputElement>(null)
   const avatarRef = useRef<HTMLInputElement>(null)
@@ -73,9 +74,10 @@ export default function ProfilePage() {
   const updateNotif = (patch: Partial<NotifSettings>) =>
     update({ notif: { ...profile.notif, ...patch } })
 
-  const handleSignOut = () => {
+  const handleSignOut = async () => {
     try { localStorage.clear() } catch {}
-    signOut({ callbackUrl: '/login' })
+    await signOut()
+    router.push('/login')
   }
 
   const sendFeedback = async () => {
@@ -93,9 +95,10 @@ export default function ProfilePage() {
     }
   }
 
-  const handleDeleteAccount = () => {
+  const handleDeleteAccount = async () => {
     try { localStorage.clear() } catch {}
-    signOut({ callbackUrl: '/login' })
+    await signOut()
+    router.push('/login')
   }
 
   const onBannerChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -631,32 +634,37 @@ export default function ProfilePage() {
         <div className="fixed inset-0 flex items-end justify-center"
           style={{ background: 'rgba(0,0,0,0.5)', zIndex: 60 }}
           onClick={() => setShowLangPicker(false)}>
-          <div className="w-full max-w-lg rounded-t-2xl p-5" style={{ background: '#FFFFFF' }}
+          <div className="w-full max-w-lg rounded-t-2xl flex flex-col"
+            style={{ background: '#FFFFFF', maxHeight: '75vh' }}
             onClick={(e) => e.stopPropagation()}>
-            <div className="flex justify-center mb-4">
-              <div className="w-10 h-1 rounded-full" style={{ background: '#C7C7CC' }} />
+            <div className="flex-shrink-0 px-5 pt-4 pb-3">
+              <div className="flex justify-center mb-3">
+                <div className="w-10 h-1 rounded-full" style={{ background: '#C7C7CC' }} />
+              </div>
+              <p className="text-base font-bold" style={{ color: '#1C1C1E' }}>言語を選択</p>
             </div>
-            <p className="text-base font-bold mb-4" style={{ color: '#1C1C1E' }}>言語を選択</p>
-            <div className="flex flex-col gap-2">
-              {LANGUAGES.map((l) => (
-                <button
-                  key={l.code}
-                  onClick={() => { update({ language: l.code }); setShowLangPicker(false) }}
-                  className="flex items-center gap-3 px-4 py-3.5 rounded-xl"
-                  style={{
-                    background: profile.language === l.code ? 'rgba(243,180,227,0.1)' : '#F8F9FA',
-                    border: `1.5px solid ${profile.language === l.code ? '#F3B4E3' : '#F0F0F5'}`,
-                  }}
-                >
-                  <span style={{ fontSize: 24 }}>{l.flag}</span>
-                  <span className="text-sm font-semibold" style={{ color: '#1C1C1E' }}>{l.label}</span>
-                  {profile.language === l.code && (
-                    <svg className="ml-auto" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#F3B4E3" strokeWidth="3">
-                      <polyline points="20 6 9 17 4 12" />
-                    </svg>
-                  )}
-                </button>
-              ))}
+            <div className="overflow-y-auto px-5" style={{ minHeight: 0, paddingBottom: 'calc(80px + env(safe-area-inset-bottom, 0px))' }}>
+              <div className="flex flex-col gap-2">
+                {LANGUAGES.map((l) => (
+                  <button
+                    key={l.code}
+                    onClick={() => { update({ language: l.code }); setShowLangPicker(false) }}
+                    className="flex items-center gap-3 px-4 py-3.5 rounded-xl"
+                    style={{
+                      background: profile.language === l.code ? 'rgba(243,180,227,0.1)' : '#F8F9FA',
+                      border: `1.5px solid ${profile.language === l.code ? '#F3B4E3' : '#F0F0F5'}`,
+                    }}
+                  >
+                    <span style={{ fontSize: 24 }}>{l.flag}</span>
+                    <span className="text-sm font-semibold" style={{ color: '#1C1C1E' }}>{l.label}</span>
+                    {profile.language === l.code && (
+                      <svg className="ml-auto" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#F3B4E3" strokeWidth="3">
+                        <polyline points="20 6 9 17 4 12" />
+                      </svg>
+                    )}
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
         </div>
@@ -676,7 +684,7 @@ export default function ProfilePage() {
               </div>
               <p className="text-base font-bold" style={{ color: '#1C1C1E' }}>居住国を選択</p>
             </div>
-            <div className="flex-1 overflow-y-auto px-5 pb-6" style={{ minHeight: 0 }}>
+            <div className="flex-1 overflow-y-auto px-5 pb-28" style={{ minHeight: 0 }}>
               <div className="grid grid-cols-2 gap-2">
                 {COUNTRIES.map((c) => (
                   <button
@@ -704,7 +712,7 @@ export default function ProfilePage() {
       <div className="mx-4 mb-4" style={{ height: 1, background: '#E5E5EA' }} />
 
       {/* ─── サインアウト＋退会 ─── */}
-      <div className="px-4 pb-8 flex flex-col gap-3">
+      <div className="px-4 pb-28 flex flex-col gap-3">
         {/* ご意見フォーム */}
         <button
           onClick={() => { setFeedbackMsg(''); setFeedbackState('idle'); setShowFeedback(true) }}
@@ -904,7 +912,7 @@ export default function ProfilePage() {
               style={{
                 overflowY: 'auto',
                 WebkitOverflowScrolling: 'touch',
-                maxHeight: 'calc(70vh - 130px)',
+                maxHeight: 'calc(70vh - 210px)',
               }}
             >
               <div className="flex flex-col gap-3 pb-3">
@@ -930,7 +938,7 @@ export default function ProfilePage() {
             </div>
 
             {/* ボタン */}
-            <div className="px-5 pt-4" style={{ borderTop: '1px solid #F0F0F5', paddingBottom: 'max(20px, env(safe-area-inset-bottom, 20px))' }}>
+            <div className="px-5 pt-4 flex-shrink-0" style={{ borderTop: '1px solid #F0F0F5', paddingBottom: 'calc(80px + env(safe-area-inset-bottom, 0px))' }}>
               <div className="flex gap-2">
                 {fcModal !== 'new' && (
                   <button

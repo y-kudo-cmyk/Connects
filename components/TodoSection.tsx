@@ -185,7 +185,13 @@ function TodoRow({ todo, onToggle, onRemove, onMemoChange }: {
           )}
         </button>
 
-        <button className="flex-1 min-w-0 text-left" onClick={() => setExpanded(v => !v)}>
+        <button className="flex-1 min-w-0 text-left" onClick={() => {
+          if (todo.sourceUrl && !expanded) {
+            window.open(todo.sourceUrl, '_blank', 'noopener,noreferrer')
+          } else {
+            setExpanded(v => !v)
+          }
+        }}>
           <p className="text-sm leading-snug"
             style={{ color: todo.done ? '#8E8E93' : '#1C1C1E', textDecoration: todo.done ? 'line-through' : 'none' }}>
             {todo.title}
@@ -194,13 +200,10 @@ function TodoRow({ todo, onToggle, onRemove, onMemoChange }: {
             <span className="flex items-center gap-1 text-[10px] font-bold px-1.5 py-0.5 rounded"
               style={{ background: cfg.bg, color: cfg.color }}>
               {todo.dateEnd
-                ? `${todo.date.slice(5).replace('-','/')} 〜 ${todo.dateEnd.slice(5).replace('-','/')}`
-                : todo.date.slice(5).replace('-', '/')}
+                ? `${todo.date.slice(5).replace('-','/')}${todo.time && todo.time !== '00:00' ? ` ${todo.time}` : ''} 〜 ${todo.dateEnd.slice(5).replace('-','/')}`
+                : `${todo.date.slice(5).replace('-', '/')}${todo.time && todo.time !== '00:00' ? ` ${todo.time}` : ''}`}
               {cfg.label ? ` · ${cfg.label}` : ''}
             </span>
-            {todo.time && todo.time !== '00:00' && (
-              <span className="text-[10px]" style={{ color: '#8E8E93' }}>{todo.time}</span>
-            )}
             {todo.memo && !expanded && (
               <span className="text-[10px]" style={{ color: '#8E8E93' }}>📝</span>
             )}

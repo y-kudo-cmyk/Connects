@@ -20,18 +20,9 @@ const DAY_NAMES = ['S','M','T','W','T','F','S']
 
 const ALL_TAGS: TagType[] = ['LIVE','POPUP','TICKET','CD','GOODS','EVENT','TV','YOUTUBE','RADIO','LUCKYDRAW']
 
-/** イベントが保有するタグ（tags未設定の場合はtypeから推定） */
+/** イベントが保有するタグ */
 function getEventTags(e: Event): TagType[] {
-  if (e.tags && e.tags.length > 0) return e.tags
-  const map: Record<string, TagType[]> = {
-    concert:   ['LIVE','TICKET'],
-    fanmeet:   ['EVENT','TICKET'],
-    release:   ['CD'],
-    broadcast: ['TV'],
-    birthday:  ['EVENT'],
-    variety:   ['YOUTUBE'],
-  }
-  return map[e.type] ?? []
+  return e.tags ?? []
 }
 
 type Region = 'HOME' | 'OVERSEAS'
@@ -125,11 +116,19 @@ export default function SchedulePage() {
   }
 
   // 選択日のイベント（期間イベントは範囲内の日付にも表示）
+  // Sort: LIVE first, then today-only, then period
   const dayEvents = filteredAll.filter((e) =>
     e.dateEnd
       ? e.date <= selectedDate && selectedDate <= e.dateEnd
       : e.date === selectedDate
-  )
+  ).sort((a, b) => {
+    const aIsLive = a.tags?.includes('LIVE') ? 0 : 1
+    const bIsLive = b.tags?.includes('LIVE') ? 0 : 1
+    if (aIsLive !== bIsLive) return aIsLive - bIsLive
+    const aIsPeriod = a.dateEnd ? 1 : 0
+    const bIsPeriod = b.dateEnd ? 1 : 0
+    return aIsPeriod - bIsPeriod
+  })
 
   return (
     <div>
@@ -271,7 +270,7 @@ export default function SchedulePage() {
       </div>
 
       {/* 選択日のイベントリスト */}
-      <div ref={eventsRef} className="px-4 pb-6">
+      <div ref={eventsRef} className="px-4 pb-28">
         <p className="text-xs font-semibold mb-3" style={{ color: '#8E8E93' }}>
           {MONTH_SHORT[parseInt(selectedDate.split('-')[1]) - 1]} {parseInt(selectedDate.split('-')[2])} · {dayEvents.length} 件
         </p>
@@ -415,10 +414,9 @@ export default function SchedulePage() {
               <p className="text-sm mb-1 leading-snug" style={{ color: '#1C1C1E' }}>{todoEvent.title}</p>
               <p className="text-xs mb-4" style={{ color: '#8E8E93' }}>
                 {todoEvent.dateEnd
-                  ? `${todoEvent.date.slice(5).replace('-','/')} 〜 ${todoEvent.dateEnd.slice(5).replace('-','/')}`
-                  : todoEvent.date.slice(5).replace('-','/')
+                  ? `${todoEvent.date.slice(5).replace('-','/')}${todoEvent.time && todoEvent.time !== '00:00' ? ` ${todoEvent.time}` : ''} 〜 ${todoEvent.dateEnd.slice(5).replace('-','/')}`
+                  : `${todoEvent.date.slice(5).replace('-','/')}${todoEvent.time && todoEvent.time !== '00:00' ? ` ${todoEvent.time}` : ''}`
                 }
-                {todoEvent.time && todoEvent.time !== '00:00' ? ` · ${todoEvent.time}` : ''}
               </p>
               {!alreadyInMy && (
                 <div className="flex items-center gap-3 px-3 py-3 rounded-xl mb-4" style={{ background: '#F8F9FA', border: '1px solid #E5E5EA' }}>
@@ -434,7 +432,7 @@ export default function SchedulePage() {
               )}
               {alreadyTodo ? (
                 <button
-                  onClick={() => { removeTodo(todos.find(t => t.eventId === todoEvent.id)!.id); setTodoEvent(null) }}
+                  onClick={() => { const t = todos.find(t => t.eventId === todoEvent.id); if (t) removeTodo(t.id); setTodoEvent(null) }}
                   className="w-full py-3 rounded-xl text-sm font-bold mb-2"
                   style={{ background: '#FEE2E2', color: '#EF4444' }}
                 >TODOから削除</button>

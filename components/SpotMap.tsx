@@ -4,7 +4,7 @@ import 'leaflet/dist/leaflet.css'
 import L from 'leaflet'
 import { MapContainer, TileLayer, Marker, Circle, useMap } from 'react-leaflet'
 import { useEffect, useRef, useState, useCallback } from 'react'
-import { PilgrimageSpot, spotGenreConfig } from '@/lib/mockData'
+import { PilgrimageSpot } from '@/lib/mockData'
 
 function FlyTo({ spot }: { spot: PilgrimageSpot | null }) {
   const map = useMap()
@@ -67,17 +67,11 @@ function LocateButton({ onLocate }: { onLocate: (lat: number, lng: number) => vo
   )
 }
 
-function makeIcon(
-  color: string,
-  bg: string,
-  emoji: string,
-  selected: boolean,
-  incomplete: boolean,
-) {
+function makeIcon(selected: boolean, incomplete: boolean) {
   const size = selected ? 42 : 34
   const border = selected ? 3 : 2
-  const borderColor = incomplete ? '#F59E0B' : color
-  const bgColor = incomplete ? 'rgba(245,158,11,0.18)' : bg
+  const color = incomplete ? '#F59E0B' : selected ? '#F3B4E3' : '#C97AB8'
+  const bg = incomplete ? 'rgba(245,158,11,0.18)' : selected ? 'rgba(243,180,227,0.18)' : 'rgba(201,122,184,0.15)'
   const shadow = selected
     ? '0 0 0 4px rgba(243,180,227,0.25), 0 3px 10px rgba(0,0,0,0.6)'
     : '0 2px 6px rgba(0,0,0,0.5)'
@@ -85,7 +79,7 @@ function makeIcon(
     ? `<div style="position:absolute;top:-4px;right:-4px;width:14px;height:14px;border-radius:50%;background:#F59E0B;color:#131315;font-size:9px;font-weight:900;display:flex;align-items:center;justify-content:center;line-height:1">!</div>`
     : ''
   return L.divIcon({
-    html: `<div style="position:relative;width:${size}px;height:${size}px;border-radius:50%;background:${bgColor};border:${border}px solid ${borderColor};display:flex;align-items:center;justify-content:center;font-size:${selected ? 20 : 16}px;box-shadow:${shadow}">${emoji}${badge}</div>`,
+    html: `<div style="position:relative;width:${size}px;height:${size}px;border-radius:50%;background:${bg};border:${border}px solid ${color};display:flex;align-items:center;justify-content:center;font-size:${selected ? 18 : 14}px;box-shadow:${shadow}">📍${badge}</div>`,
     className: '',
     iconSize: [size, size],
     iconAnchor: [size / 2, size / 2],
@@ -120,6 +114,8 @@ export default function SpotMap({
       style={{ width: '100%', height: '100%' }}
       zoomControl={false}
       attributionControl={false}
+      zoomDelta={3}
+      zoomSnap={0.5}
     >
       <TileLayer url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png" />
       <FlyTo spot={selected} />
@@ -135,20 +131,13 @@ export default function SpotMap({
         </>
       )}
       {spots.map((spot) => {
-        const cfg = spotGenreConfig[spot.genre]
         const sel = spot.id === selectedId
         const incomplete = incompleteIds.has(spot.id)
         return (
           <Marker
             key={spot.id}
             position={[spot.lat, spot.lng]}
-            icon={makeIcon(
-              sel ? '#F3B4E3' : cfg.color,
-              sel ? 'rgba(243,180,227,0.18)' : cfg.bg,
-              cfg.icon,
-              sel,
-              incomplete,
-            )}
+            icon={makeIcon(sel, incomplete)}
             eventHandlers={{ click: () => onSpotClick(spot.id) }}
           />
         )

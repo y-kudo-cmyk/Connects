@@ -1,4 +1,4 @@
-import { Event, eventTypeConfig } from '@/lib/mockData'
+import { Event, tagConfig } from '@/lib/mockData'
 import { countryFlag, cityToCountryCode } from '@/lib/countryUtils'
 
 interface EventCardProps {
@@ -22,16 +22,16 @@ function formatDateTime(date: string, time: string, dateEnd?: string, timeEnd?: 
 }
 
 export default function EventCard({ event, compact = false }: EventCardProps) {
-  const config = eventTypeConfig[event.type]
+  const firstTag = event.tags?.[0]
+  const cfg = firstTag ? tagConfig[firstTag] : { label: 'EVENT', icon: '📌', color: '#8E8E93', bg: 'rgba(142,142,147,0.15)' }
   const isPeriod = !!event.dateEnd
   const dateTime = formatDateTime(event.date, event.time, event.dateEnd, event.timeEnd)
 
   if (compact) {
-    // コンパクト表示（UPCOMING欄など）
     return (
       <div
         className="flex items-center gap-3 rounded-xl px-3 py-2.5"
-        style={{ background: '#FFFFFF', borderLeft: `3px solid ${config.color}` }}
+        style={{ background: '#FFFFFF', borderLeft: `3px solid ${cfg.color}` }}
       >
         <div
           className="w-9 h-9 rounded-lg flex items-center justify-center text-xs font-black flex-shrink-0"
@@ -40,13 +40,18 @@ export default function EventCard({ event, compact = false }: EventCardProps) {
           {event.artist.slice(0, 2).toUpperCase()}
         </div>
         <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-1.5 mb-0.5">
-            <span className="text-[10px] font-bold px-1.5 py-0.5 rounded"
-              style={{ background: config.bg, color: config.color }}>
-              {config.label}
-            </span>
+          <div className="flex items-center gap-1 flex-wrap">
+            {(event.tags ?? []).map((tag) => {
+              const tc = tagConfig[tag]
+              return (
+                <span key={tag} className="text-[10px] font-bold px-1.5 py-0.5 rounded"
+                  style={{ background: tc.bg, color: tc.color }}>
+                  {tc.icon} {tc.label}
+                </span>
+              )
+            })}
           </div>
-          <p className="text-sm font-semibold leading-tight truncate" style={{ color: '#1C1C1E' }}>
+          <p className="text-sm font-semibold leading-tight truncate mt-0.5" style={{ color: '#1C1C1E' }}>
             {event.title}
           </p>
           <p className="text-[11px] mt-0.5" style={{ color: '#8E8E93' }}>
@@ -75,30 +80,25 @@ export default function EventCard({ event, compact = false }: EventCardProps) {
             className="w-full h-full object-cover object-top"
           />
         ) : (
-          <div
-            className="w-full h-full flex items-center justify-center"
-            style={{
-              background: `linear-gradient(160deg, ${event.artistColor}35 0%, ${event.artistColor}12 100%)`,
-            }}
-          >
-            <span className="text-lg font-black opacity-25" style={{ color: event.artistColor }}>
-              {event.artist.slice(0, 3).toUpperCase()}
-            </span>
-          </div>
+          <div className="w-full h-full" style={{ background: '#E5E5EA' }} />
         )}
         {/* タイプカラーライン */}
-        <div className="absolute inset-y-0 right-0 w-0.5" style={{ background: config.color }} />
+        <div className="absolute inset-y-0 right-0 w-0.5" style={{ background: cfg.color }} />
       </div>
 
       {/* 右：テキスト情報 */}
       <div className="flex-1 min-w-0 px-3 py-2.5 flex flex-col justify-center gap-1">
-        <div className="flex items-center gap-1.5 flex-wrap">
-          <span
-            className="text-[10px] font-bold px-1.5 py-0.5 rounded"
-            style={{ background: config.bg, color: config.color }}
-          >
-            {config.label}
-          </span>
+        <div className="flex items-center gap-1 flex-wrap">
+          {(event.tags ?? []).map((tag) => {
+            const tc = tagConfig[tag]
+            return (
+              <span key={tag}
+                className="text-[10px] font-bold px-1.5 py-0.5 rounded"
+                style={{ background: tc.bg, color: tc.color }}>
+                {tc.icon} {tc.label}
+              </span>
+            )
+          })}
           {isPeriod && (
             <span
               className="text-[10px] font-bold px-1.5 py-0.5 rounded"
@@ -111,7 +111,7 @@ export default function EventCard({ event, compact = false }: EventCardProps) {
         <h3 className="text-sm font-bold leading-snug" style={{ color: '#1C1C1E' }}>
           {event.title}
         </h3>
-        <p className="text-xs font-semibold" style={{ color: config.color }}>{dateTime}</p>
+        <p className="text-xs font-semibold" style={{ color: cfg.color }}>{dateTime}</p>
         {(event.venue || event.city) && (
           <div className="flex items-center gap-1">
             {event.city ? (

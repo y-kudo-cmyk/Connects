@@ -1,21 +1,21 @@
 'use client'
 
-import { signIn, useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
+import { useAuth } from '@/lib/supabase/useAuth'
 
 export default function LoginPage() {
-  const { status } = useSession()
+  const { user, loading, signInWithGoogle, signInWithTwitter, signInWithEmail } = useAuth()
   const router = useRouter()
   const [email, setEmail] = useState('')
   const [emailError, setEmailError] = useState('')
   const [emailLoading, setEmailLoading] = useState(false)
+  const [emailSent, setEmailSent] = useState(false)
 
   useEffect(() => {
-    if (status === 'authenticated') router.replace('/')
-  }, [status, router])
+    if (!loading && user) router.replace('/')
+  }, [loading, user, router])
 
-  // 言語未設定ならオンボーディングへ
   useEffect(() => {
     try {
       if (!localStorage.getItem('cp-onboarding-lang-done')) {
@@ -31,13 +31,38 @@ export default function LoginPage() {
       return
     }
     setEmailLoading(true)
-    const res = await signIn('email', { email: email.trim(), callbackUrl: '/', redirect: false })
-    setEmailLoading(false)
-    if (res?.error) {
+    try {
+      await signInWithEmail(email.trim())
+      setEmailSent(true)
+    } catch {
       setEmailError('ログインに失敗しました')
-    } else {
-      router.push('/')
     }
+    setEmailLoading(false)
+  }
+
+  if (emailSent) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center px-6" style={{ background: '#FFFFFF' }}>
+        <div className="w-16 h-16 rounded-full flex items-center justify-center mb-4" style={{ background: 'rgba(243,180,227,0.15)' }}>
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#F3B4E3" strokeWidth="2">
+            <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
+            <polyline points="22,6 12,13 2,6" />
+          </svg>
+        </div>
+        <h2 className="text-lg font-bold mb-2" style={{ color: '#1C1C1E' }}>メールを確認してください</h2>
+        <p className="text-sm text-center leading-relaxed" style={{ color: '#8E8E93' }}>
+          {email} にログインリンクを送信しました。
+          <br />メール内のリンクをタップしてログインしてください。
+        </p>
+        <button
+          onClick={() => setEmailSent(false)}
+          className="mt-6 text-sm font-bold"
+          style={{ color: '#F3B4E3' }}
+        >
+          戻る
+        </button>
+      </div>
+    )
   }
 
   return (
@@ -58,7 +83,7 @@ export default function LoginPage() {
 
         {/* Google */}
         <button
-          onClick={() => signIn('google', { callbackUrl: '/' })}
+          onClick={() => signInWithGoogle()}
           className="w-full flex items-center gap-3 px-5 py-4 rounded-2xl text-sm font-bold"
           style={{ background: '#FFFFFF', color: '#1C1C1E', border: '1px solid #E5E5EA' }}
         >
@@ -73,7 +98,7 @@ export default function LoginPage() {
 
         {/* X */}
         <button
-          onClick={() => signIn('twitter', { callbackUrl: '/' })}
+          onClick={() => signInWithTwitter()}
           className="w-full flex items-center gap-3 px-5 py-4 rounded-2xl text-sm font-bold"
           style={{ background: '#000000', color: '#FFFFFF' }}
         >

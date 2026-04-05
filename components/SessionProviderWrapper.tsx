@@ -1,7 +1,6 @@
 'use client'
 
-import { SessionProvider } from 'next-auth/react'
-
+// Supabase Auth はプロバイダー不要（クライアント側で直接利用）
 export default function SessionProviderWrapper({ children }: { children: React.ReactNode }) {
-  return <SessionProvider>{children}</SessionProvider>
+  return <>{children}</>
 }
