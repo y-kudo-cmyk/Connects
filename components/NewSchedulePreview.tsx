@@ -117,6 +117,16 @@ export default function NewSchedulePreview() {
                   >
                     {cfg.icon} {cfg.label}
                   </span>
+                  {/* 承認バッジ */}
+                  <span
+                    className="absolute top-2 right-2 text-[8px] font-bold px-1.5 py-0.5 rounded-full"
+                    style={event.verifiedCount >= 3
+                      ? { background: 'rgba(52,211,153,0.9)', color: '#FFFFFF' }
+                      : { background: 'rgba(245,158,11,0.9)', color: '#FFFFFF' }
+                    }
+                  >
+                    {event.verifiedCount >= 3 ? '✓' : `${event.verifiedCount}/3`}
+                  </span>
                 </button>
 
                 {/* 情報 */}

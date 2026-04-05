@@ -42,6 +42,11 @@ export default function EventDetailModal({
   const [editTitle, setEditTitle] = useState(event.title)
   const [editVenue, setEditVenue] = useState(event.venue ?? '')
   const [editNotes, setEditNotes] = useState(event.notes ?? '')
+  const [editStartDate, setEditStartDate] = useState(event.date)
+  const [editStartTime, setEditStartTime] = useState(event.time !== '00:00' ? event.time : '')
+  const [editEndDate, setEditEndDate] = useState(event.dateEnd ?? '')
+  const [editSourceUrl, setEditSourceUrl] = useState(event.sourceUrl ?? '')
+  const [editImageUrl, setEditImageUrl] = useState(event.image ?? '')
   const [editSaving, setEditSaving] = useState(false)
 
   const firstTag = event.tags?.[0] as ScheduleTag | undefined
@@ -78,12 +83,24 @@ export default function EventDetailModal({
     if (!user) return
     setEditSaving(true)
 
+    // 日時の組み立て
+    const newStartDate = editStartDate && editStartTime
+      ? `${editStartDate}T${editStartTime}:00`
+      : editStartDate ? `${editStartDate}T00:00:00` : null
+    const newEndDate = editEndDate
+      ? `${editEndDate}T00:00:00`
+      : null
+
     if (isConfirmed) {
       // 承認済み → 修正依頼として投稿
-      const changes = []
+      const changes: { field_name: string; old_value: string; new_value: string }[] = []
       if (editTitle !== event.title) changes.push({ field_name: 'event_title', old_value: event.title, new_value: editTitle })
       if (editVenue !== (event.venue ?? '')) changes.push({ field_name: 'spot_name', old_value: event.venue ?? '', new_value: editVenue })
       if (editNotes !== (event.notes ?? '')) changes.push({ field_name: 'notes', old_value: event.notes ?? '', new_value: editNotes })
+      if (editSourceUrl !== (event.sourceUrl ?? '')) changes.push({ field_name: 'source_url', old_value: event.sourceUrl ?? '', new_value: editSourceUrl })
+      if (editImageUrl !== (event.image ?? '')) changes.push({ field_name: 'image_url', old_value: event.image ?? '', new_value: editImageUrl })
+      if (newStartDate && editStartDate !== event.date) changes.push({ field_name: 'start_date', old_value: event.date, new_value: newStartDate })
+      if (editEndDate !== (event.dateEnd ?? '')) changes.push({ field_name: 'end_date', old_value: event.dateEnd ?? '', new_value: newEndDate ?? '' })
 
       for (const c of changes) {
         await supabase.from('edit_requests').insert({
@@ -94,11 +111,16 @@ export default function EventDetailModal({
       }
     } else {
       // 未承認 → 直接更新
-      await supabase.from('events').update({
+      const updates: Record<string, any> = {
         event_title: editTitle,
         spot_name: editVenue,
         notes: editNotes,
-      }).eq('id', event.id)
+        source_url: editSourceUrl,
+        image_url: editImageUrl,
+      }
+      if (newStartDate) updates.start_date = newStartDate
+      if (newEndDate !== null) updates.end_date = newEndDate || null
+      await supabase.from('events').update(updates).eq('id', event.id)
     }
 
     setEditSaving(false)
@@ -179,7 +201,23 @@ export default function EventDetailModal({
         {/* コンテンツ */}
         <div className="flex-1 overflow-y-auto px-4 pb-4">
           {/* 画像 */}
-          {event.image ? (
+          {editing ? (
+            <div className="mb-4">
+              <label className="text-xs font-bold mb-1.5 block" style={{ color: '#636366' }}>画像URL</label>
+              <input type="url" value={editImageUrl} onChange={(e) => setEditImageUrl(e.target.value)}
+                placeholder="https://..."
+                className="w-full px-3 py-2.5 rounded-xl text-sm outline-none mb-2"
+                style={{ background: '#FFFFFF', border: '1.5px solid #F3B4E3', color: '#1C1C1E' }} />
+              {editImageUrl && (
+                <div className="rounded-2xl overflow-hidden">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={editImageUrl} alt="" className="w-full rounded-2xl"
+                    style={{ display: 'block' }}
+                    onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }} />
+                </div>
+              )}
+            </div>
+          ) : event.image ? (
             <div className="rounded-2xl overflow-hidden mb-4">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={event.image} alt={event.title}
@@ -235,9 +273,28 @@ export default function EventDetailModal({
                 </svg>
               </div>
               <div className="flex-1">
-                <p className="text-sm font-bold" style={{ color: '#1C1C1E' }}>
-                  {dateTime}（{dayJa}）
-                </p>
+                {editing ? (
+                  <div className="flex flex-col gap-2">
+                    <div className="flex gap-2">
+                      <input type="date" value={editStartDate} onChange={(e) => setEditStartDate(e.target.value)}
+                        className="flex-1 px-3 py-2 rounded-xl text-sm outline-none"
+                        style={{ background: '#FFFFFF', border: '1.5px solid #F3B4E3', color: '#1C1C1E' }} />
+                      <input type="time" value={editStartTime} onChange={(e) => setEditStartTime(e.target.value)}
+                        className="w-28 px-3 py-2 rounded-xl text-sm outline-none"
+                        style={{ background: '#FFFFFF', border: '1.5px solid #F3B4E3', color: '#1C1C1E' }} />
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs" style={{ color: '#8E8E93' }}>〜</span>
+                      <input type="date" value={editEndDate} onChange={(e) => setEditEndDate(e.target.value)}
+                        className="flex-1 px-3 py-2 rounded-xl text-sm outline-none"
+                        style={{ background: '#FFFFFF', border: '1.5px solid #E5E5EA', color: '#1C1C1E' }} />
+                    </div>
+                  </div>
+                ) : (
+                  <p className="text-sm font-bold" style={{ color: '#1C1C1E' }}>
+                    {dateTime}（{dayJa}）
+                  </p>
+                )}
               </div>
             </div>
 
@@ -295,25 +352,33 @@ export default function EventDetailModal({
             )}
 
             {/* ソース */}
-            {event.sourceUrl && (
-              <a href={event.sourceUrl} target="_blank" rel="noopener noreferrer"
-                className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0"
-                  style={{ background: cfg.color + '15' }}>
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={cfg.color} strokeWidth="2">
-                    <path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6" />
-                    <polyline points="15 3 21 3 21 9" />
-                    <line x1="10" y1="14" x2="21" y2="3" />
-                  </svg>
-                </div>
-                <div className="flex-1">
-                  <p className="text-sm font-semibold" style={{ color: cfg.color }}>
-                    {event.sourceName ?? 'ソースを見る'}
-                  </p>
-                  <p className="text-[11px] truncate" style={{ color: '#8E8E93' }}>{event.sourceUrl}</p>
-                </div>
-              </a>
-            )}
+            <div className="flex items-start gap-3">
+              <div className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0"
+                style={{ background: cfg.color + '15' }}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={cfg.color} strokeWidth="2">
+                  <path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6" />
+                  <polyline points="15 3 21 3 21 9" />
+                  <line x1="10" y1="14" x2="21" y2="3" />
+                </svg>
+              </div>
+              <div className="flex-1">
+                {editing ? (
+                  <input type="url" value={editSourceUrl} onChange={(e) => setEditSourceUrl(e.target.value)}
+                    placeholder="https://..."
+                    className="w-full px-3 py-2 rounded-xl text-sm outline-none"
+                    style={{ background: '#FFFFFF', border: '1.5px solid #F3B4E3', color: '#1C1C1E' }} />
+                ) : event.sourceUrl ? (
+                  <a href={event.sourceUrl} target="_blank" rel="noopener noreferrer">
+                    <p className="text-sm font-semibold" style={{ color: cfg.color }}>
+                      {event.sourceName ?? 'ソースを見る'}
+                    </p>
+                    <p className="text-[11px] truncate" style={{ color: '#8E8E93' }}>{event.sourceUrl}</p>
+                  </a>
+                ) : (
+                  <p className="text-xs" style={{ color: '#C7C7CC' }}>ソースURLなし</p>
+                )}
+              </div>
+            </div>
           </div>
         </div>
 
