@@ -24,7 +24,7 @@ function formatDateTime(date: string, time: string, dateEnd?: string, timeEnd?: 
   return `${start} 〜 ${md(dateEnd)}${endTime}`
 }
 
-const DAY_JA = ['日', '月', '火', '水', '木', '金', '土']
+// DAY names from i18n
 
 export default function EventDetailModal({
   event,
@@ -37,7 +37,8 @@ export default function EventDetailModal({
 }) {
   const { addEntry, hasEntry } = useMyEntries()
   const { user } = useAuth()
-  const { t } = useTranslation()
+  const { t, tObj } = useTranslation()
+  const dayNames = tObj<string[]>('dayNames')
   const [voted, setVoted] = useState(false)
   const [voteCount, setVoteCount] = useState(event.verifiedCount)
   const [editing, setEditing] = useState(false)
@@ -67,7 +68,7 @@ export default function EventDetailModal({
   const isPeriod = !!event.dateEnd
   const dateTime = formatDateTime(event.date, event.time, event.dateEnd, event.timeEnd)
   const startD = new Date(event.date)
-  const dayJa = DAY_JA[startD.getDay()]
+  const dayJa = dayNames[startD.getDay()]
   const imported = hasEntry(event.id)
   const isConfirmed = voteCount >= 3
 

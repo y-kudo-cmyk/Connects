@@ -8,7 +8,7 @@ import type { AppEvent } from '@/lib/supabase/adapters'
 import EventDetailModal from './EventDetailModal'
 import { useTranslation } from '@/lib/i18n/useTranslation'
 
-const DAY_JA = ['日', '月', '火', '水', '木', '金', '土']
+// DAY_JA は i18n の dayNames で置き換え
 const MONTH_SHORT = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
 
 function md(s: string) {
@@ -18,7 +18,8 @@ function md(s: string) {
 
 export default function TodayScheduleSection({ today }: { today: string }) {
   const { events: allEvents } = useSupabaseData()
-  const { t } = useTranslation()
+  const { t, tObj } = useTranslation()
+  const dayNames = tObj<string[]>('dayNames')
   const [detailEvent, setDetailEvent] = useState<AppEvent | null>(null)
 
   const todayEvents = useMemo(() => {
@@ -42,7 +43,7 @@ export default function TodayScheduleSection({ today }: { today: string }) {
   }, [today])
 
   const d = new Date(today)
-  const dayJa = DAY_JA[d.getDay()]
+  const dayJa = dayNames[d.getDay()]
   const isSat = d.getDay() === 6
   const isSun = d.getDay() === 0
 

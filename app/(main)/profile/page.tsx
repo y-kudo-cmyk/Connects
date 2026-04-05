@@ -650,7 +650,7 @@ export default function ProfilePage() {
                 {LANGUAGES.map((l) => (
                   <button
                     key={l.code}
-                    onClick={() => { update({ language: l.code }); setShowLangPicker(false) }}
+                    onClick={() => { update({ language: l.code }); try { localStorage.setItem('cp-lang', l.code) } catch {} setShowLangPicker(false); window.location.reload() }}
                     className="flex items-center gap-3 px-4 py-3.5 rounded-xl"
                     style={{
                       background: profile.language === l.code ? 'rgba(243,180,227,0.1)' : '#F8F9FA',
