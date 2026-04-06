@@ -17,6 +17,7 @@ export type MyEntry = {
   eventId?: string      // スケジュールからの転記元 ID
   title: string
   type: string          // EventType | 'memo'
+  tags?: string[]       // スケジュールタグ (LIVE, TICKET, etc.)
   color: string
   venue?: string
   city?: string

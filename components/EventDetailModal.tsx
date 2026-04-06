@@ -166,6 +166,7 @@ export default function EventDetailModal({
         eventId: event.id,
         title: event.title,
         type: event.type,
+        tags: event.tags ? [...event.tags] : [],
         color: event.artistColor,
         venue: event.venue,
         city: event.city,

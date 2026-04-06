@@ -4,6 +4,7 @@ import { useState, useRef, useEffect, type ReactNode } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { useMyEntries, MyEntry, compressImage, SeatInfo } from '@/lib/useMyEntries'
 import { eventTypeConfig } from '@/lib/mockData'
+import { scheduleTagConfig, type ScheduleTag } from '@/lib/config/tags'
 import { useTranslation } from '@/lib/i18n/useTranslation'
 import SeatInfoForm from '@/components/SeatInfoForm'
 import SeatViewPreview from '@/components/SeatViewPreview'
@@ -64,6 +65,7 @@ export default function MyPage() {
   const [selectedDate, setSelectedDate] = useState(TODAY)
   const [weekAnchor, setWeekAnchor] = useState(TODAY)
   const [editEntry, setEditEntry] = useState<MyEntry | null>(null)
+  const [tagFilter, setTagFilter] = useState<string | 'ALL'>('ALL')
   const gridRef = useRef<HTMLDivElement>(null)
 
   const searchParams = useSearchParams()
@@ -91,6 +93,14 @@ export default function MyPage() {
     }
   }, [viewMode])
 
+  // タグフィルター適用
+  const filteredEntries = tagFilter === 'ALL'
+    ? entries
+    : entries.filter((e) => e.tags?.includes(tagFilter))
+
+  // MYエントリに存在するタグ一覧
+  const usedTags = Array.from(new Set(entries.flatMap((e) => e.tags ?? [])))
+
   // ── 月ビュー用 ──────────────────────────────────────────────────
   const prevMonth = () => { if (month === 0) { setMonth(11); setYear(y => y - 1) } else setMonth(m => m - 1) }
   const nextMonth = () => { if (month === 11) { setMonth(0); setYear(y => y + 1) } else setMonth(m => m + 1) }
@@ -101,7 +111,7 @@ export default function MyPage() {
 
   // エントリが持つ日付セット（期間エントリは全日をカバー）
   const entryDates = new Set<string>()
-  for (const e of entries) {
+  for (const e of filteredEntries) {
     if (!e.dateEnd) {
       entryDates.add(e.customDate ?? e.date)
     } else {
@@ -115,7 +125,7 @@ export default function MyPage() {
   }
 
   // 選択日のエントリ
-  const dayEntries = entries.filter((e) => {
+  const dayEntries = filteredEntries.filter((e) => {
     if (e.dateEnd) return e.date <= selectedDate && selectedDate <= e.dateEnd
     return (e.customDate ?? e.date) === selectedDate
   })
@@ -169,6 +179,29 @@ export default function MyPage() {
       {/* ── スケジュール記録タブ ── */}
       {tab === 'entries' && (
         <>
+          {/* タグフィルター */}
+          {usedTags.length > 0 && (
+            <div className="flex gap-1.5 px-4 pt-2 pb-1 overflow-x-auto" style={{ scrollbarWidth: 'none' }}>
+              <button onClick={() => setTagFilter('ALL')}
+                className="flex-shrink-0 px-3 py-1.5 rounded-full text-[11px] font-bold"
+                style={tagFilter === 'ALL'
+                  ? { background: '#1C1C1E', color: '#FFFFFF' }
+                  : { background: '#F0F0F5', color: '#636366' }
+                }>ALL</button>
+              {usedTags.map((tag) => {
+                const tc = scheduleTagConfig[tag as ScheduleTag]
+                return tc ? (
+                  <button key={tag} onClick={() => setTagFilter(tag)}
+                    className="flex-shrink-0 px-3 py-1.5 rounded-full text-[11px] font-bold"
+                    style={tagFilter === tag
+                      ? { background: tc.color, color: '#FFFFFF' }
+                      : { background: tc.bg, color: tc.color }
+                    }>{tc.icon} {tc.label}</button>
+                ) : null
+              })}
+            </div>
+          )}
+
           {/* 月ビュー */}
           {viewMode === 'month' && (
             <div className="px-4 pt-2">
@@ -260,8 +293,8 @@ export default function MyPage() {
           {/* 週ビュー */}
           {viewMode === 'week' && (() => {
             const weekDates = getWeekDates(weekAnchor)
-            const allDayEntries = entries.filter((e) => !e.time || e.time === '00:00')
-            const timedEntries = entries.filter((e) => e.time && e.time !== '00:00')
+            const allDayEntries = filteredEntries.filter((e) => !e.time || e.time === '00:00')
+            const timedEntries = filteredEntries.filter((e) => e.time && e.time !== '00:00')
             const nowStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`
             const todayColIdx = weekDates.indexOf(TODAY)
 
@@ -424,13 +457,13 @@ export default function MyPage() {
 
           {/* 日ビュー */}
           {viewMode === 'day' && (() => {
-            const timedE = entries.filter((e) => {
+            const timedE = filteredEntries.filter((e) => {
               const t = e.customTime ?? e.time
               if (!t || t === '00:00') return false
               if (e.dateEnd) return e.date <= selectedDate && selectedDate <= e.dateEnd
               return (e.customDate ?? e.date) === selectedDate
             })
-            const allDayE = entries.filter((e) => {
+            const allDayE = filteredEntries.filter((e) => {
               const t = e.customTime ?? e.time
               if (t && t !== '00:00') return false
               if (e.dateEnd) return e.date <= selectedDate && selectedDate <= e.dateEnd
@@ -694,6 +727,9 @@ function EditModal({ entry, onClose, onSave, onRemove }: {
   const cfg = eventTypeConfig[entry.type as keyof typeof eventTypeConfig]
   const color = cfg?.color ?? entry.color
   const dateStr = fmtDateRange(entry.date, entry.time, entry.dateEnd)
+  // チケット画像・座席情報を表示するタグ
+  const TICKET_TAGS = ['LIVE', 'TICKET', 'EVENT', 'POPUP']
+  const showTicketSection = !entry.tags?.length || entry.tags.some((t) => TICKET_TAGS.includes(t))
 
   const handleTicketUpload = async (files: FileList | null) => {
     if (!files) return
@@ -784,41 +820,45 @@ function EditModal({ entry, onClose, onSave, onRemove }: {
               style={{ background: '#FFFFFF', border: '1px solid #E5E5EA', color: '#1C1C1E' }} />
           </EditSection>
 
-          {/* チケット画像 */}
-          <EditSection label={t('ticketImage')}>
-            <div className="flex gap-2 overflow-x-auto pb-1" style={{ scrollbarWidth: 'none' }}>
-              {ticketImages.map((img, i) => (
-                <div key={i} className="flex-shrink-0 relative rounded-xl overflow-hidden"
-                  style={{ width: 64, height: 88 }}>
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={img} alt="" className="w-full h-full object-cover" />
-                  <button onClick={() => setTicketImages((p) => p.filter((_, j) => j !== i))}
-                    className="absolute top-1 right-1 w-6 h-6 rounded-full flex items-center justify-center"
-                    style={{ background: 'rgba(0,0,0,0.65)' }}>
-                    <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" strokeWidth="3">
-                      <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+          {/* チケット画像（LIVE/TICKET/EVENT/POPUPのみ） */}
+          {showTicketSection && (
+            <>
+              <EditSection label={t('ticketImage')}>
+                <div className="flex gap-2 overflow-x-auto pb-1" style={{ scrollbarWidth: 'none' }}>
+                  {ticketImages.map((img, i) => (
+                    <div key={i} className="flex-shrink-0 relative rounded-xl overflow-hidden"
+                      style={{ width: 64, height: 88 }}>
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={img} alt="" className="w-full h-full object-cover" />
+                      <button onClick={() => setTicketImages((p) => p.filter((_, j) => j !== i))}
+                        className="absolute top-1 right-1 w-6 h-6 rounded-full flex items-center justify-center"
+                        style={{ background: 'rgba(0,0,0,0.65)' }}>
+                        <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" strokeWidth="3">
+                          <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+                        </svg>
+                      </button>
+                    </div>
+                  ))}
+                  <button onClick={() => ticketFileRef.current?.click()}
+                    className="flex-shrink-0 rounded-xl flex flex-col items-center justify-center gap-1"
+                    style={{ width: 64, height: 88, border: '2px dashed #E5E5EA', color: '#8E8E93' }}>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                      <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
                     </svg>
+                    <span className="text-[10px]">{t('add')}</span>
                   </button>
                 </div>
-              ))}
-              <button onClick={() => ticketFileRef.current?.click()}
-                className="flex-shrink-0 rounded-xl flex flex-col items-center justify-center gap-1"
-                style={{ width: 64, height: 88, border: '2px dashed #E5E5EA', color: '#8E8E93' }}>
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                  <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
-                </svg>
-                <span className="text-[10px]">{t('add')}</span>
-              </button>
-            </div>
-            <input ref={ticketFileRef} type="file" accept="image/*" multiple className="hidden"
-              onChange={(e) => handleTicketUpload(e.target.files)} />
-          </EditSection>
+                <input ref={ticketFileRef} type="file" accept="image/*" multiple className="hidden"
+                  onChange={(e) => handleTicketUpload(e.target.files)} />
+              </EditSection>
 
-          {/* 座席情報 */}
-          <div className="rounded-2xl p-4" style={{ background: '#FFFFFF' }}>
-            <SeatInfoForm value={seatInfo} onChange={setSeatInfo}
-              ticketImages={ticketImages} autoAnalyzeTrigger={autoAnalyzeTrigger} />
-          </div>
+              {/* 座席情報 */}
+              <div className="rounded-2xl p-4" style={{ background: '#FFFFFF' }}>
+                <SeatInfoForm value={seatInfo} onChange={setSeatInfo}
+                  ticketImages={ticketImages} autoAnalyzeTrigger={autoAnalyzeTrigger} />
+              </div>
+            </>
+          )}
 
           {/* 座席眺め */}
           {seatInfo.fields?.some((f) => f.value.trim()) && (
@@ -886,7 +926,7 @@ function EditModal({ entry, onClose, onSave, onRemove }: {
 
         {/* 保存ボタン */}
         <div className="px-4 pt-3 flex-shrink-0"
-          style={{ borderTop: '1px solid #E5E5EA', paddingBottom: 'calc(24px + env(safe-area-inset-bottom, 0px))' }}>
+          style={{ borderTop: '1px solid #E5E5EA', paddingBottom: 'calc(100px + env(safe-area-inset-bottom, 0px))' }}>
           <button onClick={handleSave}
             className="w-full py-4 rounded-xl text-base font-bold min-h-[52px]"
             style={{ background: '#F3B4E3', color: '#FFFFFF' }}>
