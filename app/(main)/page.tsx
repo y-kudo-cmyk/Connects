@@ -2,6 +2,7 @@ import AnnouncementsSection from '@/components/AnnouncementsSection'
 import TodayScheduleSection from '@/components/TodayScheduleSection'
 import NewSchedulePreview from '@/components/NewSchedulePreview'
 import TodoSection from '@/components/TodoSection'
+import AddScheduleButton from '@/components/AddScheduleButton'
 
 export default function HomePage() {
   return (
@@ -20,6 +21,11 @@ export default function HomePage() {
       {/* ─── 今日のスケジュール ─── */}
       <div className="pt-4">
         <TodayScheduleSection />
+      </div>
+
+      {/* ─── スケジュール投稿 ─── */}
+      <div className="pt-3 px-4">
+        <AddScheduleButton />
       </div>
 
       {/* ─── TODO ─── */}

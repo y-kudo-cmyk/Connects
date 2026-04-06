@@ -12,6 +12,7 @@ import MilCountdown from '@/components/MilCountdown'
 import { useTodos } from '@/lib/useTodos'
 import { useTranslation } from '@/lib/i18n/useTranslation'
 import { useToday } from '@/lib/useToday'
+import AddScheduleModal from '@/components/AddScheduleModal'
 
 function getDaysInMonth(y: number, m: number) { return new Date(y, m + 1, 0).getDate() }
 function getFirstDay(y: number, m: number) { return new Date(y, m, 1).getDay() }
@@ -53,6 +54,7 @@ export default function SchedulePage() {
   const homeName = COUNTRIES.find((c) => c.code === homeCountry)?.nameJa ?? homeCountry
   const { addEntry, removeEntry, entries, hasEntry } = useMyEntries()
   const { todos, addTodo, removeTodo, hasTodo } = useTodos()
+  const [showAddSchedule, setShowAddSchedule] = useState(false)
   const { t } = useTranslation()
   const eventsRef = useRef<HTMLDivElement>(null)
 
@@ -141,7 +143,16 @@ export default function SchedulePage() {
         className="px-4"
         style={{ paddingTop: 'calc(16px + env(safe-area-inset-top, 0px))', paddingBottom: 8 }}
       >
-        <h1 className="text-lg font-black tracking-wider" style={{ color: '#1C1C1E' }}>SCHEDULE</h1>
+        <div className="flex items-center gap-2">
+          <h1 className="text-lg font-black tracking-wider" style={{ color: '#1C1C1E' }}>SCHEDULE</h1>
+          <button onClick={() => setShowAddSchedule(true)}
+            className="w-8 h-8 rounded-full flex items-center justify-center"
+            style={{ background: '#F3B4E3' }}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" strokeWidth="2.5">
+              <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
+            </svg>
+          </button>
+        </div>
       </div>
 
       {/* 兵役カウントダウン */}
@@ -459,6 +470,9 @@ export default function SchedulePage() {
         )
       })()}
 
+      {showAddSchedule && (
+        <AddScheduleModal onClose={() => setShowAddSchedule(false)} />
+      )}
     </div>
   )
 }
