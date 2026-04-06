@@ -110,16 +110,23 @@ export default function MyPage() {
   const fmt = (y: number, m: number, d: number) =>
     `${y}-${String(m + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`
 
-  // エントリが持つ日付セット（期間エントリは全日をカバー）
-  const entryDates = new Set<string>()
+  // エントリが持つ日付 → タグ色のマップ（期間エントリは全日をカバー）
+  const entryDateColors = new Map<string, string[]>()
   for (const e of filteredEntries) {
+    const color = e.tags?.[0] && scheduleTagConfig[e.tags[0] as ScheduleTag]
+      ? scheduleTagConfig[e.tags[0] as ScheduleTag].color
+      : e.color || '#F3B4E3'
+    const addDate = (ds: string) => {
+      const existing = entryDateColors.get(ds) ?? []
+      if (!existing.includes(color)) entryDateColors.set(ds, [...existing, color])
+    }
     if (!e.dateEnd) {
-      entryDates.add(e.customDate ?? e.date)
+      addDate(e.customDate ?? e.date)
     } else {
       const cur = new Date(e.date)
       const end = new Date(e.dateEnd)
       while (cur <= end) {
-        entryDates.add(cur.toISOString().slice(0, 10))
+        addDate(cur.toISOString().slice(0, 10))
         cur.setDate(cur.getDate() + 1)
       }
     }
@@ -254,7 +261,7 @@ export default function MyPage() {
                   const ds = fmt(year, month, day)
                   const isSelected = ds === selectedDate
                   const isToday = ds === TODAY
-                  const hasDot = entryDates.has(ds)
+                  const colors = entryDateColors.get(ds)
                   return (
                     <button key={day} onClick={() => setSelectedDate(ds)}
                       className="flex flex-col items-center py-2 rounded-lg"
@@ -266,9 +273,13 @@ export default function MyPage() {
                         }}>
                         {day}
                       </span>
-                      {hasDot && (
-                        <span className="w-1 h-1 rounded-full mt-0.5"
-                          style={{ background: isSelected ? '#F8F9FA' : '#F3B4E3' }} />
+                      {colors && (
+                        <div className="flex gap-0.5 mt-0.5">
+                          {colors.slice(0, 3).map((c, ci) => (
+                            <span key={ci} className="w-1 h-1 rounded-full"
+                              style={{ background: isSelected ? '#F8F9FA' : c }} />
+                          ))}
+                        </div>
                       )}
                     </button>
                   )

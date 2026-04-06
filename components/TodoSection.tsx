@@ -187,13 +187,7 @@ function TodoRow({ todo, onToggle, onRemove, onMemoChange }: {
           )}
         </button>
 
-        <button className="flex-1 min-w-0 text-left" onClick={() => {
-          if (todo.sourceUrl && !expanded) {
-            window.open(todo.sourceUrl, '_blank', 'noopener,noreferrer')
-          } else {
-            setExpanded(v => !v)
-          }
-        }}>
+        <button className="flex-1 min-w-0 text-left" onClick={() => setExpanded(v => !v)}>
           <p className="text-sm leading-snug"
             style={{ color: todo.done ? '#8E8E93' : '#1C1C1E', textDecoration: todo.done ? 'line-through' : 'none' }}>
             {todo.title}
@@ -222,33 +216,15 @@ function TodoRow({ todo, onToggle, onRemove, onMemoChange }: {
       {/* 展開エリア */}
       {expanded && (
         <div className="px-3 pb-3 flex flex-col gap-2" style={{ borderTop: '1px solid #F0F0F5' }}>
-          {/* ソースリンク */}
-          {todo.sourceUrl && (
-            <a href={todo.sourceUrl} target="_blank" rel="noopener noreferrer"
-              className="flex items-center gap-2 px-3 py-2 rounded-xl mt-2"
-              style={{ background: '#F8F9FA', border: '1px solid #E5E5EA' }}>
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#636366" strokeWidth="2" className="flex-shrink-0">
-                <path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/>
-                <path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/>
-              </svg>
-              <span className="text-xs truncate flex-1" style={{ color: '#636366' }}>
-                {todo.sourceName ?? todo.sourceUrl}
-              </span>
-              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#C7C7CC" strokeWidth="2" className="flex-shrink-0 ml-auto">
-                <path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/>
-                <polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/>
-              </svg>
-            </a>
-          )}
-
-          {/* メモ */}
+          {/* メモ編集 */}
           {editingMemo ? (
-            <div className="flex flex-col gap-1.5">
+            <div className="flex flex-col gap-1.5 mt-2">
               <textarea
                 value={memoVal}
                 onChange={(e) => setMemoVal(e.target.value)}
                 placeholder={t('todoMemo')}
                 rows={3}
+                autoFocus
                 className="w-full px-3 py-2 text-sm rounded-xl outline-none resize-none"
                 style={{ background: '#F8F9FA', border: '1px solid #E5E5EA', color: '#1C1C1E' }}
               />
@@ -268,7 +244,7 @@ function TodoRow({ todo, onToggle, onRemove, onMemoChange }: {
           ) : (
             <button
               onClick={() => setEditingMemo(true)}
-              className="flex items-start gap-2 px-3 py-2 rounded-xl text-left w-full"
+              className="flex items-start gap-2 px-3 py-2 rounded-xl text-left w-full mt-2"
               style={{ background: '#F8F9FA', border: '1px solid #E5E5EA' }}
             >
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#8E8E93" strokeWidth="2" className="flex-shrink-0 mt-0.5">
@@ -278,6 +254,25 @@ function TodoRow({ todo, onToggle, onRemove, onMemoChange }: {
                 {todo.memo || t('todoMemoAdd')}
               </span>
             </button>
+          )}
+
+          {/* ソースリンク */}
+          {todo.sourceUrl && (
+            <a href={todo.sourceUrl} target="_blank" rel="noopener noreferrer"
+              className="flex items-center gap-2 px-3 py-2 rounded-xl"
+              style={{ background: '#F8F9FA', border: '1px solid #E5E5EA' }}>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#636366" strokeWidth="2" className="flex-shrink-0">
+                <path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/>
+                <path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/>
+              </svg>
+              <span className="text-xs truncate flex-1" style={{ color: '#636366' }}>
+                {todo.sourceName ?? todo.sourceUrl}
+              </span>
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#C7C7CC" strokeWidth="2" className="flex-shrink-0">
+                <path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/>
+                <polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/>
+              </svg>
+            </a>
           )}
         </div>
       )}
