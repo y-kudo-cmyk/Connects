@@ -46,7 +46,8 @@ export default function AnnouncementsSection() {
 }
 
 function AnnouncementCard({ ann, onDismiss }: { ann: Announcement; onDismiss: () => void }) {
-  const { t } = useTranslation()
+  const { t, tObj } = useTranslation()
+  const announcementLabels = tObj<Record<string, string>>('announcementTypes')
   const cfg = TYPE_CONFIG[ann.type]
   const d = new Date(ann.date)
 
@@ -66,7 +67,7 @@ function AnnouncementCard({ ann, onDismiss }: { ann: Announcement; onDismiss: ()
             className="text-[10px] font-black px-2 py-0.5 rounded-full flex-shrink-0"
             style={{ background: cfg.border, color: cfg.color }}
           >
-            {cfg.label}
+            {announcementLabels[ann.type] ?? cfg.label}
           </span>
           <span className="text-[10px] flex-shrink-0" style={{ color: '#636366' }}>
             {MONTH_SHORT[d.getMonth()]} {d.getDate()}

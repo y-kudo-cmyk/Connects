@@ -3,6 +3,7 @@
 import { useState, useRef } from 'react'
 import { scheduleTagConfig, type ScheduleTag } from '@/lib/config/tags'
 import type { AppEvent } from '@/lib/supabase/adapters'
+import { useRouter } from 'next/navigation'
 import { useMyEntries } from '@/lib/useMyEntries'
 import { useAuth } from '@/lib/supabase/useAuth'
 import { createClient } from '@/lib/supabase/client'
@@ -35,7 +36,8 @@ export default function EventDetailModal({
   onClose: () => void
   showConfirmButton?: boolean
 }) {
-  const { addEntry, hasEntry } = useMyEntries()
+  const router = useRouter()
+  const { addEntry, hasEntry, findEntryByEventId } = useMyEntries()
   const { user } = useAuth()
   const { t, tObj } = useTranslation()
   const dayNames = tObj<string[]>('dayNames')
@@ -51,6 +53,7 @@ export default function EventDetailModal({
   const [editSourceUrl, setEditSourceUrl] = useState(event.sourceUrl ?? '')
   const [editImageUrl, setEditImageUrl] = useState(event.image ?? '')
   const [editSaving, setEditSaving] = useState(false)
+  const [editRequestSent, setEditRequestSent] = useState(false)
   const imageFileRef = useRef<HTMLInputElement>(null)
 
   const handleImageUpload = async (files: FileList | null) => {
@@ -120,12 +123,15 @@ export default function EventDetailModal({
       if (newStartDate && editStartDate !== event.date) changes.push({ field_name: 'start_date', old_value: event.date, new_value: newStartDate })
       if (editEndDate !== (event.dateEnd ?? '')) changes.push({ field_name: 'end_date', old_value: event.dateEnd ?? '', new_value: newEndDate ?? '' })
 
-      for (const c of changes) {
-        await supabase.from('edit_requests').insert({
-          event_id: event.id,
-          ...c,
-          submitted_by: userId,
-        })
+      if (changes.length > 0) {
+        for (const c of changes) {
+          await supabase.from('edit_requests').insert({
+            event_id: event.id,
+            ...c,
+            submitted_by: userId,
+          })
+        }
+        setEditRequestSent(true)
       }
     } else {
       // 直接更新 + カウントリセット
@@ -348,7 +354,30 @@ export default function EventDetailModal({
                     style={{ color: '#1C1C1E', background: '#FFFFFF', border: '1.5px solid #F3B4E3' }} />
                 ) : (
                   <>
-                    {event.venue && <p className="text-sm font-bold" style={{ color: '#1C1C1E' }}>{event.venue}</p>}
+                    {event.venue && (
+                      <>
+                        <p className="text-sm font-bold" style={{ color: '#1C1C1E' }}>{event.venue}</p>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            const cc = cityToCountryCode(event.city ?? '')
+                            const q = encodeURIComponent(event.venue + (event.city ? ` ${event.city}` : ''))
+                            const url = cc === 'KR'
+                              ? `https://map.naver.com/v5/search/${q}`
+                              : `https://www.google.com/maps/search/?api=1&query=${q}`
+                            window.open(url, '_blank', 'noopener,noreferrer')
+                          }}
+                          className="flex items-center gap-1 mt-1 px-2.5 py-1.5 rounded-lg text-[11px] font-bold"
+                          style={{ background: cfg.color + '12', color: cfg.color }}
+                        >
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z" />
+                            <circle cx="12" cy="10" r="3" />
+                          </svg>
+                          {t('mapOpen')}
+                        </button>
+                      </>
+                    )}
                     {event.city && (
                       <p className="text-xs mt-0.5 flex items-center gap-1" style={{ color: '#8E8E93' }}>
                         <span>{countryFlag(cityToCountryCode(event.city))}</span>{event.city}
@@ -415,6 +444,17 @@ export default function EventDetailModal({
           </div>
         </div>
 
+        {/* 修正依頼送信済みバナー */}
+        {editRequestSent && (
+          <div className="mx-4 mb-2 px-3 py-2.5 rounded-xl flex items-center gap-2"
+            style={{ background: 'rgba(52,211,153,0.1)', border: '1px solid rgba(52,211,153,0.3)' }}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#34D399" strokeWidth="2.5">
+              <polyline points="20 6 9 17 4 12" />
+            </svg>
+            <p className="text-xs font-bold" style={{ color: '#34D399' }}>{t('editRequestSentMsg')}</p>
+          </div>
+        )}
+
         {/* アクションボタン */}
         <div className="px-4 pt-3 flex-shrink-0 flex flex-col gap-2"
           style={{ borderTop: '1px solid #E5E5EA', paddingBottom: 'calc(80px + env(safe-area-inset-bottom, 0px))' }}>
@@ -460,7 +500,7 @@ export default function EventDetailModal({
                         {t('approved')}
                       </>
                     ) : (
-                      <>承認する（{voteCount}/3）</>
+                      <>{t('approveButton')}（{voteCount}/3）</>
                     )}
                   </button>
                 </>
@@ -468,15 +508,33 @@ export default function EventDetailModal({
             </div>
           )}
 
-          {/* MYに追加 */}
-          <button onClick={handleAddToMy}
-            className="w-full py-3.5 rounded-xl text-sm font-bold"
-            style={imported
-              ? { background: 'rgba(243,180,227,0.15)', color: '#F3B4E3' }
-              : { background: '#F3B4E3', color: '#FFFFFF' }
-            }>
-            {imported ? t('addedToMyDone') : t('addToMy')}
-          </button>
+          {/* MYに追加 / MY詳細へ */}
+          {imported ? (
+            <button
+              onClick={(e) => {
+                e.stopPropagation()
+                const myEntry = findEntryByEventId(event.id)
+                if (myEntry) {
+                  router.push(`/my?entry=${myEntry.id}`)
+                  setTimeout(onClose, 100)
+                }
+              }}
+              className="w-full py-3.5 rounded-xl text-sm font-bold flex items-center justify-center gap-1.5"
+              style={{ background: 'rgba(243,180,227,0.15)', color: '#F3B4E3' }}
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" />
+                <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" />
+              </svg>
+              {t('addedToMyDone')}
+            </button>
+          ) : (
+            <button onClick={handleAddToMy}
+              className="w-full py-3.5 rounded-xl text-sm font-bold"
+              style={{ background: '#F3B4E3', color: '#FFFFFF' }}>
+              {t('addToMy')}
+            </button>
+          )}
         </div>
       </div>
     </div>

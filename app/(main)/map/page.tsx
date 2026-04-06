@@ -20,6 +20,8 @@ import { useFavoriteSpots } from '@/lib/useFavoriteSpots'
 import { useSpotPhotos } from '@/lib/useSpotPhotos'
 import { compressImage } from '@/lib/useMyEntries'
 import { useProfile } from '@/lib/useProfile'
+import { useToday } from '@/lib/useToday'
+import { useTranslation } from '@/lib/i18n/useTranslation'
 
 const SpotMap = dynamic(() => import('@/components/SpotMap'), {
   ssr: false,
@@ -29,7 +31,7 @@ const SpotMap = dynamic(() => import('@/components/SpotMap'), {
         <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.2" className="opacity-40">
           <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z" /><circle cx="12" cy="10" r="3" />
         </svg>
-        <span className="text-xs">地図を読み込み中...</span>
+        <span className="text-xs">Loading...</span>
       </div>
     </div>
   ),
@@ -40,12 +42,14 @@ const PLATFORM_CONFIG: Record<SpotPlatform, { label: string; color: string; icon
   instagram: { label: 'Instagram', color: '#E1306C', icon: '📸' },
   weverse:   { label: 'Weverse',   color: '#02D1AC', icon: '🎵' },
   x:         { label: 'X',         color: '#1C1C1E', icon: '𝕏' },
-  other:     { label: 'その他',    color: '#636366', icon: '🔗' },
+  other:     { label: 'Other',     color: '#636366', icon: '🔗' },
 }
 
 const ALL_TAGS = ['SEVENTEEN', ...seventeenMembers.map((m) => m.name)]
 
 export default function MapPage() {
+  const TODAY = useToday()
+  const { t } = useTranslation()
   const { events } = useSupabaseData()
   const [search, setSearch] = useState('')
   const [memberFilter, setMemberFilter] = useState('ALL')
@@ -77,7 +81,7 @@ export default function MapPage() {
   })
 
   const activeScheduleEvents = useMemo(() => {
-    const today = new Date().toISOString().slice(0, 10)
+    const today = TODAY
     return events.filter((e) =>
       e.tags?.some((t) => t === 'POPUP' || t === 'EVENT') &&
       (e.dateEnd ? e.date <= today && today <= e.dateEnd : e.date === today)
@@ -119,7 +123,7 @@ export default function MapPage() {
         {uploadSpot && (
           <PhotoUploadModal
             spot={uploadSpot}
-            defaultContributor={profile.nickname || 'ユーザー'}
+            defaultContributor={profile.nickname || t('user')}
             onSave={(photo) => { addPhoto(uploadSpot.id, { ...photo, status: 'pending', votes: 0 }); setUploadSpot(null) }}
             onClose={() => setUploadSpot(null)}
           />
@@ -150,11 +154,11 @@ export default function MapPage() {
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                 <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
               </svg>
-              スポット登録
+              {t('spotRegister')}
             </button>
             <span className="text-xs font-bold px-2.5 py-1.5 rounded-full"
               style={{ background: 'rgba(243,180,227,0.12)', color: '#F3B4E3' }}>
-              {limitedFilter ? `${activeScheduleEvents.length} 件` : `${filtered.length} 件`}
+              {limitedFilter ? `${activeScheduleEvents.length}${t('countSuffix')}` : `${filtered.length}${t('countSuffix')}`}
             </span>
           </div>
         </div>
@@ -167,7 +171,7 @@ export default function MapPage() {
             type="text"
             value={search}
             onChange={(e) => { setSearch(e.target.value); if (e.target.value) { setMemberFilter('ALL'); setLimitedFilter(false) } }}
-            placeholder="スポットを検索"
+            placeholder={t('searchSpot')}
             className="w-full pl-8 pr-3 py-2.5 rounded-xl text-sm outline-none"
             style={{ background: '#FFFFFF', color: '#1C1C1E', border: '1px solid #2E2E32' }}
           />
@@ -180,7 +184,7 @@ export default function MapPage() {
               ? { background: '#F3B4E3', color: '#FFFFFF' }
               : { background: '#FFFFFF', color: '#636366' }
             }>
-            全員
+            {t('everyone')}
           </button>
           <button onClick={() => { setFavOnly((v) => !v); setLimitedFilter(false) }}
             className="flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold flex items-center gap-1"
@@ -191,7 +195,7 @@ export default function MapPage() {
             <svg width="12" height="12" viewBox="0 0 24 24" fill={favOnly ? '#FFFFFF' : '#FB7185'} stroke="none">
               <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z" />
             </svg>
-            お気に入り
+            {t('favorites')}
           </button>
           {activeScheduleEvents.length > 0 && (
             <button onClick={() => { setLimitedFilter((v) => !v); setMemberFilter('ALL') }}
@@ -201,7 +205,7 @@ export default function MapPage() {
                 : { background: 'rgba(251,146,60,0.12)', color: '#FB923C' }
               }>
               <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: 'currentColor' }} />
-              期間限定
+              {t('limited')}
             </button>
           )}
           {seventeenMembers.map((m) => (
@@ -280,7 +284,7 @@ export default function MapPage() {
                       style={{ background: 'rgba(245,158,11,0.08)', border: '1px dashed rgba(245,158,11,0.3)' }}>
                       <span className="text-[10px] font-bold" style={{ color: '#F59E0B' }}>！</span>
                       <p className="text-[11px]" style={{ color: '#8E8E93' }}>
-                        住所情報がありません。ご存知の方は情報提供をお願いします
+                        {t('noAddress')}
                       </p>
                     </div>
                   )}
@@ -291,7 +295,7 @@ export default function MapPage() {
                 <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.2" className="mb-2 opacity-30">
                   <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z" /><circle cx="12" cy="10" r="3" />
                 </svg>
-                <p className="text-sm">スポットが見つかりません</p>
+                <p className="text-sm">{t('spotNotFound')}</p>
               </div>
             ) : (
               <>
@@ -346,7 +350,7 @@ export default function MapPage() {
                           <div className="flex items-center gap-1 mt-1 flex-wrap">
                             {spot.members.includes('ALL') ? (
                               <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full"
-                                style={{ background: '#3B82F610', color: '#3B82F6' }}>全メンバー</span>
+                                style={{ background: '#3B82F610', color: '#3B82F6' }}>{t('allMembers')}</span>
                             ) : spot.members.slice(0, 3).map((name) => {
                               const m = seventeenMembers.find((x) => x.name === name)
                               return (
@@ -397,7 +401,7 @@ export default function MapPage() {
       {/* 新規スポット投稿モーダル */}
       {showNewSpot && (
         <NewSpotModal
-          defaultContributor={profile.nickname || 'ユーザー'}
+          defaultContributor={profile.nickname || t('user')}
           onClose={() => setShowNewSpot(false)}
         />
       )}
@@ -432,6 +436,7 @@ function SpotDetailScreen({
   onClose: () => void
   onMemberFilter: (name: string) => void
 }) {
+  const { t } = useTranslation()
   const [showUrlInput, setShowUrlInput] = useState(false)
   const [urlInput, setUrlInput] = useState('')
   const [urlSubmitted, setUrlSubmitted] = useState(false)
@@ -498,7 +503,7 @@ function SpotDetailScreen({
               <p className="text-sm mb-2" style={{ color: '#8E8E93' }}>📍 {spot.address}</p>
               {isIncomplete && (
                 <span className="text-[10px] font-bold px-2 py-0.5 rounded-full"
-                  style={{ background: 'rgba(245,158,11,0.15)', color: '#F59E0B' }}>！情報募集中</span>
+                  style={{ background: 'rgba(245,158,11,0.15)', color: '#F59E0B' }}>{t('infoWanted')}</span>
               )}
             </div>
           </div>
@@ -529,7 +534,7 @@ function SpotDetailScreen({
                 className="flex-1 flex items-center justify-center gap-2 py-3.5 rounded-2xl text-sm font-bold"
                 style={{ background: '#FFFFFF', color: '#F59E0B', border: '1px dashed rgba(245,158,11,0.5)' }}>
                 <span className="text-xs">！</span>
-                HP募集中
+                {t('hpWanted')}
               </button>
             )}
           </div>
@@ -543,11 +548,11 @@ function SpotDetailScreen({
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#34D399" strokeWidth="2.5">
                     <polyline points="20 6 9 17 4 12" />
                   </svg>
-                  <p className="text-sm font-bold" style={{ color: '#34D399' }}>送信しました（承認後に反映）</p>
+                  <p className="text-sm font-bold" style={{ color: '#34D399' }}>{t('submitted')}</p>
                 </div>
               ) : (
                 <>
-                  <p className="text-xs font-bold" style={{ color: '#636366' }}>公式HPのURLを教えてください</p>
+                  <p className="text-xs font-bold" style={{ color: '#636366' }}>{t('hpUrlPrompt')}</p>
                   <input
                     type="url"
                     value={urlInput}
@@ -560,7 +565,7 @@ function SpotDetailScreen({
                     <button onClick={() => setShowUrlInput(false)}
                       className="flex-1 py-2.5 rounded-xl text-xs font-bold"
                       style={{ background: '#F0F0F5', color: '#636366' }}>
-                      キャンセル
+                      {t('cancel')}
                     </button>
                     <button onClick={handleUrlSubmit}
                       disabled={!urlInput.trim()}
@@ -569,7 +574,7 @@ function SpotDetailScreen({
                         background: urlInput.trim() ? '#F3B4E3' : '#E5E5EA',
                         color: urlInput.trim() ? '#FFFFFF' : '#8E8E93',
                       }}>
-                      送信（承認制）
+                      {t('submitApproval')}
                     </button>
                   </div>
                 </>
@@ -581,7 +586,7 @@ function SpotDetailScreen({
 
         {/* ── 写真ギャラリー ── */}
         <div className="mt-4 mb-2 px-4">
-          <p className="text-xs font-semibold mb-2" style={{ color: '#8E8E93' }}>フォト</p>
+          <p className="text-xs font-semibold mb-2" style={{ color: '#8E8E93' }}>{t('photos')}</p>
         </div>
         <div className="pb-4">
           {confirmedPhotos.length === 0 ? (
@@ -589,7 +594,7 @@ function SpotDetailScreen({
               className="mx-4 w-[calc(100%-32px)] flex flex-col items-center justify-center gap-2 rounded-2xl"
               style={{ height: 160, background: '#EEEFF4' }}>
               <span className="text-4xl">📷</span>
-              <span className="text-sm font-semibold" style={{ color: '#636366' }}>最初の写真を投稿しよう</span>
+              <span className="text-sm font-semibold" style={{ color: '#636366' }}>{t('firstPhoto')}</span>
             </button>
           ) : (
             <div className="flex gap-2 px-4 overflow-x-auto" style={{ scrollbarWidth: 'none' }}>
@@ -610,8 +615,8 @@ function SpotDetailScreen({
             <div>
               <div className="flex items-center gap-2 mb-3">
                 <span className="text-xs font-bold px-2 py-0.5 rounded-full"
-                  style={{ background: 'rgba(245,158,11,0.15)', color: '#F59E0B' }}>仮</span>
-                <p className="text-xs font-bold" style={{ color: '#F59E0B' }}>承認待ち {pendingPhotos.length}件</p>
+                  style={{ background: 'rgba(245,158,11,0.15)', color: '#F59E0B' }}>{t('pendingLabel')}</span>
+                <p className="text-xs font-bold" style={{ color: '#F59E0B' }}>{t('pendingPhotos')} {pendingPhotos.length}{t('pendingCount')}</p>
               </div>
               <div className="flex flex-col gap-2">
                 {pendingPhotos.map((photo) => (
@@ -657,7 +662,7 @@ function SpotDetailScreen({
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
               <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
             </svg>
-            写真を投稿する
+            {t('uploadPhoto')}
           </button>
 
         </div>
@@ -679,6 +684,7 @@ function PhotoCard({
   onRemove: () => void
   onRequestUpload?: () => void
 }) {
+  const { t } = useTranslation()
   const cardContent = (
     <div className="flex-shrink-0 rounded-xl overflow-hidden flex flex-col"
       style={{ width: 'calc(50vw - 20px)', minWidth: 'calc(50vw - 20px)', background: '#F0F0F5', cursor: photo.sourceUrl ? 'pointer' : 'default' }}>
@@ -743,7 +749,7 @@ function PhotoCard({
             className="flex items-center gap-1 mt-1 text-left"
             style={{ color: '#F59E0B' }}>
             <span className="text-[9px]">！</span>
-            <span className="text-[9px] font-bold">ソースURLを追加</span>
+            <span className="text-[9px] font-bold">{t('addSourceUrl')}</span>
           </button>
         )}
       </div>
@@ -769,11 +775,13 @@ function PhotoUploadModal({
   onSave: (photo: SpotPhoto) => void
   onClose: () => void
 }) {
+  const { t } = useTranslation()
   const [imageDataUrl, setImageDataUrl] = useState<string | undefined>(undefined)
   const [sourceUrl, setSourceUrl] = useState('')
   const [platform, setPlatform] = useState<SpotPlatform>('instagram')
   const [selectedTags, setSelectedTags] = useState<string[]>([])
-  const [date, setDate] = useState(new Date().toISOString().slice(0, 10))
+  const today = useToday()
+  const [date, setDate] = useState(today)
   const [caption, setCaption] = useState('')
   const fileRef = useRef<HTMLInputElement>(null)
 
@@ -820,7 +828,7 @@ function PhotoUploadModal({
         {/* Header */}
         <div className="flex-shrink-0 flex items-center justify-between px-4 py-2" style={{ borderBottom: '1px solid #E5E5EA' }}>
           <div>
-            <p className="text-sm font-bold" style={{ color: '#1C1C1E' }}>📷 フォトを投稿</p>
+            <p className="text-sm font-bold" style={{ color: '#1C1C1E' }}>{t('photoUploadTitle')}</p>
             <p className="text-[11px] mt-0.5" style={{ color: '#8E8E93' }}>{spot.name}</p>
           </div>
           <button onClick={onClose} className="w-11 h-11 flex items-center justify-center">
@@ -835,7 +843,7 @@ function PhotoUploadModal({
 
           {/* 画像 */}
           <div>
-            <label className="text-xs font-bold mb-2 block" style={{ color: '#636366' }}>写真</label>
+            <label className="text-xs font-bold mb-2 block" style={{ color: '#636366' }}>{t('photoLabel')}</label>
             {imageDataUrl ? (
               <div className="relative rounded-xl overflow-hidden" style={{ aspectRatio: '4/3' }}>
                 {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -853,7 +861,7 @@ function PhotoUploadModal({
                 className="w-full h-32 rounded-xl flex flex-col items-center justify-center gap-2"
                 style={{ border: '2px dashed #E5E5EA', color: '#8E8E93' }}>
                 <span className="text-3xl">📷</span>
-                <span className="text-xs">タップして写真を追加</span>
+                <span className="text-xs">{t('photoAdd')}</span>
               </button>
             )}
             <input ref={fileRef} type="file" accept="image/*" className="hidden"
@@ -862,7 +870,7 @@ function PhotoUploadModal({
 
           {/* 来店日 */}
           <div>
-            <label className="text-xs font-bold mb-2 block" style={{ color: '#636366' }}>来店日</label>
+            <label className="text-xs font-bold mb-2 block" style={{ color: '#636366' }}>{t('photoVisitDate')}</label>
             <input
               type="date"
               value={date}
@@ -875,7 +883,7 @@ function PhotoUploadModal({
           {/* メンバー（複数選択可） */}
           <div>
             <label className="text-xs font-bold mb-2 block" style={{ color: '#636366' }}>
-              メンバー <span style={{ color: '#8E8E93', fontWeight: 400 }}>（複数選択可）</span>
+              {t('newSpotMember')} <span style={{ color: '#8E8E93', fontWeight: 400 }}>（{t('newSpotMemberSub')}）</span>
             </label>
             <div className="flex flex-wrap gap-2">
               {seventeenMembers.map((m) => {
@@ -897,7 +905,7 @@ function PhotoUploadModal({
           {/* ソースURL */}
           <div>
             <label className="text-xs font-bold mb-2 block" style={{ color: '#636366' }}>
-              ソースURL <span style={{ color: '#8E8E93', fontWeight: 400 }}>（Instagram / Weverse / X）</span>
+              {t('photoSourceUrl')} <span style={{ color: '#8E8E93', fontWeight: 400 }}>（{t('photoSourceUrlSub')}）</span>
             </label>
             <input
               type="url"
@@ -912,12 +920,12 @@ function PhotoUploadModal({
           {/* メモ */}
           <div>
             <label className="text-xs font-bold mb-2 block" style={{ color: '#636366' }}>
-              メモ <span style={{ color: '#8E8E93', fontWeight: 400 }}>（任意）</span>
+              {t('photoMemo')} <span style={{ color: '#8E8E93', fontWeight: 400 }}>（{t('photoMemoSub')}）</span>
             </label>
             <textarea
               value={caption}
               onChange={(e) => setCaption(e.target.value)}
-              placeholder="メモを入力..."
+              placeholder={t('photoMemoPlaceholder')}
               rows={2}
               className="w-full px-3 py-3 rounded-xl text-sm outline-none resize-none"
               style={{ background: '#F0F0F5', color: '#1C1C1E', border: '1px solid #E5E5EA' }}
@@ -929,7 +937,7 @@ function PhotoUploadModal({
             onClick={handleSave}
             className="w-full py-4 rounded-2xl text-sm font-bold min-h-[52px]"
             style={{ background: '#F3B4E3', color: '#FFFFFF' }}>
-            投稿する
+            {t('submit')}
           </button>
 
           <div className="flex-shrink-0" style={{ height: 200 }} />
@@ -947,6 +955,7 @@ function NewSpotModal({
   defaultContributor: string
   onClose: () => void
 }) {
+  const { t } = useTranslation()
   const [name, setName] = useState('')
   const [nameLocal, setNameLocal] = useState('')
   const [address, setAddress] = useState('')
@@ -1015,14 +1024,14 @@ function NewSpotModal({
             <polyline points="20 6 9 17 4 12" />
           </svg>
         </div>
-        <p className="text-base font-bold mb-1" style={{ color: '#1C1C1E' }}>投稿を受け付けました</p>
+        <p className="text-base font-bold mb-1" style={{ color: '#1C1C1E' }}>{t('newSpotSubmitted')}</p>
         <p className="text-sm text-center mb-4" style={{ color: '#8E8E93' }}>
-          審査後にMAPに追加されます
+          {t('newSpotReview')}
         </p>
         <button onClick={onClose}
           className="w-full max-w-xs py-3.5 rounded-2xl text-sm font-bold"
           style={{ background: '#F3B4E3', color: '#FFFFFF' }}>
-          閉じる
+          {t('close')}
         </button>
       </div>
     )
@@ -1045,7 +1054,7 @@ function NewSpotModal({
             <polyline points="15 18 9 12 15 6" />
           </svg>
         </button>
-        <p className="text-sm font-bold" style={{ color: '#1C1C1E' }}>新しいスポットを投稿</p>
+        <p className="text-sm font-bold" style={{ color: '#1C1C1E' }}>{t('newSpotTitle')}</p>
         <div style={{ width: 36 }}></div>
       </div>
 
@@ -1054,7 +1063,7 @@ function NewSpotModal({
           {/* スクリーンショット（最上部） */}
           <div>
             <label className="text-xs font-bold mb-2 block" style={{ color: '#636366' }}>
-              スクリーンショット <span style={{ color: '#8E8E93', fontWeight: 400 }}>（SNS投稿のスクショなど）</span>
+              {t('newSpotScreenshot')} <span style={{ color: '#8E8E93', fontWeight: 400 }}>（{t('newSpotScreenshotSub')}）</span>
             </label>
             {screenshotUrl ? (
               <div className="relative rounded-xl overflow-hidden">
@@ -1073,8 +1082,8 @@ function NewSpotModal({
                 className="w-full h-32 rounded-xl flex flex-col items-center justify-center gap-2"
                 style={{ border: '2px dashed #E5E5EA', color: '#8E8E93' }}>
                 <span className="text-3xl">📱</span>
-                <span className="text-xs">スクショをアップロード</span>
-                <span className="text-[10px]" style={{ color: '#C7C7CC' }}>スポット名を自動入力します</span>
+                <span className="text-xs">{t('newSpotScreenshotUpload')}</span>
+                <span className="text-[10px]" style={{ color: '#C7C7CC' }}>{t('newSpotScreenshotHint')}</span>
               </button>
             )}
             <input ref={ssFileRef} type="file" accept="image/*" className="hidden"
@@ -1084,9 +1093,9 @@ function NewSpotModal({
           {/* スポット名 */}
           <div>
             <label className="text-xs font-bold mb-2 block" style={{ color: '#636366' }}>
-              スポット名 <span style={{ color: '#F87171' }}>*</span>
+              {t('newSpotName')} <span style={{ color: '#F87171' }}>*</span>
             </label>
-            <p className="text-[10px] mb-1.5" style={{ color: '#F59E0B' }}>※現地の表記を優先</p>
+            <p className="text-[10px] mb-1.5" style={{ color: '#F59E0B' }}>{t('newSpotNameHint')}</p>
             <input type="text" value={name} onChange={(e) => setName(e.target.value)}
               placeholder="例: 하이브 인사이트"
               className="w-full px-3 py-3 rounded-xl text-sm outline-none"
@@ -1096,7 +1105,7 @@ function NewSpotModal({
           {/* 現地語名 */}
           <div>
             <label className="text-xs font-bold mb-2 block" style={{ color: '#636366' }}>
-              現地語名 <span style={{ color: '#8E8E93', fontWeight: 400 }}>（任意・タクシーで見せる用）</span>
+              {t('newSpotLocalName')} <span style={{ color: '#8E8E93', fontWeight: 400 }}>（{t('newSpotLocalNameSub')}）</span>
             </label>
             <input type="text" value={nameLocal} onChange={(e) => setNameLocal(e.target.value)}
               placeholder="例: 하이브 인사이트"
@@ -1107,7 +1116,7 @@ function NewSpotModal({
           {/* 住所 */}
           <div>
             <label className="text-xs font-bold mb-2 block" style={{ color: '#636366' }}>
-              住所 <span style={{ color: '#F87171' }}>*</span>
+              {t('newSpotAddress')} <span style={{ color: '#F87171' }}>*</span>
             </label>
             <input type="text" value={address} onChange={(e) => setAddress(e.target.value)}
               placeholder="例: ソウル特別市龍山区漢南大路42キル 35"
@@ -1117,7 +1126,7 @@ function NewSpotModal({
 
           {/* ジャンル */}
           <div>
-            <label className="text-xs font-bold mb-2 block" style={{ color: '#636366' }}>ジャンル</label>
+            <label className="text-xs font-bold mb-2 block" style={{ color: '#636366' }}>{t('newSpotGenre')}</label>
             <div className="flex flex-wrap gap-2">
               {Object.entries(spotGenreConfig).map(([key, cfg]) => (
                 <button key={key} onClick={() => setGenre(key as SpotGenre)}
@@ -1135,7 +1144,7 @@ function NewSpotModal({
           {/* メンバー */}
           <div>
             <label className="text-xs font-bold mb-2 block" style={{ color: '#636366' }}>
-              メンバー <span style={{ color: '#8E8E93', fontWeight: 400 }}>（複数選択可）</span>
+              {t('newSpotMember')} <span style={{ color: '#8E8E93', fontWeight: 400 }}>（{t('newSpotMemberSub')}）</span>
             </label>
             <div className="flex flex-wrap gap-2">
               {seventeenMembers.map((m) => {
@@ -1156,7 +1165,7 @@ function NewSpotModal({
 
           {/* 写真（必須） */}
           <div>
-            <label className="text-xs font-bold mb-2 block" style={{ color: '#636366' }}>写真 <span style={{ color: '#F87171' }}>*</span></label>
+            <label className="text-xs font-bold mb-2 block" style={{ color: '#636366' }}>{t('newSpotPhoto')} <span style={{ color: '#F87171' }}>*</span></label>
             {imageDataUrl ? (
               <div className="relative rounded-xl overflow-hidden" style={{ aspectRatio: '4/3' }}>
                 {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -1174,7 +1183,7 @@ function NewSpotModal({
                 className="w-full h-32 rounded-xl flex flex-col items-center justify-center gap-2"
                 style={{ border: `2px dashed ${!imageDataUrl ? '#F87171' : '#E5E5EA'}40`, color: '#8E8E93' }}>
                 <span className="text-3xl">📷</span>
-                <span className="text-xs">タップして写真を追加（必須）</span>
+                <span className="text-xs">{t('newSpotPhotoAdd')}</span>
               </button>
             )}
             <input ref={fileRef} type="file" accept="image/*" className="hidden"
@@ -1184,7 +1193,7 @@ function NewSpotModal({
           {/* 公式URL */}
           <div>
             <label className="text-xs font-bold mb-2 block" style={{ color: '#636366' }}>
-              SPOT公式URL <span style={{ color: '#8E8E93', fontWeight: 400 }}>（任意）</span>
+              {t('newSpotOfficialUrl')} <span style={{ color: '#8E8E93', fontWeight: 400 }}></span>
             </label>
             <input type="url" value={officialUrl} onChange={(e) => setOfficialUrl(e.target.value)}
               placeholder="https://www.example.com"
@@ -1195,7 +1204,7 @@ function NewSpotModal({
           {/* ソースURL */}
           <div>
             <label className="text-xs font-bold mb-2 block" style={{ color: '#636366' }}>
-              ソースURL <span style={{ color: '#8E8E93', fontWeight: 400 }}>（任意・SNS投稿など）</span>
+              {t('newSpotSourceUrl')} <span style={{ color: '#8E8E93', fontWeight: 400 }}>（{t('newSpotSourceUrlSub')}）</span>
             </label>
             <input type="url" value={sourceUrl} onChange={(e) => setSourceUrl(e.target.value)}
               placeholder="https://www.instagram.com/p/..."
@@ -1206,10 +1215,10 @@ function NewSpotModal({
           {/* 説明 */}
           <div>
             <label className="text-xs font-bold mb-2 block" style={{ color: '#636366' }}>
-              説明 <span style={{ color: '#8E8E93', fontWeight: 400 }}>（任意）</span>
+              {t('newSpotDesc')} <span style={{ color: '#8E8E93', fontWeight: 400 }}></span>
             </label>
             <textarea value={description} onChange={(e) => setDescription(e.target.value)}
-              placeholder="どんなスポットか、エピソードなど"
+              placeholder={t('newSpotDescPlaceholder')}
               rows={3}
               className="w-full px-3 py-3 rounded-xl text-sm outline-none resize-none"
               style={{ background: '#F0F0F5', color: '#1C1C1E', border: '1px solid #E5E5EA' }} />
@@ -1224,7 +1233,7 @@ function NewSpotModal({
               background: name.trim() && address.trim() && imageDataUrl ? '#F3B4E3' : '#E5E5EA',
               color: name.trim() && address.trim() && imageDataUrl ? '#FFFFFF' : '#8E8E93',
             }}>
-            投稿する
+            {t('submit')}
           </button>
 
           <div className="flex-shrink-0" style={{ height: 200 }} />

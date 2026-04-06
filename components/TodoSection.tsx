@@ -3,28 +3,26 @@
 import { useState } from 'react'
 import { useTodos, Todo } from '@/lib/useTodos'
 import { useTranslation } from '@/lib/i18n/useTranslation'
-
-
-
-const TODAY = new Date().toISOString().slice(0, 10)
+import { useToday } from '@/lib/useToday'
 
 // 期間イベントはdateEnd（終了日）で判定、単発はdate
-function getDueStatus(todo: Todo): 'overdue' | 'today' | 'soon' | 'future' {
+function getDueStatus(todo: Todo, today: string): 'overdue' | 'today' | 'soon' | 'future' {
   const end = todo.dateEnd ?? todo.date
-  if (end < TODAY) return 'overdue'
-  if (end === TODAY) return 'today'
-  const diff = (new Date(end).getTime() - new Date(TODAY).getTime()) / 86400000
+  if (end < today) return 'overdue'
+  if (end === today) return 'today'
+  const diff = (new Date(end).getTime() - new Date(today).getTime()) / 86400000
   return diff <= 3 ? 'soon' : 'future'
 }
 
-const DUE_CONFIG = {
-  overdue: { label: '期限切れ', color: '#EF4444', bg: 'rgba(239,68,68,0.12)' },
-  today:   { label: '今日',     color: '#F59E0B', bg: 'rgba(245,158,11,0.12)' },
-  soon:    { label: 'もうすぐ', color: '#F3B4E3', bg: 'rgba(243,180,227,0.12)' },
-  future:  { label: '',         color: '#636366', bg: 'transparent' },
+const DUE_STYLE = {
+  overdue: { label: 'todoOverdue' as const, color: '#EF4444', bg: 'rgba(239,68,68,0.12)' },
+  today:   { label: 'todoToday'   as const, color: '#F59E0B', bg: 'rgba(245,158,11,0.12)' },
+  soon:    { label: 'todoSoon'    as const, color: '#F3B4E3', bg: 'rgba(243,180,227,0.12)' },
+  future:  { label: ''            as const, color: '#636366', bg: 'transparent' },
 }
 
 export default function TodoSection() {
+  const TODAY = useToday()
   const { t } = useTranslation()
   const { todos, addTodo, toggleDone, removeTodo, updateTodo } = useTodos()
   const [input, setInput] = useState('')
@@ -78,7 +76,7 @@ export default function TodoSection() {
                 : <><path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></>
               }
             </svg>
-            完了 {done.length}件
+            {t('todoDone')} {done.length}{t('items')}
           </button>
         )}
       </div>
@@ -167,12 +165,13 @@ function TodoRow({ todo, onToggle, onRemove, onMemoChange }: {
   onRemove: () => void
   onMemoChange: (memo: string) => void
 }) {
+  const TODAY = useToday()
   const { t } = useTranslation()
   const [expanded, setExpanded] = useState(false)
   const [editingMemo, setEditingMemo] = useState(false)
   const [memoVal, setMemoVal] = useState(todo.memo ?? '')
-  const status = getDueStatus(todo)
-  const cfg = DUE_CONFIG[status]
+  const status = getDueStatus(todo, TODAY)
+  const cfg = DUE_STYLE[status]
 
   return (
     <div className="rounded-xl overflow-hidden" style={{ background: '#FFFFFF', opacity: todo.done ? 0.6 : 1 }}>
@@ -205,7 +204,7 @@ function TodoRow({ todo, onToggle, onRemove, onMemoChange }: {
               {todo.dateEnd
                 ? `${todo.date.slice(5).replace('-','/')}${todo.time && todo.time !== '00:00' ? ` ${todo.time}` : ''} 〜 ${todo.dateEnd.slice(5).replace('-','/')}`
                 : `${todo.date.slice(5).replace('-', '/')}${todo.time && todo.time !== '00:00' ? ` ${todo.time}` : ''}`}
-              {cfg.label ? ` · ${cfg.label}` : ''}
+              {cfg.label ? ` · ${t(cfg.label)}` : ''}
             </span>
             {todo.memo && !expanded && (
               <span className="text-[10px]" style={{ color: '#8E8E93' }}>📝</span>

@@ -73,7 +73,12 @@ export function useMyEntries() {
     [entries],
   )
 
-  return { entries, addEntry, updateEntry, removeEntry, hasEntry }
+  const findEntryByEventId = useCallback(
+    (eventId: string) => entries.find((e) => e.eventId === eventId),
+    [entries],
+  )
+
+  return { entries, addEntry, updateEntry, removeEntry, hasEntry, findEntryByEventId }
 }
 
 /** 画像をリサイズ・圧縮して data URL に変換 */

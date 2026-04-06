@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useTranslation } from '@/lib/i18n/useTranslation'
 
 type Member = {
   name: string
@@ -26,6 +27,7 @@ function daysUntil(dateStr: string): number {
 }
 
 export default function MilCountdown() {
+  const { t } = useTranslation()
   const [days, setDays] = useState<number[]>([])
 
   useEffect(() => {
@@ -92,7 +94,7 @@ export default function MilCountdown() {
               {/* カウント */}
               <div className="w-full px-1 py-2 text-center">
                 {discharged ? (
-                  <p className="text-[10px] font-black" style={{ color: m.color }}>完了</p>
+                  <p className="text-[10px] font-black" style={{ color: m.color }}>{t('milCountdownDone')}</p>
                 ) : (
                   <>
                     <p className="text-base font-black leading-none" style={{ color: m.color }}>

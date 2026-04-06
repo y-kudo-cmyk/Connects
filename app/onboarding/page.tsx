@@ -11,7 +11,7 @@ type Step = 'lang' | 'code'
 
 const LANGUAGES: { code: Lang; flag: string; label: string; sub: string }[] = [
   { code: 'ja', flag: '🇯🇵', label: '日本語', sub: 'Japanese' },
-  { code: 'en', flag: '🇺🇸', label: 'English', sub: '英語' },
+  { code: 'en', flag: '🇺🇸', label: 'English', sub: 'English' },
   { code: 'ko', flag: '🇰🇷', label: '한국어', sub: 'Korean' },
 ]
 
@@ -55,7 +55,7 @@ export default function OnboardingPage() {
   }
 
   const handleVerifyCode = async () => {
-    if (!code.trim()) { setCodeError('招待コードを入力してください'); return }
+    if (!code.trim()) { setCodeError(t('enterInviteCode')); return }
     setCodeLoading(true)
     setCodeError('')
     try {

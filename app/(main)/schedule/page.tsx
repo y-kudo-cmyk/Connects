@@ -11,8 +11,7 @@ import { countryFlag, COUNTRIES } from '@/lib/countryUtils'
 import MilCountdown from '@/components/MilCountdown'
 import { useTodos } from '@/lib/useTodos'
 import { useTranslation } from '@/lib/i18n/useTranslation'
-
-const TODAY = new Date().toISOString().slice(0, 10)
+import { useToday } from '@/lib/useToday'
 
 function getDaysInMonth(y: number, m: number) { return new Date(y, m + 1, 0).getDate() }
 function getFirstDay(y: number, m: number) { return new Date(y, m, 1).getDay() }
@@ -37,6 +36,7 @@ function matchRegion(e: AppEvent, region: Region, homeCountry: string): boolean 
 }
 
 export default function SchedulePage() {
+  const TODAY = useToday()
   const { events } = useSupabaseData()
   const now = new Date()
   const [selectedDate, setSelectedDate] = useState(TODAY)
@@ -312,7 +312,7 @@ export default function SchedulePage() {
                             <path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/>
                             <path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/>
                           </svg>
-                          <span className="text-[10px] font-bold" style={{ color: '#636366' }}>ソース</span>
+                          <span className="text-[10px] font-bold" style={{ color: '#636366' }}>{t('source')}</span>
                         </a>
                       ) : (
                         <div className="flex-1 flex flex-col items-center justify-center gap-0.5 py-2 rounded-xl"
@@ -321,7 +321,7 @@ export default function SchedulePage() {
                             <path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/>
                             <path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/>
                           </svg>
-                          <span className="text-[10px] font-bold" style={{ color: '#636366' }}>ソース</span>
+                          <span className="text-[10px] font-bold" style={{ color: '#636366' }}>{t('source')}</span>
                         </div>
                       )}
                       {/* MY */}

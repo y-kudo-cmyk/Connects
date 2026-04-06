@@ -312,7 +312,7 @@ export default function ProfilePage() {
               <p className="text-base font-black" style={{ color: rank.color }}>{rank.label}</p>
               {nextRank ? (
                 <p className="text-[10px]" style={{ color: '#8E8E93' }}>
-                  次のランクまで あと {nextRank.min - score} pt
+                  {t('nextRank')} {nextRank.min - score} pt
                 </p>
               ) : (
                 <p className="text-[10px]" style={{ color: '#8E8E93' }}>{t('maxRank')}</p>
@@ -643,7 +643,7 @@ export default function ProfilePage() {
               <div className="flex justify-center mb-3">
                 <div className="w-10 h-1 rounded-full" style={{ background: '#C7C7CC' }} />
               </div>
-              <p className="text-base font-bold" style={{ color: '#1C1C1E' }}>言語を選択</p>
+              <p className="text-base font-bold" style={{ color: '#1C1C1E' }}>{t('selectLanguage')}</p>
             </div>
             <div className="overflow-y-auto px-5" style={{ minHeight: 0, paddingBottom: 'calc(80px + env(safe-area-inset-bottom, 0px))' }}>
               <div className="flex flex-col gap-2">
@@ -684,7 +684,7 @@ export default function ProfilePage() {
               <div className="flex justify-center mb-3">
                 <div className="w-10 h-1 rounded-full" style={{ background: '#C7C7CC' }} />
               </div>
-              <p className="text-base font-bold" style={{ color: '#1C1C1E' }}>居住国を選択</p>
+              <p className="text-base font-bold" style={{ color: '#1C1C1E' }}>{t('selectCountry')}</p>
             </div>
             <div className="flex-1 overflow-y-auto px-5 pb-28" style={{ minHeight: 0 }}>
               <div className="grid grid-cols-2 gap-2">
@@ -724,7 +724,7 @@ export default function ProfilePage() {
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" />
           </svg>
-          ご意見はこちら
+          {t('feedbackHere')}
         </button>
 
         {/* サインアウト */}
@@ -733,19 +733,19 @@ export default function ProfilePage() {
             <button onClick={() => setShowSignOutConfirm(false)}
               className="flex-1 py-3.5 rounded-xl text-sm font-semibold"
               style={{ background: '#FFFFFF', color: '#636366' }}>
-              キャンセル
+              {t('cancel')}
             </button>
             <button onClick={handleSignOut}
               className="flex-1 py-3.5 rounded-xl text-sm font-semibold"
               style={{ background: 'rgba(239,68,68,0.1)', color: '#EF4444' }}>
-              サインアウト確認
+              {t('signOutConfirm')}
             </button>
           </div>
         ) : (
           <button onClick={() => setShowSignOutConfirm(true)}
             className="w-full py-3.5 rounded-xl text-sm font-semibold"
             style={{ background: '#FFFFFF', color: '#EF4444' }}>
-            サインアウト
+            {t('signOut')}
           </button>
         )}
 
@@ -755,7 +755,7 @@ export default function ProfilePage() {
           className="w-full py-3 rounded-xl text-sm font-medium"
           style={{ background: 'transparent', color: '#C7C7CC' }}
         >
-          退会する
+          {t('deleteAccount')}
         </button>
 
         <p className="text-center text-xs" style={{ color: '#C7C7CC' }}>Connects+ v1.0.0</p>
@@ -773,9 +773,9 @@ export default function ProfilePage() {
             style={{ background: '#FFFFFF' }}
             onClick={(e) => e.stopPropagation()}
           >
-            <p className="text-base font-bold mb-2 text-center" style={{ color: '#1C1C1E' }}>退会の確認</p>
+            <p className="text-base font-bold mb-2 text-center" style={{ color: '#1C1C1E' }}>{t('deleteAccountConfirmTitle')}</p>
             <p className="text-sm mb-5 text-center leading-relaxed" style={{ color: '#636366' }}>
-              退会するとすべてのデータが削除されます。この操作は取り消せません。
+              {t('deleteAccountConfirmMsg')}
             </p>
             <label className="flex items-start gap-3 mb-5 cursor-pointer">
               <div
@@ -793,7 +793,7 @@ export default function ProfilePage() {
                 )}
               </div>
               <span className="text-sm leading-relaxed" style={{ color: '#1C1C1E' }}>
-                データが削除されることを理解しました
+                {t('deleteAccountAgree')}
               </span>
             </label>
             <div className="flex gap-2">
@@ -801,7 +801,7 @@ export default function ProfilePage() {
                 onClick={() => setShowDeleteConfirm(false)}
                 className="flex-1 py-3 rounded-xl text-sm font-semibold"
                 style={{ background: '#F0F0F5', color: '#636366' }}
-              >キャンセル</button>
+              >{t('cancel')}</button>
               <button
                 onClick={handleDeleteAccount}
                 disabled={!deleteAgreed}
@@ -810,7 +810,7 @@ export default function ProfilePage() {
                   background: deleteAgreed ? '#EF4444' : '#F0F0F5',
                   color: deleteAgreed ? '#FFFFFF' : '#C7C7CC',
                 }}
-              >退会する</button>
+              >{t('deleteAccountButton')}</button>
             </div>
           </div>
         </div>
@@ -831,8 +831,8 @@ export default function ProfilePage() {
             <div className="flex justify-center mb-4">
               <div className="w-10 h-1 rounded-full" style={{ background: '#C7C7CC' }} />
             </div>
-            <p className="text-base font-bold mb-1" style={{ color: '#1C1C1E' }}>ご意見・ご要望</p>
-            <p className="text-xs mb-4" style={{ color: '#8E8E93' }}>いただいたご意見は運営チームへ送信されます</p>
+            <p className="text-base font-bold mb-1" style={{ color: '#1C1C1E' }}>{t('feedbackTitle')}</p>
+            <p className="text-xs mb-4" style={{ color: '#8E8E93' }}>{t('feedbackDesc')}</p>
 
             {feedbackState === 'done' ? (
               <div className="flex flex-col items-center py-8 gap-3">
@@ -841,10 +841,10 @@ export default function ProfilePage() {
                     <polyline points="20 6 9 17 4 12" />
                   </svg>
                 </div>
-                <p className="text-sm font-bold" style={{ color: '#1C1C1E' }}>送信しました！</p>
-                <p className="text-xs" style={{ color: '#8E8E93' }}>ご意見ありがとうございます</p>
+                <p className="text-sm font-bold" style={{ color: '#1C1C1E' }}>{t('feedbackSent')}</p>
+                <p className="text-xs" style={{ color: '#8E8E93' }}>{t('feedbackThanks')}</p>
                 <button onClick={() => setShowFeedback(false)} className="mt-2 px-6 py-2.5 rounded-xl text-sm font-bold" style={{ background: '#F3B4E3', color: '#FFFFFF' }}>
-                  閉じる
+                  {t('close')}
                 </button>
               </div>
             ) : (
@@ -852,7 +852,7 @@ export default function ProfilePage() {
                 <textarea
                   value={feedbackMsg}
                   onChange={(e) => setFeedbackMsg(e.target.value)}
-                  placeholder="ご意見・ご要望をお聞かせください..."
+                  placeholder={t('feedbackPlaceholder')}
                   rows={5}
                   maxLength={500}
                   className="w-full px-3 py-3 rounded-xl text-sm outline-none resize-none mb-1"
@@ -860,7 +860,7 @@ export default function ProfilePage() {
                 />
                 <p className="text-[10px] text-right mb-4" style={{ color: '#C7C7CC' }}>{feedbackMsg.length}/500</p>
                 {feedbackState === 'error' && (
-                  <p className="text-xs mb-3 text-center" style={{ color: '#EF4444' }}>送信に失敗しました。時間をおいて再試行してください。</p>
+                  <p className="text-xs mb-3 text-center" style={{ color: '#EF4444' }}>{t('feedbackError')}</p>
                 )}
                 <button
                   onClick={sendFeedback}
@@ -871,7 +871,7 @@ export default function ProfilePage() {
                     color: feedbackMsg.trim() ? '#FFFFFF' : '#8E8E93',
                   }}
                 >
-                  {feedbackState === 'sending' ? '送信中...' : '送信する'}
+                  {feedbackState === 'sending' ? t('sending') : t('send')}
                 </button>
               </>
             )}
@@ -898,7 +898,7 @@ export default function ProfilePage() {
               </div>
               <div className="flex items-center justify-between">
                 <h2 className="text-base font-bold" style={{ color: '#1C1C1E' }}>
-                  {fcModal === 'new' ? '会員番号を追加' : '会員情報を編集'}
+                  {fcModal === 'new' ? t('fcAddTitle') : t('fcEditTitle')}
                 </h2>
                 <button onClick={() => setFcModal(null)} className="w-10 h-10 flex items-center justify-center -mr-2">
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#636366" strokeWidth="2">
@@ -918,23 +918,23 @@ export default function ProfilePage() {
               }}
             >
               <div className="flex flex-col gap-3 pb-3">
-                <FcField label="アーティスト名 *" value={fcForm.clubName ?? ''} placeholder="例: SEVENTEEN"
+                <FcField label={t('fcArtistName')} value={fcForm.clubName ?? ''} placeholder="例: SEVENTEEN"
                   onChange={(v) => setFcForm((f) => ({ ...f, clubName: v }))} />
-                <FcField label="登録メールアドレス" value={fcForm.email ?? ''} placeholder="example@email.com"
+                <FcField label={t('fcEmail')} value={fcForm.email ?? ''} placeholder="example@email.com"
                   onChange={(v) => setFcForm((f) => ({ ...f, email: v }))} inputType="email" />
-                <FcField label="会員番号 *" value={fcForm.memberNumber ?? ''} placeholder="例: 00123456"
+                <FcField label={t('fcMemberNumber')} value={fcForm.memberNumber ?? ''} placeholder="例: 00123456"
                   onChange={(v) => setFcForm((f) => ({ ...f, memberNumber: v }))} />
-                <FcField label="会員番号パスワード" value={fcForm.memberPassword ?? ''} placeholder="パスワード"
+                <FcField label={t('fcMemberPassword')} value={fcForm.memberPassword ?? ''} placeholder={t('password')}
                   onChange={(v) => setFcForm((f) => ({ ...f, memberPassword: v }))} inputType="password" />
-                <FcField label="モバイル会員番号" value={fcForm.mobileMemberNumber ?? ''} placeholder="例: M00123456"
+                <FcField label={t('fcMobileMemberNumber')} value={fcForm.mobileMemberNumber ?? ''} placeholder="例: M00123456"
                   onChange={(v) => setFcForm((f) => ({ ...f, mobileMemberNumber: v }))} />
-                <FcField label="モバイルパスワード" value={fcForm.mobilePassword ?? ''} placeholder="パスワード"
+                <FcField label={t('fcMobilePassword')} value={fcForm.mobilePassword ?? ''} placeholder={t('password')}
                   onChange={(v) => setFcForm((f) => ({ ...f, mobilePassword: v }))} inputType="password" />
-                <FcField label="電話番号" value={fcForm.phone ?? ''} placeholder="090-0000-0000"
+                <FcField label={t('fcPhone')} value={fcForm.phone ?? ''} placeholder="090-0000-0000"
                   onChange={(v) => setFcForm((f) => ({ ...f, phone: v }))} inputType="tel" />
-                <FcField label="有効期限" value={fcForm.validUntil ?? ''} placeholder="YYYY-MM-DD"
+                <FcField label={t('fcValidUntil')} value={fcForm.validUntil ?? ''} placeholder="YYYY-MM-DD"
                   onChange={(v) => setFcForm((f) => ({ ...f, validUntil: v }))} inputType="date" />
-                <FcField label="メモ" value={fcForm.note ?? ''} placeholder="備考など"
+                <FcField label={t('fcNote')} value={fcForm.note ?? ''} placeholder={t('fcNotePlaceholder')}
                   onChange={(v) => setFcForm((f) => ({ ...f, note: v }))} />
               </div>
             </div>
@@ -947,7 +947,7 @@ export default function ProfilePage() {
                     onClick={() => { removeFanClub(fcModal); setFcModal(null) }}
                     className="px-4 py-3 rounded-xl text-sm font-semibold"
                     style={{ background: '#FEE2E2', color: '#EF4444' }}
-                  >削除</button>
+                  >{t('delete')}</button>
                 )}
                 <button
                   onClick={saveFc}
@@ -957,7 +957,7 @@ export default function ProfilePage() {
                     background: fcForm.clubName && fcForm.memberNumber ? '#F3B4E3' : '#F0F0F5',
                     color: fcForm.clubName && fcForm.memberNumber ? '#FFFFFF' : '#8E8E93',
                   }}
-                >保存</button>
+                >{t('save')}</button>
               </div>
             </div>
           </div>

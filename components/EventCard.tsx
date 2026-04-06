@@ -1,6 +1,7 @@
 import { scheduleTagConfig, type ScheduleTag } from '@/lib/config/tags'
 import type { AppEvent } from '@/lib/supabase/adapters'
 import { countryFlag, cityToCountryCode } from '@/lib/countryUtils'
+import { useTranslation } from '@/lib/i18n/useTranslation'
 
 interface EventCardProps {
   event: AppEvent
@@ -23,6 +24,7 @@ function formatDateTime(date: string, time: string, dateEnd?: string, timeEnd?: 
 }
 
 export default function EventCard({ event, compact = false }: EventCardProps) {
+  const { t } = useTranslation()
   const firstTag = event.tags?.[0] as ScheduleTag | undefined
   const cfg = firstTag && scheduleTagConfig[firstTag] ? scheduleTagConfig[firstTag] : { label: 'EVENT', icon: '📌', color: '#8E8E93', bg: 'rgba(142,142,147,0.15)' }
   const isPeriod = !!event.dateEnd
@@ -105,7 +107,7 @@ export default function EventCard({ event, compact = false }: EventCardProps) {
               className="text-[10px] font-bold px-1.5 py-0.5 rounded"
               style={{ background: 'rgba(0,0,0,0.06)', color: '#8E8E93' }}
             >
-              期間
+              {t('period')}
             </span>
           )}
         </div>

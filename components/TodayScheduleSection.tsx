@@ -7,6 +7,10 @@ import { useSupabaseData } from './SupabaseDataProvider'
 import type { AppEvent } from '@/lib/supabase/adapters'
 import EventDetailModal from './EventDetailModal'
 import { useTranslation } from '@/lib/i18n/useTranslation'
+import { useToday } from '@/lib/useToday'
+import { cityToCountryCode } from '@/lib/countryUtils'
+import { useMyEntries } from '@/lib/useMyEntries'
+import { useRouter } from 'next/navigation'
 
 // DAY_JA は i18n の dayNames で置き換え
 const MONTH_SHORT = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
@@ -16,8 +20,11 @@ function md(s: string) {
   return `${String(d.getMonth() + 1).padStart(2, '0')}/${String(d.getDate()).padStart(2, '0')}`
 }
 
-export default function TodayScheduleSection({ today }: { today: string }) {
+export default function TodayScheduleSection() {
+  const today = useToday()
+  const router = useRouter()
   const { events: allEvents } = useSupabaseData()
+  const { hasEntry, findEntryByEventId } = useMyEntries()
   const { t, tObj } = useTranslation()
   const dayNames = tObj<string[]>('dayNames')
   const [detailEvent, setDetailEvent] = useState<AppEvent | null>(null)
@@ -111,77 +118,121 @@ export default function TodayScheduleSection({ today }: { today: string }) {
               const dateStr = isPeriod
                 ? `${md(event.date)}${hasTime ? ` ${event.time}` : ''} 〜 ${md(event.dateEnd!)}${event.timeEnd && event.timeEnd !== '00:00' ? ` ${event.timeEnd}` : ''}`
                 : (hasTime ? `${md(event.date)} ${event.time}` : t('allDay'))
-              return (
-                <button
+              {
+                const imported = hasEntry(event.id)
+                return (
+                <div
                   key={event.id}
-                  onClick={() => setDetailEvent(event)}
-                  className="flex items-center gap-3 rounded-2xl overflow-hidden text-left"
-                  style={{ background: '#FFFFFF', minHeight: 80 }}
+                  className="rounded-2xl overflow-hidden"
+                  style={{ background: '#FFFFFF' }}
                 >
-                  {/* 左：画像 */}
-                  <div className="flex-shrink-0 relative overflow-hidden" style={{ width: 72, alignSelf: 'stretch' }}>
-                    {event.image ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img
-                        src={event.image}
-                        alt={event.title}
-                        className="w-full h-full object-cover object-top"
-                      />
-                    ) : (
-                      <div className="w-full h-full" style={{ background: '#E5E5EA' }} />
-                    )}
-                    <div className="absolute inset-y-0 right-0 w-0.5" style={{ background: cfg.color }} />
-                  </div>
+                  {/* メインエリア：タップで詳細 */}
+                  <button
+                    onClick={() => setDetailEvent(event)}
+                    className="flex items-center gap-3 w-full text-left"
+                    style={{ minHeight: 80 }}
+                  >
+                    {/* 左：画像 */}
+                    <div className="flex-shrink-0 relative overflow-hidden" style={{ width: 72, alignSelf: 'stretch' }}>
+                      {event.image ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          src={event.image}
+                          alt={event.title}
+                          className="w-full h-full object-cover object-top"
+                        />
+                      ) : (
+                        <div className="w-full h-full" style={{ background: '#E5E5EA' }} />
+                      )}
+                      <div className="absolute inset-y-0 right-0 w-0.5" style={{ background: cfg.color }} />
+                    </div>
 
-                  {/* 右：情報 */}
-                  <div className="flex-1 min-w-0 py-2.5 pr-3">
-                    <div className="flex items-center gap-1 mb-1">
-                      <span
-                        className="text-[10px] font-bold px-1.5 py-0.5 rounded"
-                        style={{ background: cfg.bg ?? cfg.color + '20', color: cfg.color }}
-                      >
-                        {cfg.icon} {cfg.label}
-                      </span>
-                      {/* 承認バッジ */}
-                      <span
-                        className="text-[9px] font-bold px-1.5 py-0.5 rounded-full"
-                        style={event.verifiedCount >= 3
-                          ? { background: 'rgba(52,211,153,0.15)', color: '#34D399' }
-                          : { background: 'rgba(245,158,11,0.12)', color: '#F59E0B' }
-                        }
-                      >
-                        {event.verifiedCount >= 3 ? '✓' : `${event.verifiedCount}/3`}
-                      </span>
-                      {isPeriod && (
+                    {/* 右：情報 */}
+                    <div className="flex-1 min-w-0 py-2.5 pr-3">
+                      <div className="flex items-center gap-1 mb-1">
                         <span
                           className="text-[10px] font-bold px-1.5 py-0.5 rounded"
-                          style={{ background: 'rgba(0,0,0,0.06)', color: '#8E8E93' }}
+                          style={{ background: cfg.bg ?? cfg.color + '20', color: cfg.color }}
                         >
-                          {t('period')}
+                          {cfg.icon} {cfg.label}
                         </span>
-                      )}
-                    </div>
-                    <p className="text-sm font-bold leading-snug" style={{ color: '#1C1C1E' }}>
-                      {event.title}
-                    </p>
-                    <p className="text-xs font-semibold mt-0.5" style={{ color: cfg.color }}>
-                      {dateStr}
-                    </p>
-                    {(event.venue || event.city) && (
-                      <p className="text-[11px] mt-0.5 truncate" style={{ color: '#8E8E93' }}>
-                        📍 {event.venue}{event.venue && event.city ? ' · ' : ''}{event.city}
+                        <span
+                          className="text-[9px] font-bold px-1.5 py-0.5 rounded-full"
+                          style={event.verifiedCount >= 3
+                            ? { background: 'rgba(52,211,153,0.15)', color: '#34D399' }
+                            : { background: 'rgba(245,158,11,0.12)', color: '#F59E0B' }
+                          }
+                        >
+                          {event.verifiedCount >= 3 ? '✓' : `${event.verifiedCount}/3`}
+                        </span>
+                        {isPeriod && (
+                          <span
+                            className="text-[10px] font-bold px-1.5 py-0.5 rounded"
+                            style={{ background: 'rgba(0,0,0,0.06)', color: '#8E8E93' }}
+                          >
+                            {t('period')}
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-sm font-bold leading-snug" style={{ color: '#1C1C1E' }}>
+                        {event.title}
                       </p>
+                      <p className="text-xs font-semibold mt-0.5" style={{ color: cfg.color }}>
+                        {dateStr}
+                      </p>
+                    </div>
+                  </button>
+
+                  {/* 下部アクション行：会場MAP・MY */}
+                  <div className="flex items-center gap-2 px-3 pb-2.5 -mt-0.5">
+                    {event.venue && (
+                      <button
+                        onClick={() => {
+                          const cc = cityToCountryCode(event.city ?? '')
+                          const q = encodeURIComponent(event.venue! + (event.city ? ` ${event.city}` : ''))
+                          const url = cc === 'KR'
+                            ? `https://map.naver.com/v5/search/${q}`
+                            : `https://www.google.com/maps/search/?api=1&query=${q}`
+                          window.open(url, '_blank', 'noopener,noreferrer')
+                        }}
+                        className="flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-bold"
+                        style={{ background: '#F0F0F5', color: '#636366' }}
+                      >
+                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z" />
+                          <circle cx="12" cy="10" r="3" />
+                        </svg>
+                        {event.venue}
+                      </button>
                     )}
+                    <div className="flex-1" />
+                    {imported ? (
+                      <button
+                        onClick={() => {
+                          const myEntry = findEntryByEventId(event.id)
+                          if (myEntry) router.push(`/my?entry=${myEntry.id}`)
+                        }}
+                        className="flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-bold"
+                        style={{ background: 'rgba(243,180,227,0.12)', color: '#F3B4E3' }}
+                      >
+                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" />
+                          <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" />
+                        </svg>
+                        MY
+                      </button>
+                    ) : null}
                   </div>
-                </button>
-              )
+                </div>
+                )
+              }
             })}
           </div>
         )}
       </section>
 
       {detailEvent && (
-        <EventDetailModal event={detailEvent} onClose={() => setDetailEvent(null)} showConfirmButton={false} />
+        <EventDetailModal event={detailEvent} onClose={() => setDetailEvent(null)} showConfirmButton />
       )}
     </>
   )

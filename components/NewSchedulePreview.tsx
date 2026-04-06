@@ -7,13 +7,13 @@ import type { AppEvent } from '@/lib/supabase/adapters'
 import { useMyEntries } from '@/lib/useMyEntries'
 import EventDetailModal from './EventDetailModal'
 import { useTranslation } from '@/lib/i18n/useTranslation'
-
-const TODAY = new Date().toISOString().slice(0, 10)
+import { useToday } from '@/lib/useToday'
 const DISMISSED_KEY = 'cp-dismissed'
 
 const MONTH_SHORT = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
 
 export default function NewSchedulePreview() {
+  const TODAY = useToday()
   const { t } = useTranslation()
   const [dismissed, setDismissed] = useState<Set<string>>(new Set())
   const { events } = useSupabaseData()

@@ -1,14 +1,14 @@
 'use client'
 
 import { useState, useRef, useEffect, type ReactNode } from 'react'
+import { useSearchParams } from 'next/navigation'
 import { useMyEntries, MyEntry, compressImage, SeatInfo } from '@/lib/useMyEntries'
 import { eventTypeConfig } from '@/lib/mockData'
 import { useTranslation } from '@/lib/i18n/useTranslation'
 import SeatInfoForm from '@/components/SeatInfoForm'
 import SeatViewPreview from '@/components/SeatViewPreview'
 import TodoSection from '@/components/TodoSection'
-
-const TODAY = new Date().toISOString().slice(0, 10)
+import { useToday } from '@/lib/useToday'
 
 // ── 日付ヘルパー ─────────────────────────────────────────────────
 function md(s: string) {
@@ -51,10 +51,11 @@ function getFirstDay(y: number, m: number) { return new Date(y, m, 1).getDay() }
 
 const FULL_MONTH = ['January','February','March','April','May','June','July','August','September','October','November','December']
 const DAY_NAMES = ['S','M','T','W','T','F','S']
-const DAY_SHORT = ['日','月','火','水','木','金','土']
+// DAY_SHORT は tObj('dayNames') に置き換え
 
 // ── メインページ ─────────────────────────────────────────────────
 export default function MyPage() {
+  const TODAY = useToday()
   const now = new Date()
   const [tab, setTab] = useState<'entries' | 'todos'>('entries')
   const [viewMode, setViewMode] = useState<'month' | 'week' | 'day'>('month')
@@ -65,8 +66,19 @@ export default function MyPage() {
   const [editEntry, setEditEntry] = useState<MyEntry | null>(null)
   const gridRef = useRef<HTMLDivElement>(null)
 
+  const searchParams = useSearchParams()
   const { entries, updateEntry, removeEntry } = useMyEntries()
-  const { t } = useTranslation()
+  const { t, tObj } = useTranslation()
+  const DAY_SHORT = tObj<string[]>('dayNames')
+
+  // クエリパラメータ ?entry=<id> でエントリ編集モーダルを自動オープン
+  useEffect(() => {
+    const entryId = searchParams.get('entry')
+    if (entryId && entries.length > 0 && !editEntry) {
+      const target = entries.find((e) => e.id === entryId)
+      if (target) setEditEntry(target)
+    }
+  }, [searchParams, entries])
 
   // 週/日ビューに切り替えたとき現在時刻にスクロール
   useEffect(() => {
@@ -746,7 +758,7 @@ function EditModal({ entry, onClose, onSave, onRemove }: {
 
           {/* 来場日（期間イベントのみ） */}
           {isPeriod && (
-            <EditSection label="来場日">
+            <EditSection label={t('visitDate')}>
               <input type="date" value={customDate}
                 min={entry.date} max={entry.dateEnd}
                 onChange={(e) => setCustomDate(e.target.value)}
@@ -756,7 +768,7 @@ function EditModal({ entry, onClose, onSave, onRemove }: {
           )}
 
           {/* 時間 */}
-          <EditSection label="時間">
+          <EditSection label={t('time')}>
             <input type="time" value={customTime}
               onChange={(e) => setCustomTime(e.target.value)}
               className="w-full px-3 py-2.5 rounded-xl text-sm outline-none"
@@ -764,16 +776,16 @@ function EditModal({ entry, onClose, onSave, onRemove }: {
           </EditSection>
 
           {/* 予約番号 */}
-          <EditSection label="予約番号・確認番号">
+          <EditSection label={t('reservationNumber')}>
             <input type="text" value={reservationNote}
               onChange={(e) => setReservationNote(e.target.value)}
-              placeholder="例: ABC-12345"
+              placeholder={t('reservationPlaceholder')}
               className="w-full px-3 py-2.5 rounded-xl text-sm outline-none"
               style={{ background: '#FFFFFF', border: '1px solid #E5E5EA', color: '#1C1C1E' }} />
           </EditSection>
 
           {/* チケット画像 */}
-          <EditSection label="チケット画像">
+          <EditSection label={t('ticketImage')}>
             <div className="flex gap-2 overflow-x-auto pb-1" style={{ scrollbarWidth: 'none' }}>
               {ticketImages.map((img, i) => (
                 <div key={i} className="flex-shrink-0 relative rounded-xl overflow-hidden"
@@ -795,7 +807,7 @@ function EditModal({ entry, onClose, onSave, onRemove }: {
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
                   <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
                 </svg>
-                <span className="text-[10px]">追加</span>
+                <span className="text-[10px]">{t('add')}</span>
               </button>
             </div>
             <input ref={ticketFileRef} type="file" accept="image/*" multiple className="hidden"
@@ -817,16 +829,16 @@ function EditModal({ entry, onClose, onSave, onRemove }: {
           )}
 
           {/* メモ */}
-          <EditSection label="メモ">
+          <EditSection label={t('memo')}>
             <textarea value={memo} onChange={(e) => setMemo(e.target.value)}
-              placeholder="参戦メモを書こう..."
+              placeholder={t('memoPlaceholder')}
               rows={4}
               className="w-full px-3 py-2.5 rounded-xl text-sm outline-none resize-none"
               style={{ background: '#FFFFFF', border: '1px solid #E5E5EA', color: '#1C1C1E' }} />
           </EditSection>
 
           {/* 思い出写真 */}
-          <EditSection label="思い出写真">
+          <EditSection label={t('memoryPhotos')}>
             <div className="flex flex-wrap gap-2">
               {images.map((img, i) => (
                 <div key={i} className="relative rounded-xl overflow-hidden"
@@ -848,7 +860,7 @@ function EditModal({ entry, onClose, onSave, onRemove }: {
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
                   <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
                 </svg>
-                <span className="text-[10px]">追加</span>
+                <span className="text-[10px]">{t('add')}</span>
               </button>
             </div>
             <input ref={photoFileRef} type="file" accept="image/*" multiple className="hidden"
@@ -860,7 +872,7 @@ function EditModal({ entry, onClose, onSave, onRemove }: {
             <div className="flex gap-2">
               <button onClick={onRemove}
                 className="flex-1 py-3 rounded-xl text-sm font-bold"
-                style={{ background: '#FEE2E2', color: '#EF4444' }}>削除する</button>
+                style={{ background: '#FEE2E2', color: '#EF4444' }}>{t('confirmDelete')}</button>
               <button onClick={() => setShowConfirmRemove(false)}
                 className="flex-1 py-3 rounded-xl text-sm font-semibold"
                 style={{ background: '#F0F0F5', color: '#636366' }}>{t('cancel')}</button>

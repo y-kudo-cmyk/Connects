@@ -1,6 +1,7 @@
 'use client'
 
 import { useRef, useState, useEffect } from 'react'
+import { useTranslation } from '@/lib/i18n/useTranslation'
 
 type Props = {
   src: string
@@ -11,6 +12,7 @@ type Props = {
 }
 
 export default function ImageCropModal({ src, aspectRatio = 4, circle = false, onConfirm, onCancel }: Props) {
+  const { t } = useTranslation()
   const containerRef = useRef<HTMLDivElement>(null)
   const imgRef = useRef<HTMLImageElement>(null)
 
@@ -197,11 +199,11 @@ export default function ImageCropModal({ src, aspectRatio = 4, circle = false, o
         className="flex items-center justify-between px-5 flex-shrink-0"
         style={{ paddingTop: 'calc(14px + env(safe-area-inset-top, 0px))', paddingBottom: 14 }}
       >
-        <button onClick={onCancel} className="text-sm font-semibold" style={{ color: '#8E8E93' }}>キャンセル</button>
+        <button onClick={onCancel} className="text-sm font-semibold" style={{ color: '#8E8E93' }}>{t('cancel')}</button>
         <p className="text-sm font-bold" style={{ color: '#FFFFFF' }}>
-          {circle ? 'アイコンを調整' : 'バナーを調整'}
+          {circle ? t('cropIcon') : t('cropBanner')}
         </p>
-        <button onClick={confirm} className="text-sm font-bold" style={{ color: '#F3B4E3' }}>完了</button>
+        <button onClick={confirm} className="text-sm font-bold" style={{ color: '#F3B4E3' }}>{t('done')}</button>
       </div>
 
       {/* 操作エリア */}
@@ -248,7 +250,7 @@ export default function ImageCropModal({ src, aspectRatio = 4, circle = false, o
         className="flex-shrink-0 text-center py-3"
         style={{ paddingBottom: 'calc(10px + env(safe-area-inset-bottom, 0px))' }}
       >
-        <p className="text-xs" style={{ color: '#636366' }}>ドラッグで移動 · ピンチでズーム</p>
+        <p className="text-xs" style={{ color: '#636366' }}>{t('cropHint')}</p>
       </div>
     </div>
   )
