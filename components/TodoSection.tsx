@@ -150,7 +150,7 @@ export default function TodoSection() {
               todo={todo}
               onToggle={() => toggleDone(todo.id)}
               onRemove={() => removeTodo(todo.id)}
-              onMemoChange={(memo) => updateTodo(todo.id, { memo })}
+              onUpdate={(patch) => updateTodo(todo.id, patch)}
             />
           ))}
         </div>
@@ -159,17 +159,22 @@ export default function TodoSection() {
   )
 }
 
-function TodoRow({ todo, onToggle, onRemove, onMemoChange }: {
+function TodoRow({ todo, onToggle, onRemove, onUpdate }: {
   todo: Todo
   onToggle: () => void
   onRemove: () => void
-  onMemoChange: (memo: string) => void
+  onUpdate: (patch: Partial<Todo>) => void
 }) {
   const TODAY = useToday()
   const { t } = useTranslation()
   const [expanded, setExpanded] = useState(false)
-  const [editingMemo, setEditingMemo] = useState(false)
-  const [memoVal, setMemoVal] = useState(todo.memo ?? '')
+  const [editing, setEditing] = useState(false)
+  const [editTitle, setEditTitle] = useState(todo.title)
+  const [editDate, setEditDate] = useState(todo.date)
+  const [editDateEnd, setEditDateEnd] = useState(todo.dateEnd ?? '')
+  const [editTime, setEditTime] = useState(todo.time ?? '')
+  const [editMemo, setEditMemo] = useState(todo.memo ?? '')
+  const [editUrl, setEditUrl] = useState(todo.sourceUrl ?? '')
   const status = getDueStatus(todo, TODAY)
   const cfg = DUE_STYLE[status]
 
@@ -215,64 +220,94 @@ function TodoRow({ todo, onToggle, onRemove, onMemoChange }: {
 
       {/* 展開エリア */}
       {expanded && (
-        <div className="px-3 pb-3 flex flex-col gap-2" style={{ borderTop: '1px solid #F0F0F5' }}>
-          {/* メモ編集 */}
-          {editingMemo ? (
-            <div className="flex flex-col gap-1.5 mt-2">
-              <textarea
-                value={memoVal}
-                onChange={(e) => setMemoVal(e.target.value)}
-                placeholder={t('todoMemo')}
-                rows={3}
-                autoFocus
-                className="w-full px-3 py-2 text-sm rounded-xl outline-none resize-none"
-                style={{ background: '#F8F9FA', border: '1px solid #E5E5EA', color: '#1C1C1E' }}
-              />
+        <div className="px-3 pb-3 flex flex-col gap-2.5 pt-2" style={{ borderTop: '1px solid #F0F0F5' }}>
+          {editing ? (
+            <>
+              {/* タイトル編集 */}
+              <input type="text" value={editTitle} onChange={(e) => setEditTitle(e.target.value)}
+                className="w-full px-3 py-2.5 rounded-xl text-sm font-bold outline-none"
+                style={{ background: '#F8F9FA', border: '1px solid #E5E5EA', color: '#1C1C1E' }} />
+              {/* 日付 */}
               <div className="flex gap-2">
-                <button
-                  onClick={() => { onMemoChange(memoVal); setEditingMemo(false) }}
-                  className="flex-1 py-2 rounded-xl text-xs font-bold"
-                  style={{ background: '#F3B4E3', color: '#FFFFFF' }}
-                >{t('save')}</button>
-                <button
-                  onClick={() => { setMemoVal(todo.memo ?? ''); setEditingMemo(false) }}
-                  className="px-4 py-2 rounded-xl text-xs"
-                  style={{ background: '#F0F0F5', color: '#636366' }}
-                >{t('cancel')}</button>
+                <input type="date" value={editDate} onChange={(e) => setEditDate(e.target.value)}
+                  className="flex-1 px-3 py-2 rounded-xl text-xs outline-none"
+                  style={{ background: '#F8F9FA', border: '1px solid #E5E5EA', color: '#1C1C1E' }} />
+                <input type="time" value={editTime} onChange={(e) => setEditTime(e.target.value)}
+                  className="w-24 px-3 py-2 rounded-xl text-xs outline-none"
+                  style={{ background: '#F8F9FA', border: '1px solid #E5E5EA', color: '#1C1C1E' }} />
               </div>
-            </div>
+              {/* 終了日 */}
+              <div className="flex items-center gap-2">
+                <span className="text-xs" style={{ color: '#8E8E93' }}>〜</span>
+                <input type="date" value={editDateEnd} onChange={(e) => setEditDateEnd(e.target.value)}
+                  className="flex-1 px-3 py-2 rounded-xl text-xs outline-none"
+                  style={{ background: '#F8F9FA', border: '1px solid #E5E5EA', color: '#1C1C1E' }} />
+              </div>
+              {/* メモ */}
+              <textarea value={editMemo} onChange={(e) => setEditMemo(e.target.value)}
+                placeholder={t('todoMemo')} rows={2}
+                className="w-full px-3 py-2 text-sm rounded-xl outline-none resize-none"
+                style={{ background: '#F8F9FA', border: '1px solid #E5E5EA', color: '#1C1C1E' }} />
+              {/* リンク */}
+              <input type="url" value={editUrl} onChange={(e) => setEditUrl(e.target.value)}
+                placeholder="https://..."
+                className="w-full px-3 py-2 rounded-xl text-xs outline-none"
+                style={{ background: '#F8F9FA', border: '1px solid #E5E5EA', color: '#1C1C1E' }} />
+              {/* 保存/キャンセル */}
+              <div className="flex gap-2">
+                <button onClick={() => {
+                  onUpdate({
+                    title: editTitle, date: editDate,
+                    dateEnd: editDateEnd || undefined, time: editTime || undefined,
+                    memo: editMemo || undefined, sourceUrl: editUrl || undefined,
+                  })
+                  setEditing(false)
+                }} className="flex-1 py-2.5 rounded-xl text-xs font-bold"
+                  style={{ background: '#F3B4E3', color: '#FFFFFF' }}>{t('save')}</button>
+                <button onClick={() => {
+                  setEditTitle(todo.title); setEditDate(todo.date); setEditDateEnd(todo.dateEnd ?? '')
+                  setEditTime(todo.time ?? ''); setEditMemo(todo.memo ?? ''); setEditUrl(todo.sourceUrl ?? '')
+                  setEditing(false)
+                }} className="px-4 py-2.5 rounded-xl text-xs"
+                  style={{ background: '#F0F0F5', color: '#636366' }}>{t('cancel')}</button>
+              </div>
+            </>
           ) : (
-            <button
-              onClick={() => setEditingMemo(true)}
-              className="flex items-start gap-2 px-3 py-2 rounded-xl text-left w-full mt-2"
-              style={{ background: '#F8F9FA', border: '1px solid #E5E5EA' }}
-            >
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#8E8E93" strokeWidth="2" className="flex-shrink-0 mt-0.5">
-                <path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/>
-              </svg>
-              <span className="text-xs" style={{ color: todo.memo ? '#1C1C1E' : '#C7C7CC', whiteSpace: 'pre-wrap' }}>
-                {todo.memo || t('todoMemoAdd')}
-              </span>
-            </button>
-          )}
-
-          {/* ソースリンク */}
-          {todo.sourceUrl && (
-            <a href={todo.sourceUrl} target="_blank" rel="noopener noreferrer"
-              className="flex items-center gap-2 px-3 py-2 rounded-xl"
-              style={{ background: '#F8F9FA', border: '1px solid #E5E5EA' }}>
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#636366" strokeWidth="2" className="flex-shrink-0">
-                <path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/>
-                <path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/>
-              </svg>
-              <span className="text-xs truncate flex-1" style={{ color: '#636366' }}>
-                {todo.sourceName ?? todo.sourceUrl}
-              </span>
-              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#C7C7CC" strokeWidth="2" className="flex-shrink-0">
-                <path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/>
-                <polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/>
-              </svg>
-            </a>
+            <>
+              {/* 編集ボタン */}
+              <button onClick={() => setEditing(true)}
+                className="flex items-center gap-2 px-3 py-2 rounded-xl w-full text-left"
+                style={{ background: '#F8F9FA', border: '1px solid #E5E5EA' }}>
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#8E8E93" strokeWidth="2">
+                  <path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/>
+                </svg>
+                <span className="text-xs" style={{ color: '#636366' }}>{t('editButton')}</span>
+              </button>
+              {/* メモ表示 */}
+              {todo.memo && (
+                <p className="text-xs px-1 leading-snug" style={{ color: '#636366', whiteSpace: 'pre-wrap' }}>
+                  📝 {todo.memo}
+                </p>
+              )}
+              {/* ソースリンク */}
+              {todo.sourceUrl && (
+                <a href={todo.sourceUrl} target="_blank" rel="noopener noreferrer"
+                  className="flex items-center gap-2 px-3 py-2 rounded-xl"
+                  style={{ background: '#F8F9FA', border: '1px solid #E5E5EA' }}>
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#636366" strokeWidth="2" className="flex-shrink-0">
+                    <path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/>
+                    <path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/>
+                  </svg>
+                  <span className="text-xs truncate flex-1" style={{ color: '#636366' }}>
+                    {todo.sourceName ?? todo.sourceUrl}
+                  </span>
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#C7C7CC" strokeWidth="2" className="flex-shrink-0">
+                    <path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/>
+                    <polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/>
+                  </svg>
+                </a>
+              )}
+            </>
           )}
         </div>
       )}

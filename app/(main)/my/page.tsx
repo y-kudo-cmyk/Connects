@@ -199,27 +199,24 @@ export default function MyPage() {
       {tab === 'entries' && (
         <>
           {/* タグフィルター */}
-          {usedTags.length > 0 && (
-            <div className="flex gap-1.5 px-4 pt-2 pb-1 overflow-x-auto" style={{ scrollbarWidth: 'none' }}>
+          <div className="px-4 pt-2 pb-1">
+            <div className="flex gap-2 overflow-x-auto pb-1" style={{ scrollbarWidth: 'none' }}>
               <button onClick={() => setTagFilter('ALL')}
-                className="flex-shrink-0 px-3 py-1.5 rounded-full text-[11px] font-bold"
+                className="flex-shrink-0 px-4 py-2.5 rounded-full text-xs font-semibold min-h-[44px]"
                 style={tagFilter === 'ALL'
-                  ? { background: '#1C1C1E', color: '#FFFFFF' }
-                  : { background: '#F0F0F5', color: '#636366' }
+                  ? { background: '#F3B4E3', color: '#F8F9FA' }
+                  : { background: '#FFFFFF', color: '#636366' }
                 }>ALL</button>
-              {usedTags.map((tag) => {
-                const tc = scheduleTagConfig[tag as ScheduleTag]
-                return tc ? (
-                  <button key={tag} onClick={() => setTagFilter(tag)}
-                    className="flex-shrink-0 px-3 py-1.5 rounded-full text-[11px] font-bold"
-                    style={tagFilter === tag
-                      ? { background: tc.color, color: '#FFFFFF' }
-                      : { background: tc.bg, color: tc.color }
-                    }>{tc.icon} {tc.label}</button>
-                ) : null
-              })}
+              {(Object.entries(scheduleTagConfig) as [ScheduleTag, typeof scheduleTagConfig[ScheduleTag]][]).map(([key, tc]) => (
+                <button key={key} onClick={() => setTagFilter(key)}
+                  className="flex-shrink-0 px-4 py-2.5 rounded-full text-xs font-semibold min-h-[44px]"
+                  style={tagFilter === key
+                    ? { background: tc.color, color: '#F8F9FA' }
+                    : { background: tc.bg, color: tc.color }
+                  }>{tc.icon} {tc.label}</button>
+              ))}
             </div>
-          )}
+          </div>
 
           {/* 月ビュー */}
           {viewMode === 'month' && (
@@ -261,7 +258,7 @@ export default function MyPage() {
                   const ds = fmt(year, month, day)
                   const isSelected = ds === selectedDate
                   const isToday = ds === TODAY
-                  const colors = entryDateColors.get(ds)
+                  const hasEntry = entryDateColors.has(ds)
                   return (
                     <button key={day} onClick={() => setSelectedDate(ds)}
                       className="flex flex-col items-center py-2 rounded-lg"
@@ -269,18 +266,12 @@ export default function MyPage() {
                       <span className="text-sm w-7 h-7 flex items-center justify-center rounded-full"
                         style={{
                           color: isSelected ? '#F8F9FA' : isToday ? '#F3B4E3' : '#1C1C1E',
-                          fontWeight: isToday || isSelected ? 700 : 400,
+                          fontWeight: isToday || isSelected ? 700 : hasEntry ? 600 : 400,
+                          textDecoration: hasEntry && !isSelected ? 'underline' : 'none',
+                          textUnderlineOffset: 2,
                         }}>
                         {day}
                       </span>
-                      {colors && (
-                        <div className="flex gap-0.5 mt-0.5">
-                          {colors.slice(0, 3).map((c, ci) => (
-                            <span key={ci} className="w-1 h-1 rounded-full"
-                              style={{ background: isSelected ? '#F8F9FA' : c }} />
-                          ))}
-                        </div>
-                      )}
                     </button>
                   )
                 })}
@@ -686,8 +677,8 @@ function EntryCard({ entry, onEdit, onRemove }: {
           <div className="absolute inset-y-0 right-0 w-0.5" style={{ background: color }} />
         </button>
 
-        {/* 右：情報 */}
-        <div className="flex-1 min-w-0 flex flex-col justify-between px-3 py-2.5">
+        {/* 右：情報（タップで編集） */}
+        <button onClick={onEdit} className="flex-1 min-w-0 flex flex-col justify-between px-3 py-2.5 text-left">
           <div className="flex items-start justify-between gap-2">
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-1 mb-1">
@@ -711,23 +702,17 @@ function EntryCard({ entry, onEdit, onRemove }: {
                 </p>
               )}
             </div>
-            <button onClick={onEdit}
-              className="w-8 h-8 flex items-center justify-center rounded-lg flex-shrink-0"
-              style={{ background: '#F0F0F5' }}>
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#636366" strokeWidth="2">
-                <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" />
-                <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" />
-              </svg>
-            </button>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#C7C7CC" strokeWidth="2" className="flex-shrink-0">
+              <polyline points="9 18 15 12 9 6" />
+            </svg>
           </div>
-
-          {entry.memo ? (
-            <p className="text-[11px] mt-1.5 leading-snug line-clamp-2"
+          {entry.memo && (
+            <p className="text-[11px] mt-1 leading-snug line-clamp-2"
               style={{ color: '#636366', whiteSpace: 'pre-wrap' }}>
-              {entry.memo}
+              📝 {entry.memo}
             </p>
-          ) : null}
-        </div>
+          )}
+        </button>
       </div>
 
       {viewerSrc && <ImageViewer src={viewerSrc} onClose={() => setViewerSrc(null)} />}
