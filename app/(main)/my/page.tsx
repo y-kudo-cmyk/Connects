@@ -198,26 +198,6 @@ export default function MyPage() {
       {/* ── スケジュール記録タブ ── */}
       {tab === 'entries' && (
         <>
-          {/* タグフィルター */}
-          <div className="px-4 pt-2 pb-1">
-            <div className="flex gap-2 overflow-x-auto pb-1" style={{ scrollbarWidth: 'none' }}>
-              <button onClick={() => setTagFilter('ALL')}
-                className="flex-shrink-0 px-4 py-2.5 rounded-full text-xs font-semibold min-h-[44px]"
-                style={tagFilter === 'ALL'
-                  ? { background: '#F3B4E3', color: '#F8F9FA' }
-                  : { background: '#FFFFFF', color: '#636366' }
-                }>ALL</button>
-              {(Object.entries(scheduleTagConfig) as [ScheduleTag, typeof scheduleTagConfig[ScheduleTag]][]).map(([key, tc]) => (
-                <button key={key} onClick={() => setTagFilter(key)}
-                  className="flex-shrink-0 px-4 py-2.5 rounded-full text-xs font-semibold min-h-[44px]"
-                  style={tagFilter === key
-                    ? { background: tc.color, color: '#F8F9FA' }
-                    : { background: tc.bg, color: tc.color }
-                  }>{tc.icon} {tc.label}</button>
-              ))}
-            </div>
-          </div>
-
           {/* 月ビュー */}
           {viewMode === 'month' && (
             <div className="px-4 pt-2">
@@ -266,16 +246,39 @@ export default function MyPage() {
                       <span className="text-sm w-7 h-7 flex items-center justify-center rounded-full"
                         style={{
                           color: isSelected ? '#F8F9FA' : isToday ? '#F3B4E3' : '#1C1C1E',
-                          fontWeight: isToday || isSelected ? 700 : hasEntry ? 600 : 400,
-                          textDecoration: hasEntry && !isSelected ? 'underline' : 'none',
-                          textUnderlineOffset: 2,
+                          fontWeight: isToday || isSelected ? 700 : 400,
                         }}>
                         {day}
                       </span>
+                      {hasEntry && (
+                        <span className="w-1 h-1 rounded-full mt-0.5"
+                          style={{ background: isSelected ? '#F8F9FA' : '#F3B4E3' }} />
+                      )}
                     </button>
                   )
                 })}
               </div>
+
+              {/* タグフィルター（カレンダー下） */}
+              <div className="mb-4">
+                <div className="flex gap-2 overflow-x-auto pb-1" style={{ scrollbarWidth: 'none' }}>
+                  <button onClick={() => setTagFilter('ALL')}
+                    className="flex-shrink-0 px-4 py-2.5 rounded-full text-xs font-semibold min-h-[44px]"
+                    style={tagFilter === 'ALL'
+                      ? { background: '#F3B4E3', color: '#F8F9FA' }
+                      : { background: '#FFFFFF', color: '#636366' }
+                    }>ALL</button>
+                  {(Object.entries(scheduleTagConfig) as [ScheduleTag, typeof scheduleTagConfig[ScheduleTag]][]).map(([key, tc]) => (
+                    <button key={key} onClick={() => setTagFilter(key)}
+                      className="flex-shrink-0 px-4 py-2.5 rounded-full text-xs font-semibold min-h-[44px]"
+                      style={tagFilter === key
+                        ? { background: tc.color, color: '#F8F9FA' }
+                        : { background: tc.bg, color: tc.color }
+                      }>{tc.icon} {tc.label}</button>
+                  ))}
+                </div>
+              </div>
+
               {/* 選択日のエントリ */}
               <div className="pb-28">
                 <p className="text-xs font-semibold mb-3" style={{ color: '#8E8E93' }}>
