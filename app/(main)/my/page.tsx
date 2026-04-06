@@ -69,7 +69,8 @@ export default function MyPage() {
   const gridRef = useRef<HTMLDivElement>(null)
 
   const searchParams = useSearchParams()
-  const { entries, updateEntry, removeEntry } = useMyEntries()
+  const { entries, addEntry, updateEntry, removeEntry } = useMyEntries()
+  const [showAddModal, setShowAddModal] = useState(false)
   const { t, tObj } = useTranslation()
   const DAY_SHORT = tObj<string[]>('dayNames')
 
@@ -136,7 +137,18 @@ export default function MyPage() {
       <div className="px-4"
         style={{ paddingTop: 'calc(16px + env(safe-area-inset-top, 0px))', paddingBottom: 8, background: '#F8F9FA' }}>
         <div className="flex items-center justify-between">
-          <h1 className="text-lg font-black tracking-wider" style={{ color: '#1C1C1E' }}>MY</h1>
+          <div className="flex items-center gap-2">
+            <h1 className="text-lg font-black tracking-wider" style={{ color: '#1C1C1E' }}>MY</h1>
+            {tab === 'entries' && (
+              <button onClick={() => setShowAddModal(true)}
+                className="w-8 h-8 rounded-full flex items-center justify-center"
+                style={{ background: '#F3B4E3' }}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" strokeWidth="2.5">
+                  <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
+                </svg>
+              </button>
+            )}
+          </div>
           {tab === 'entries' && (
             <div className="flex rounded-lg p-0.5" style={{ background: '#EFEFEF' }}>
               {(['month', 'week', 'day'] as const).map((v) => (
@@ -573,6 +585,15 @@ export default function MyPage() {
         </>
       )}
 
+      {/* AddModal */}
+      {showAddModal && (
+        <AddModal
+          defaultDate={selectedDate}
+          onClose={() => setShowAddModal(false)}
+          onAdd={(entry) => { addEntry(entry); setShowAddModal(false) }}
+        />
+      )}
+
       {/* EditModal */}
       {editEntry && (
         <EditModal
@@ -703,6 +724,131 @@ function EntryCard({ entry, onEdit, onRemove }: {
   )
 }
 
+// ── AddModal（プライベートスケジュール追加） ──────────────────────
+function AddModal({ defaultDate, onClose, onAdd }: {
+  defaultDate: string
+  onClose: () => void
+  onAdd: (entry: MyEntry) => void
+}) {
+  const { t } = useTranslation()
+  const [title, setTitle] = useState('')
+  const [date, setDate] = useState(defaultDate)
+  const [dateEnd, setDateEnd] = useState('')
+  const [time, setTime] = useState('')
+  const [venue, setVenue] = useState('')
+  const [memo, setMemo] = useState('')
+  const [selectedTag, setSelectedTag] = useState<string>('')
+
+  const handleAdd = () => {
+    if (!title.trim()) return
+    onAdd({
+      id: Date.now().toString(),
+      date,
+      dateEnd: dateEnd || undefined,
+      title: title.trim(),
+      type: selectedTag || 'memo',
+      tags: selectedTag ? [selectedTag] : [],
+      color: selectedTag && scheduleTagConfig[selectedTag as ScheduleTag]
+        ? scheduleTagConfig[selectedTag as ScheduleTag].color
+        : '#8E8E93',
+      venue: venue || undefined,
+      time: time || undefined,
+      memo,
+      images: [],
+      ticketImages: [],
+      createdAt: new Date().toISOString(),
+    })
+  }
+
+  return (
+    <div className="fixed inset-0 z-[60] flex flex-col justify-end">
+      <div className="absolute inset-0" style={{ background: 'rgba(0,0,0,0.55)' }} onClick={onClose} />
+      <div className="relative flex flex-col rounded-t-2xl overflow-hidden"
+        style={{ background: '#F8F9FA', maxHeight: '85vh' }}>
+        <div className="flex justify-center pt-3 pb-1 flex-shrink-0">
+          <div className="w-10 h-1 rounded-full" style={{ background: '#C7C7CC' }} />
+        </div>
+
+        {/* ヘッダー */}
+        <div className="flex items-center justify-between px-4 py-2 flex-shrink-0"
+          style={{ borderBottom: '1px solid #E5E5EA' }}>
+          <p className="text-sm font-bold" style={{ color: '#1C1C1E' }}>{t('addPrivateSchedule')}</p>
+          <div className="flex items-center gap-2">
+            <button onClick={handleAdd} disabled={!title.trim()}
+              className="px-4 py-2 rounded-xl text-sm font-bold"
+              style={{ background: title.trim() ? '#F3B4E3' : '#E5E5EA', color: title.trim() ? '#FFFFFF' : '#8E8E93' }}>
+              {t('add')}
+            </button>
+            <button onClick={onClose} className="w-11 h-11 flex items-center justify-center">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#636366" strokeWidth="2">
+                <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <div className="flex-1 overflow-y-auto px-4 py-4 flex flex-col gap-4">
+          {/* タイトル */}
+          <input type="text" value={title} onChange={(e) => setTitle(e.target.value)}
+            placeholder={t('titlePlaceholder')}
+            className="w-full px-3 py-3 rounded-xl text-base font-bold outline-none"
+            style={{ background: '#FFFFFF', border: '1px solid #E5E5EA', color: '#1C1C1E' }}
+            autoFocus />
+
+          {/* タグ選択 */}
+          <div className="flex gap-1.5 flex-wrap">
+            <button onClick={() => setSelectedTag('')}
+              className="px-3 py-1.5 rounded-full text-[11px] font-bold"
+              style={!selectedTag
+                ? { background: '#8E8E93', color: '#FFFFFF' }
+                : { background: '#F0F0F5', color: '#636366' }
+              }>📌 {t('private')}</button>
+            {(Object.entries(scheduleTagConfig) as [ScheduleTag, typeof scheduleTagConfig[ScheduleTag]][]).map(([key, cfg]) => (
+              <button key={key} onClick={() => setSelectedTag(key)}
+                className="px-3 py-1.5 rounded-full text-[11px] font-bold"
+                style={selectedTag === key
+                  ? { background: cfg.color, color: '#FFFFFF' }
+                  : { background: cfg.bg, color: cfg.color }
+                }>{cfg.icon} {cfg.label}</button>
+            ))}
+          </div>
+
+          {/* 日付 */}
+          <div className="flex gap-2">
+            <input type="date" value={date} onChange={(e) => setDate(e.target.value)}
+              className="flex-1 px-3 py-2.5 rounded-xl text-sm outline-none"
+              style={{ background: '#FFFFFF', border: '1px solid #E5E5EA', color: '#1C1C1E' }} />
+            <input type="time" value={time} onChange={(e) => setTime(e.target.value)}
+              className="w-28 px-3 py-2.5 rounded-xl text-sm outline-none"
+              style={{ background: '#FFFFFF', border: '1px solid #E5E5EA', color: '#1C1C1E' }} />
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-xs" style={{ color: '#8E8E93' }}>〜</span>
+            <input type="date" value={dateEnd} onChange={(e) => setDateEnd(e.target.value)}
+              className="flex-1 px-3 py-2.5 rounded-xl text-sm outline-none"
+              style={{ background: '#FFFFFF', border: '1px solid #E5E5EA', color: '#1C1C1E' }} />
+          </div>
+
+          {/* 会場 */}
+          <input type="text" value={venue} onChange={(e) => setVenue(e.target.value)}
+            placeholder={t('venuePlaceholder')}
+            className="w-full px-3 py-2.5 rounded-xl text-sm outline-none"
+            style={{ background: '#FFFFFF', border: '1px solid #E5E5EA', color: '#1C1C1E' }} />
+
+          {/* メモ */}
+          <textarea value={memo} onChange={(e) => setMemo(e.target.value)}
+            placeholder={t('memoPlaceholder')}
+            rows={3}
+            className="w-full px-3 py-2.5 rounded-xl text-sm outline-none resize-none"
+            style={{ background: '#FFFFFF', border: '1px solid #E5E5EA', color: '#1C1C1E' }} />
+        </div>
+
+        <div style={{ height: 'calc(80px + env(safe-area-inset-bottom, 0px))' }} />
+      </div>
+    </div>
+  )
+}
+
 // ── EditModal ─────────────────────────────────────────────────
 function EditModal({ entry, onClose, onSave, onRemove }: {
   entry: MyEntry
@@ -728,7 +874,7 @@ function EditModal({ entry, onClose, onSave, onRemove }: {
   const color = cfg?.color ?? entry.color
   const dateStr = fmtDateRange(entry.date, entry.time, entry.dateEnd)
   // チケット画像・座席情報を表示するタグ
-  const TICKET_TAGS = ['LIVE', 'TICKET', 'EVENT', 'POPUP']
+  const TICKET_TAGS = ['LIVE', 'EVENT', 'POPUP']
   const showTicketSection = !entry.tags?.length || entry.tags.some((t) => TICKET_TAGS.includes(t))
 
   const handleTicketUpload = async (files: FileList | null) => {
@@ -782,11 +928,18 @@ function EditModal({ entry, onClose, onSave, onRemove }: {
             <p className="text-sm font-bold truncate" style={{ color: '#1C1C1E' }}>{entry.title}</p>
             <p className="text-xs" style={{ color }}>{dateStr}</p>
           </div>
-          <button onClick={onClose} className="w-11 h-11 flex items-center justify-center flex-shrink-0">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#636366" strokeWidth="2">
-              <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
-            </svg>
-          </button>
+          <div className="flex items-center gap-2 flex-shrink-0">
+            <button onClick={handleSave}
+              className="px-4 py-2 rounded-xl text-sm font-bold"
+              style={{ background: '#F3B4E3', color: '#FFFFFF' }}>
+              {t('save')}
+            </button>
+            <button onClick={onClose} className="w-11 h-11 flex items-center justify-center">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#636366" strokeWidth="2">
+                <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+              </svg>
+            </button>
+          </div>
         </div>
 
         {/* スクロール可能なコンテンツ */}
@@ -924,15 +1077,8 @@ function EditModal({ entry, onClose, onSave, onRemove }: {
           )}
         </div>
 
-        {/* 保存ボタン */}
-        <div className="px-4 pt-3 flex-shrink-0"
-          style={{ borderTop: '1px solid #E5E5EA', paddingBottom: 'calc(100px + env(safe-area-inset-bottom, 0px))' }}>
-          <button onClick={handleSave}
-            className="w-full py-4 rounded-xl text-base font-bold min-h-[52px]"
-            style={{ background: '#F3B4E3', color: '#FFFFFF' }}>
-            {t('save')}
-          </button>
-        </div>
+        {/* 下部余白（タブバーに被らないように） */}
+        <div style={{ height: 'calc(80px + env(safe-area-inset-bottom, 0px))' }} />
       </div>
     </div>
   )
