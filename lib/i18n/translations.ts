@@ -125,6 +125,7 @@ const translations = {
   editRequestSentMsg: { ja: '修正依頼を送信しました（承認後に反映されます）', en: 'Edit request submitted (will be applied after approval)', ko: '수정 요청이 제출되었습니다 (승인 후 반영됩��다)' },
   addToMy: { ja: '+ MYに追加', en: '+ Add to MY', ko: '+ MY에 추가' },
   addedToMyDone: { ja: '✓ MYに追加済み', en: '✓ Added to MY', ko: '✓ MY에 추가됨' },
+  customizeSchedule: { ja: 'スケジュールをカスタマイズ', en: 'Customize schedule', ko: '스케줄 커스터마이즈' },
   imageLabel: { ja: '画像', en: 'Image', ko: '이미지' },
   uploadImage: { ja: 'タップして画像をアップロード', en: 'Tap to upload image', ko: '탭하여 이미지 업로드' },
   venuePlaceholder: { ja: '会場名', en: 'Venue name', ko: '장소명' },
