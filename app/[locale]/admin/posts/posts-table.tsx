@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useRef } from "react"
 import {
   Table,
   TableBody,
@@ -27,7 +27,8 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog"
 import { updateEventStatus, updateEvent, deleteEvent } from "../actions"
-import { Pencil } from "lucide-react"
+import { uploadImage } from "@/lib/supabase/uploadImage"
+import { Pencil, Upload, X } from "lucide-react"
 
 type Event = {
   id: string
@@ -80,6 +81,18 @@ function EventEditForm({
   tags: Tag[]
   onClose: () => void
 }) {
+  const [imageUrl, setImageUrl] = useState(event.image_url ?? "")
+  const [uploading, setUploading] = useState(false)
+  const fileRef = useRef<HTMLInputElement>(null)
+
+  async function handleImageFile(files: FileList | null) {
+    if (!files?.[0]) return
+    setUploading(true)
+    const url = await uploadImage("event-images", files[0], 1200, 0.85)
+    if (url) setImageUrl(url)
+    setUploading(false)
+  }
+
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
     const fd = new FormData(e.currentTarget)
@@ -91,7 +104,7 @@ function EventEditForm({
       end_date: (fd.get("end_date") as string) || null,
       spot_name: fd.get("spot_name") as string,
       spot_address: fd.get("spot_address") as string,
-      image_url: fd.get("image_url") as string,
+      image_url: imageUrl,
       notes: fd.get("notes") as string,
     })
     onClose()
@@ -156,8 +169,45 @@ function EventEditForm({
         <Input name="spot_address" defaultValue={event.spot_address} />
       </div>
       <div>
-        <label className="text-sm font-medium">画像URL</label>
-        <Input name="image_url" defaultValue={event.image_url} />
+        <label className="text-sm font-medium">画像</label>
+        {imageUrl && (
+          <div className="relative mt-1 mb-2 rounded-md overflow-hidden">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={imageUrl} alt="" className="w-full max-h-40 object-cover rounded-md" />
+            <button
+              type="button"
+              onClick={() => setImageUrl("")}
+              className="absolute top-1 right-1 bg-black/50 text-white rounded-full p-0.5"
+            >
+              <X className="size-4" />
+            </button>
+          </div>
+        )}
+        <div className="flex gap-2">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            disabled={uploading}
+            onClick={() => fileRef.current?.click()}
+          >
+            <Upload className="mr-1 size-3" />
+            {uploading ? "アップロード中..." : "画像を選択"}
+          </Button>
+          <Input
+            placeholder="または画像URLを入力"
+            value={imageUrl}
+            onChange={(e) => setImageUrl(e.target.value)}
+            className="flex-1"
+          />
+        </div>
+        <input
+          ref={fileRef}
+          type="file"
+          accept="image/*"
+          className="hidden"
+          onChange={(e) => handleImageFile(e.target.files)}
+        />
       </div>
       <div>
         <label className="text-sm font-medium">備考</label>

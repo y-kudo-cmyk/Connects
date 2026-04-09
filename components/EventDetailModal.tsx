@@ -8,6 +8,7 @@ import { useMyEntries } from '@/lib/useMyEntries'
 import { useAuth } from '@/lib/supabase/useAuth'
 import { createClient } from '@/lib/supabase/client'
 import { useVoting, VOTE_THRESHOLD } from '@/lib/supabase/useVoting'
+import { uploadImage } from '@/lib/supabase/uploadImage'
 import { countryFlag, cityToCountryCode } from '@/lib/countryUtils'
 import { useTranslations } from 'next-intl'
 
@@ -80,12 +81,13 @@ export default function EventDetailModal({
     onClose()
   }
 
+  const [imageUploading, setImageUploading] = useState(false)
   const handleImageUpload = async (files: FileList | null) => {
     if (!files || !files[0]) return
-    const file = files[0]
-    const reader = new FileReader()
-    reader.onload = () => setEditImageUrl(reader.result as string)
-    reader.readAsDataURL(file)
+    setImageUploading(true)
+    const url = await uploadImage('event-images', files[0], 1200, 0.85)
+    if (url) setEditImageUrl(url)
+    setImageUploading(false)
   }
 
   const firstTag = event.tags?.[0] as ScheduleTag | undefined
@@ -243,11 +245,11 @@ export default function EventDetailModal({
                   </button>
                 </div>
               ) : (
-                <button onClick={() => imageFileRef.current?.click()}
+                <button onClick={() => !imageUploading && imageFileRef.current?.click()}
                   className="w-full h-32 rounded-2xl flex flex-col items-center justify-center gap-2"
-                  style={{ border: '2px dashed #E5E5EA', color: '#8E8E93' }}>
-                  <span className="text-3xl">📷</span>
-                  <span className="text-xs">{t('Schedule.uploadImage')}</span>
+                  style={{ border: '2px dashed #E5E5EA', color: '#8E8E93', opacity: imageUploading ? 0.5 : 1 }}>
+                  <span className="text-3xl">{imageUploading ? '⏳' : '📷'}</span>
+                  <span className="text-xs">{imageUploading ? 'アップロード中...' : t('Schedule.uploadImage')}</span>
                 </button>
               )}
               <input ref={imageFileRef} type="file" accept="image/*" className="hidden"

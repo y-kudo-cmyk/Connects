@@ -21,14 +21,14 @@ export async function uploadImage(
   const blob = await compressToBlob(file, maxPx, quality)
 
   // 2. ユニークなファイル名を生成
-  const ext = 'jpg'
+  const ext = 'webp'
   const fileName = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`
 
   // 3. Supabase Storage にアップロード
   const { error } = await supabase.storage
     .from(bucket)
     .upload(fileName, blob, {
-      contentType: 'image/jpeg',
+      contentType: 'image/webp',
       upsert: false,
     })
 
@@ -60,7 +60,7 @@ function compressToBlob(file: File, maxPx: number, quality: number): Promise<Blo
         canvas.getContext('2d')!.drawImage(img, 0, 0, w, h)
         canvas.toBlob(
           (blob) => resolve(blob!),
-          'image/jpeg',
+          'image/webp',
           quality,
         )
       }
