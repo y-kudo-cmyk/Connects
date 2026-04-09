@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { scheduleTagConfig, type ScheduleTag } from '@/lib/config/tags'
 import type { AppEvent } from '@/lib/supabase/adapters'
 import { useRouter } from 'next/navigation'
@@ -43,7 +43,9 @@ export default function EventDetailModal({
   const { t, tObj } = useTranslation()
   const dayNames = tObj<string[]>('dayNames')
   const { hasVoted, voteCount, isConfirmed, loading: voteLoading, submitVote, refetch: refetchVotes } = useVoting('event', event.id, user?.id ?? null)
+  const [userRole, setUserRole] = useState<string>('user')
   const [editing, setEditing] = useState(false)
+  const [confirmDelete, setConfirmDelete] = useState(false)
   const [editTitle, setEditTitle] = useState(event.title)
   const [editVenue, setEditVenue] = useState(event.venue ?? '')
   const [editNotes, setEditNotes] = useState(event.notes ?? '')
@@ -55,6 +57,28 @@ export default function EventDetailModal({
   const [editSaving, setEditSaving] = useState(false)
   const [editRequestSent, setEditRequestSent] = useState(false)
   const imageFileRef = useRef<HTMLInputElement>(null)
+
+  // admin判定
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    if (!user) return
+    supabase.from('profiles').select('role').eq('id', user.id).maybeSingle()
+      .then(({ data }) => { if (data?.role) setUserRole(data.role) })
+  }, [user?.id])
+
+  const isOwner = user?.id && event.submittedBy === user.id
+  const isAdmin = userRole === 'admin'
+  const canDelete = isOwner || isAdmin
+
+  const handleDelete = async () => {
+    await supabase.from('event_votes').delete().eq('event_id', event.id)
+    const { error } = await supabase.from('events').delete().eq('id', event.id)
+    if (error) {
+      console.error('Delete error:', error.message)
+      return
+    }
+    onClose()
+  }
 
   const handleImageUpload = async (files: FileList | null) => {
     if (!files || !files[0]) return
@@ -435,7 +459,7 @@ export default function EventDetailModal({
             <div className="flex gap-2">
               {editing ? (
                 <>
-                  <button onClick={() => setEditing(false)}
+                  <button onClick={() => { setEditing(false); setConfirmDelete(false) }}
                     className="flex-1 py-3.5 rounded-xl text-sm font-bold"
                     style={{ background: '#F0F0F5', color: '#636366' }}>
                     {t('cancel')}
@@ -485,6 +509,30 @@ export default function EventDetailModal({
                 </>
               )}
             </div>
+          )}
+
+          {/* 削除ボタン（投稿者本人 or 運営者） */}
+          {editing && canDelete && (
+            confirmDelete ? (
+              <div className="flex gap-2">
+                <button onClick={() => setConfirmDelete(false)}
+                  className="flex-1 py-3 rounded-xl text-sm font-bold"
+                  style={{ background: '#F0F0F5', color: '#636366' }}>
+                  {t('cancel')}
+                </button>
+                <button onClick={handleDelete}
+                  className="flex-1 py-3 rounded-xl text-sm font-bold"
+                  style={{ background: '#EF4444', color: '#FFFFFF' }}>
+                  {t('confirmDelete')}
+                </button>
+              </div>
+            ) : (
+              <button onClick={() => setConfirmDelete(true)}
+                className="w-full py-3 rounded-xl text-sm font-bold"
+                style={{ color: '#EF4444', background: 'rgba(239,68,68,0.08)' }}>
+                {t('deleteEvent')}
+              </button>
+            )
           )}
 
           {/* MYに追加 / MY詳細へ */}

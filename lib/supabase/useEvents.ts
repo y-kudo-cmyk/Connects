@@ -22,6 +22,7 @@ export type SupabaseEvent = {
   image_url: string
   source_url: string
   notes: string
+  submitted_by: string | null
   status: string
   verified_count: number
 }

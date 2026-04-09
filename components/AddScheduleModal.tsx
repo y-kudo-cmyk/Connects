@@ -1,11 +1,11 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import { useState } from 'react'
 import { scheduleTagConfig, type ScheduleTag } from '@/lib/config/tags'
-import { useAuth } from '@/lib/supabase/useAuth'
 import { createClient } from '@/lib/supabase/client'
+import { useAuth } from '@/lib/supabase/useAuth'
 import { useTranslation } from '@/lib/i18n/useTranslation'
-import { compressImage } from '@/lib/useMyEntries'
+import { uploadImage } from '@/lib/supabase/uploadImage'
 
 const supabase = createClient()
 
@@ -21,28 +21,40 @@ export default function AddScheduleModal({ onClose }: { onClose: () => void }) {
   const [country, setCountry] = useState('')
   const [sourceUrl, setSourceUrl] = useState('')
   const [notes, setNotes] = useState('')
-  const [imageUrl, setImageUrl] = useState('')
+  const [imagePreview, setImagePreview] = useState('')
+  const [imageFile, setImageFile] = useState<File | null>(null)
   const [saving, setSaving] = useState(false)
   const [done, setDone] = useState(false)
-  const fileRef = useRef<HTMLInputElement>(null)
+  const [submitError, setSubmitError] = useState('')
 
-  const handleImage = async (files: FileList | null) => {
+  const handleImage = (files: FileList | null) => {
     if (!files?.[0]) return
-    setImageUrl(await compressImage(files[0], 1200, 0.85))
+    setImageFile(files[0])
+    // プレビュー用にローカルURLを生成
+    const reader = new FileReader()
+    reader.onload = () => setImagePreview(reader.result as string)
+    reader.readAsDataURL(files[0])
   }
 
   const handleSubmit = async () => {
     if (!title.trim() || !startDate) return
     setSaving(true)
 
+    // 画像があればSupabase Storageにアップロード
+    let finalImageUrl = ''
+    if (imageFile) {
+      const url = await uploadImage('event-images', imageFile, 1200, 0.85)
+      if (url) finalImageUrl = url
+    }
+
     const startIso = startTime
       ? `${startDate}T${startTime}:00`
       : `${startDate}T00:00:00`
     const endIso = endDate ? `${endDate}T00:00:00` : null
 
-    await supabase.from('events').insert({
+    const { error } = await supabase.from('events').insert({
       tag,
-      artist_id: 'seventeen',
+      artist_id: 'A000000',
       related_artists: '',
       event_title: title.trim(),
       sub_event_title: '',
@@ -53,12 +65,20 @@ export default function AddScheduleModal({ onClose }: { onClose: () => void }) {
       lat: null,
       lng: null,
       country: country || '',
-      image_url: imageUrl || '',
+      image_url: finalImageUrl,
       source_url: sourceUrl || '',
       notes: notes || '',
+      submitted_by: user?.id ?? null,
       status: 'pending',
       verified_count: 0,
     })
+
+    if (error) {
+      console.error('Event insert error:', error.message)
+      setSubmitError(t('postFailed'))
+      setSaving(false)
+      return
+    }
 
     setSaving(false)
     setDone(true)
@@ -159,11 +179,11 @@ export default function AddScheduleModal({ onClose }: { onClose: () => void }) {
             style={{ background: '#FFFFFF', border: '1px solid #E5E5EA', color: '#1C1C1E' }} />
 
           {/* 画像 */}
-          {imageUrl ? (
+          {imagePreview ? (
             <div className="relative rounded-xl overflow-hidden" style={{ aspectRatio: '16/9' }}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={imageUrl} alt="" className="w-full h-full object-cover" />
-              <button onClick={() => setImageUrl('')}
+              <img src={imagePreview} alt="" className="w-full h-full object-cover" />
+              <button onClick={() => { setImagePreview(''); setImageFile(null) }}
                 className="absolute top-2 right-2 w-8 h-8 rounded-full flex items-center justify-center"
                 style={{ background: 'rgba(0,0,0,0.7)' }}>
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" strokeWidth="2">
@@ -172,15 +192,15 @@ export default function AddScheduleModal({ onClose }: { onClose: () => void }) {
               </button>
             </div>
           ) : (
-            <button onClick={() => fileRef.current?.click()}
-              className="w-full h-24 rounded-xl flex flex-col items-center justify-center gap-1"
+            <label
+              className="w-full h-24 rounded-xl flex flex-col items-center justify-center gap-1 cursor-pointer"
               style={{ border: '2px dashed #E5E5EA', color: '#8E8E93' }}>
               <span className="text-2xl">📷</span>
               <span className="text-xs">{t('uploadImage')}</span>
-            </button>
+              <input type="file" accept="image/*" className="hidden"
+                onChange={(e) => handleImage(e.target.files)} />
+            </label>
           )}
-          <input ref={fileRef} type="file" accept="image/*" className="hidden"
-            onChange={(e) => handleImage(e.target.files)} />
 
           {/* ソースURL */}
           <input type="url" value={sourceUrl} onChange={(e) => setSourceUrl(e.target.value)}
@@ -194,6 +214,10 @@ export default function AddScheduleModal({ onClose }: { onClose: () => void }) {
             rows={2}
             className="w-full px-3 py-2.5 rounded-xl text-sm outline-none resize-none"
             style={{ background: '#FFFFFF', border: '1px solid #E5E5EA', color: '#1C1C1E' }} />
+
+          {submitError && (
+            <p className="text-xs text-center" style={{ color: '#EF4444' }}>{submitError}</p>
+          )}
         </div>
 
         <div style={{ height: 'calc(80px + env(safe-area-inset-bottom, 0px))' }} />

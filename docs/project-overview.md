@@ -51,6 +51,7 @@ K-POPファン向けのスケジュール管理＆聖地巡礼アプリ。現在
 - [ ] **ユーザーデータ移行** — Glideの1,250ユーザーをSupabase Authに紐づけ
 - [ ] **MYカレンダーデータ移行** — Glideの6,540件を移行
 - [ ] **画像のSupabase Storage移行** — Google Drive → Supabase Storage
+- [ ] **Storage RLSポリシー設定（DB）** — Dashboard SQL Editorで event-images バケットのアップロードポリシーを設定。SQLは `docs/supabase-schema.sql` に記載
 - [x] **承認制UI（イベント）** — useVotingフック・EventDetailModal承認ボタン・EventCardバッジ実装済み
 - [ ] **承認制UI（スポット・写真・URL）** — スポット投稿のSupabase接続、写真投票、URL提案UIが未実装
 - [ ] **profiles自動作成トリガー（DB）** — Dashboard SQL Editorで `handle_new_user` トリガーを実行する必要あり。実行後、`useVoting.ts` の `ensureProfile` と `auth/callback/route.ts` のprofile作成コードを削除する。SQLは `docs/supabase-schema.sql` 末尾に記載

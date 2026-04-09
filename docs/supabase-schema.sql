@@ -449,11 +449,21 @@ create trigger on_auth_user_created
 -- ============================================================
 -- avatars        (プロフィール画像)
 -- banners        (プロフィールバナー)
--- event-images   (スケジュール画像)
+-- event-images   (スケジュール画像) ✅ 作成済み（public）
 -- spot-photos    (聖地写真)
 -- screenshots    (スクリーンショット)
 -- tickets        (チケット画像) ※private
 -- memories       (思い出写真) ※private
+
+-- Storage RLS ポリシー（TODO: Dashboard SQL Editor で実行）
+-- 認証済みユーザーは event-images にアップロード可能、誰でも閲覧可能
+create policy "Anyone can view event images"
+  on storage.objects for select
+  using (bucket_id = 'event-images');
+
+create policy "Authenticated users can upload event images"
+  on storage.objects for insert
+  with check (bucket_id = 'event-images' and auth.role() = 'authenticated');
 
 -- ============================================================
 -- 初期データ: タグマスタ

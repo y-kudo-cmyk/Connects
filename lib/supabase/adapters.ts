@@ -26,6 +26,7 @@ export type AppEvent = {
   sourceUrl?: string
   sourceName?: string
   notes?: string
+  submittedBy?: string
   status: string
   verifiedCount: number
   relatedArtists: string
@@ -71,6 +72,7 @@ export function toAppEvent(e: SupabaseEvent): AppEvent {
     sourceUrl: e.source_url || undefined,
     sourceName: e.source_url ? extractSourceName(e.source_url) : undefined,
     notes: e.notes || undefined,
+    submittedBy: e.submitted_by || undefined,
     status: e.status,
     verifiedCount: e.verified_count,
     relatedArtists: e.related_artists,
