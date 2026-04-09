@@ -2,10 +2,10 @@
 
 import { useState } from 'react'
 import AddScheduleModal from './AddScheduleModal'
-import { useTranslation } from '@/lib/i18n/useTranslation'
+import { useTranslations } from 'next-intl'
 
 export default function AddScheduleButton() {
-  const { t } = useTranslation()
+  const t = useTranslations()
   const [show, setShow] = useState(false)
 
   return (
@@ -18,7 +18,7 @@ export default function AddScheduleButton() {
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
           <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
         </svg>
-        {t('addSchedule')}
+        {t('Schedule.addSchedule')}
       </button>
       {show && <AddScheduleModal onClose={() => setShow(false)} />}
     </>

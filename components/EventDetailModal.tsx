@@ -9,7 +9,7 @@ import { useAuth } from '@/lib/supabase/useAuth'
 import { createClient } from '@/lib/supabase/client'
 import { useVoting, VOTE_THRESHOLD } from '@/lib/supabase/useVoting'
 import { countryFlag, cityToCountryCode } from '@/lib/countryUtils'
-import { useTranslation } from '@/lib/i18n/useTranslation'
+import { useTranslations } from 'next-intl'
 
 const supabase = createClient()
 
@@ -40,8 +40,8 @@ export default function EventDetailModal({
   const router = useRouter()
   const { addEntry, hasEntry, findEntryByEventId } = useMyEntries()
   const { user } = useAuth()
-  const { t, tObj } = useTranslation()
-  const dayNames = tObj<string[]>('dayNames')
+  const t = useTranslations()
+  const dayNames = t.raw('Calendar.dayNames') as string[]
   const { hasVoted, voteCount, isConfirmed, loading: voteLoading, submitVote, refetch: refetchVotes } = useVoting('event', event.id, user?.id ?? null)
   const [userRole, setUserRole] = useState<string>('user')
   const [editing, setEditing] = useState(false)
@@ -206,12 +206,12 @@ export default function EventDetailModal({
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
                     <polyline points="20 6 9 17 4 12" />
                   </svg>
-                  {t('approved')}
+                  {t('Schedule.approved')}
                 </>
               ) : (
                 <>
                   <span className="font-black">{voteCount}/{VOTE_THRESHOLD}</span>
-                  {t('pendingApproval')}
+                  {t('Schedule.pendingApproval')}
                 </>
               )}
             </div>
@@ -229,7 +229,7 @@ export default function EventDetailModal({
           {/* 画像 */}
           {editing ? (
             <div className="mb-4">
-              <label className="text-xs font-bold mb-1.5 block" style={{ color: '#636366' }}>{t('imageLabel')}</label>
+              <label className="text-xs font-bold mb-1.5 block" style={{ color: '#636366' }}>{t('Schedule.imageLabel')}</label>
               {editImageUrl ? (
                 <div className="relative rounded-2xl overflow-hidden">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -247,7 +247,7 @@ export default function EventDetailModal({
                   className="w-full h-32 rounded-2xl flex flex-col items-center justify-center gap-2"
                   style={{ border: '2px dashed #E5E5EA', color: '#8E8E93' }}>
                   <span className="text-3xl">📷</span>
-                  <span className="text-xs">{t('uploadImage')}</span>
+                  <span className="text-xs">{t('Schedule.uploadImage')}</span>
                 </button>
               )}
               <input ref={imageFileRef} type="file" accept="image/*" className="hidden"
@@ -276,7 +276,7 @@ export default function EventDetailModal({
             })}
             {isPeriod && (
               <span className="text-[11px] font-bold px-2 py-1 rounded-lg"
-                style={{ background: 'rgba(0,0,0,0.06)', color: '#8E8E93' }}>{t('period')}</span>
+                style={{ background: 'rgba(0,0,0,0.06)', color: '#8E8E93' }}>{t('Common.period')}</span>
             )}
           </div>
 
@@ -347,7 +347,7 @@ export default function EventDetailModal({
               <div className="flex-1">
                 {editing ? (
                   <input type="text" value={editVenue} onChange={(e) => setEditVenue(e.target.value)}
-                    placeholder={t('venuePlaceholder')}
+                    placeholder={t('Schedule.venuePlaceholder')}
                     className="w-full text-sm font-bold px-3 py-2 rounded-xl outline-none"
                     style={{ color: '#1C1C1E', background: '#FFFFFF', border: '1.5px solid #F3B4E3' }} />
                 ) : (
@@ -397,7 +397,7 @@ export default function EventDetailModal({
                 <div className="flex-1">
                   {editing ? (
                     <textarea value={editNotes} onChange={(e) => setEditNotes(e.target.value)}
-                      placeholder={t('notesPlaceholder')}
+                      placeholder={t('Schedule.notesPlaceholder')}
                       rows={2}
                       className="w-full text-sm px-3 py-2 rounded-xl outline-none resize-none"
                       style={{ color: '#1C1C1E', background: '#FFFFFF', border: '1.5px solid #F3B4E3' }} />
@@ -427,12 +427,12 @@ export default function EventDetailModal({
                 ) : event.sourceUrl ? (
                   <a href={event.sourceUrl} target="_blank" rel="noopener noreferrer">
                     <p className="text-sm font-semibold" style={{ color: cfg.color }}>
-                      {event.sourceName ?? t('viewSource')}
+                      {event.sourceName ?? t('Schedule.viewSource')}
                     </p>
                     <p className="text-[11px] truncate" style={{ color: '#8E8E93' }}>{event.sourceUrl}</p>
                   </a>
                 ) : (
-                  <p className="text-xs" style={{ color: '#C7C7CC' }}>{t('noSourceUrl')}</p>
+                  <p className="text-xs" style={{ color: '#C7C7CC' }}>{t('Schedule.noSourceUrl')}</p>
                 )}
               </div>
             </div>
@@ -446,7 +446,7 @@ export default function EventDetailModal({
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#34D399" strokeWidth="2.5">
               <polyline points="20 6 9 17 4 12" />
             </svg>
-            <p className="text-xs font-bold" style={{ color: '#34D399' }}>{t('editRequestSentMsg')}</p>
+            <p className="text-xs font-bold" style={{ color: '#34D399' }}>{t('Schedule.editRequestSentMsg')}</p>
           </div>
         )}
 
@@ -462,12 +462,12 @@ export default function EventDetailModal({
                   <button onClick={() => { setEditing(false); setConfirmDelete(false) }}
                     className="flex-1 py-3.5 rounded-xl text-sm font-bold"
                     style={{ background: '#F0F0F5', color: '#636366' }}>
-                    {t('cancel')}
+                    {t('Common.cancel')}
                   </button>
                   <button onClick={handleEditSave} disabled={editSaving}
                     className="flex-1 py-3.5 rounded-xl text-sm font-bold"
                     style={{ background: '#34D399', color: '#FFFFFF' }}>
-                    {editSaving ? t('saving') : isConfirmed ? t('submitEditRequest') : t('editAndApprove')}
+                    {editSaving ? t('Common.saving') : isConfirmed ? t('Schedule.submitEditRequest') : t('Schedule.editAndApprove')}
                   </button>
                 </>
               ) : (
@@ -479,7 +479,7 @@ export default function EventDetailModal({
                       <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" />
                       <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" />
                     </svg>
-                    {isConfirmed ? t('editRequest') : t('editButton')}
+                    {isConfirmed ? t('Schedule.editRequest') : t('Schedule.editButton')}
                   </button>
                   {user ? (
                     <button onClick={submitVote} disabled={hasVoted || voteLoading}
@@ -493,17 +493,17 @@ export default function EventDetailModal({
                           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                             <polyline points="20 6 9 17 4 12" />
                           </svg>
-                          {t('approved')}
+                          {t('Schedule.approved')}
                         </>
                       ) : (
-                        <>{t('approveButton')}（{voteCount}/{VOTE_THRESHOLD}）</>
+                        <>{t('Schedule.approveButton')}（{voteCount}/{VOTE_THRESHOLD}）</>
                       )}
                     </button>
                   ) : (
                     <button onClick={() => router.push('/login')}
                       className="flex-1 py-3.5 rounded-xl text-sm font-bold flex items-center justify-center gap-1.5"
                       style={{ background: '#34D399', color: '#FFFFFF' }}>
-                      {t('signInToApprove')}
+                      {t('Schedule.signInToApprove')}
                     </button>
                   )}
                 </>
@@ -518,19 +518,19 @@ export default function EventDetailModal({
                 <button onClick={() => setConfirmDelete(false)}
                   className="flex-1 py-3 rounded-xl text-sm font-bold"
                   style={{ background: '#F0F0F5', color: '#636366' }}>
-                  {t('cancel')}
+                  {t('Common.cancel')}
                 </button>
                 <button onClick={handleDelete}
                   className="flex-1 py-3 rounded-xl text-sm font-bold"
                   style={{ background: '#EF4444', color: '#FFFFFF' }}>
-                  {t('confirmDelete')}
+                  {t('My.confirmDelete')}
                 </button>
               </div>
             ) : (
               <button onClick={() => setConfirmDelete(true)}
                 className="w-full py-3 rounded-xl text-sm font-bold"
                 style={{ color: '#EF4444', background: 'rgba(239,68,68,0.08)' }}>
-                {t('deleteEvent')}
+                {t('Schedule.deleteEvent')}
               </button>
             )
           )}
@@ -553,13 +553,13 @@ export default function EventDetailModal({
                 <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" />
                 <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" />
               </svg>
-              {t('customizeSchedule')}
+              {t('Schedule.customizeSchedule')}
             </button>
           ) : (
             <button onClick={handleAddToMy}
               className="w-full py-3.5 rounded-xl text-sm font-bold"
               style={{ background: '#F3B4E3', color: '#FFFFFF' }}>
-              {t('addToMy')}
+              {t('Schedule.addToMy')}
             </button>
           )}
         </div>

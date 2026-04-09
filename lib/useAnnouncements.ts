@@ -11,24 +11,6 @@ export type Announcement = {
   url?: string
 }
 
-// DB連携前のモックデータ
-export const MOCK_ANNOUNCEMENTS: Announcement[] = [
-  {
-    id: 'ann-1',
-    type: 'important',
-    title: 'Connects+ へようこそ！',
-    body: 'スケジュール・MAP・GOODSなど機能を順次公開中です。投稿・承認でグレードアップ！',
-    date: '2026-04-01',
-  },
-  {
-    id: 'ann-2',
-    type: 'info',
-    title: 'スケジュール投稿機能 公開',
-    body: 'みなさんのスケジュール投稿をお待ちしています。3人の確認で公開されます。',
-    date: '2026-04-02',
-  },
-]
-
 const DISMISSED_KEY = 'cp-dismissed-announcements'
 
 export function useAnnouncements(all: Announcement[]) {

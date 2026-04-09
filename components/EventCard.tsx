@@ -2,7 +2,7 @@ import { scheduleTagConfig, type ScheduleTag } from '@/lib/config/tags'
 import type { AppEvent } from '@/lib/supabase/adapters'
 import { VOTE_THRESHOLD } from '@/lib/supabase/useVoting'
 import { countryFlag, cityToCountryCode } from '@/lib/countryUtils'
-import { useTranslation } from '@/lib/i18n/useTranslation'
+import { useTranslations } from 'next-intl'
 
 interface EventCardProps {
   event: AppEvent
@@ -25,7 +25,7 @@ function formatDateTime(date: string, time: string, dateEnd?: string, timeEnd?: 
 }
 
 export default function EventCard({ event, compact = false }: EventCardProps) {
-  const { t } = useTranslation()
+  const t = useTranslations()
   const firstTag = event.tags?.[0] as ScheduleTag | undefined
   const cfg = firstTag && scheduleTagConfig[firstTag] ? scheduleTagConfig[firstTag] : { label: 'EVENT', icon: '📌', color: '#8E8E93', bg: 'rgba(142,142,147,0.15)' }
   const isPeriod = !!event.dateEnd
@@ -115,7 +115,7 @@ export default function EventCard({ event, compact = false }: EventCardProps) {
               className="text-[10px] font-bold px-1.5 py-0.5 rounded"
               style={{ background: 'rgba(0,0,0,0.06)', color: '#8E8E93' }}
             >
-              {t('period')}
+              {t('Common.period')}
             </span>
           )}
           <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full"

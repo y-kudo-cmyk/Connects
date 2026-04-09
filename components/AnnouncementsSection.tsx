@@ -1,7 +1,7 @@
 'use client'
 
-import { Announcement, MOCK_ANNOUNCEMENTS, useAnnouncements } from '@/lib/useAnnouncements'
-import { useTranslation } from '@/lib/i18n/useTranslation'
+import { Announcement, useAnnouncements } from '@/lib/useAnnouncements'
+import { useTranslations } from 'next-intl'
 
 const TYPE_CONFIG = {
   important: { label: '重要',    bg: '#FFF0F8', border: '#F3B4E3', color: '#C97AB8' },
@@ -11,10 +11,9 @@ const TYPE_CONFIG = {
 
 const MONTH_SHORT = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
 
-export default function AnnouncementsSection() {
-  const { t } = useTranslation()
-  // DB連携後はここをAPIフェッチに差し替え
-  const { visible, dismiss } = useAnnouncements(MOCK_ANNOUNCEMENTS)
+export default function AnnouncementsSection({ announcements }: { announcements: Announcement[] }) {
+  const t = useTranslations()
+  const { visible, dismiss } = useAnnouncements(announcements)
 
   if (visible.length === 0) return null
 
@@ -26,13 +25,13 @@ export default function AnnouncementsSection() {
           <path d="M13.73 21a2 2 0 01-3.46 0"/>
         </svg>
         <h2 className="text-xs font-bold tracking-wider" style={{ color: '#636366' }}>
-          {t('announcements')}
+          {t('Home.announcements')}
         </h2>
         <span
           className="text-[10px] font-bold px-2 py-0.5 rounded-full"
           style={{ background: 'rgba(243,180,227,0.12)', color: '#F3B4E3' }}
         >
-          {visible.length}{t('items')}
+          {visible.length}{t('Common.items')}
         </span>
       </div>
 
@@ -46,8 +45,8 @@ export default function AnnouncementsSection() {
 }
 
 function AnnouncementCard({ ann, onDismiss }: { ann: Announcement; onDismiss: () => void }) {
-  const { t, tObj } = useTranslation()
-  const announcementLabels = tObj<Record<string, string>>('announcementTypes')
+  const t = useTranslations()
+  const announcementLabels = t.raw('Home.announcementTypes') as Record<string, string>
   const cfg = TYPE_CONFIG[ann.type]
   const d = new Date(ann.date)
 
@@ -103,7 +102,7 @@ function AnnouncementCard({ ann, onDismiss }: { ann: Announcement; onDismiss: ()
           className="text-[11px] font-bold"
           style={{ color: cfg.color }}
         >
-          {t('readMore')}
+          {t('Home.readMore')}
         </a>
       )}
     </div>

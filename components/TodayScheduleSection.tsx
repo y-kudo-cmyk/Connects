@@ -6,7 +6,7 @@ import { scheduleTagConfig, type ScheduleTag } from '@/lib/config/tags'
 import { useSupabaseData } from './SupabaseDataProvider'
 import type { AppEvent } from '@/lib/supabase/adapters'
 import EventDetailModal from './EventDetailModal'
-import { useTranslation } from '@/lib/i18n/useTranslation'
+import { useTranslations } from 'next-intl'
 import { useToday } from '@/lib/useToday'
 import { cityToCountryCode } from '@/lib/countryUtils'
 import { VOTE_THRESHOLD } from '@/lib/supabase/useVoting'
@@ -22,8 +22,8 @@ function md(s: string) {
 export default function TodayScheduleSection() {
   const today = useToday()
   const { events: allEvents } = useSupabaseData()
-  const { t, tObj } = useTranslation()
-  const dayNames = tObj<string[]>('dayNames')
+  const t = useTranslations()
+  const dayNames = t.raw('Calendar.dayNames') as string[]
   const [detailEvent, setDetailEvent] = useState<AppEvent | null>(null)
 
   const todayEvents = useMemo(() => {
@@ -79,7 +79,7 @@ export default function TodayScheduleSection() {
                 style={{ background: 'rgba(243,180,227,0.12)', color: '#F3B4E3' }}
               >
                 <span className="w-1.5 h-1.5 rounded-full bg-current animate-pulse" />
-                {todayEvents.length}{t('items')}
+                {todayEvents.length}{t('Common.items')}
               </span>
             )}
             <Link
@@ -87,7 +87,7 @@ export default function TodayScheduleSection() {
               className="text-xs font-bold"
               style={{ color: '#636366' }}
             >
-              {t('seeAll')}
+              {t('Common.seeAll')}
             </Link>
           </div>
         </div>
@@ -103,7 +103,7 @@ export default function TodayScheduleSection() {
               <line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/>
               <line x1="3" y1="10" x2="21" y2="10"/>
             </svg>
-            <p className="text-sm" style={{ color: '#C7C7CC' }}>{t('noScheduleToday')}</p>
+            <p className="text-sm" style={{ color: '#C7C7CC' }}>{t('Home.noScheduleToday')}</p>
           </div>
         ) : (
           <div className="flex flex-col gap-2">
@@ -114,7 +114,7 @@ export default function TodayScheduleSection() {
               const hasTime = event.time && event.time !== '00:00'
               const dateStr = isPeriod
                 ? `${md(event.date)}${hasTime ? ` ${event.time}` : ''} 〜 ${md(event.dateEnd!)}${event.timeEnd && event.timeEnd !== '00:00' ? ` ${event.timeEnd}` : ''}`
-                : (hasTime ? `${md(event.date)} ${event.time}` : t('allDay'))
+                : (hasTime ? `${md(event.date)} ${event.time}` : t('Common.allDay'))
               return (
                 <button
                   key={event.id}
@@ -151,7 +151,7 @@ export default function TodayScheduleSection() {
                       {isPeriod && (
                         <span className="text-[10px] font-bold px-1.5 py-0.5 rounded"
                           style={{ background: 'rgba(0,0,0,0.06)', color: '#8E8E93' }}>
-                          {t('period')}
+                          {t('Common.period')}
                         </span>
                       )}
                     </div>

@@ -14,6 +14,7 @@ K-POPファン向けのスケジュール管理＆聖地巡礼アプリ。現在
 |---|---|---|
 | フロントエンド | Next.js 16 + React 19 + TypeScript | アプリ本体（PWA） |
 | スタイリング | Tailwind CSS v4 | UI |
+| UIコンポーネント | shadcn/ui (base-nova) | 管理画面等のUIコンポーネント |
 | DB / Auth / Storage | Supabase | PostgreSQL + 認証 + ファイル保存 |
 | ホスティング | Vercel | デプロイ・CDN |
 | 地図 | Leaflet (react-leaflet) | 聖地巡礼MAP |
