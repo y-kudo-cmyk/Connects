@@ -30,6 +30,7 @@ export type AppEvent = {
   verifiedCount: number
   relatedArtists: string
   subTitle?: string
+  submittedByName?: string
 }
 
 // タイムゾーンずれを防ぐ: DBの日時文字列から直接 YYYY-MM-DD と HH:MM を取る
@@ -75,6 +76,7 @@ export function toAppEvent(e: SupabaseEvent): AppEvent {
     verifiedCount: e.verified_count,
     relatedArtists: e.related_artists,
     subTitle: e.sub_event_title || undefined,
+    submittedByName: e.submitter?.nickname || undefined,
   }
 }
 
@@ -118,6 +120,7 @@ export type AppSpot = {
   photos?: AppSpotPhoto[]
   status: string
   verifiedCount: number
+  contributor?: string
 }
 
 export type AppSpotPhoto = {

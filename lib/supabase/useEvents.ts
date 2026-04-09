@@ -24,6 +24,8 @@ export type SupabaseEvent = {
   notes: string
   status: string
   verified_count: number
+  submitted_by: string | null
+  submitter?: { nickname: string } | null
 }
 
 export function useEvents() {
@@ -33,7 +35,7 @@ export function useEvents() {
   useEffect(() => {
     supabase
       .from('events')
-      .select('*')
+      .select('*, submitter:profiles!submitted_by(nickname)')
       .order('start_date', { ascending: true })
       .then(({ data, error }) => {
         if (error) console.error('Events fetch error:', error.message)

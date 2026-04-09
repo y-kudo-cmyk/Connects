@@ -13,6 +13,11 @@ export default function HomePage() {
         <AnnouncementsSection />
       </div>
 
+      {/* ─── スケジュール投稿 ─── */}
+      <div className="pt-4 px-4">
+        <AddScheduleButton />
+      </div>
+
       {/* ─── 新着スケジュール ─── */}
       <div className="pt-4">
         <NewSchedulePreview />
@@ -21,11 +26,6 @@ export default function HomePage() {
       {/* ─── 今日のスケジュール ─── */}
       <div className="pt-4">
         <TodayScheduleSection />
-      </div>
-
-      {/* ─── スケジュール投稿 ─── */}
-      <div className="pt-3 px-4">
-        <AddScheduleButton />
       </div>
 
       {/* ─── TODO ─── */}

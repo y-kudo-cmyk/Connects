@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { scheduleTagConfig, type ScheduleTag } from '@/lib/config/tags'
 import { useAuth } from '@/lib/supabase/useAuth'
 import { createClient } from '@/lib/supabase/client'
@@ -26,6 +26,18 @@ export default function AddScheduleModal({ onClose }: { onClose: () => void }) {
   const [done, setDone] = useState(false)
   const fileRef = useRef<HTMLInputElement>(null)
 
+  useEffect(() => {
+    const main = document.querySelector('main') as HTMLElement | null
+    const prevBody = document.body.style.overflow
+    const prevMain = main?.style.overflow ?? ''
+    document.body.style.overflow = 'hidden'
+    if (main) main.style.overflow = 'hidden'
+    return () => {
+      document.body.style.overflow = prevBody
+      if (main) main.style.overflow = prevMain
+    }
+  }, [])
+
   const handleImage = async (files: FileList | null) => {
     if (!files?.[0]) return
     setImageUrl(await compressImage(files[0], 1200, 0.85))
@@ -43,6 +55,7 @@ export default function AddScheduleModal({ onClose }: { onClose: () => void }) {
     await supabase.from('events').insert({
       tag,
       artist_id: 'seventeen',
+      submitted_by: user?.id ?? null,
       related_artists: '',
       event_title: title.trim(),
       sub_event_title: '',
@@ -90,7 +103,7 @@ export default function AddScheduleModal({ onClose }: { onClose: () => void }) {
     <div className="fixed inset-0 z-[60] flex flex-col justify-end">
       <div className="absolute inset-0" style={{ background: 'rgba(0,0,0,0.55)' }} onClick={onClose} />
       <div className="relative flex flex-col rounded-t-2xl overflow-hidden"
-        style={{ background: '#F8F9FA', maxHeight: '90vh' }}>
+        style={{ background: '#F8F9FA', height: '88dvh' }}>
         <div className="flex justify-center pt-3 pb-1 flex-shrink-0">
           <div className="w-10 h-1 rounded-full" style={{ background: '#C7C7CC' }} />
         </div>
@@ -99,24 +112,15 @@ export default function AddScheduleModal({ onClose }: { onClose: () => void }) {
         <div className="flex items-center justify-between px-4 py-2 flex-shrink-0"
           style={{ borderBottom: '1px solid #E5E5EA' }}>
           <p className="text-sm font-bold" style={{ color: '#1C1C1E' }}>{t('addSchedule')}</p>
-          <div className="flex items-center gap-2">
-            <button onClick={handleSubmit} disabled={!title.trim() || !startDate || saving}
-              className="px-4 py-2 rounded-xl text-sm font-bold"
-              style={{
-                background: title.trim() && startDate ? '#F3B4E3' : '#E5E5EA',
-                color: title.trim() && startDate ? '#FFFFFF' : '#8E8E93',
-              }}>
-              {saving ? t('saving') : t('addScheduleShort')}
-            </button>
-            <button onClick={onClose} className="w-11 h-11 flex items-center justify-center">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#636366" strokeWidth="2">
-                <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
-              </svg>
-            </button>
-          </div>
+          <button onClick={onClose} className="w-11 h-11 flex items-center justify-center">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#636366" strokeWidth="2">
+              <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
+          </button>
         </div>
 
-        <div className="flex-1 overflow-y-auto px-4 py-4 flex flex-col gap-4">
+        <div className="flex-1 min-h-0 overflow-y-auto px-4 pt-4 flex flex-col gap-4"
+          style={{ paddingBottom: 120, WebkitOverflowScrolling: 'touch', overscrollBehavior: 'contain' }}>
           {/* タイトル */}
           <input type="text" value={title} onChange={(e) => setTitle(e.target.value)}
             placeholder={t('titlePlaceholder')}
@@ -191,12 +195,27 @@ export default function AddScheduleModal({ onClose }: { onClose: () => void }) {
           {/* 備考 */}
           <textarea value={notes} onChange={(e) => setNotes(e.target.value)}
             placeholder={t('notesPlaceholder')}
-            rows={2}
-            className="w-full px-3 py-2.5 rounded-xl text-sm outline-none resize-none"
+            rows={3}
+            className="w-full px-3 py-3 rounded-xl text-sm outline-none resize-none"
             style={{ background: '#FFFFFF', border: '1px solid #E5E5EA', color: '#1C1C1E' }} />
         </div>
 
-        <div style={{ height: 'calc(80px + env(safe-area-inset-bottom, 0px))' }} />
+        {/* フッター（投稿ボタン） */}
+        <div className="flex-shrink-0 px-4 pt-3"
+          style={{
+            background: '#F8F9FA',
+            borderTop: '1px solid #E5E5EA',
+            paddingBottom: 'calc(12px + env(safe-area-inset-bottom, 0px))',
+          }}>
+          <button onClick={handleSubmit} disabled={!title.trim() || !startDate || saving}
+            className="w-full py-3.5 rounded-2xl text-sm font-bold"
+            style={{
+              background: title.trim() && startDate ? '#F3B4E3' : '#E5E5EA',
+              color: title.trim() && startDate ? '#FFFFFF' : '#8E8E93',
+            }}>
+            {saving ? t('saving') : t('addScheduleShort')}
+          </button>
+        </div>
       </div>
     </div>
   )

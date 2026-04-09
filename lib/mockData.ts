@@ -223,6 +223,7 @@ export type PilgrimageSpot = {
   sourceUrl?: string
   sourceName?: string
   photos?: SpotPhoto[]  // シード写真（公式・キュレーション済み）
+  contributor?: string  // 投稿者ニックネーム（ユーザー投稿スポットのみ）
 }
 
 /** スポットが「情報完備」かどうか（ピンの色判定用） */
