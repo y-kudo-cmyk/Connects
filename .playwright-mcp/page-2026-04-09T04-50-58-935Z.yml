@@ -1,0 +1,202 @@
+- generic [ref=e1]:
+  - button "Open Next.js Dev Tools" [ref=e7] [cursor=pointer]:
+    - img [ref=e8]
+  - alert [ref=e11]
+  - generic [ref=e12]:
+    - main [ref=e13]:
+      - generic [ref=e14]:
+        - generic [ref=e16]:
+          - generic [ref=e17]:
+            - img [ref=e18]
+            - heading "運営からのお知らせ" [level=2] [ref=e21]
+            - generic [ref=e22]: 2件
+          - generic [ref=e23]:
+            - generic [ref=e24]:
+              - generic [ref=e25]:
+                - generic [ref=e26]:
+                  - generic [ref=e27]: 重要
+                  - generic [ref=e28]: Apr 1
+                - button [ref=e29]:
+                  - img [ref=e30]
+              - paragraph [ref=e33]: Connects+ へようこそ！
+              - paragraph [ref=e34]: スケジュール・MAP・GOODSなど機能を順次公開中です。投稿・承認でグレードアップ！
+            - generic [ref=e35]:
+              - generic [ref=e36]:
+                - generic [ref=e37]:
+                  - generic [ref=e38]: お知らせ
+                  - generic [ref=e39]: Apr 2
+                - button [ref=e40]:
+                  - img [ref=e41]
+              - paragraph [ref=e44]: スケジュール投稿機能 公開
+              - paragraph [ref=e45]: みなさんのスケジュール投稿をお待ちしています。3人の確認で公開されます。
+        - generic [ref=e46]:
+          - generic [ref=e108]:
+            - generic [ref=e109]:
+              - heading "新着スケジュール" [level=2] [ref=e112]
+              - generic [ref=e113]: 8件
+            - generic [ref=e114]:
+              - generic [ref=e115]:
+                - button "❤️ EVENT 0/3" [active] [ref=e116]:
+                  - generic [ref=e118]: ❤️ EVENT
+                  - generic [ref=e119]: 0/3
+                - button "Apr 10 『HYBE MUSIC GROUP STORE』ツリービレッジ横浜店にオープン！" [ref=e120]:
+                  - generic [ref=e121]: Apr 10
+                  - paragraph [ref=e122]: 『HYBE MUSIC GROUP STORE』ツリービレッジ横浜店にオープン！
+                - generic [ref=e123]:
+                  - button "確認" [ref=e124]
+                  - button "+ MY" [ref=e125]
+              - generic [ref=e126]:
+                - button "🎫 TICKET 0/3" [ref=e127]:
+                  - generic [ref=e129]: 🎫 TICKET
+                  - generic [ref=e130]: 0/3
+                - button "Apr 10 11:00 SEVENTEEN 2026 JAPAN FANMEETING 'YAKUSOKU'" [ref=e131]:
+                  - generic [ref=e132]: Apr 10 11:00
+                  - paragraph [ref=e133]: SEVENTEEN 2026 JAPAN FANMEETING 'YAKUSOKU'
+                - generic [ref=e134]:
+                  - button "確認" [ref=e135]
+                  - button "+ MY" [ref=e136]
+              - generic [ref=e137]:
+                - button "SERENADE ON STAGE 🎤 LIVE 0/3" [ref=e138]:
+                  - img "SERENADE ON STAGE" [ref=e139]
+                  - generic [ref=e140]: 🎤 LIVE
+                  - generic [ref=e141]: 0/3
+                - button "Apr 17 SERENADE ON STAGE 📍 INSPIRE ARENA" [ref=e142]:
+                  - generic [ref=e143]: Apr 17
+                  - paragraph [ref=e144]: SERENADE ON STAGE
+                  - paragraph [ref=e145]: 📍 INSPIRE ARENA
+                - generic [ref=e146]:
+                  - button "確認" [ref=e147]
+                  - button "+ MY" [ref=e148]
+              - generic [ref=e149]:
+                - button "🎫 TICKET 0/3" [ref=e150]:
+                  - generic [ref=e152]: 🎫 TICKET
+                  - generic [ref=e153]: 0/3
+                - button "Apr 17 11:00 SEVENTEEN 2026 JAPAN FANMEETING 'YAKUSOKU'" [ref=e154]:
+                  - generic [ref=e155]: Apr 17 11:00
+                  - paragraph [ref=e156]: SEVENTEEN 2026 JAPAN FANMEETING 'YAKUSOKU'
+                - generic [ref=e157]:
+                  - button "確認" [ref=e158]
+                  - button "+ MY" [ref=e159]
+              - generic [ref=e160]:
+                - button "SERENADE ON STAGE 🎤 LIVE 0/3" [ref=e161]:
+                  - img "SERENADE ON STAGE" [ref=e162]
+                  - generic [ref=e163]: 🎤 LIVE
+                  - generic [ref=e164]: 0/3
+                - button "Apr 18 SERENADE ON STAGE 📍 INSPIRE ARENA" [ref=e165]:
+                  - generic [ref=e166]: Apr 18
+                  - paragraph [ref=e167]: SERENADE ON STAGE
+                  - paragraph [ref=e168]: 📍 INSPIRE ARENA
+                - generic [ref=e169]:
+                  - button "確認" [ref=e170]
+                  - button "+ MY" [ref=e171]
+              - generic [ref=e172]:
+                - button "🎫 TICKET ✓" [ref=e173]:
+                  - generic [ref=e175]: 🎫 TICKET
+                  - generic [ref=e176]: ✓
+                - button "Apr 18 18:00 DxS [SERENADE] ON STAGE - JAPAN チケットシェアリング" [ref=e177]:
+                  - generic [ref=e178]: Apr 18 18:00
+                  - paragraph [ref=e179]: DxS [SERENADE] ON STAGE - JAPAN チケットシェアリング
+                - generic [ref=e180]:
+                  - button "確認" [ref=e181]
+                  - button "+ MY" [ref=e182]
+              - generic [ref=e183]:
+                - button "SERENADE ON STAGE 🎤 LIVE 0/3" [ref=e184]:
+                  - img "SERENADE ON STAGE" [ref=e185]
+                  - generic [ref=e186]: 🎤 LIVE
+                  - generic [ref=e187]: 0/3
+                - button "Apr 19 SERENADE ON STAGE 📍 INSPIRE ARENA" [ref=e188]:
+                  - generic [ref=e189]: Apr 19
+                  - paragraph [ref=e190]: SERENADE ON STAGE
+                  - paragraph [ref=e191]: 📍 INSPIRE ARENA
+                - generic [ref=e192]:
+                  - button "確認" [ref=e193]
+                  - button "+ MY" [ref=e194]
+              - generic [ref=e195]:
+                - button "DxS [SERENADE] ON STAGE - JAPAN ライブビューイング 🎫 TICKET 0/3" [ref=e196]:
+                  - img "DxS [SERENADE] ON STAGE - JAPAN ライブビューイング" [ref=e197]
+                  - generic [ref=e198]: 🎫 TICKET
+                  - generic [ref=e199]: 0/3
+                - button "Apr 23 15:00 DxS [SERENADE] ON STAGE - JAPAN ライブビューイング" [ref=e200]:
+                  - generic [ref=e201]: Apr 23 15:00
+                  - paragraph [ref=e202]: DxS [SERENADE] ON STAGE - JAPAN ライブビューイング
+                - generic [ref=e203]:
+                  - button "確認" [ref=e204]
+                  - button "+ MY" [ref=e205]
+          - generic [ref=e208]:
+            - generic [ref=e211]:
+              - generic [ref=e213]:
+                - generic [ref=e214]: 0/3
+                - text: 承認待ち
+              - button [ref=e215]:
+                - img [ref=e216]
+            - generic [ref=e219]:
+              - generic [ref=e222]: ❤️ EVENT
+              - heading "『HYBE MUSIC GROUP STORE』ツリービレッジ横浜店にオープン！" [level=2] [ref=e223]
+              - generic [ref=e224]:
+                - generic [ref=e225]:
+                  - img [ref=e227]
+                  - paragraph [ref=e230]: 04/10（金）
+                - img [ref=e233]
+                - generic [ref=e236]:
+                  - img [ref=e238]
+                  - link "seventeen-17.jp https://www.seventeen-17.jp/posts/information/jazjcl" [ref=e243] [cursor=pointer]:
+                    - /url: https://www.seventeen-17.jp/posts/information/jazjcl
+                    - paragraph [ref=e244]: seventeen-17.jp
+                    - paragraph [ref=e245]: https://www.seventeen-17.jp/posts/information/jazjcl
+            - generic [ref=e246]:
+              - generic [ref=e247]:
+                - button "修正" [ref=e248]:
+                  - img [ref=e249]
+                  - text: 修正
+                - button "承認する（0/3）" [ref=e252]
+              - button "+ MYに追加" [ref=e253]
+        - generic [ref=e48]:
+          - generic [ref=e49]:
+            - generic [ref=e50]:
+              - paragraph [ref=e51]: TODAY'S SCHEDULE
+              - generic [ref=e52]:
+                - heading "Apr 9" [level=2] [ref=e53]
+                - generic [ref=e54]: (木)
+            - link "すべて →" [ref=e56] [cursor=pointer]:
+              - /url: /schedule
+          - generic [ref=e57]:
+            - img [ref=e58]
+            - paragraph [ref=e60]: 今日の予定はありません
+        - button "スケジュールを投稿" [ref=e62]:
+          - img [ref=e63]
+          - text: スケジュールを投稿
+        - generic [ref=e65]:
+          - heading "TODO" [level=2] [ref=e68]
+          - generic [ref=e70]:
+            - textbox "TODOを追加..." [ref=e71]
+            - button "期限" [ref=e72]:
+              - img [ref=e73]
+              - text: 期限
+            - button [ref=e75]:
+              - img [ref=e76]
+          - paragraph [ref=e78]: やることを追加しよう
+    - navigation [ref=e79]:
+      - link "HOME" [ref=e80] [cursor=pointer]:
+        - /url: /
+        - img [ref=e81]
+        - generic [ref=e84]: HOME
+      - link "MY" [ref=e85] [cursor=pointer]:
+        - /url: /my
+        - img [ref=e86]
+        - generic [ref=e88]: MY
+      - link "SCHEDULE" [ref=e89] [cursor=pointer]:
+        - /url: /schedule
+        - img [ref=e90]
+        - generic [ref=e92]: SCHEDULE
+      - link "MAP" [ref=e93] [cursor=pointer]:
+        - /url: /map
+        - img [ref=e94]
+        - generic [ref=e97]: MAP
+      - link "GOODS" [ref=e98] [cursor=pointer]:
+        - /url: /goods
+        - img [ref=e99]
+        - generic [ref=e102]: GOODS
+      - link "PROFILE" [ref=e103] [cursor=pointer]:
+        - /url: /profile
+        - img [ref=e104]
+        - generic [ref=e107]: PROFILE

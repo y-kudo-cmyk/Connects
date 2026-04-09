@@ -1,0 +1,18 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - img "Connects+" [ref=e4]
+    - generic [ref=e5]:
+      - paragraph [ref=e7]: ログイン方法を選択
+      - button "Googleでログイン" [ref=e8]:
+        - img [ref=e9]
+        - generic [ref=e14]: Googleでログイン
+      - button "X（Twitter）でログイン" [ref=e15]:
+        - img [ref=e16]
+        - generic [ref=e18]: X（Twitter）でログイン
+      - generic [ref=e21]: またはメールで
+      - textbox "example@email.com" [ref=e23]
+      - button "メールでログイン" [ref=e24]
+    - paragraph [ref=e25]: ログインすることで、利用規約と プライバシーポリシーに同意したものとみなします。
+  - button "Open Next.js Dev Tools" [ref=e31] [cursor=pointer]:
+    - img [ref=e32]
+  - alert [ref=e35]

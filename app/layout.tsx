@@ -1,6 +1,10 @@
 import type { Metadata, Viewport } from 'next'
 import './globals.css'
 import SessionProviderWrapper from '@/components/SessionProviderWrapper'
+import { Geist } from "next/font/google";
+import { cn } from "@/lib/utils";
+
+const geist = Geist({subsets:['latin'],variable:'--font-sans'});
 
 export const metadata: Metadata = {
   title: 'Connects+',
@@ -34,7 +38,7 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="ja" className="h-full">
+    <html lang="ja" className={cn("h-full", "font-sans", geist.variable)}>
       <body className="h-full antialiased">
         <SessionProviderWrapper>{children}</SessionProviderWrapper>
       </body>

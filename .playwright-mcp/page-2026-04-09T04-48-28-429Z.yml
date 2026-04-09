@@ -1,0 +1,81 @@
+- generic [active] [ref=e1]:
+  - button "Open Next.js Dev Tools" [ref=e7] [cursor=pointer]:
+    - img [ref=e8]
+  - alert [ref=e11]
+  - generic [ref=e12]:
+    - main [ref=e13]:
+      - generic [ref=e14]:
+        - generic [ref=e16]:
+          - generic [ref=e17]:
+            - img [ref=e18]
+            - heading "運営からのお知らせ" [level=2] [ref=e21]
+            - generic [ref=e22]: 2件
+          - generic [ref=e23]:
+            - generic [ref=e24]:
+              - generic [ref=e25]:
+                - generic [ref=e26]:
+                  - generic [ref=e27]: 重要
+                  - generic [ref=e28]: Apr 1
+                - button [ref=e29]:
+                  - img [ref=e30]
+              - paragraph [ref=e33]: Connects+ へようこそ！
+              - paragraph [ref=e34]: スケジュール・MAP・GOODSなど機能を順次公開中です。投稿・承認でグレードアップ！
+            - generic [ref=e35]:
+              - generic [ref=e36]:
+                - generic [ref=e37]:
+                  - generic [ref=e38]: お知らせ
+                  - generic [ref=e39]: Apr 2
+                - button [ref=e40]:
+                  - img [ref=e41]
+              - paragraph [ref=e44]: スケジュール投稿機能 公開
+              - paragraph [ref=e45]: みなさんのスケジュール投稿をお待ちしています。3人の確認で公開されます。
+        - generic [ref=e48]:
+          - generic [ref=e49]:
+            - generic [ref=e50]:
+              - paragraph [ref=e51]: TODAY'S SCHEDULE
+              - generic [ref=e52]:
+                - heading "Apr 9" [level=2] [ref=e53]
+                - generic [ref=e54]: (木)
+            - link "すべて →" [ref=e56] [cursor=pointer]:
+              - /url: /schedule
+          - generic [ref=e57]:
+            - img [ref=e58]
+            - paragraph [ref=e60]: 今日の予定はありません
+        - button "スケジュールを投稿" [ref=e62]:
+          - img [ref=e63]
+          - text: スケジュールを投稿
+        - generic [ref=e65]:
+          - heading "TODO" [level=2] [ref=e68]
+          - generic [ref=e70]:
+            - textbox "TODOを追加..." [ref=e71]
+            - button "期限" [ref=e72]:
+              - img [ref=e73]
+              - text: 期限
+            - button [ref=e75]:
+              - img [ref=e76]
+          - paragraph [ref=e78]: やることを追加しよう
+    - navigation [ref=e79]:
+      - link "HOME" [ref=e80] [cursor=pointer]:
+        - /url: /
+        - img [ref=e81]
+        - generic [ref=e84]: HOME
+      - link "MY" [ref=e85] [cursor=pointer]:
+        - /url: /my
+        - img [ref=e86]
+        - generic [ref=e88]: MY
+      - link "SCHEDULE" [ref=e89] [cursor=pointer]:
+        - /url: /schedule
+        - img [ref=e90]
+        - generic [ref=e92]: SCHEDULE
+      - link "MAP" [ref=e93] [cursor=pointer]:
+        - /url: /map
+        - img [ref=e94]
+        - generic [ref=e97]: MAP
+      - link "GOODS" [ref=e98] [cursor=pointer]:
+        - /url: /goods
+        - img [ref=e99]
+        - generic [ref=e102]: GOODS
+      - link "PROFILE" [ref=e103] [cursor=pointer]:
+        - /url: /profile
+        - img [ref=e104]
+        - generic [ref=e107]: PROFILE

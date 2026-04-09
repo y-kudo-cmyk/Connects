@@ -55,6 +55,8 @@ K-POPファン向けのスケジュール管理＆聖地巡礼アプリ。現在
 - [x] **承認制UI（イベント）** — useVotingフック・EventDetailModal承認ボタン・EventCardバッジ実装済み
 - [ ] **承認制UI（スポット・写真・URL）** — スポット投稿のSupabase接続、写真投票、URL提案UIが未実装
 - [ ] **profiles自動作成トリガー（DB）** — Dashboard SQL Editorで `handle_new_user` トリガーを実行する必要あり。実行後、`useVoting.ts` の `ensureProfile` と `auth/callback/route.ts` のprofile作成コードを削除する。SQLは `docs/supabase-schema.sql` 末尾に記載
+- [ ] **auto_confirm_eventトリガー修正（DB）** — 投票ごとにverified_countを更新するよう修正。SQLは `docs/supabase-schema.sql` に記載
+- [ ] **管理画面（/admin）** — 投稿管理・承認設定・ユーザー管理・お知らせ・タグ・アーティスト管理。詳細は `docs/admin-requirements.md`
 - [ ] **Apify連携** — 公式サイト・SNSからの自動データ取得
 - [ ] **OneSignal連携** — プッシュ通知
 - [ ] **X自動投稿** — 新着スポットの自動ポスト

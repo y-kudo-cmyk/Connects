@@ -445,6 +445,23 @@ create trigger on_auth_user_created
   for each row execute function handle_new_user();
 
 -- ============================================================
+-- auto_confirm_event 修正（TODO: Dashboard SQL Editor で実行）
+-- 投票ごとに verified_count を更新する（元は3票到達時のみ更新）
+-- ============================================================
+create or replace function auto_confirm_event()
+returns trigger as $$
+begin
+  update events
+  set verified_count = (select count(*) from event_votes where event_id = NEW.event_id and vote = 'approve'),
+      status = case
+        when (select count(*) from event_votes where event_id = NEW.event_id and vote = 'approve') >= 3
+        then 'confirmed' else status end
+  where id = NEW.event_id;
+  return NEW;
+end;
+$$ language plpgsql;
+
+-- ============================================================
 -- Storage バケット（Supabase Dashboard で作成）
 -- ============================================================
 -- avatars        (プロフィール画像)
