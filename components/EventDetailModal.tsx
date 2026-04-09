@@ -260,7 +260,11 @@ export default function EventDetailModal({
                 className="w-full rounded-2xl" style={{ display: 'block' }} />
             </div>
           ) : (
-            <div className="rounded-2xl mb-4" style={{ aspectRatio: '16/9', background: '#E5E5EA' }} />
+            <div className="rounded-2xl mb-4 flex items-center justify-center"
+              style={{ aspectRatio: '16/9', background: 'linear-gradient(135deg, #E8D5F5 0%, #D5E5F5 50%, #F5D5E8 100%)' }}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/logo.png" alt="" className="w-16 h-16 opacity-40" />
+            </div>
           )}
 
           {/* タグ */}
