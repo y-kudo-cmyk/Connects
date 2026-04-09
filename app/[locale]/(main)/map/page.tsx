@@ -10,7 +10,7 @@ import {
   getMapUrl,
   getMapAppName,
   isSpotComplete,
-} from '@/lib/mockData'
+} from '@/lib/config/constants'
 import type { AppSpot } from '@/lib/supabase/adapters'
 import type { SpotPhoto } from '@/lib/useSpotPhotos'
 import EventCard from '@/components/EventCard'

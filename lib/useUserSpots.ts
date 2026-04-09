@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useAuth } from '@/lib/supabase/useAuth'
-import type { PilgrimageSpot } from './mockData'
+import type { PilgrimageSpot } from './config/constants'
 
 const supabase = createClient()
 

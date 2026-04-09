@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect, type ReactNode } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { useMyEntries, MyEntry, compressImage, SeatInfo } from '@/lib/useMyEntries'
-import { eventTypeConfig } from '@/lib/mockData'
+import { eventTypeConfig } from '@/lib/config/constants'
 import { scheduleTagConfig, type ScheduleTag } from '@/lib/config/tags'
 import { useTranslations } from 'next-intl'
 import SeatInfoForm from '@/components/SeatInfoForm'
