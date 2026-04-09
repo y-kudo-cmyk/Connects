@@ -58,6 +58,6 @@
 - 現在 admin ユーザーは未設定（全員 `role = 'user'`）
 
 ## 依存する未完了タスク
-- [ ] Dashboard SQL: `handle_new_user` トリガー実行
-- [ ] Dashboard SQL: Storage RLS ポリシー設定
-- [ ] Dashboard SQL: `auto_confirm_event` トリガー修正（投票ごとに verified_count 更新）
+- [x] Dashboard SQL: `handle_new_user` トリガー実行
+- [x] Dashboard SQL: Storage RLS ポリシー設定
+- [x] Dashboard SQL: `auto_confirm_event` トリガー修正（投票ごとに verified_count 更新）

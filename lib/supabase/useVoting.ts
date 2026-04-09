@@ -68,35 +68,12 @@ export function useVoting(
     fetchVotes()
   }, [fetchVotes])
 
-  const ensureProfile = useCallback(async (): Promise<boolean> => {
-    if (!userId) return false
-    const { data } = await supabase.from('profiles').select('id').eq('id', userId).maybeSingle()
-    if (data) return true
-    // profiles レコードが未作成なら自動作成
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) return false
-    const { error } = await supabase.from('profiles').insert({
-      id: user.id,
-      mail: user.email ?? '',
-      nickname: user.user_metadata?.name ?? user.email?.split('@')[0] ?? '',
-      avatar_url: user.user_metadata?.avatar_url ?? '',
-      join_date: new Date().toISOString(),
-    })
-    return !error
-  }, [userId])
-
   const submitVote = useCallback(async (): Promise<{ success: boolean; error?: string }> => {
     if (!userId) {
       return { success: false, error: 'auth_required' }
     }
     if (hasVoted) {
       return { success: false, error: 'already_voted' }
-    }
-
-    // profiles レコードがなければ作成（外部キー制約対策）
-    const profileReady = await ensureProfile()
-    if (!profileReady) {
-      return { success: false, error: 'profile_creation_failed' }
     }
 
     const { error } = await supabase.from(table).insert({
@@ -117,7 +94,7 @@ export function useVoting(
     // DB から最新カウントを再取得（トリガー反映後の正確な値）
     await fetchVotes()
     return { success: true }
-  }, [userId, hasVoted, ensureProfile, table, fk, resourceId, fetchVotes])
+  }, [userId, hasVoted, table, fk, resourceId, fetchVotes])
 
   return {
     hasVoted,
