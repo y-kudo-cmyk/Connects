@@ -226,13 +226,13 @@ export type PilgrimageSpot = {
 }
 
 /** スポットが「情報完備」かどうか（ピンの色判定用） */
-export function isSpotComplete(spot: PilgrimageSpot, confirmedUserPhotoCount: number): boolean {
+export function isSpotComplete(spot: { photos?: { id: string }[] }, confirmedUserPhotoCount: number): boolean {
   const seedCount = spot.photos?.length ?? 0
   return (seedCount + confirmedUserPhotoCount) > 0
 }
 
 /** 韓国 → NAVER MAP / 日本 → Google Maps */
-export function getMapUrl(spot: PilgrimageSpot): string {
+export function getMapUrl(spot: { city: string; nameLocal: string; name: string; lat: number; lng: number }): string {
   const isKorea = spot.city === 'Seoul' || spot.city === 'Busan' || spot.city === 'Incheon'
   const q = encodeURIComponent(spot.nameLocal || spot.name)
   if (isKorea) {
@@ -241,7 +241,7 @@ export function getMapUrl(spot: PilgrimageSpot): string {
   return `https://www.google.com/maps/search/?api=1&query=${q}+${spot.lat},${spot.lng}`
 }
 
-export function getMapAppName(spot: PilgrimageSpot): string {
+export function getMapAppName(spot: { city: string }): string {
   const isKorea = spot.city === 'Seoul' || spot.city === 'Busan'
   return isKorea ? 'NAVER MAP' : 'マップで開く'
 }

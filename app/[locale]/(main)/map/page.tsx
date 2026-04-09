@@ -3,9 +3,7 @@
 import { useState, useRef, useCallback, useMemo } from 'react'
 import dynamic from 'next/dynamic'
 import {
-  pilgrimageSpots,
   seventeenMembers,
-  PilgrimageSpot,
   SpotPlatform,
   SpotGenre,
   spotGenreConfig,
@@ -13,6 +11,7 @@ import {
   getMapAppName,
   isSpotComplete,
 } from '@/lib/mockData'
+import type { AppSpot } from '@/lib/supabase/adapters'
 import type { SpotPhoto } from '@/lib/useSpotPhotos'
 import EventCard from '@/components/EventCard'
 import { useSupabaseData } from '@/components/SupabaseDataProvider'
@@ -50,21 +49,21 @@ const ALL_TAGS = ['SEVENTEEN', ...seventeenMembers.map((m) => m.name)]
 export default function MapPage() {
   const TODAY = useToday()
   const t = useTranslations()
-  const { events } = useSupabaseData()
+  const { events, spots: allSpots } = useSupabaseData()
   const [search, setSearch] = useState('')
   const [memberFilter, setMemberFilter] = useState('ALL')
   const [limitedFilter, setLimitedFilter] = useState(false)
 
   const [selectedId, setSelectedId] = useState<string | null>(null)
-  const [previewSpot, setPreviewSpot] = useState<PilgrimageSpot | null>(null)
-  const [detailSpot, setDetailSpot] = useState<PilgrimageSpot | null>(null)
-  const [uploadSpot, setUploadSpot] = useState<PilgrimageSpot | null>(null)
+  const [previewSpot, setPreviewSpot] = useState<AppSpot | null>(null)
+  const [detailSpot, setDetailSpot] = useState<AppSpot | null>(null)
+  const [uploadSpot, setUploadSpot] = useState<AppSpot | null>(null)
   const [showNewSpot, setShowNewSpot] = useState(false)
   const [favOnly, setFavOnly] = useState(false)
   const { profile } = useProfile()
   const { toggle, isFavorite } = useFavoriteSpots()
   const { photoMap, addPhoto, removePhoto, votePhoto, getPhotos, getConfirmedCount } = useSpotPhotos()
-  const filtered = limitedFilter ? [] : pilgrimageSpots.filter((spot) => {
+  const filtered = limitedFilter ? [] : allSpots.filter((spot) => {
     if (favOnly && !isFavorite(spot.id)) return false
     if (search) {
       const q = search.toLowerCase()
@@ -90,7 +89,7 @@ export default function MapPage() {
 
   const incompleteIds = useMemo(() => {
     const set = new Set<string>()
-    pilgrimageSpots.forEach((spot) => {
+    allSpots.forEach((spot) => {
       if (!isSpotComplete(spot, getConfirmedCount(spot.id))) {
         set.add(spot.id)
       }
@@ -100,7 +99,7 @@ export default function MapPage() {
 
   const handleSpotSelect = useCallback((id: string) => {
     setSelectedId(id)
-    const spot = pilgrimageSpots.find((s) => s.id === id)
+    const spot = allSpots.find((s) => s.id === id)
     if (spot) setPreviewSpot(spot)
   }, [])
 
@@ -425,7 +424,7 @@ function PlatformBadge({ platform }: { platform?: SpotPlatform }) {
 function SpotDetailScreen({
   spot, isFavorite, onToggleFav, userPhotos, onRemovePhoto, onConfirmPhoto, onOpenUpload, isIncomplete, onClose, onMemberFilter,
 }: {
-  spot: PilgrimageSpot
+  spot: AppSpot
   isFavorite: boolean
   onToggleFav: () => void
   userPhotos: SpotPhoto[]
@@ -770,7 +769,7 @@ function PhotoCard({
 function PhotoUploadModal({
   spot, defaultContributor, onSave, onClose,
 }: {
-  spot: PilgrimageSpot
+  spot: AppSpot
   defaultContributor: string
   onSave: (photo: SpotPhoto) => void
   onClose: () => void
