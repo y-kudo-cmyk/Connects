@@ -109,14 +109,19 @@ export default function NewSchedulePreview() {
                       src={event.image}
                       alt={event.title}
                       className="w-full h-full object-cover object-top"
+                      onError={(e) => {
+                        const target = e.currentTarget
+                        target.style.display = 'none'
+                        target.parentElement!.querySelector('[data-fallback]')!.removeAttribute('hidden')
+                      }}
                     />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center"
-                      style={{ background: 'linear-gradient(135deg, #E8D5F5 0%, #D5E5F5 50%, #F5D5E8 100%)' }}>
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src="/logo.png" alt="" className="w-10 h-10 opacity-40" />
-                    </div>
-                  )}
+                  ) : null}
+                  <div data-fallback className="w-full h-full flex items-center justify-center"
+                    hidden={!!event.image}
+                    style={{ background: 'linear-gradient(135deg, #E8D5F5 0%, #D5E5F5 50%, #F5D5E8 100%)' }}>
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src="/logo.png" alt="" className="w-10 h-10 opacity-40" />
+                  </div>
                   {/* タグバッジ */}
                   <span
                     className="absolute top-2 left-2 text-[9px] font-bold px-1.5 py-0.5 rounded"

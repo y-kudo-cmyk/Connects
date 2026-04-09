@@ -259,7 +259,18 @@ export default function EventDetailModal({
             <div className="rounded-2xl overflow-hidden mb-4">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={event.image} alt={event.title}
-                className="w-full rounded-2xl" style={{ display: 'block' }} />
+                className="w-full rounded-2xl" style={{ display: 'block' }}
+                onError={(e) => {
+                  const target = e.currentTarget
+                  target.style.display = 'none'
+                  target.parentElement!.querySelector('[data-fallback]')!.removeAttribute('hidden')
+                }}
+              />
+              <div data-fallback hidden className="flex items-center justify-center rounded-2xl"
+                style={{ aspectRatio: '16/9', background: 'linear-gradient(135deg, #E8D5F5 0%, #D5E5F5 50%, #F5D5E8 100%)' }}>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src="/logo.png" alt="" className="w-16 h-16 opacity-40" />
+              </div>
             </div>
           ) : (
             <div className="rounded-2xl mb-4 flex items-center justify-center"

@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { scheduleTagConfig, type ScheduleTag } from '@/lib/config/tags'
 import type { AppEvent } from '@/lib/supabase/adapters'
 import { VOTE_THRESHOLD } from '@/lib/supabase/useVoting'
@@ -25,6 +26,7 @@ function formatDateTime(date: string, time: string, dateEnd?: string, timeEnd?: 
 }
 
 export default function EventCard({ event, compact = false }: EventCardProps) {
+  const [imgError, setImgError] = useState(false)
   const t = useTranslations()
   const firstTag = event.tags?.[0] as ScheduleTag | undefined
   const cfg = firstTag && scheduleTagConfig[firstTag] ? scheduleTagConfig[firstTag] : { label: 'EVENT', icon: '📌', color: '#8E8E93', bg: 'rgba(142,142,147,0.15)' }
@@ -83,12 +85,13 @@ export default function EventCard({ event, compact = false }: EventCardProps) {
     <div className="rounded-2xl overflow-hidden flex" style={{ background: '#FFFFFF', minHeight: 104 }}>
       {/* 左：画像 */}
       <div className="relative flex-shrink-0 overflow-hidden" style={{ width: 88 }}>
-        {event.image ? (
+        {event.image && !imgError ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
             src={event.image}
             alt={event.title}
             className="w-full h-full object-cover object-top"
+            onError={() => setImgError(true)}
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center"
