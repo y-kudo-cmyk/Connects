@@ -1,6 +1,10 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
+import { createClient } from '@/lib/supabase/client'
+import { useAuth } from '@/lib/supabase/useAuth'
+
+const supabase = createClient()
 
 /** 1つの座席フィールド（ラベルは会場によって自由に変更可） */
 export type SeatField = { label: string; value: string }
@@ -8,66 +12,134 @@ export type SeatField = { label: string; value: string }
 /** 柔軟な座席情報（ラベルはユーザーが編集可能） */
 export type SeatInfo = {
   fields: SeatField[]
-  position?: { x: number; y: number }  // アリーナ図上の正規化座標
+  position?: { x: number; y: number }
 }
 
 export type MyEntry = {
   id: string
-  date: string          // YYYY-MM-DD（表示日・デフォルトは元イベントの開始日）
-  eventId?: string      // スケジュールからの転記元 ID
+  date: string
+  eventId?: string
   title: string
-  type: string          // EventType | 'memo'
-  tags?: string[]       // スケジュールタグ (LIVE, TICKET, etc.)
+  type: string
+  tags?: string[]
   color: string
   venue?: string
   city?: string
-  time?: string         // 元イベントの時間
-  dateEnd?: string      // 元イベントの終了日（期間イベント）
-  customTime?: string      // ユーザーが設定した実際の予約時間
-  customDate?: string      // ユーザーが選んだ来場日（期間イベント）
-  reservationNote?: string // 予約番号・確認番号など
-  ticketImages?: string[]  // 電子チケット・確認書のスクショ
-  seatInfo?: SeatInfo      // 座席情報
+  time?: string
+  dateEnd?: string
+  customTime?: string
+  customDate?: string
+  reservationNote?: string
+  ticketImages?: string[]
+  seatInfo?: SeatInfo
   memo: string
-  images: string[]         // 日記・思い出の写真
+  images: string[]
   createdAt: string
 }
 
-const STORAGE_KEY = 'cp-my-entries'
+type DbMyEntry = {
+  id: string
+  user_id: string
+  event_id: string | null
+  tag: string | null
+  artist_id: string | null
+  related_artists: string | null
+  event_title: string | null
+  sub_event_title: string | null
+  start_date: string | null
+  end_date: string | null
+  spot_name: string | null
+  spot_address: string | null
+  image_url: string | null
+  source_url: string | null
+  notes: string | null
+  ticket_image_url: string | null
+  view_image_url: string | null
+  seat_info: SeatInfo | null
+  memo: string | null
+  created_at: string
+  updated_at: string
+}
+
+function toApp(row: DbMyEntry): MyEntry {
+  return {
+    id: row.id,
+    eventId: row.event_id ?? undefined,
+    title: row.event_title ?? '',
+    type: row.tag ?? '',
+    tags: row.tag ? [row.tag] : [],
+    color: '',
+    date: row.start_date?.slice(0, 10) ?? '',
+    dateEnd: row.end_date?.slice(0, 10) ?? undefined,
+    time: row.start_date?.slice(11, 16) ?? undefined,
+    venue: row.spot_name ?? undefined,
+    city: row.spot_address ?? undefined,
+    ticketImages: row.ticket_image_url ? [row.ticket_image_url] : [],
+    seatInfo: row.seat_info ?? undefined,
+    memo: row.memo ?? '',
+    images: row.image_url ? [row.image_url] : [],
+    createdAt: row.created_at,
+  }
+}
 
 export function useMyEntries() {
+  const { user } = useAuth()
   const [entries, setEntries] = useState<MyEntry[]>([])
 
-  useEffect(() => {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY)
-      if (raw) setEntries(JSON.parse(raw))
-    } catch {}
-  }, [])
+  const fetchEntries = useCallback(async () => {
+    if (!user) { setEntries([]); return }
+    const { data } = await supabase
+      .from('my_entries')
+      .select('*')
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false })
+    if (data) setEntries(data.map(toApp))
+  }, [user])
 
-  const addEntry = useCallback((entry: MyEntry) => {
-    setEntries((prev) => {
-      const next = [...prev, entry]
-      try { localStorage.setItem(STORAGE_KEY, JSON.stringify(next)) } catch {}
-      return next
-    })
-  }, [])
+  useEffect(() => { fetchEntries() }, [fetchEntries])
 
-  const updateEntry = useCallback((id: string, updates: Partial<MyEntry>) => {
-    setEntries((prev) => {
-      const next = prev.map((e) => (e.id === id ? { ...e, ...updates } : e))
-      try { localStorage.setItem(STORAGE_KEY, JSON.stringify(next)) } catch {}
-      return next
+  const addEntry = useCallback(async (entry: MyEntry) => {
+    if (!user) return
+    await supabase.from('my_entries').insert({
+      user_id: user.id,
+      event_id: entry.eventId || null,
+      tag: entry.type || null,
+      event_title: entry.title,
+      start_date: entry.date ? (entry.time ? `${entry.date}T${entry.time}:00` : `${entry.date}T00:00:00`) : null,
+      end_date: entry.dateEnd ? `${entry.dateEnd}T00:00:00` : null,
+      spot_name: entry.venue || null,
+      spot_address: entry.city || null,
+      image_url: entry.images?.[0] || null,
+      notes: null,
+      ticket_image_url: entry.ticketImages?.[0] || null,
+      seat_info: entry.seatInfo || null,
+      memo: entry.memo || null,
     })
-  }, [])
+    await fetchEntries()
+  }, [user, fetchEntries])
 
-  const removeEntry = useCallback((id: string) => {
-    setEntries((prev) => {
-      const next = prev.filter((e) => e.id !== id)
-      try { localStorage.setItem(STORAGE_KEY, JSON.stringify(next)) } catch {}
-      return next
-    })
-  }, [])
+  const updateEntry = useCallback(async (id: string, updates: Partial<MyEntry>) => {
+    if (!user) return
+    const dbUpdates: Record<string, unknown> = {}
+    if (updates.title !== undefined) dbUpdates.event_title = updates.title
+    if (updates.venue !== undefined) dbUpdates.spot_name = updates.venue || null
+    if (updates.memo !== undefined) dbUpdates.memo = updates.memo || null
+    if (updates.seatInfo !== undefined) dbUpdates.seat_info = updates.seatInfo || null
+    if (updates.ticketImages !== undefined) dbUpdates.ticket_image_url = updates.ticketImages?.[0] || null
+    if (updates.images !== undefined) dbUpdates.image_url = updates.images?.[0] || null
+    if (updates.date !== undefined) {
+      const time = updates.time ?? updates.customTime ?? '00:00'
+      dbUpdates.start_date = `${updates.date}T${time}:00`
+    }
+    if (updates.dateEnd !== undefined) dbUpdates.end_date = updates.dateEnd ? `${updates.dateEnd}T00:00:00` : null
+    await supabase.from('my_entries').update(dbUpdates).eq('id', id)
+    await fetchEntries()
+  }, [user, fetchEntries])
+
+  const removeEntry = useCallback(async (id: string) => {
+    await supabase.from('my_entries').delete().eq('id', id)
+    await fetchEntries()
+  }, [fetchEntries])
 
   const hasEntry = useCallback(
     (eventId: string) => entries.some((e) => e.eventId === eventId),

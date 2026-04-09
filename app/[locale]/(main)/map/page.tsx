@@ -6,7 +6,6 @@ import {
   pilgrimageSpots,
   seventeenMembers,
   PilgrimageSpot,
-  SpotPhoto,
   SpotPlatform,
   SpotGenre,
   spotGenreConfig,
@@ -14,6 +13,7 @@ import {
   getMapAppName,
   isSpotComplete,
 } from '@/lib/mockData'
+import type { SpotPhoto } from '@/lib/useSpotPhotos'
 import EventCard from '@/components/EventCard'
 import { useSupabaseData } from '@/components/SupabaseDataProvider'
 import { useFavoriteSpots } from '@/lib/useFavoriteSpots'
@@ -443,7 +443,7 @@ function SpotDetailScreen({
   const mapUrl = getMapUrl(spot)
   const mapName = getMapAppName(spot)
   const isKorea = spot.city === 'Seoul' || spot.city === 'Busan' || spot.city === 'Incheon'
-  const seedPhotos: SpotPhoto[] = (spot.photos ?? []).map((p) => ({ ...p, status: 'confirmed' as const }))
+  const seedPhotos: SpotPhoto[] = (spot.photos ?? []).map((p) => ({ ...p, imageUrl: p.imageUrl ?? '', sourceUrl: p.sourceUrl ?? '', platform: p.platform ?? '', status: 'confirmed' as const }))
   const allPhotos: SpotPhoto[] = [...seedPhotos, ...userPhotos]
   const pendingPhotos = userPhotos.filter((p) => p.status === 'pending')
   const confirmedPhotos = allPhotos.filter((p) => p.status === 'confirmed')
@@ -800,8 +800,8 @@ function PhotoUploadModal({
   const handleSave = () => {
     const photo: SpotPhoto = {
       id: Date.now().toString(),
-      imageUrl: imageDataUrl,
-      sourceUrl: sourceUrl.trim() || undefined,
+      imageUrl: imageDataUrl ?? '',
+      sourceUrl: sourceUrl.trim() || '',
       platform,
       tags: selectedTags,
       contributor: defaultContributor,
