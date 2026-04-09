@@ -422,6 +422,29 @@ create policy "Auth vote" on spot_photo_votes for insert with check (auth.uid() 
 create policy "Auth vote" on edit_request_votes for insert with check (auth.uid() = user_id);
 
 -- ============================================================
+-- profiles 自動作成トリガー（TODO: Dashboard SQL Editor で実行）
+-- 実行後、useVoting.ts の ensureProfile と auth/callback/route.ts の
+-- profile作成コードを削除すること
+-- ============================================================
+create or replace function handle_new_user()
+returns trigger as $$
+begin
+  insert into public.profiles (id, mail, nickname, join_date)
+  values (
+    new.id,
+    new.email,
+    coalesce(new.raw_user_meta_data->>'name', split_part(new.email, '@', 1)),
+    now()
+  );
+  return new;
+end;
+$$ language plpgsql security definer;
+
+create trigger on_auth_user_created
+  after insert on auth.users
+  for each row execute function handle_new_user();
+
+-- ============================================================
 -- Storage バケット（Supabase Dashboard で作成）
 -- ============================================================
 -- avatars        (プロフィール画像)

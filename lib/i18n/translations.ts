@@ -117,6 +117,7 @@ const translations = {
   approved: { ja: '承認済み', en: 'Approved', ko: '승인됨' },
   pendingApproval: { ja: '承認待ち', en: 'Pending', ko: '승인 대기' },
   approveButton: { ja: '承認する', en: 'Approve', ko: '승인' },
+  signInToApprove: { ja: 'ログインして承認', en: 'Sign in to approve', ko: '로그인하여 승인' },
   approveCount: { ja: '承認する（{count}/3）', en: 'Approve ({count}/3)', ko: '승인 ({count}/3)' },
   editButton: { ja: '修正', en: 'Edit', ko: '수정' },
   editRequest: { ja: '修正依頼', en: 'Request edit', ko: '수정 요청' },

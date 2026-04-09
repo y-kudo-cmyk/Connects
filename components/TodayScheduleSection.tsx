@@ -9,6 +9,7 @@ import EventDetailModal from './EventDetailModal'
 import { useTranslation } from '@/lib/i18n/useTranslation'
 import { useToday } from '@/lib/useToday'
 import { cityToCountryCode } from '@/lib/countryUtils'
+import { VOTE_THRESHOLD } from '@/lib/supabase/useVoting'
 
 // DAY_JA は i18n の dayNames で置き換え
 const MONTH_SHORT = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
@@ -141,11 +142,11 @@ export default function TodayScheduleSection() {
                         {cfg.icon} {cfg.label}
                       </span>
                       <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full"
-                        style={event.verifiedCount >= 3
+                        style={event.verifiedCount >= VOTE_THRESHOLD
                           ? { background: 'rgba(52,211,153,0.15)', color: '#34D399' }
                           : { background: 'rgba(245,158,11,0.12)', color: '#F59E0B' }
                         }>
-                        {event.verifiedCount >= 3 ? '✓' : `${event.verifiedCount}/3`}
+                        {event.verifiedCount >= VOTE_THRESHOLD ? '✓' : `${event.verifiedCount}/${VOTE_THRESHOLD}`}
                       </span>
                       {isPeriod && (
                         <span className="text-[10px] font-bold px-1.5 py-0.5 rounded"

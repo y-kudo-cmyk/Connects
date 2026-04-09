@@ -1,5 +1,6 @@
 import { scheduleTagConfig, type ScheduleTag } from '@/lib/config/tags'
 import type { AppEvent } from '@/lib/supabase/adapters'
+import { VOTE_THRESHOLD } from '@/lib/supabase/useVoting'
 import { countryFlag, cityToCountryCode } from '@/lib/countryUtils'
 import { useTranslation } from '@/lib/i18n/useTranslation'
 
@@ -53,6 +54,13 @@ export default function EventCard({ event, compact = false }: EventCardProps) {
                 </span>
               )
             })}
+            <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full"
+              style={event.verifiedCount >= VOTE_THRESHOLD
+                ? { background: 'rgba(52,211,153,0.15)', color: '#34D399' }
+                : { background: 'rgba(245,158,11,0.12)', color: '#F59E0B' }
+              }>
+              {event.verifiedCount >= VOTE_THRESHOLD ? '✓' : `${event.verifiedCount}/${VOTE_THRESHOLD}`}
+            </span>
           </div>
           <p className="text-sm font-semibold leading-tight truncate mt-0.5" style={{ color: '#1C1C1E' }}>
             {event.title}
@@ -110,6 +118,13 @@ export default function EventCard({ event, compact = false }: EventCardProps) {
               {t('period')}
             </span>
           )}
+          <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full"
+            style={event.verifiedCount >= VOTE_THRESHOLD
+              ? { background: 'rgba(52,211,153,0.15)', color: '#34D399' }
+              : { background: 'rgba(245,158,11,0.12)', color: '#F59E0B' }
+            }>
+            {event.verifiedCount >= VOTE_THRESHOLD ? '✓' : `${event.verifiedCount}/${VOTE_THRESHOLD}`}
+          </span>
         </div>
         <h3 className="text-sm font-bold leading-snug" style={{ color: '#1C1C1E' }}>
           {event.title}

@@ -8,6 +8,7 @@ import { useMyEntries } from '@/lib/useMyEntries'
 import EventDetailModal from './EventDetailModal'
 import { useTranslation } from '@/lib/i18n/useTranslation'
 import { useToday } from '@/lib/useToday'
+import { VOTE_THRESHOLD } from '@/lib/supabase/useVoting'
 const DISMISSED_KEY = 'cp-dismissed'
 
 const MONTH_SHORT = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
@@ -122,12 +123,12 @@ export default function NewSchedulePreview() {
                   {/* 承認バッジ */}
                   <span
                     className="absolute top-2 right-2 text-[8px] font-bold px-1.5 py-0.5 rounded-full"
-                    style={event.verifiedCount >= 3
+                    style={event.verifiedCount >= VOTE_THRESHOLD
                       ? { background: 'rgba(52,211,153,0.9)', color: '#FFFFFF' }
                       : { background: 'rgba(245,158,11,0.9)', color: '#FFFFFF' }
                     }
                   >
-                    {event.verifiedCount >= 3 ? '✓' : `${event.verifiedCount}/3`}
+                    {event.verifiedCount >= VOTE_THRESHOLD ? '✓' : `${event.verifiedCount}/${VOTE_THRESHOLD}`}
                   </span>
                 </button>
 

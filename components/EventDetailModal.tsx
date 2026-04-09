@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation'
 import { useMyEntries } from '@/lib/useMyEntries'
 import { useAuth } from '@/lib/supabase/useAuth'
 import { createClient } from '@/lib/supabase/client'
+import { useVoting, VOTE_THRESHOLD } from '@/lib/supabase/useVoting'
 import { countryFlag, cityToCountryCode } from '@/lib/countryUtils'
 import { useTranslation } from '@/lib/i18n/useTranslation'
 
@@ -41,8 +42,7 @@ export default function EventDetailModal({
   const { user } = useAuth()
   const { t, tObj } = useTranslation()
   const dayNames = tObj<string[]>('dayNames')
-  const [voted, setVoted] = useState(false)
-  const [voteCount, setVoteCount] = useState(event.verifiedCount)
+  const { hasVoted, voteCount, isConfirmed, loading: voteLoading, submitVote, refetch: refetchVotes } = useVoting('event', event.id, user?.id ?? null)
   const [editing, setEditing] = useState(false)
   const [editTitle, setEditTitle] = useState(event.title)
   const [editVenue, setEditVenue] = useState(event.venue ?? '')
@@ -73,32 +73,6 @@ export default function EventDetailModal({
   const startD = new Date(event.date)
   const dayJa = dayNames[startD.getDay()]
   const imported = hasEntry(event.id)
-  const isConfirmed = voteCount >= 3
-
-  const handleVote = async () => {
-    if (voted) return
-    if (!user) {
-      // 未ログイン時はローカルのみ反映
-      setVoted(true)
-      setVoteCount(v => v + 1)
-      return
-    }
-    const { error } = await supabase.from('event_votes').insert({
-      event_id: event.id,
-      user_id: user.id,
-      vote: 'approve',
-    })
-    if (error) {
-      if (error.message.includes('duplicate')) {
-        setVoted(true)
-        return
-      }
-      console.error('Vote error:', error.message)
-      return
-    }
-    setVoted(true)
-    setVoteCount(v => v + 1)
-  }
 
   const handleEditSave = async () => {
     setEditSaving(true)
@@ -151,8 +125,7 @@ export default function EventDetailModal({
       await supabase.from('event_votes').delete().eq('event_id', event.id)
     }
 
-    setVoteCount(0)
-    setVoted(false)
+    await refetchVotes()
     setEditSaving(false)
     setEditing(false)
   }
@@ -213,7 +186,7 @@ export default function EventDetailModal({
                 </>
               ) : (
                 <>
-                  <span className="font-black">{voteCount}/3</span>
+                  <span className="font-black">{voteCount}/{VOTE_THRESHOLD}</span>
                   {t('pendingApproval')}
                 </>
               )}
@@ -484,23 +457,31 @@ export default function EventDetailModal({
                     </svg>
                     {isConfirmed ? t('editRequest') : t('editButton')}
                   </button>
-                  <button onClick={handleVote} disabled={voted}
-                    className="flex-1 py-3.5 rounded-xl text-sm font-bold flex items-center justify-center gap-1.5"
-                    style={voted
-                      ? { background: 'rgba(52,211,153,0.15)', color: '#34D399' }
-                      : { background: '#34D399', color: '#FFFFFF' }
-                    }>
-                    {voted ? (
-                      <>
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                          <polyline points="20 6 9 17 4 12" />
-                        </svg>
-                        {t('approved')}
-                      </>
-                    ) : (
-                      <>{t('approveButton')}（{voteCount}/3）</>
-                    )}
-                  </button>
+                  {user ? (
+                    <button onClick={submitVote} disabled={hasVoted || voteLoading}
+                      className="flex-1 py-3.5 rounded-xl text-sm font-bold flex items-center justify-center gap-1.5"
+                      style={hasVoted
+                        ? { background: 'rgba(52,211,153,0.15)', color: '#34D399' }
+                        : { background: '#34D399', color: '#FFFFFF' }
+                      }>
+                      {hasVoted ? (
+                        <>
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                            <polyline points="20 6 9 17 4 12" />
+                          </svg>
+                          {t('approved')}
+                        </>
+                      ) : (
+                        <>{t('approveButton')}（{voteCount}/{VOTE_THRESHOLD}）</>
+                      )}
+                    </button>
+                  ) : (
+                    <button onClick={() => router.push('/login')}
+                      className="flex-1 py-3.5 rounded-xl text-sm font-bold flex items-center justify-center gap-1.5"
+                      style={{ background: '#34D399', color: '#FFFFFF' }}>
+                      {t('signInToApprove')}
+                    </button>
+                  )}
                 </>
               )}
             </div>
