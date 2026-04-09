@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useRef } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter } from '@/i18n/navigation'
 import { useAuth } from '@/lib/supabase/useAuth'
 import { useTranslations } from 'next-intl'
 import { useProfile, FanClubMembership, NotifSettings } from '@/lib/useProfile'

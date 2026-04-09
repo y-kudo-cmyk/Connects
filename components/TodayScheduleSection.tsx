@@ -1,7 +1,7 @@
 'use client'
 
 import { useMemo, useState } from 'react'
-import Link from 'next/link'
+import { Link } from '@/i18n/navigation'
 import { scheduleTagConfig, type ScheduleTag } from '@/lib/config/tags'
 import { useSupabaseData } from './SupabaseDataProvider'
 import type { AppEvent } from '@/lib/supabase/adapters'
