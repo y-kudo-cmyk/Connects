@@ -1,6 +1,5 @@
 /**
- * Supabase のデータ型 → アプリの既存型への変換アダプター
- * mockData の型をそのまま使いつつ、データソースだけ切り替える
+ * Supabase のデータ型 → アプリの型への変換アダプター
  */
 
 import type { SupabaseEvent } from './useEvents'

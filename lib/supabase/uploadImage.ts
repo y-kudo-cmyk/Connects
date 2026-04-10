@@ -42,6 +42,46 @@ export async function uploadImage(
   return data.publicUrl
 }
 
+/**
+ * DataURL（base64）を Supabase Storage にアップロードし、公開URLを返す
+ * クロップ済み画像など、既にcanvasで加工済みの画像に使用
+ */
+export async function uploadDataUrl(
+  bucket: string,
+  dataUrl: string,
+): Promise<string | null> {
+  const ext = 'webp'
+  const fileName = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`
+
+  // WebP に変換
+  const webpBlob = await new Promise<Blob>((resolve) => {
+    const img = new Image()
+    img.onload = () => {
+      const canvas = document.createElement('canvas')
+      canvas.width = img.width
+      canvas.height = img.height
+      canvas.getContext('2d')!.drawImage(img, 0, 0)
+      canvas.toBlob((b) => resolve(b!), 'image/webp', 0.85)
+    }
+    img.src = dataUrl
+  })
+
+  const { error } = await supabase.storage
+    .from(bucket)
+    .upload(fileName, webpBlob, {
+      contentType: 'image/webp',
+      upsert: false,
+    })
+
+  if (error) {
+    console.error('Upload error:', error.message)
+    return null
+  }
+
+  const { data } = supabase.storage.from(bucket).getPublicUrl(fileName)
+  return data.publicUrl
+}
+
 /** 画像を圧縮して Blob を返す */
 function compressToBlob(file: File, maxPx: number, quality: number): Promise<Blob> {
   return new Promise((resolve) => {

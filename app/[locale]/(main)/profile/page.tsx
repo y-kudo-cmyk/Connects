@@ -5,7 +5,7 @@ import { useRouter } from '@/i18n/navigation'
 import { useAuth } from '@/lib/supabase/useAuth'
 import { useTranslations } from 'next-intl'
 import { useProfile, FanClubMembership, NotifSettings } from '@/lib/useProfile'
-import { compressImage } from '@/lib/useMyEntries'
+import { uploadDataUrl } from '@/lib/supabase/uploadImage'
 import { useReferral } from '@/lib/useReferral'
 import { COUNTRIES, countryFlag } from '@/lib/countryUtils'
 import ImageCropModal from '@/components/ImageCropModal'
@@ -38,9 +38,13 @@ function getRank(score: number) {
   return RANKS[0]
 }
 
-async function loadImage(files: FileList | null, maxPx: number): Promise<string | null> {
+async function loadImage(files: FileList | null): Promise<string | null> {
   if (!files?.[0]) return null
-  return compressImage(files[0], maxPx, 0.82)
+  return new Promise((resolve) => {
+    const reader = new FileReader()
+    reader.onload = () => resolve(reader.result as string)
+    reader.readAsDataURL(files[0])
+  })
 }
 
 export default function ProfilePage() {
@@ -104,21 +108,28 @@ export default function ProfilePage() {
   }
 
   const onBannerChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const url = await loadImage(e.target.files, 1600)
+    const url = await loadImage(e.target.files)
     if (url) { setCropTarget('banner'); setCropSrc(url) }
     e.target.value = ''
   }
 
   const onAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const url = await loadImage(e.target.files, 800)
+    const url = await loadImage(e.target.files)
     if (url) { setCropTarget('avatar'); setCropSrc(url) }
     e.target.value = ''
   }
 
-  const onCropConfirm = (dataUrl: string) => {
-    if (cropTarget === 'banner') update({ bannerImage: dataUrl })
-    else update({ avatarImage: dataUrl })
+  const [imageUploading, setImageUploading] = useState(false)
+  const onCropConfirm = async (dataUrl: string) => {
     setCropSrc(null)
+    setImageUploading(true)
+    const bucket = cropTarget === 'banner' ? 'banners' : 'avatars'
+    const publicUrl = await uploadDataUrl(bucket, dataUrl)
+    if (publicUrl) {
+      if (cropTarget === 'banner') update({ bannerImage: publicUrl })
+      else update({ avatarImage: publicUrl })
+    }
+    setImageUploading(false)
   }
 
   const startEditNickname = () => { setNicknameInput(profile.nickname); setEditingNickname(true) }
