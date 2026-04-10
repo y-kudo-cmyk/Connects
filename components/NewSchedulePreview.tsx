@@ -6,15 +6,16 @@ import { useSupabaseData } from './SupabaseDataProvider'
 import type { AppEvent } from '@/lib/supabase/adapters'
 import { useMyEntries } from '@/lib/useMyEntries'
 import EventDetailModal from './EventDetailModal'
-import { useTranslation } from '@/lib/i18n/useTranslation'
+import { useTranslations } from 'next-intl'
 import { useToday } from '@/lib/useToday'
+import { VOTE_THRESHOLD } from '@/lib/supabase/useVoting'
 const DISMISSED_KEY = 'cp-dismissed'
 
 const MONTH_SHORT = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
 
 export default function NewSchedulePreview() {
   const TODAY = useToday()
-  const { t } = useTranslation()
+  const t = useTranslations()
   const [dismissed, setDismissed] = useState<Set<string>>(new Set())
   const { events } = useSupabaseData()
   const [detailEvent, setDetailEvent] = useState<AppEvent | null>(null)
@@ -70,13 +71,13 @@ export default function NewSchedulePreview() {
         <div className="flex items-center justify-between px-4 mb-2">
           <div className="flex items-center gap-2">
             <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: '#F3B4E3' }} />
-            <h2 className="text-xs font-bold tracking-wider" style={{ color: '#636366' }}>{t('newSchedule')}</h2>
+            <h2 className="text-xs font-bold tracking-wider" style={{ color: '#636366' }}>{t('Home.newSchedule')}</h2>
           </div>
           <span
             className="text-[10px] font-bold px-2 py-0.5 rounded-full"
             style={{ background: 'rgba(243,180,227,0.12)', color: '#F3B4E3' }}
           >
-            {upcoming.length}{t('items')}
+            {upcoming.length}{t('Common.items')}
           </span>
         </div>
 
@@ -108,10 +109,19 @@ export default function NewSchedulePreview() {
                       src={event.image}
                       alt={event.title}
                       className="w-full h-full object-cover object-top"
+                      onError={(e) => {
+                        const target = e.currentTarget
+                        target.style.display = 'none'
+                        target.parentElement!.querySelector('[data-fallback]')!.removeAttribute('hidden')
+                      }}
                     />
-                  ) : (
-                    <div className="w-full h-full" style={{ background: '#E5E5EA' }} />
-                  )}
+                  ) : null}
+                  <div data-fallback className="w-full h-full flex items-center justify-center"
+                    hidden={!!event.image}
+                    style={{ background: 'linear-gradient(135deg, #E8D5F5 0%, #D5E5F5 50%, #F5D5E8 100%)' }}>
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src="/logo.png" alt="" className="w-10 h-10 opacity-40" />
+                  </div>
                   {/* タグバッジ */}
                   <span
                     className="absolute top-2 left-2 text-[9px] font-bold px-1.5 py-0.5 rounded"
@@ -122,12 +132,12 @@ export default function NewSchedulePreview() {
                   {/* 承認バッジ */}
                   <span
                     className="absolute top-2 right-2 text-[8px] font-bold px-1.5 py-0.5 rounded-full"
-                    style={event.verifiedCount >= 3
+                    style={event.verifiedCount >= VOTE_THRESHOLD
                       ? { background: 'rgba(52,211,153,0.9)', color: '#FFFFFF' }
                       : { background: 'rgba(245,158,11,0.9)', color: '#FFFFFF' }
                     }
                   >
-                    {event.verifiedCount >= 3 ? '✓' : `${event.verifiedCount}/3`}
+                    {event.verifiedCount >= VOTE_THRESHOLD ? '✓' : `${event.verifiedCount}/${VOTE_THRESHOLD}`}
                   </span>
                 </button>
 
@@ -161,7 +171,7 @@ export default function NewSchedulePreview() {
                     className="flex-1 py-3 rounded-lg text-xs font-bold min-h-[44px]"
                     style={{ background: '#F0F0F5', color: '#636366' }}
                   >
-                    {t('confirm')}
+                    {t('Common.confirm')}
                   </button>
                   <button
                     onClick={() => importAndDismiss(event)}

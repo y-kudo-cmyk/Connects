@@ -4,9 +4,9 @@ import 'leaflet/dist/leaflet.css'
 import L from 'leaflet'
 import { MapContainer, TileLayer, Marker, Circle, useMap } from 'react-leaflet'
 import { useEffect, useRef, useState, useCallback } from 'react'
-import { PilgrimageSpot } from '@/lib/mockData'
+import type { AppSpot } from '@/lib/supabase/adapters'
 
-function FlyTo({ spot }: { spot: PilgrimageSpot | null }) {
+function FlyTo({ spot }: { spot: AppSpot | null }) {
   const map = useMap()
   const prevId = useRef<string | null>(null)
   useEffect(() => {
@@ -99,7 +99,7 @@ export default function SpotMap({
   onSpotClick,
   incompleteIds = new Set(),
 }: {
-  spots: PilgrimageSpot[]
+  spots: AppSpot[]
   selectedId: string | null
   onSpotClick: (id: string) => void
   incompleteIds?: Set<string>

@@ -1,7 +1,9 @@
+import { useState } from 'react'
 import { scheduleTagConfig, type ScheduleTag } from '@/lib/config/tags'
 import type { AppEvent } from '@/lib/supabase/adapters'
+import { VOTE_THRESHOLD } from '@/lib/supabase/useVoting'
 import { countryFlag, cityToCountryCode } from '@/lib/countryUtils'
-import { useTranslation } from '@/lib/i18n/useTranslation'
+import { useTranslations } from 'next-intl'
 
 interface EventCardProps {
   event: AppEvent
@@ -24,7 +26,8 @@ function formatDateTime(date: string, time: string, dateEnd?: string, timeEnd?: 
 }
 
 export default function EventCard({ event, compact = false }: EventCardProps) {
-  const { t } = useTranslation()
+  const [imgError, setImgError] = useState(false)
+  const t = useTranslations()
   const firstTag = event.tags?.[0] as ScheduleTag | undefined
   const cfg = firstTag && scheduleTagConfig[firstTag] ? scheduleTagConfig[firstTag] : { label: 'EVENT', icon: '📌', color: '#8E8E93', bg: 'rgba(142,142,147,0.15)' }
   const isPeriod = !!event.dateEnd
@@ -53,6 +56,13 @@ export default function EventCard({ event, compact = false }: EventCardProps) {
                 </span>
               )
             })}
+            <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full"
+              style={event.verifiedCount >= VOTE_THRESHOLD
+                ? { background: 'rgba(52,211,153,0.15)', color: '#34D399' }
+                : { background: 'rgba(245,158,11,0.12)', color: '#F59E0B' }
+              }>
+              {event.verifiedCount >= VOTE_THRESHOLD ? '✓' : `${event.verifiedCount}/${VOTE_THRESHOLD}`}
+            </span>
           </div>
           <p className="text-sm font-semibold leading-tight truncate mt-0.5" style={{ color: '#1C1C1E' }}>
             {event.title}
@@ -75,15 +85,20 @@ export default function EventCard({ event, compact = false }: EventCardProps) {
     <div className="rounded-2xl overflow-hidden flex" style={{ background: '#FFFFFF', minHeight: 104 }}>
       {/* 左：画像 */}
       <div className="relative flex-shrink-0 overflow-hidden" style={{ width: 88 }}>
-        {event.image ? (
+        {event.image && !imgError ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
             src={event.image}
             alt={event.title}
             className="w-full h-full object-cover object-top"
+            onError={() => setImgError(true)}
           />
         ) : (
-          <div className="w-full h-full" style={{ background: '#E5E5EA' }} />
+          <div className="w-full h-full flex items-center justify-center"
+            style={{ background: 'linear-gradient(135deg, #E8D5F5 0%, #D5E5F5 50%, #F5D5E8 100%)' }}>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/logo.png" alt="" className="w-10 h-10 opacity-40" />
+          </div>
         )}
         {/* タイプカラーライン */}
         <div className="absolute inset-y-0 right-0 w-0.5" style={{ background: cfg.color }} />
@@ -107,9 +122,16 @@ export default function EventCard({ event, compact = false }: EventCardProps) {
               className="text-[10px] font-bold px-1.5 py-0.5 rounded"
               style={{ background: 'rgba(0,0,0,0.06)', color: '#8E8E93' }}
             >
-              {t('period')}
+              {t('Common.period')}
             </span>
           )}
+          <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full"
+            style={event.verifiedCount >= VOTE_THRESHOLD
+              ? { background: 'rgba(52,211,153,0.15)', color: '#34D399' }
+              : { background: 'rgba(245,158,11,0.12)', color: '#F59E0B' }
+            }>
+            {event.verifiedCount >= VOTE_THRESHOLD ? '✓' : `${event.verifiedCount}/${VOTE_THRESHOLD}`}
+          </span>
         </div>
         <h3 className="text-sm font-bold leading-snug" style={{ color: '#1C1C1E' }}>
           {event.title}

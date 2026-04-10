@@ -1,52 +1,102 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { SpotPhoto } from './mockData'
+import { createClient } from '@/lib/supabase/client'
+import { useAuth } from '@/lib/supabase/useAuth'
 
-const KEY = 'cp-spot-photos'
+const supabase = createClient()
 
-type PhotoMap = Record<string, SpotPhoto[]>
+export type SpotPhoto = {
+  id: string
+  imageUrl: string
+  sourceUrl: string
+  platform: string
+  tags: string[]
+  contributor: string
+  date: string
+  caption?: string
+  votes: number
+  status: 'pending' | 'confirmed'
+}
+
+type DbSpotPhoto = {
+  id: string
+  spot_id: string
+  image_url: string
+  source_url: string
+  platform: string
+  tags: string
+  contributor: string
+  visit_date: string | null
+  votes: number
+  status: string
+}
+
+function toApp(row: DbSpotPhoto): SpotPhoto {
+  return {
+    id: row.id,
+    imageUrl: row.image_url ?? '',
+    sourceUrl: row.source_url ?? '',
+    platform: row.platform ?? '',
+    tags: row.tags ? row.tags.split(',').map(t => t.trim()) : [],
+    contributor: row.contributor ?? '',
+    date: row.visit_date ?? '',
+    votes: row.votes ?? 0,
+    status: (row.status as 'pending' | 'confirmed') ?? 'pending',
+  }
+}
 
 export function useSpotPhotos() {
-  const [photoMap, setPhotoMap] = useState<PhotoMap>({})
+  const { user } = useAuth()
+  const [photoMap, setPhotoMap] = useState<Record<string, SpotPhoto[]>>({})
 
-  useEffect(() => {
-    try {
-      const raw = localStorage.getItem(KEY)
-      if (raw) setPhotoMap(JSON.parse(raw))
-    } catch {}
-  }, [])
-
-  const addPhoto = useCallback((spotId: string, photo: SpotPhoto) => {
-    setPhotoMap((prev) => {
-      const next = { ...prev, [spotId]: [...(prev[spotId] ?? []), photo] }
-      try { localStorage.setItem(KEY, JSON.stringify(next)) } catch {}
-      return next
-    })
-  }, [])
-
-  const removePhoto = useCallback((spotId: string, photoId: string) => {
-    setPhotoMap((prev) => {
-      const next = { ...prev, [spotId]: (prev[spotId] ?? []).filter((p) => p.id !== photoId) }
-      try { localStorage.setItem(KEY, JSON.stringify(next)) } catch {}
-      return next
-    })
-  }, [])
-
-  const votePhoto = useCallback((spotId: string, photoId: string) => {
-    setPhotoMap((prev) => {
-      const next = {
-        ...prev,
-        [spotId]: (prev[spotId] ?? []).map((p) => {
-          if (p.id !== photoId) return p
-          const votes = (p.votes ?? 0) + 1
-          return { ...p, votes, status: votes >= 3 ? 'confirmed' as const : 'pending' as const }
-        }),
+  const fetchPhotos = useCallback(async () => {
+    const { data } = await supabase
+      .from('spot_photos')
+      .select('*')
+      .order('created_at', { ascending: false })
+    if (data) {
+      const map: Record<string, SpotPhoto[]> = {}
+      for (const row of data as DbSpotPhoto[]) {
+        if (!map[row.spot_id]) map[row.spot_id] = []
+        map[row.spot_id].push(toApp(row))
       }
-      try { localStorage.setItem(KEY, JSON.stringify(next)) } catch {}
-      return next
-    })
+      setPhotoMap(map)
+    }
   }, [])
+
+  useEffect(() => { fetchPhotos() }, [fetchPhotos])
+
+  const addPhoto = useCallback(async (spotId: string, photo: SpotPhoto) => {
+    if (!user) return
+    await supabase.from('spot_photos').insert({
+      spot_id: spotId,
+      image_url: photo.imageUrl,
+      source_url: photo.sourceUrl || null,
+      platform: photo.platform || null,
+      tags: photo.tags?.join(', ') || null,
+      contributor: photo.contributor || null,
+      submitted_by: user.id,
+      visit_date: photo.date || null,
+      status: 'pending',
+      votes: 0,
+    })
+    await fetchPhotos()
+  }, [user, fetchPhotos])
+
+  const removePhoto = useCallback(async (_spotId: string, photoId: string) => {
+    await supabase.from('spot_photos').delete().eq('id', photoId)
+    await fetchPhotos()
+  }, [fetchPhotos])
+
+  const votePhoto = useCallback(async (spotId: string, photoId: string) => {
+    if (!user) return
+    await supabase.from('spot_photo_votes').insert({
+      photo_id: photoId,
+      user_id: user.id,
+    })
+    await fetchPhotos()
+  }, [user, fetchPhotos])
 
   const getPhotos = useCallback(
     (spotId: string): SpotPhoto[] => photoMap[spotId] ?? [],

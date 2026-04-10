@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useTodos, Todo } from '@/lib/useTodos'
-import { useTranslation } from '@/lib/i18n/useTranslation'
+import { useTranslations } from 'next-intl'
 import { useToday } from '@/lib/useToday'
 
 // 期間イベントはdateEnd（終了日）で判定、単発はdate
@@ -15,15 +15,15 @@ function getDueStatus(todo: Todo, today: string): 'overdue' | 'today' | 'soon' |
 }
 
 const DUE_STYLE = {
-  overdue: { label: 'todoOverdue' as const, color: '#EF4444', bg: 'rgba(239,68,68,0.12)' },
-  today:   { label: 'todoToday'   as const, color: '#F59E0B', bg: 'rgba(245,158,11,0.12)' },
-  soon:    { label: 'todoSoon'    as const, color: '#F3B4E3', bg: 'rgba(243,180,227,0.12)' },
-  future:  { label: ''            as const, color: '#636366', bg: 'transparent' },
+  overdue: { label: 'Todo.todoOverdue' as const, color: '#EF4444', bg: 'rgba(239,68,68,0.12)' },
+  today:   { label: 'Todo.todoToday'   as const, color: '#F59E0B', bg: 'rgba(245,158,11,0.12)' },
+  soon:    { label: 'Todo.todoSoon'    as const, color: '#F3B4E3', bg: 'rgba(243,180,227,0.12)' },
+  future:  { label: ''                 as const, color: '#636366', bg: 'transparent' },
 }
 
 export default function TodoSection() {
   const TODAY = useToday()
-  const { t } = useTranslation()
+  const t = useTranslations()
   const { todos, addTodo, toggleDone, removeTodo, updateTodo } = useTodos()
   const [input, setInput] = useState('')
   const [dueDate, setDueDate] = useState('')
@@ -76,7 +76,7 @@ export default function TodoSection() {
                 : <><path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></>
               }
             </svg>
-            {t('todoDone')} {done.length}{t('items')}
+            {t('Todo.todoDone')} {done.length}{t('Common.items')}
           </button>
         )}
       </div>
@@ -89,7 +89,7 @@ export default function TodoSection() {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && handleAdd()}
-            placeholder={t('todoAdd')}
+            placeholder={t('Todo.todoAdd')}
             className="flex-1 py-1.5 text-sm outline-none"
             style={{ background: 'transparent', color: '#1C1C1E' }}
           />
@@ -105,7 +105,7 @@ export default function TodoSection() {
               <line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/>
               <line x1="3" y1="10" x2="21" y2="10"/>
             </svg>
-            {dueDate ? `${parseInt(dueDate.slice(5,7))}/${parseInt(dueDate.slice(8))}` : t('todoDueDate')}
+            {dueDate ? `${parseInt(dueDate.slice(5,7))}/${parseInt(dueDate.slice(8))}` : t('Todo.todoDueDate')}
           </button>
           <button
             onClick={handleAdd}
@@ -130,7 +130,7 @@ export default function TodoSection() {
               <button onClick={() => setDueDate('')}
                 className="text-xs px-3 py-2 rounded-xl"
                 style={{ color: '#636366', background: '#F0F0F5' }}>
-                {t('clear')}
+                {t('Common.clear')}
               </button>
             )}
           </div>
@@ -140,7 +140,7 @@ export default function TodoSection() {
       {/* リスト */}
       {sorted.length === 0 ? (
         <div className="flex items-center justify-center py-6" style={{ color: '#8E8E93' }}>
-          <p className="text-sm">{t('todoEmpty')}</p>
+          <p className="text-sm">{t('Todo.todoEmpty')}</p>
         </div>
       ) : (
         <div className="flex flex-col gap-2">
@@ -166,7 +166,7 @@ function TodoRow({ todo, onToggle, onRemove, onUpdate }: {
   onUpdate: (patch: Partial<Todo>) => void
 }) {
   const TODAY = useToday()
-  const { t } = useTranslation()
+  const t = useTranslations()
   const [expanded, setExpanded] = useState(false)
   const [editing, setEditing] = useState(false)
   const [editTitle, setEditTitle] = useState(todo.title)
@@ -245,7 +245,7 @@ function TodoRow({ todo, onToggle, onRemove, onUpdate }: {
               </div>
               {/* メモ */}
               <textarea value={editMemo} onChange={(e) => setEditMemo(e.target.value)}
-                placeholder={t('todoMemo')} rows={2}
+                placeholder={t('Todo.todoMemo')} rows={2}
                 className="w-full px-3 py-2 text-sm rounded-xl outline-none resize-none"
                 style={{ background: '#F8F9FA', border: '1px solid #E5E5EA', color: '#1C1C1E' }} />
               {/* リンク */}
@@ -263,13 +263,13 @@ function TodoRow({ todo, onToggle, onRemove, onUpdate }: {
                   })
                   setEditing(false)
                 }} className="flex-1 py-2.5 rounded-xl text-xs font-bold"
-                  style={{ background: '#F3B4E3', color: '#FFFFFF' }}>{t('save')}</button>
+                  style={{ background: '#F3B4E3', color: '#FFFFFF' }}>{t('Common.save')}</button>
                 <button onClick={() => {
                   setEditTitle(todo.title); setEditDate(todo.date); setEditDateEnd(todo.dateEnd ?? '')
                   setEditTime(todo.time ?? ''); setEditMemo(todo.memo ?? ''); setEditUrl(todo.sourceUrl ?? '')
                   setEditing(false)
                 }} className="px-4 py-2.5 rounded-xl text-xs"
-                  style={{ background: '#F0F0F5', color: '#636366' }}>{t('cancel')}</button>
+                  style={{ background: '#F0F0F5', color: '#636366' }}>{t('Common.cancel')}</button>
               </div>
             </>
           ) : (
@@ -281,7 +281,7 @@ function TodoRow({ todo, onToggle, onRemove, onUpdate }: {
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#8E8E93" strokeWidth="2">
                   <path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/>
                 </svg>
-                <span className="text-xs" style={{ color: '#636366' }}>{t('editButton')}</span>
+                <span className="text-xs" style={{ color: '#636366' }}>{t('Schedule.editButton')}</span>
               </button>
               {/* メモ表示 */}
               {todo.memo && (

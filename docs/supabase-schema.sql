@@ -422,15 +422,65 @@ create policy "Auth vote" on spot_photo_votes for insert with check (auth.uid() 
 create policy "Auth vote" on edit_request_votes for insert with check (auth.uid() = user_id);
 
 -- ============================================================
+-- profiles 自動作成トリガー（TODO: Dashboard SQL Editor で実行）
+-- 実行後、useVoting.ts の ensureProfile と auth/callback/route.ts の
+-- profile作成コードを削除すること
+-- ============================================================
+create or replace function handle_new_user()
+returns trigger as $$
+begin
+  insert into public.profiles (id, mail, nickname, join_date)
+  values (
+    new.id,
+    new.email,
+    coalesce(new.raw_user_meta_data->>'name', split_part(new.email, '@', 1)),
+    now()
+  );
+  return new;
+end;
+$$ language plpgsql security definer;
+
+create trigger on_auth_user_created
+  after insert on auth.users
+  for each row execute function handle_new_user();
+
+-- ============================================================
+-- auto_confirm_event 修正（TODO: Dashboard SQL Editor で実行）
+-- 投票ごとに verified_count を更新する（元は3票到達時のみ更新）
+-- ============================================================
+create or replace function auto_confirm_event()
+returns trigger as $$
+begin
+  update events
+  set verified_count = (select count(*) from event_votes where event_id = NEW.event_id and vote = 'approve'),
+      status = case
+        when (select count(*) from event_votes where event_id = NEW.event_id and vote = 'approve') >= 3
+        then 'confirmed' else status end
+  where id = NEW.event_id;
+  return NEW;
+end;
+$$ language plpgsql;
+
+-- ============================================================
 -- Storage バケット（Supabase Dashboard で作成）
 -- ============================================================
 -- avatars        (プロフィール画像)
 -- banners        (プロフィールバナー)
--- event-images   (スケジュール画像)
+-- event-images   (スケジュール画像) ✅ 作成済み（public）
 -- spot-photos    (聖地写真)
 -- screenshots    (スクリーンショット)
 -- tickets        (チケット画像) ※private
 -- memories       (思い出写真) ※private
+
+-- Storage RLS ポリシー（TODO: Dashboard SQL Editor で実行）
+-- 認証済みユーザーは event-images にアップロード可能、誰でも閲覧可能
+create policy "Anyone can view event images"
+  on storage.objects for select
+  using (bucket_id = 'event-images');
+
+create policy "Authenticated users can upload event images"
+  on storage.objects for insert
+  with check (bucket_id = 'event-images' and auth.role() = 'authenticated');
 
 -- ============================================================
 -- 初期データ: タグマスタ

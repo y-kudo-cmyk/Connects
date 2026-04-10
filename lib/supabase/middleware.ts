@@ -33,13 +33,47 @@ export async function updateSession(request: NextRequest) {
   const isProtected = protectedPaths.some(
     (p) => request.nextUrl.pathname === p || request.nextUrl.pathname.startsWith(p + '/'),
   )
+  const isAdmin = request.nextUrl.pathname === '/admin' || request.nextUrl.pathname.startsWith('/admin/')
   const publicPaths = ['/login', '/join', '/onboarding', '/auth', '/api']
   const isPublic = publicPaths.some((p) => request.nextUrl.pathname.startsWith(p))
 
-  if (!user && isProtected && !isPublic) {
+  if (!user && (isProtected || isAdmin) && !isPublic) {
     const url = request.nextUrl.clone()
     url.pathname = '/login'
     return NextResponse.redirect(url)
+  }
+
+  // Role check (banned + admin)
+  if (user && (isProtected || isAdmin) && !isPublic) {
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', user.id)
+      .single()
+
+    const role = profile?.role
+
+    // Banned → /login にリダイレクト
+    if (role === 'banned') {
+      const url = request.nextUrl.clone()
+      url.pathname = '/login'
+      const redirectResponse = NextResponse.redirect(url)
+      supabaseResponse.cookies.getAll().forEach((cookie) => {
+        redirectResponse.cookies.set(cookie.name, cookie.value, cookie)
+      })
+      return redirectResponse
+    }
+
+    // Admin ページに admin 以外 → / にリダイレクト
+    if (isAdmin && role !== 'admin') {
+      const url = request.nextUrl.clone()
+      url.pathname = '/'
+      const redirectResponse = NextResponse.redirect(url)
+      supabaseResponse.cookies.getAll().forEach((cookie) => {
+        redirectResponse.cookies.set(cookie.name, cookie.value, cookie)
+      })
+      return redirectResponse
+    }
   }
 
   return supabaseResponse

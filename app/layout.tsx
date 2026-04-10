@@ -1,6 +1,10 @@
 import type { Metadata, Viewport } from 'next'
 import './globals.css'
-import SessionProviderWrapper from '@/components/SessionProviderWrapper'
+import { Geist } from "next/font/google";
+import { cn } from "@/lib/utils";
+import { getLocale } from 'next-intl/server'
+
+const geist = Geist({subsets:['latin'],variable:'--font-sans'});
 
 export const metadata: Metadata = {
   title: 'Connects+',
@@ -28,15 +32,17 @@ export const viewport: Viewport = {
   themeColor: '#131315',
 }
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
+  const locale = await getLocale()
+
   return (
-    <html lang="ja" className="h-full">
+    <html lang={locale} className={cn("h-full", "font-sans", geist.variable)} suppressHydrationWarning>
       <body className="h-full antialiased">
-        <SessionProviderWrapper>{children}</SessionProviderWrapper>
+        {children}
       </body>
     </html>
   )

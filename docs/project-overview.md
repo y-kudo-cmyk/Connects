@@ -14,6 +14,7 @@ K-POPファン向けのスケジュール管理＆聖地巡礼アプリ。現在
 |---|---|---|
 | フロントエンド | Next.js 16 + React 19 + TypeScript | アプリ本体（PWA） |
 | スタイリング | Tailwind CSS v4 | UI |
+| UIコンポーネント | shadcn/ui (base-nova) | 管理画面等のUIコンポーネント |
 | DB / Auth / Storage | Supabase | PostgreSQL + 認証 + ファイル保存 |
 | ホスティング | Vercel | デプロイ・CDN |
 | 地図 | Leaflet (react-leaflet) | 聖地巡礼MAP |
@@ -43,7 +44,7 @@ K-POPファン向けのスケジュール管理＆聖地巡礼アプリ。現在
 - [x] タグ・ジャンル設定ファイル（lib/config/tags.ts）
 
 ### 未完了（対応が必要）
-- [ ] **Auth移行の完了** — AuthGuard / middleware を一時無効化中。ログインフローの安定化が必要
+- [x] **Auth移行の完了** — Supabase Auth（middleware + AuthGuard）で認証保護を有効化済み
 - [ ] **MAP（スポット）→ Supabase接続** — 現在まだmockData
 - [ ] **MYカレンダー → Supabase接続** — 現在localStorage
 - [ ] **TODO → Supabase接続** — 現在localStorage
@@ -51,7 +52,12 @@ K-POPファン向けのスケジュール管理＆聖地巡礼アプリ。現在
 - [ ] **ユーザーデータ移行** — Glideの1,250ユーザーをSupabase Authに紐づけ
 - [ ] **MYカレンダーデータ移行** — Glideの6,540件を移行
 - [ ] **画像のSupabase Storage移行** — Google Drive → Supabase Storage
-- [ ] **承認制UI** — 3人承認の確認画面・修正依頼フォーム
+- [x] **Storage RLSポリシー設定（DB）** — event-images バケットの閲覧・アップロードポリシー設定済み
+- [x] **承認制UI（イベント）** — useVotingフック・EventDetailModal承認ボタン・EventCardバッジ実装済み
+- [ ] **承認制UI（スポット・写真・URL）** — スポット投稿のSupabase接続、写真投票、URL提案UIが未実装
+- [x] **profiles自動作成トリガー（DB）** — `handle_new_user` トリガー作成済み。※ `useVoting.ts` の `ensureProfile` と `auth/callback/route.ts` のprofile作成コードは削除可能
+- [x] **auto_confirm_eventトリガー修正（DB）** — 投票ごとにverified_count更新するよう修正済み
+- [ ] **管理画面（/admin）** — 投稿管理・承認設定・ユーザー管理・お知らせ・タグ・アーティスト管理。詳細は `docs/admin-requirements.md`
 - [ ] **Apify連携** — 公式サイト・SNSからの自動データ取得
 - [ ] **OneSignal連携** — プッシュ通知
 - [ ] **X自動投稿** — 新着スポットの自動ポスト
@@ -139,8 +145,6 @@ K-POPファン向けのスケジュール管理＆聖地巡礼アプリ。現在
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase 公開キー | ✅ 設定済み |
 | `SUPABASE_SERVICE_ROLE_KEY` | Supabase 管理キー（サーバーのみ） | ローカルのみ |
 | `REFERRAL_MASTER_CODES` | 招待コード | ✅ 設定済み |
-| `AUTH_SECRET` | NextAuth用（移行後は不要） | ✅ 設定済み |
-| `AUTH_TRUST_HOST` | NextAuth用（移行後は不要） | ✅ 設定済み |
 | `GOOGLE_GENERATIVE_AI_API_KEY` | Gemini API | 未設定 |
 | `NEXT_PUBLIC_ONESIGNAL_APP_ID` | OneSignal | 未設定 |
 | `X_API_KEY` / `X_API_SECRET` | X API | 未設定 |
@@ -182,7 +186,7 @@ connects-plus/
 │   └── supabase-schema.sql # DB定義
 ├── scripts/
 │   └── import-data.ts      # Glide CSV → Supabase インポート
-├── middleware.ts            # 認証ミドルウェア（一時無効化中）
+├── middleware.ts            # 認証ミドルウェア（Supabase Auth）
 └── data/glide-export/      # Glideエクスポートデータ（.gitignore）
 ```
 

@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { SeatField, SeatInfo } from '@/lib/useMyEntries'
-import { useTranslation } from '@/lib/i18n/useTranslation'
+import { useTranslations } from 'next-intl'
 import { ArenaPositionPicker, detectSection } from '@/components/ArenaMap'
 
 // 会場タイプ別のプリセットラベル（キー名は翻訳で表示）
@@ -11,7 +11,7 @@ const PRESET_LABELS: Record<string, string[]> = {
   dome: ['エリア', 'ブロック', '列', '席番号', 'ゲート'],
   overseas: ['Section/Zone', 'Block/Area', 'Row', 'Seat No.', 'Gate'],
 }
-const PRESET_KEYS = { domestic: 'seatPresetDomestic', dome: 'seatPresetDome', overseas: 'seatPresetOverseas' } as const
+const PRESET_KEYS = { domestic: 'Seat.seatPresetDomestic', dome: 'Seat.seatPresetDome', overseas: 'Seat.seatPresetOverseas' } as const
 
 function emptyFields(labels: string[]): SeatField[] {
   return labels.map((label) => ({ label, value: '' }))
@@ -42,7 +42,7 @@ export default function SeatInfoForm({
   ticketImages?: string[]
   autoAnalyzeTrigger?: number  // incrementするとanalyze発火
 }) {
-  const { t } = useTranslation()
+  const t = useTranslations()
   const [analyzing, setAnalyzing] = useState(false)
   const [analyzed, setAnalyzed] = useState(false)
   const [error, setError] = useState('')
@@ -73,10 +73,10 @@ export default function SeatInfoForm({
         onChange({ fields: result })
         setAnalyzed(true)
       } else {
-        setError(t('seatAnalyzeFailed'))
+        setError(t('Seat.seatAnalyzeFailed'))
       }
     } catch {
-      setError(t('seatAnalyzeFail2'))
+      setError(t('Seat.seatAnalyzeFail2'))
     } finally {
       setAnalyzing(false)
     }
@@ -114,7 +114,7 @@ export default function SeatInfoForm({
             <path d="M20 9V7a2 2 0 00-2-2H4a2 2 0 00-2 2v2"/>
             <path d="M2 9l10 6 10-6"/><path d="M12 15v6"/>
           </svg>
-          {t('seatInfo')}
+          {t('Seat.seatInfo')}
         </p>
         <div className="flex items-center gap-2">
           {ticketImages && ticketImages.length > 0 && (
@@ -131,14 +131,14 @@ export default function SeatInfoForm({
               {analyzing ? (
                 <span className="animate-spin inline-block w-3 h-3 border-2 border-current border-t-transparent rounded-full" />
               ) : analyzed ? (
-                t('seatAnalyzed')
+                t('Seat.seatAnalyzed')
               ) : (
                 <>
                   <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                     <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
                     <circle cx="12" cy="12" r="3"/>
                   </svg>
-                  {t('seatAnalyze')}
+                  {t('Seat.seatAnalyze')}
                 </>
               )}
             </button>
@@ -151,7 +151,7 @@ export default function SeatInfoForm({
         <div className="flex items-center gap-2 px-3 py-2.5 rounded-xl"
           style={{ background: 'rgba(59,130,246,0.08)', border: '1px solid rgba(59,130,246,0.2)' }}>
           <span className="animate-spin inline-block w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full flex-shrink-0" />
-          <p className="text-xs" style={{ color: '#3B82F6' }}>{t('seatAnalyzing')}</p>
+          <p className="text-xs" style={{ color: '#3B82F6' }}>{t('Seat.seatAnalyzing')}</p>
         </div>
       )}
 
@@ -161,7 +161,7 @@ export default function SeatInfoForm({
 
       {/* プリセット */}
       <div>
-        <p className="text-[11px] font-semibold mb-1.5" style={{ color: '#8E8E93' }}>{t('seatField')}</p>
+        <p className="text-[11px] font-semibold mb-1.5" style={{ color: '#8E8E93' }}>{t('Seat.seatField')}</p>
         <div className="flex gap-2">
           {Object.entries(PRESET_LABELS).map(([key, labels]) => (
             <button
@@ -178,7 +178,7 @@ export default function SeatInfoForm({
             className="flex-1 py-2 rounded-xl text-xs font-bold"
             style={{ background: '#F0F0F5', color: '#636366', border: '1px solid #E5E5EA' }}
           >
-            {t('seatCustom')}
+            {t('Seat.seatCustom')}
           </button>
         </div>
       </div>
@@ -193,7 +193,7 @@ export default function SeatInfoForm({
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
             <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
           </svg>
-          {t('seatTapToInput')}
+          {t('Seat.seatTapToInput')}
         </button>
       ) : (
         <div className="flex flex-col gap-2">
@@ -204,7 +204,7 @@ export default function SeatInfoForm({
                 type="text"
                 value={field.label}
                 onChange={(e) => setField(idx, 'label', e.target.value)}
-                placeholder={t('seatFieldName')}
+                placeholder={t('Seat.seatFieldName')}
                 className="w-24 flex-shrink-0 px-2.5 py-2 rounded-lg text-xs outline-none"
                 style={{ background: '#F0F0F5', border: '1px solid #E5E5EA', color: '#636366' }}
               />
@@ -214,7 +214,7 @@ export default function SeatInfoForm({
                 type="text"
                 value={field.value}
                 onChange={(e) => setField(idx, 'value', e.target.value)}
-                placeholder={t('seatFieldValue')}
+                placeholder={t('Seat.seatFieldValue')}
                 className="flex-1 px-2.5 py-2 rounded-lg text-sm font-semibold outline-none"
                 style={{ background: '#FFFFFF', border: '1px solid #E5E5EA', color: '#1C1C1E' }}
               />
@@ -239,7 +239,7 @@ export default function SeatInfoForm({
             <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
               <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
             </svg>
-            {t('seatAddField')}
+            {t('Seat.seatAddField')}
           </button>
         </div>
       )}
@@ -259,7 +259,7 @@ function PositionSection({
   onChange: (v: SeatInfo) => void
   fields: SeatField[]
 }) {
-  const { t } = useTranslation()
+  const t = useTranslations()
   const [open, setOpen] = useState(false)
 
   return (
@@ -286,7 +286,7 @@ function PositionSection({
           <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/>
           </svg>
-          {value.position ? detectSection(value.position) || t('seatMapSet') : t('seatMapSetPosition')}
+          {value.position ? detectSection(value.position) || t('Seat.seatMapSet') : t('Seat.seatMapSetPosition')}
         </button>
       </div>
 

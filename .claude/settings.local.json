@@ -48,7 +48,34 @@
       "Bash(npx tsx:*)",
       "Bash(git add:*)",
       "Bash(git push:*)",
-      "Bash(git commit:*)"
+      "Bash(git commit:*)",
+      "mcp__context7__resolve-library-id",
+      "mcp__context7__query-docs",
+      "mcp__playwright__browser_navigate",
+      "mcp__playwright__browser_snapshot",
+      "mcp__playwright__browser_click",
+      "Bash(npm ls:*)",
+      "Bash(npm uninstall:*)",
+      "mcp__playwright__browser_fill_form",
+      "mcp__playwright__browser_take_screenshot",
+      "Bash(npx supabase:*)",
+      "Bash(git -C /Users/tm/DevProjects/source-code/Connects status --short)",
+      "Bash(git rm:*)",
+      "mcp__playwright__browser_close",
+      "Bash(supabase projects:*)",
+      "Bash(git branch:*)",
+      "Bash(git checkout:*)",
+      "mcp__shadcn__search_items_in_registries",
+      "mcp__shadcn__view_items_in_registries",
+      "mcp__shadcn__get_item_examples_from_registries",
+      "Bash(npx shadcn@latest init -d --base-color neutral --css-variables)",
+      "Bash(npx shadcn@latest:*)"
     ]
-  }
+  },
+  "enabledMcpjsonServers": [
+    "shadcn",
+    "context7",
+    "chrome-devtools",
+    "playwright"
+  ]
 }

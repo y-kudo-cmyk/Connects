@@ -1,16 +1,16 @@
 'use client'
 
-import { useState, useRef, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { scheduleTagConfig, type ScheduleTag } from '@/lib/config/tags'
-import { useAuth } from '@/lib/supabase/useAuth'
 import { createClient } from '@/lib/supabase/client'
-import { useTranslation } from '@/lib/i18n/useTranslation'
-import { compressImage } from '@/lib/useMyEntries'
+import { useAuth } from '@/lib/supabase/useAuth'
+import { useTranslations } from 'next-intl'
+import { uploadImage } from '@/lib/supabase/uploadImage'
 
 const supabase = createClient()
 
 export default function AddScheduleModal({ onClose }: { onClose: () => void }) {
-  const { t } = useTranslation()
+  const t = useTranslations()
   const { user } = useAuth()
   const [title, setTitle] = useState('')
   const [tag, setTag] = useState<ScheduleTag>('EVENT')
@@ -21,10 +21,11 @@ export default function AddScheduleModal({ onClose }: { onClose: () => void }) {
   const [country, setCountry] = useState('')
   const [sourceUrl, setSourceUrl] = useState('')
   const [notes, setNotes] = useState('')
-  const [imageUrl, setImageUrl] = useState('')
+  const [imagePreview, setImagePreview] = useState('')
+  const [imageFile, setImageFile] = useState<File | null>(null)
   const [saving, setSaving] = useState(false)
   const [done, setDone] = useState(false)
-  const fileRef = useRef<HTMLInputElement>(null)
+  const [submitError, setSubmitError] = useState('')
 
   useEffect(() => {
     const main = document.querySelector('main') as HTMLElement | null
@@ -38,23 +39,34 @@ export default function AddScheduleModal({ onClose }: { onClose: () => void }) {
     }
   }, [])
 
-  const handleImage = async (files: FileList | null) => {
+  const handleImage = (files: FileList | null) => {
     if (!files?.[0]) return
-    setImageUrl(await compressImage(files[0], 1200, 0.85))
+    setImageFile(files[0])
+    // プレビュー用にローカルURLを生成
+    const reader = new FileReader()
+    reader.onload = () => setImagePreview(reader.result as string)
+    reader.readAsDataURL(files[0])
   }
 
   const handleSubmit = async () => {
     if (!title.trim() || !startDate) return
     setSaving(true)
 
+    // 画像があればSupabase Storageにアップロード
+    let finalImageUrl = ''
+    if (imageFile) {
+      const url = await uploadImage('event-images', imageFile, 1200, 0.85)
+      if (url) finalImageUrl = url
+    }
+
     const startIso = startTime
       ? `${startDate}T${startTime}:00`
       : `${startDate}T00:00:00`
     const endIso = endDate ? `${endDate}T00:00:00` : null
 
-    await supabase.from('events').insert({
+    const { error } = await supabase.from('events').insert({
       tag,
-      artist_id: 'seventeen',
+      artist_id: 'A000000',
       submitted_by: user?.id ?? null,
       related_artists: '',
       event_title: title.trim(),
@@ -66,12 +78,19 @@ export default function AddScheduleModal({ onClose }: { onClose: () => void }) {
       lat: null,
       lng: null,
       country: country || '',
-      image_url: imageUrl || '',
+      image_url: finalImageUrl,
       source_url: sourceUrl || '',
       notes: notes || '',
       status: 'pending',
       verified_count: 0,
     })
+
+    if (error) {
+      console.error('Event insert error:', error.message)
+      setSubmitError(t('Schedule.postFailed'))
+      setSaving(false)
+      return
+    }
 
     setSaving(false)
     setDone(true)
@@ -88,11 +107,11 @@ export default function AddScheduleModal({ onClose }: { onClose: () => void }) {
               <polyline points="20 6 9 17 4 12" />
             </svg>
           </div>
-          <p className="text-sm font-bold text-center" style={{ color: '#1C1C1E' }}>{t('schedulePosted')}</p>
+          <p className="text-sm font-bold text-center" style={{ color: '#1C1C1E' }}>{t('Schedule.schedulePosted')}</p>
           <button onClick={onClose}
             className="mt-2 px-8 py-3 rounded-xl text-sm font-bold"
             style={{ background: '#F3B4E3', color: '#FFFFFF' }}>
-            {t('close')}
+            {t('Common.close')}
           </button>
         </div>
       </div>
@@ -111,7 +130,7 @@ export default function AddScheduleModal({ onClose }: { onClose: () => void }) {
         {/* ヘッダー */}
         <div className="flex items-center justify-between px-4 py-2 flex-shrink-0"
           style={{ borderBottom: '1px solid #E5E5EA' }}>
-          <p className="text-sm font-bold" style={{ color: '#1C1C1E' }}>{t('addSchedule')}</p>
+          <p className="text-sm font-bold" style={{ color: '#1C1C1E' }}>{t('Schedule.addSchedule')}</p>
           <button onClick={onClose} className="w-11 h-11 flex items-center justify-center">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#636366" strokeWidth="2">
               <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
@@ -120,10 +139,10 @@ export default function AddScheduleModal({ onClose }: { onClose: () => void }) {
         </div>
 
         <div className="flex-1 min-h-0 overflow-y-auto px-4 pt-4 flex flex-col gap-4"
-          style={{ paddingBottom: 120, WebkitOverflowScrolling: 'touch', overscrollBehavior: 'contain' }}>
+          style={{ paddingBottom: 80, WebkitOverflowScrolling: 'touch', overscrollBehavior: 'contain' }}>
           {/* タイトル */}
           <input type="text" value={title} onChange={(e) => setTitle(e.target.value)}
-            placeholder={t('titlePlaceholder')}
+            placeholder={t('Schedule.titlePlaceholder')}
             className="w-full px-3 py-3 rounded-xl text-base font-bold outline-none"
             style={{ background: '#FFFFFF', border: '1px solid #E5E5EA', color: '#1C1C1E' }}
             autoFocus />
@@ -158,16 +177,16 @@ export default function AddScheduleModal({ onClose }: { onClose: () => void }) {
 
           {/* 会場 */}
           <input type="text" value={venue} onChange={(e) => setVenue(e.target.value)}
-            placeholder={t('venuePlaceholder')}
+            placeholder={t('Schedule.venuePlaceholder')}
             className="w-full px-3 py-2.5 rounded-xl text-sm outline-none"
             style={{ background: '#FFFFFF', border: '1px solid #E5E5EA', color: '#1C1C1E' }} />
 
           {/* 画像 */}
-          {imageUrl ? (
+          {imagePreview ? (
             <div className="relative rounded-xl overflow-hidden" style={{ aspectRatio: '16/9' }}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={imageUrl} alt="" className="w-full h-full object-cover" />
-              <button onClick={() => setImageUrl('')}
+              <img src={imagePreview} alt="" className="w-full h-full object-cover" />
+              <button onClick={() => { setImagePreview(''); setImageFile(null) }}
                 className="absolute top-2 right-2 w-8 h-8 rounded-full flex items-center justify-center"
                 style={{ background: 'rgba(0,0,0,0.7)' }}>
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" strokeWidth="2">
@@ -176,28 +195,32 @@ export default function AddScheduleModal({ onClose }: { onClose: () => void }) {
               </button>
             </div>
           ) : (
-            <button onClick={() => fileRef.current?.click()}
-              className="w-full h-24 rounded-xl flex flex-col items-center justify-center gap-1"
+            <label
+              className="w-full h-24 rounded-xl flex flex-col items-center justify-center gap-1 cursor-pointer"
               style={{ border: '2px dashed #E5E5EA', color: '#8E8E93' }}>
               <span className="text-2xl">📷</span>
-              <span className="text-xs">{t('uploadImage')}</span>
-            </button>
+              <span className="text-xs">{t('Schedule.uploadImage')}</span>
+              <input type="file" accept="image/*" className="hidden"
+                onChange={(e) => handleImage(e.target.files)} />
+            </label>
           )}
-          <input ref={fileRef} type="file" accept="image/*" className="hidden"
-            onChange={(e) => handleImage(e.target.files)} />
 
           {/* ソースURL */}
           <input type="url" value={sourceUrl} onChange={(e) => setSourceUrl(e.target.value)}
-            placeholder={`${t('source')} URL`}
+            placeholder={`${t('Schedule.source')} URL`}
             className="w-full px-3 py-2.5 rounded-xl text-sm outline-none"
             style={{ background: '#FFFFFF', border: '1px solid #E5E5EA', color: '#1C1C1E' }} />
 
           {/* 備考 */}
           <textarea value={notes} onChange={(e) => setNotes(e.target.value)}
-            placeholder={t('notesPlaceholder')}
+            placeholder={t('Schedule.notesPlaceholder')}
             rows={3}
             className="w-full px-3 py-3 rounded-xl text-sm outline-none resize-none"
             style={{ background: '#FFFFFF', border: '1px solid #E5E5EA', color: '#1C1C1E' }} />
+
+          {submitError && (
+            <p className="text-xs text-center" style={{ color: '#EF4444' }}>{submitError}</p>
+          )}
         </div>
 
         {/* フッター（投稿ボタン） */}
@@ -213,7 +236,7 @@ export default function AddScheduleModal({ onClose }: { onClose: () => void }) {
               background: title.trim() && startDate ? '#F3B4E3' : '#E5E5EA',
               color: title.trim() && startDate ? '#FFFFFF' : '#8E8E93',
             }}>
-            {saving ? t('saving') : t('addScheduleShort')}
+            {saving ? t('Common.saving') : t('Schedule.addScheduleShort')}
           </button>
         </div>
       </div>
