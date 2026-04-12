@@ -635,15 +635,6 @@ function SpotDetailScreen({
                     <p className="text-sm font-semibold mb-1" style={{ color: '#636366' }}>{spot.nameLocal}</p>
                   )}
                   <p className="text-sm mb-2" style={{ color: '#8E8E93' }}>📍 {spot.address}</p>
-                  {(spot.submittedByName || spot.contributor) && (
-                    <div className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-[11px] font-semibold mb-1"
-                      style={{ background: '#F0F0F5', color: '#636366' }}>
-                      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                        <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" /><circle cx="12" cy="7" r="4" />
-                      </svg>
-                      {spot.submittedByName || spot.contributor}
-                    </div>
-                  )}
                   {isIncomplete && (
                     <span className="text-[10px] font-bold px-2 py-0.5 rounded-full"
                       style={{ background: 'rgba(245,158,11,0.15)', color: '#F59E0B' }}>{t('Map.infoWanted')}</span>
@@ -783,6 +774,7 @@ function SpotDetailScreen({
                   onRemove={() => onRemovePhoto(photo.id)}
                   spotId={spot.id}
                   spotMemo={spot.description}
+                  spotContributor={spot.submittedByName}
                   onSavePhoto={onRefresh}
                   onVotePhoto={(photoId) => onConfirmPhoto(photoId)} />
               ))}
@@ -859,13 +851,14 @@ function SpotDetailScreen({
 
 // ─── 写真カード ─────────────────────────────────────────────
 function PhotoCard({
-  photo, isUserPhoto, onRemove, spotId, spotMemo, onSavePhoto, onVotePhoto,
+  photo, isUserPhoto, onRemove, spotId, spotMemo, spotContributor, onSavePhoto, onVotePhoto,
 }: {
   photo: SpotPhoto
   isUserPhoto: boolean
   onRemove: () => void
   spotId: string
   spotMemo?: string
+  spotContributor?: string
   onSavePhoto?: () => Promise<void>
   onVotePhoto?: (photoId: string) => void
 }) {
@@ -968,8 +961,8 @@ function PhotoCard({
         <p className="text-[10px] leading-tight" style={{ color: '#8E8E93' }}>
           {(savedDate || photo.date || '').replace(/-/g, '/')}
         </p>
-        {photo.contributor && (
-          <p className="text-[9px] font-semibold" style={{ color: '#B0B0B5' }}>👤 {photo.contributor}</p>
+        {(photo.contributor || spotContributor) && (
+          <p className="text-[9px] font-semibold" style={{ color: '#B0B0B5' }}>👤 {photo.contributor || spotContributor}</p>
         )}
         {!effectiveSourceUrl && (
           <div className="flex items-center gap-1 mt-1" style={{ color: '#F59E0B' }}>
