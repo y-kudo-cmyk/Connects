@@ -445,7 +445,15 @@ function SpotDetailScreen({
   const seedPhotos: SpotPhoto[] = (spot.photos ?? []).map((p) => ({ ...p, imageUrl: p.imageUrl ?? '', sourceUrl: p.sourceUrl ?? '', platform: p.platform ?? '', status: 'confirmed' as const }))
   const allPhotos: SpotPhoto[] = [...seedPhotos, ...userPhotos]
   const pendingPhotos = userPhotos.filter((p) => p.status === 'pending')
-  const confirmedPhotos = allPhotos.filter((p) => p.status === 'confirmed')
+  // Remove duplicate photos (same imageUrl)
+  const seen = new Set<string>()
+  const confirmedPhotos = allPhotos.filter((p) => {
+    if (p.status !== 'confirmed') return false
+    if (!p.imageUrl) return true
+    if (seen.has(p.imageUrl)) return false
+    seen.add(p.imageUrl)
+    return true
+  })
 
   const handleUrlSubmit = () => {
     if (!urlInput.trim()) return
