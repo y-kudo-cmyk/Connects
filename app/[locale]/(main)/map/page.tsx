@@ -998,6 +998,9 @@ function PhotoCard({
         <p className="text-[10px] leading-tight" style={{ color: '#8E8E93' }}>
           {(savedDate || photo.date).replace(/-/g, '/')}
         </p>
+        {photo.contributor && (
+          <p className="text-[9px] font-semibold" style={{ color: '#B0B0B5' }}>👤 {photo.contributor}</p>
+        )}
         {/* ソースURLがない場合 */}
         {!effectiveSourceUrl && onAddSourceUrl && !showSourceInput && (
           <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShowSourceInput(true) }}
