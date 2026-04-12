@@ -100,7 +100,7 @@ export default function MapPage() {
       }
     })
     return set
-  }, [photoMap])
+  }, [allSpots, photoMap, getConfirmedCount])
 
   const handleSpotSelect = useCallback((id: string) => {
     setSelectedId(id)

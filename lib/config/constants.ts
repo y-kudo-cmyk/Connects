@@ -96,9 +96,12 @@ export type PilgrimageSpot = {
 }
 
 /** スポットが「情報完備」かどうか（ピンの色判定用） */
-export function isSpotComplete(spot: { photos?: { id: string }[] }, confirmedUserPhotoCount: number): boolean {
+export function isSpotComplete(spot: { photos?: { id: string; sourceUrl?: string; tags?: string[] }[]; members?: string[]; sourceUrl?: string; name?: string; address?: string; genre?: string }, confirmedUserPhotoCount: number): boolean {
   const seedCount = spot.photos?.length ?? 0
-  return (seedCount + confirmedUserPhotoCount) > 0
+  const hasPhotos = (seedCount + confirmedUserPhotoCount) > 0
+  const hasMembers = (spot.members ?? []).some(m => m !== 'ALL')
+  const hasSource = !!(spot.sourceUrl || spot.photos?.some(p => p.sourceUrl))
+  return hasPhotos && hasMembers && hasSource
 }
 
 /** 韓国 → NAVER MAP / 日本 → Google Maps */
