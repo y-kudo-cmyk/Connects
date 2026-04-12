@@ -795,32 +795,38 @@ function PhotoCard({
           </button>
         )}
         {showSourceInput && (
-          <div className="mt-1 flex flex-col gap-1" onClick={(e) => e.stopPropagation()}>
-            {(photo.caption || spotMemo) && (
-              <span className="text-[9px]" style={{ color: '#8E8E93' }}>{photo.caption || spotMemo}</span>
-            )}
-            <input
-              type="url"
-              value={sourceInput}
-              onChange={(e) => setSourceInput(e.target.value)}
-              placeholder="https://..."
-              autoFocus
-              className="w-full px-2 py-1.5 rounded-lg text-[10px] outline-none"
-              style={{ background: '#F0F0F5', color: '#1C1C1E', border: '1px solid #E5E5EA' }}
-            />
-            <div className="flex gap-1">
-              <button onClick={() => setShowSourceInput(false)}
-                className="flex-1 py-1 rounded-lg text-[9px] font-bold"
-                style={{ background: '#F0F0F5', color: '#636366' }}>
-                {t('Common.cancel')}
-              </button>
-              <button
-                onClick={() => { if(sourceInput.trim()) { onAddSourceUrl?.(photo.id, sourceInput.trim()); setShowSourceInput(false) } }}
-                disabled={!sourceInput.trim()}
-                className="flex-1 py-1 rounded-lg text-[9px] font-bold"
-                style={{ background: sourceInput.trim() ? '#F3B4E3' : '#E5E5EA', color: sourceInput.trim() ? '#FFF' : '#8E8E93' }}>
-                {t('Common.save')}
-              </button>
+          <div className="fixed inset-0 z-[70] flex items-center justify-center px-6" onClick={() => setShowSourceInput(false)}>
+            <div className="absolute inset-0" style={{ background: 'rgba(0,0,0,0.5)' }} />
+            <div className="relative w-full max-w-sm rounded-2xl p-5 flex flex-col gap-3"
+              style={{ background: '#F8F9FA' }}
+              onClick={(e) => e.stopPropagation()}>
+              <p className="text-sm font-bold" style={{ color: '#1C1C1E' }}>ソースURLを追加</p>
+              {(photo.caption || spotMemo) && (
+                <p className="text-xs" style={{ color: '#8E8E93' }}>{photo.caption || spotMemo}</p>
+              )}
+              <input
+                type="url"
+                value={sourceInput}
+                onChange={(e) => setSourceInput(e.target.value)}
+                placeholder="https://..."
+                autoFocus
+                className="w-full px-3 py-2.5 rounded-xl text-sm outline-none"
+                style={{ background: '#FFFFFF', border: '1px solid #E5E5EA', color: '#1C1C1E' }}
+              />
+              <div className="flex gap-2">
+                <button onClick={() => setShowSourceInput(false)}
+                  className="flex-1 py-2.5 rounded-xl text-sm font-bold"
+                  style={{ background: '#F0F0F5', color: '#636366' }}>
+                  {t('Common.cancel')}
+                </button>
+                <button
+                  onClick={() => { if(sourceInput.trim()) { onAddSourceUrl?.(photo.id, sourceInput.trim()); setShowSourceInput(false) } }}
+                  disabled={!sourceInput.trim()}
+                  className="flex-1 py-2.5 rounded-xl text-sm font-bold"
+                  style={{ background: sourceInput.trim() ? '#F3B4E3' : '#E5E5EA', color: sourceInput.trim() ? '#FFF' : '#8E8E93' }}>
+                  {t('Common.save')}
+                </button>
+              </div>
             </div>
           </div>
         )}
