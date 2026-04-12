@@ -12,11 +12,11 @@ import { VOTE_THRESHOLD } from '@/lib/supabase/useVoting'
 const DISMISSED_KEY = 'cp-dismissed'
 
 const MONTH_SHORT = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
-const DAY_SHORT = ['日','月','火','水','木','金','土']
 
 export default function NewSchedulePreview() {
   const TODAY = useToday()
   const t = useTranslations()
+  const dayNamesShort = t.raw('Calendar.dayNamesShort') as string[]
   const [dismissed, setDismissed] = useState<Set<string>>(new Set())
   const { events } = useSupabaseData()
   const [detailEvent, setDetailEvent] = useState<AppEvent | null>(null)
@@ -152,7 +152,7 @@ export default function NewSchedulePreview() {
                     className="text-[10px] font-black px-2 py-0.5 rounded-full self-start"
                     style={{ background: cfg.bg, color: cfg.color }}
                   >
-                    {d.getMonth()+1}/{d.getDate()}({DAY_SHORT[d.getDay()]}){event.time && event.time !== '00:00' ? ` ${event.time}` : ''}
+                    {d.getMonth()+1}/{d.getDate()}({dayNamesShort[d.getDay()]}){event.time && event.time !== '00:00' ? ` ${event.time}` : ''}
                   </span>
 
                   {/* Title */}
