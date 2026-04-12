@@ -724,9 +724,11 @@ function PhotoCard({
   const t = useTranslations()
   const [showSourceInput, setShowSourceInput] = useState(false)
   const [sourceInput, setSourceInput] = useState('')
+  const [savedSourceUrl, setSavedSourceUrl] = useState(photo.sourceUrl)
+  const effectiveSourceUrl = savedSourceUrl || photo.sourceUrl
   const cardContent = (
     <div className="flex-shrink-0 rounded-xl overflow-hidden flex flex-col"
-      style={{ width: 'calc(50vw - 20px)', minWidth: 'calc(50vw - 20px)', background: '#F0F0F5', cursor: photo.sourceUrl ? 'pointer' : 'default' }}>
+      style={{ width: 'calc(50vw - 20px)', minWidth: 'calc(50vw - 20px)', background: '#F0F0F5', cursor: effectiveSourceUrl ? 'pointer' : 'default' }}>
       {/* 画像 */}
       <div className="relative overflow-hidden">
         {photo.imageUrl ? (
@@ -749,7 +751,7 @@ function PhotoCard({
           </button>
         )}
         {/* ソースアイコン */}
-        {photo.sourceUrl && (
+        {effectiveSourceUrl && (
           <div className="absolute bottom-1.5 right-1.5 w-5 h-5 rounded-full flex items-center justify-center"
             style={{ background: 'rgba(0,0,0,0.6)' }}>
             <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" strokeWidth="2.5">
@@ -783,7 +785,7 @@ function PhotoCard({
           {photo.date.replace(/-/g, '/')}
         </p>
         {/* ソースURLがない場合 */}
-        {!photo.sourceUrl && onAddSourceUrl && !showSourceInput && (
+        {!effectiveSourceUrl && onAddSourceUrl && !showSourceInput && (
           <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShowSourceInput(true) }}
             className="flex items-center gap-1 mt-1 text-left flex-wrap"
             style={{ color: '#F59E0B' }}>
@@ -820,7 +822,7 @@ function PhotoCard({
                   {t('Common.cancel')}
                 </button>
                 <button
-                  onClick={() => { if(sourceInput.trim()) { onAddSourceUrl?.(photo.id, sourceInput.trim()); setShowSourceInput(false) } }}
+                  onClick={() => { if(sourceInput.trim()) { onAddSourceUrl?.(photo.id, sourceInput.trim()); setSavedSourceUrl(sourceInput.trim()); setShowSourceInput(false) } }}
                   disabled={!sourceInput.trim()}
                   className="flex-1 py-2.5 rounded-xl text-sm font-bold"
                   style={{ background: sourceInput.trim() ? '#F3B4E3' : '#E5E5EA', color: sourceInput.trim() ? '#FFF' : '#8E8E93' }}>
@@ -834,9 +836,9 @@ function PhotoCard({
     </div>
   )
 
-  if (photo.sourceUrl) {
+  if (effectiveSourceUrl) {
     return (
-      <a href={photo.sourceUrl} target="_blank" rel="noopener noreferrer" className="flex-shrink-0">
+      <a href={effectiveSourceUrl} target="_blank" rel="noopener noreferrer" className="flex-shrink-0">
         {cardContent}
       </a>
     )
