@@ -1,8 +1,8 @@
 const fs = require('fs');
 const { createClient } = require('@supabase/supabase-js');
 const sb = createClient(
-  'https://cjhwxocabmmrsmdfyqzr.supabase.co',
-  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNqaHd4b2NhYm1tcnNtZGZ5cXpyIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NTM0ODY1MywiZXhwIjoyMDkwOTI0NjUzfQ.gLNhjNxWI3DOWejXqQeIQb12RN-lw3rvjbJHzMB2PJM'
+  process.env.NEXT_PUBLIC_SUPABASE_URL,
+  process.env.SUPABASE_SERVICE_ROLE_KEY
 );
 
 function parseCSV(text) {
