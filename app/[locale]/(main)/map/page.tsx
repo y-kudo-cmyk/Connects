@@ -523,9 +523,6 @@ function SpotDetailScreen({
                 <span className="text-[10px] font-bold px-2 py-0.5 rounded-full"
                   style={{ background: 'rgba(245,158,11,0.15)', color: '#F59E0B' }}>{t('Map.infoWanted')}</span>
               )}
-              {spot.description && (
-                <p className="text-xs mt-2" style={{ color: '#636366' }}>{spot.description}</p>
-              )}
             </div>
           </div>
 
