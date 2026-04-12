@@ -631,7 +631,8 @@ function SpotDetailScreen({
                 <PhotoCard key={photo.id} photo={photo}
                   isUserPhoto={userPhotos.some((p) => p.id === photo.id)}
                   onRemove={() => onRemovePhoto(photo.id)}
-                  onRequestUpload={onOpenUpload} />
+                  onRequestUpload={onOpenUpload}
+                  spotMemo={spot.description} />
               ))}
             </div>
           )}
@@ -706,12 +707,13 @@ function SpotDetailScreen({
 
 // ─── 写真カード ─────────────────────────────────────────────
 function PhotoCard({
-  photo, isUserPhoto, onRemove, onRequestUpload,
+  photo, isUserPhoto, onRemove, onRequestUpload, spotMemo,
 }: {
   photo: SpotPhoto
   isUserPhoto: boolean
   onRemove: () => void
   onRequestUpload?: () => void
+  spotMemo?: string
 }) {
   const t = useTranslations()
   const cardContent = (
@@ -775,10 +777,13 @@ function PhotoCard({
         {/* ソースURLがない場合 */}
         {!photo.sourceUrl && onRequestUpload && (
           <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); onRequestUpload() }}
-            className="flex items-center gap-1 mt-1 text-left"
+            className="flex items-center gap-1 mt-1 text-left flex-wrap"
             style={{ color: '#F59E0B' }}>
             <span className="text-[9px]">！</span>
             <span className="text-[9px] font-bold">{t('Map.addSourceUrl')}</span>
+            {(photo.caption || spotMemo) && (
+              <span className="text-[9px] font-normal" style={{ color: '#8E8E93' }}>{photo.caption || spotMemo}</span>
+            )}
           </button>
         )}
       </div>
