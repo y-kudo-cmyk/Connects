@@ -780,9 +780,7 @@ function PhotoCard({
   const [editSourceUrl, setEditSourceUrl] = useState(photo.sourceUrl || '')
   const [editDate, setEditDate] = useState(photo.date || '')
   const [editMembers, setEditMembers] = useState<string[]>(
-    (photo.tags || [])
-      .filter(t => t.toUpperCase() !== 'SEVENTEEN')
-      .map(t => seventeenMembers.find(m => m.name.toUpperCase() === t.toUpperCase())?.name || t)
+    (photo.tags || []).filter(t => t !== 'SEVENTEEN')
   )
   const [saving, setSaving] = useState(false)
   const [savedSourceUrl, setSavedSourceUrl] = useState(photo.sourceUrl)
@@ -861,8 +859,8 @@ function PhotoCard({
         {savedTags.length > 0 && (
           <div className="flex flex-wrap gap-1">
             {savedTags.map((tag) => {
-              const m = seventeenMembers.find((x) => x.name.toUpperCase() === tag.toUpperCase())
-              const isSVT = tag.toUpperCase() === 'SEVENTEEN'
+              const m = seventeenMembers.find((x) => x.name === tag)
+              const isSVT = tag === 'SEVENTEEN'
               return (
                 <span key={tag} className="text-[10px] font-bold px-1.5 py-0.5 rounded"
                   style={{
