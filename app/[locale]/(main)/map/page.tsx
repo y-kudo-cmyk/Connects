@@ -838,9 +838,48 @@ function PhotoCard({
 
   if (effectiveSourceUrl) {
     return (
-      <a href={effectiveSourceUrl} target="_blank" rel="noopener noreferrer" className="flex-shrink-0">
+      <div className="flex-shrink-0 cursor-pointer" onClick={() => setShowSourceInput(true)}>
         {cardContent}
-      </a>
+        {showSourceInput && (
+          <div className="fixed inset-0 z-[70] flex items-center justify-center px-6" onClick={(e) => { e.stopPropagation(); setShowSourceInput(false) }}>
+            <div className="absolute inset-0" style={{ background: 'rgba(0,0,0,0.5)' }} />
+            <div className="relative w-full max-w-sm rounded-2xl p-5 flex flex-col gap-3"
+              style={{ background: '#F8F9FA' }}
+              onClick={(e) => e.stopPropagation()}>
+              <p className="text-sm font-bold" style={{ color: '#1C1C1E' }}>ソースURL</p>
+              <input
+                type="url"
+                value={sourceInput || effectiveSourceUrl}
+                onChange={(e) => setSourceInput(e.target.value)}
+                autoFocus
+                className="w-full px-3 py-2.5 rounded-xl text-sm outline-none"
+                style={{ background: '#FFFFFF', border: '1px solid #E5E5EA', color: '#1C1C1E' }}
+              />
+              <div className="flex gap-2">
+                <a href={effectiveSourceUrl} target="_blank" rel="noopener noreferrer"
+                  className="flex-1 py-2.5 rounded-xl text-sm font-bold text-center"
+                  style={{ background: '#F0F0F5', color: '#636366' }}>
+                  開く ↗
+                </a>
+                <button
+                  onClick={() => {
+                    const url = sourceInput.trim() || effectiveSourceUrl
+                    if(url) { onAddSourceUrl?.(photo.id, url); setSavedSourceUrl(url) }
+                    setShowSourceInput(false)
+                  }}
+                  className="flex-1 py-2.5 rounded-xl text-sm font-bold"
+                  style={{ background: '#F3B4E3', color: '#FFF' }}>
+                  {t('Common.save')}
+                </button>
+              </div>
+              <button onClick={() => setShowSourceInput(false)}
+                className="py-2 text-xs font-bold" style={{ color: '#8E8E93' }}>
+                {t('Common.cancel')}
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
     )
   }
   return (
