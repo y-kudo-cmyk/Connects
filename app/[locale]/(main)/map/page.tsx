@@ -550,10 +550,15 @@ function SpotDetailScreen({
               </a>
             ) : (
               <button onClick={() => setShowUrlInput(true)}
-                className="flex-1 flex items-center justify-center gap-2 py-3.5 rounded-2xl text-sm font-bold"
+                className="flex-1 flex flex-col items-center justify-center gap-1 py-3 rounded-2xl text-sm font-bold"
                 style={{ background: '#FFFFFF', color: '#F59E0B', border: '1px dashed rgba(245,158,11,0.5)' }}>
-                <span className="text-xs">！</span>
-                {t('Map.hpWanted')}
+                <div className="flex items-center gap-1">
+                  <span className="text-xs">！</span>
+                  {t('Map.hpWanted')}
+                </div>
+                {spot.description && (
+                  <span className="text-[10px] font-normal" style={{ color: '#8E8E93' }}>{spot.description}</span>
+                )}
               </button>
             )}
           </div>
