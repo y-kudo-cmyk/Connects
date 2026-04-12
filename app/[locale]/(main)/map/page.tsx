@@ -776,6 +776,7 @@ function SpotDetailScreen({
                   isUserPhoto={userPhotos.some((p) => p.id === photo.id)}
                   onRemove={() => onRemovePhoto(photo.id)}
                   spotId={spot.id}
+                  spotMemo={spot.description}
                   onSavePhoto={onRefresh} />
               ))}
             </div>
@@ -851,12 +852,13 @@ function SpotDetailScreen({
 
 // ─── 写真カード ─────────────────────────────────────────────
 function PhotoCard({
-  photo, isUserPhoto, onRemove, spotId, onSavePhoto,
+  photo, isUserPhoto, onRemove, spotId, spotMemo, onSavePhoto,
 }: {
   photo: SpotPhoto
   isUserPhoto: boolean
   onRemove: () => void
   spotId: string
+  spotMemo?: string
   onSavePhoto?: () => Promise<void>
 }) {
   const t = useTranslations()
@@ -976,6 +978,9 @@ function PhotoCard({
             <span className="text-[9px]">！</span>
             <span className="text-[9px] font-bold">{t('Map.addSourceUrl')}</span>
           </div>
+        )}
+        {(photo.caption || spotMemo) && (
+          <p className="text-[9px] leading-tight mt-0.5" style={{ color: '#8E8E93' }}>{photo.caption || spotMemo}</p>
         )}
       </div>
       {/* 写真編集モーダル */}
