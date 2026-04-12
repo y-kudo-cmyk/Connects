@@ -74,7 +74,8 @@ export default function MapPage() {
       if (!matchName && !matchDesc && !matchMember && !matchAddress) return false
     }
     if (memberFilter !== 'ALL') {
-      if (!spot.members.includes('ALL') && !spot.members.includes(memberFilter)) return false
+      const filterUpper = memberFilter.toUpperCase()
+      if (!spot.members.includes('ALL') && !spot.members.some((m) => m.toUpperCase() === filterUpper)) return false
     }
     return true
   })
