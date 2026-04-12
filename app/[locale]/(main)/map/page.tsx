@@ -628,8 +628,8 @@ function SpotDetailScreen({
             </div>
           ) : (
             <div className="flex gap-2 px-4 overflow-x-auto" style={{ scrollbarWidth: 'none' }}>
-              {/* 画像なし枠（メモ情報 + アップロード促し）を先頭に */}
-              {spot.description && confirmedPhotos.length < 3 && (
+              {/* 画像なし枠（メモ情報 + アップロード促し）を先頭に — 写真が少ないスポットのみ */}
+              {spot.description && confirmedPhotos.length === 0 && (
                 <div className="flex-shrink-0 rounded-2xl flex flex-col items-center justify-center gap-2 p-3"
                   style={{ width: 'calc(50vw - 20px)', minWidth: 'calc(50vw - 20px)', height: 160, background: '#F0F0F5', border: '1px dashed #C7C7CC', cursor: 'pointer' }}
                   onClick={onOpenUpload}>
