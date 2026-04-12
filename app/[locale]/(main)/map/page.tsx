@@ -552,16 +552,22 @@ function SpotDetailScreen({
             </svg>
           </button>
         )}
-        {user && !isConfirmed && (
-          <button onClick={submitVote} disabled={hasVoted || voteLoading}
-            className="flex items-center gap-1 px-3 py-2 rounded-full text-xs font-bold flex-shrink-0"
-            style={hasVoted
-              ? { background: 'rgba(52,211,153,0.15)', color: '#34D399' }
-              : { background: 'rgba(243,180,227,0.12)', color: '#F3B4E3' }
-            }>
-            {hasVoted ? '✓' : '👍'} {t('Schedule.approveButton')}
-          </button>
-        )}
+        {user && !isConfirmed && (() => {
+          const spotComplete = !!(spot.name && spot.address && spot.genre)
+          return (
+            <button onClick={submitVote} disabled={hasVoted || voteLoading || !spotComplete}
+              title={!spotComplete ? '名前・住所・ジャンルが必要です' : ''}
+              className="flex items-center gap-1 px-3 py-2 rounded-full text-xs font-bold flex-shrink-0"
+              style={hasVoted
+                ? { background: 'rgba(52,211,153,0.15)', color: '#34D399' }
+                : !spotComplete
+                  ? { background: '#F0F0F5', color: '#8E8E93' }
+                  : { background: 'rgba(243,180,227,0.12)', color: '#F3B4E3' }
+              }>
+              {hasVoted ? '✓' : !spotComplete ? '⚠' : '👍'} {t('Schedule.approveButton')}
+            </button>
+          )
+        })()}
         <button onClick={onToggleFav}
           className="w-9 h-9 flex items-center justify-center rounded-full flex-shrink-0"
           style={{ background: isFavorite ? 'rgba(251,113,133,0.15)' : '#FFFFFF', border: '1px solid #E5E5EA' }}>
@@ -777,7 +783,8 @@ function SpotDetailScreen({
                   onRemove={() => onRemovePhoto(photo.id)}
                   spotId={spot.id}
                   spotMemo={spot.description}
-                  onSavePhoto={onRefresh} />
+                  onSavePhoto={onRefresh}
+                  onVotePhoto={(photoId) => onConfirmPhoto(photoId)} />
               ))}
             </div>
           )}
@@ -852,7 +859,7 @@ function SpotDetailScreen({
 
 // ─── 写真カード ─────────────────────────────────────────────
 function PhotoCard({
-  photo, isUserPhoto, onRemove, spotId, spotMemo, onSavePhoto,
+  photo, isUserPhoto, onRemove, spotId, spotMemo, onSavePhoto, onVotePhoto,
 }: {
   photo: SpotPhoto
   isUserPhoto: boolean
@@ -860,6 +867,7 @@ function PhotoCard({
   spotId: string
   spotMemo?: string
   onSavePhoto?: () => Promise<void>
+  onVotePhoto?: (photoId: string) => void
 }) {
   const t = useTranslations()
   const [showEdit, setShowEdit] = useState(false)
@@ -982,6 +990,28 @@ function PhotoCard({
         {(photo.caption || spotMemo) && (
           <p className="text-[9px] leading-tight mt-0.5" style={{ color: '#8E8E93' }}>{photo.caption || spotMemo}</p>
         )}
+        {/* 写真承認ボタン */}
+        {onVotePhoto && (() => {
+          const hasMembers = savedTags.some(t => t !== 'SEVENTEEN')
+          const hasSource = !!effectiveSourceUrl
+          const isComplete = hasMembers && hasSource
+          const isApproved = photo.status === 'confirmed' && (photo.votes ?? 0) >= 3
+          if (isApproved) return (
+            <span className="inline-flex items-center gap-0.5 mt-1 text-[9px] font-bold px-1.5 py-0.5 rounded-full"
+              style={{ background: 'rgba(52,211,153,0.15)', color: '#34D399' }}>✓ 承認済</span>
+          )
+          return (
+            <button onClick={(e) => { e.stopPropagation(); if (isComplete) onVotePhoto(photo.id) }}
+              disabled={!isComplete}
+              className="inline-flex items-center gap-0.5 mt-1 text-[9px] font-bold px-1.5 py-0.5 rounded-full"
+              style={!isComplete
+                ? { background: '#F0F0F5', color: '#8E8E93' }
+                : { background: 'rgba(243,180,227,0.12)', color: '#F3B4E3' }
+              }>
+              {!isComplete ? '⚠' : '👍'} {photo.votes ?? 0}/3
+            </button>
+          )
+        })()}
       </div>
       {/* 写真編集モーダル */}
       {showEdit && (
