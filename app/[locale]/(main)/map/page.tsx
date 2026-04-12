@@ -886,26 +886,18 @@ function PhotoCard({
         {(photo.caption || spotMemo) && (
           <p className="text-[9px] leading-tight mt-0.5" style={{ color: '#8E8E93' }}>{photo.caption || spotMemo}</p>
         )}
-        {/* 写真承認ボタン */}
-        {onVotePhoto && (() => {
-          const hasMembers = savedTags.some(t => t !== 'SEVENTEEN')
-          const hasSource = !!effectiveSourceUrl
-          const isComplete = hasMembers && hasSource
+        {/* 承認状態バッジ */}
+        {(() => {
           const isApproved = photo.status === 'confirmed' && (photo.votes ?? 0) >= 3
           if (isApproved) return (
             <span className="inline-flex items-center gap-0.5 mt-1 text-[9px] font-bold px-1.5 py-0.5 rounded-full"
-              style={{ background: 'rgba(52,211,153,0.15)', color: '#34D399' }}>✓ 承認済</span>
+              style={{ background: 'rgba(52,211,153,0.15)', color: '#34D399' }}>✓ {photo.votes}/3</span>
           )
           return (
-            <button onClick={(e) => { e.stopPropagation(); if (isComplete) onVotePhoto(photo.id) }}
-              disabled={!isComplete}
-              className="inline-flex items-center gap-0.5 mt-1 text-[9px] font-bold px-1.5 py-0.5 rounded-full"
-              style={!isComplete
-                ? { background: '#F0F0F5', color: '#8E8E93' }
-                : { background: 'rgba(243,180,227,0.12)', color: '#F3B4E3' }
-              }>
-              {!isComplete ? '⚠' : '👍'} {photo.votes ?? 0}/3
-            </button>
+            <span className="inline-flex items-center gap-0.5 mt-1 text-[9px] font-bold px-1.5 py-0.5 rounded-full"
+              style={{ background: 'rgba(245,158,11,0.12)', color: '#F59E0B' }}>
+              {photo.votes ?? 0}/3
+            </span>
           )
         })()}
       </div>
@@ -951,15 +943,41 @@ function PhotoCard({
                 className="w-full px-3 py-2.5 rounded-xl text-sm outline-none"
                 style={{ background: '#FFFFFF', border: '1px solid #E5E5EA', color: '#1C1C1E' }} />
             </div>
-            {/* ボタン */}
+            {/* ソースを開く */}
+            {effectiveSourceUrl && (
+              <a href={effectiveSourceUrl} target="_blank" rel="noopener noreferrer"
+                className="w-full py-2.5 rounded-xl text-sm font-bold text-center block"
+                style={{ background: '#F0F0F5', color: '#636366' }}>
+                ソースを確認 ↗
+              </a>
+            )}
+            {/* 承認ボタン */}
+            {onVotePhoto && (() => {
+              const hasMembers = editMembers.length > 0
+              const hasSource = !!(editSourceUrl || effectiveSourceUrl)
+              const isComplete = hasMembers && hasSource
+              const isApproved = photo.status === 'confirmed' && (photo.votes ?? 0) >= 3
+              if (isApproved) return (
+                <div className="w-full py-3 rounded-xl text-sm font-bold text-center"
+                  style={{ background: 'rgba(52,211,153,0.15)', color: '#34D399' }}>
+                  ✓ 承認済み（{photo.votes}/3）
+                </div>
+              )
+              return (
+                <button
+                  onClick={() => { if (isComplete) { onVotePhoto(photo.id); setShowEdit(false) } }}
+                  disabled={!isComplete}
+                  className="w-full py-3 rounded-xl text-sm font-bold"
+                  style={!isComplete
+                    ? { background: '#F0F0F5', color: '#8E8E93' }
+                    : { background: 'rgba(52,211,153,0.15)', color: '#34D399' }
+                  }>
+                  {!isComplete ? '⚠ メンバーとソースURLを入力してください' : `👍 承認する（${photo.votes ?? 0}/3）`}
+                </button>
+              )
+            })()}
+            {/* 保存・キャンセル */}
             <div className="flex gap-2">
-              {effectiveSourceUrl && (
-                <a href={effectiveSourceUrl} target="_blank" rel="noopener noreferrer"
-                  className="py-2.5 px-3 rounded-xl text-sm font-bold text-center"
-                  style={{ background: '#F0F0F5', color: '#636366' }}>
-                  ↗
-                </a>
-              )}
               <button onClick={() => setShowEdit(false)}
                 className="flex-1 py-2.5 rounded-xl text-sm font-bold"
                 style={{ background: '#F0F0F5', color: '#636366' }}>
