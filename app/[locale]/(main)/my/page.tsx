@@ -132,10 +132,21 @@ export default function MyPage() {
     }
   }
 
-  // 選択日のエントリ
+  // 選択日のエントリ (LIVE→TICKET→EVENT(single)→other→period)
   const dayEntries = filteredEntries.filter((e) => {
     if (e.dateEnd) return e.date <= selectedDate && selectedDate <= e.dateEnd
     return (e.customDate ?? e.date) === selectedDate
+  }).sort((a, b) => {
+    function sortKey(e: typeof a): number {
+      const tag = e.tags?.[0] || ''
+      const isPeriod = !!e.dateEnd
+      if (tag === 'LIVE') return 0
+      if (tag === 'TICKET') return 1
+      if (tag === 'EVENT' && !isPeriod) return 2
+      if (!isPeriod) return 3
+      return 4
+    }
+    return sortKey(a) - sortKey(b)
   })
 
   return (
