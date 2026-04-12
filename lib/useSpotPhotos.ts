@@ -38,7 +38,7 @@ function toApp(row: DbSpotPhoto): SpotPhoto {
     imageUrl: row.image_url ?? '',
     sourceUrl: row.source_url ?? '',
     platform: row.platform ?? '',
-    tags: row.tags ? row.tags.split(',').map(t => t.trim()) : [],
+    tags: row.tags ? row.tags.split('#').map(t => t.trim()).filter(Boolean) : [],
     contributor: row.contributor ?? '',
     date: row.visit_date ?? '',
     votes: row.votes ?? 0,
