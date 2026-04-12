@@ -44,7 +44,7 @@ export default function TodayScheduleSection() {
       const bIsPeriod = b.dateEnd ? 1 : 0
       return aIsPeriod - bIsPeriod
     })
-  }, [today])
+  }, [today, allEvents])
 
   const d = new Date(today)
   const dayJa = dayNames[d.getDay()]
