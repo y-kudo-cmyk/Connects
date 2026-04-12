@@ -938,7 +938,7 @@ function PhotoCard({
             </div>
             {/* 訪問日 */}
             <div>
-              <label className="text-xs font-medium mb-1 block" style={{ color: '#636366' }}>訪問日</label>
+              <label className="text-xs font-medium mb-1 block" style={{ color: '#636366' }}>訪問日/投稿日</label>
               <input type="date" value={editDate} onChange={(e) => setEditDate(e.target.value)}
                 className="w-full px-3 py-2.5 rounded-xl text-sm outline-none"
                 style={{ background: '#FFFFFF', border: '1px solid #E5E5EA', color: '#1C1C1E' }} />
