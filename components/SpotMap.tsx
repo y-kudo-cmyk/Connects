@@ -114,8 +114,10 @@ export default function SpotMap({
       style={{ width: '100%', height: '100%' }}
       zoomControl={false}
       attributionControl={false}
-      zoomDelta={3}
-      zoomSnap={0.5}
+      zoomDelta={1}
+      zoomSnap={1}
+      minZoom={2}
+      maxZoom={18}
     >
       <TileLayer url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png" />
       <FlyTo spot={selected} />
