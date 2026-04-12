@@ -22,11 +22,11 @@ export type ScheduleTag =
 export const scheduleTagConfig: Record<ScheduleTag, { label: string; icon: string; color: string; bg: string }> = {
   LIVE:       { label: 'LIVE',       icon: '🎤', color: '#F3B4E3', bg: 'rgba(243,180,227,0.15)' },
   TICKET:     { label: 'TICKET',     icon: '🎫', color: '#FCD34D', bg: 'rgba(252,211,77,0.15)'  },
-  CD:         { label: 'CD',         icon: '💿', color: '#A78BFA', bg: 'rgba(167,139,250,0.15)' },
+  CD:         { label: 'ALBUM',      icon: '💿', color: '#A78BFA', bg: 'rgba(167,139,250,0.15)' },
   LUCKY_DRAW: { label: 'LUCKY DRAW', icon: '🂠', color: '#E879F9', bg: 'rgba(232,121,249,0.15)' },
   POPUP:      { label: 'POPUP',      icon: '🏪', color: '#FB923C', bg: 'rgba(251,146,60,0.15)'  },
   MERCH:      { label: 'MERCH',      icon: '🛒', color: '#34D399', bg: 'rgba(52,211,153,0.15)'  },
-  RELEASE:    { label: 'RELEASE',    icon: '📀', color: '#60A5FA', bg: 'rgba(96,165,250,0.15)'  },
+  RELEASE:    { label: 'ALBUM',      icon: '💿', color: '#A78BFA', bg: 'rgba(167,139,250,0.15)' },
   BIRTHDAY:   { label: 'BIRTHDAY',   icon: '🎂', color: '#FB923C', bg: 'rgba(251,146,60,0.15)'  },
   MAGAZINE:   { label: 'MAGAZINE',   icon: '📖', color: '#F87171', bg: 'rgba(248,113,113,0.15)' },
   EVENT:      { label: 'EVENT',      icon: '❤️', color: '#F87171', bg: 'rgba(248,113,113,0.15)' },
