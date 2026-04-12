@@ -633,10 +633,12 @@ function SpotDetailScreen({
                   onRemove={() => onRemovePhoto(photo.id)}
                   onRequestUpload={onOpenUpload}
                   spotMemo={spot.description}
-                  onAddSourceUrl={async (photoId, url) => {
+                  onAddSourceUrl={async (photoId, url, date) => {
                     const { createClient } = await import('@/lib/supabase/client')
                     const sb = createClient()
-                    await sb.from('spot_photos').update({ source_url: url }).eq('id', photoId)
+                    const updates: Record<string, string> = { source_url: url }
+                    if (date) updates.visit_date = date
+                    await sb.from('spot_photos').update(updates).eq('id', photoId)
                   }} />
               ))}
             </div>
@@ -719,12 +721,14 @@ function PhotoCard({
   onRemove: () => void
   onRequestUpload?: () => void
   spotMemo?: string
-  onAddSourceUrl?: (photoId: string, url: string) => void
+  onAddSourceUrl?: (photoId: string, url: string, date?: string) => void
 }) {
   const t = useTranslations()
   const [showSourceInput, setShowSourceInput] = useState(false)
   const [sourceInput, setSourceInput] = useState('')
+  const [dateInput, setDateInput] = useState(photo.date || '')
   const [savedSourceUrl, setSavedSourceUrl] = useState(photo.sourceUrl)
+  const [savedDate, setSavedDate] = useState(photo.date || '')
   const effectiveSourceUrl = savedSourceUrl || photo.sourceUrl
   const cardContent = (
     <div className="flex-shrink-0 rounded-xl overflow-hidden flex flex-col"
@@ -782,7 +786,7 @@ function PhotoCard({
           </div>
         )}
         <p className="text-[10px] leading-tight" style={{ color: '#8E8E93' }}>
-          {photo.date.replace(/-/g, '/')}
+          {(savedDate || photo.date).replace(/-/g, '/')}
         </p>
         {/* ソースURLがない場合 */}
         {!effectiveSourceUrl && onAddSourceUrl && !showSourceInput && (
@@ -815,6 +819,16 @@ function PhotoCard({
                 className="w-full px-3 py-2.5 rounded-xl text-sm outline-none"
                 style={{ background: '#FFFFFF', border: '1px solid #E5E5EA', color: '#1C1C1E' }}
               />
+              <div>
+                <label className="text-xs font-medium" style={{ color: '#636366' }}>訪問日</label>
+                <input
+                  type="date"
+                  value={dateInput}
+                  onChange={(e) => setDateInput(e.target.value)}
+                  className="w-full px-3 py-2.5 rounded-xl text-sm outline-none"
+                  style={{ background: '#FFFFFF', border: '1px solid #E5E5EA', color: '#1C1C1E' }}
+                />
+              </div>
               <div className="flex gap-2">
                 <button onClick={() => setShowSourceInput(false)}
                   className="flex-1 py-2.5 rounded-xl text-sm font-bold"
@@ -822,7 +836,7 @@ function PhotoCard({
                   {t('Common.cancel')}
                 </button>
                 <button
-                  onClick={() => { if(sourceInput.trim()) { onAddSourceUrl?.(photo.id, sourceInput.trim()); setSavedSourceUrl(sourceInput.trim()); setShowSourceInput(false) } }}
+                  onClick={() => { if(sourceInput.trim()) { onAddSourceUrl?.(photo.id, sourceInput.trim(), dateInput); setSavedSourceUrl(sourceInput.trim()); setSavedDate(dateInput); setShowSourceInput(false) } }}
                   disabled={!sourceInput.trim()}
                   className="flex-1 py-2.5 rounded-xl text-sm font-bold"
                   style={{ background: sourceInput.trim() ? '#F3B4E3' : '#E5E5EA', color: sourceInput.trim() ? '#FFF' : '#8E8E93' }}>
@@ -855,6 +869,16 @@ function PhotoCard({
                 className="w-full px-3 py-2.5 rounded-xl text-sm outline-none"
                 style={{ background: '#FFFFFF', border: '1px solid #E5E5EA', color: '#1C1C1E' }}
               />
+              <div>
+                <label className="text-xs font-medium" style={{ color: '#636366' }}>訪問日</label>
+                <input
+                  type="date"
+                  value={dateInput || savedDate}
+                  onChange={(e) => setDateInput(e.target.value)}
+                  className="w-full px-3 py-2.5 rounded-xl text-sm outline-none"
+                  style={{ background: '#FFFFFF', border: '1px solid #E5E5EA', color: '#1C1C1E' }}
+                />
+              </div>
               <div className="flex gap-2">
                 <a href={effectiveSourceUrl} target="_blank" rel="noopener noreferrer"
                   className="flex-1 py-2.5 rounded-xl text-sm font-bold text-center"
@@ -864,7 +888,7 @@ function PhotoCard({
                 <button
                   onClick={() => {
                     const url = sourceInput.trim() || effectiveSourceUrl
-                    if(url) { onAddSourceUrl?.(photo.id, url); setSavedSourceUrl(url) }
+                    if(url) { onAddSourceUrl?.(photo.id, url, dateInput); setSavedSourceUrl(url); setSavedDate(dateInput) }
                     setShowSourceInput(false)
                   }}
                   className="flex-1 py-2.5 rounded-xl text-sm font-bold"
