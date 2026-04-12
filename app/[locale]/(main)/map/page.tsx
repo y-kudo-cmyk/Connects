@@ -101,7 +101,7 @@ export default function MapPage() {
     setSelectedId(id)
     const spot = allSpots.find((s) => s.id === id)
     if (spot) setPreviewSpot(spot)
-  }, [])
+  }, [allSpots])
 
   // 詳細画面表示中
   if (detailSpot) {
