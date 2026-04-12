@@ -259,7 +259,17 @@
     "genreFashion": "ファッション",
     "genreEntertainment": "エンタメ",
     "genreMusic": "音楽",
-    "genreOther": "その他"
+    "genreOther": "その他",
+    "spotName": "スポット名",
+    "address": "住所",
+    "genre": "ジャンル",
+    "memberTag": "メンバータグ",
+    "sourceUrl": "ソースURL",
+    "officialUrl": "公式URL",
+    "memo": "メモ",
+    "editRequestSent": "修正依頼を送信しました（承認後に反映されます）",
+    "submitEditRequest": "修正依頼を送信",
+    "saveEdit": "保存する"
   },
   "Seat": {
     "seatViewFromHere": "この席からの眺め",

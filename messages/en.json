@@ -259,7 +259,17 @@
     "genreFashion": "Fashion",
     "genreEntertainment": "Entertainment",
     "genreMusic": "Music",
-    "genreOther": "Other"
+    "genreOther": "Other",
+    "spotName": "Spot Name",
+    "address": "Address",
+    "genre": "Genre",
+    "memberTag": "Member Tag",
+    "sourceUrl": "Source URL",
+    "officialUrl": "Official URL",
+    "memo": "Memo",
+    "editRequestSent": "Edit request submitted (will be applied after approval)",
+    "submitEditRequest": "Submit Edit Request",
+    "saveEdit": "Save"
   },
   "Seat": {
     "seatViewFromHere": "View from this seat",

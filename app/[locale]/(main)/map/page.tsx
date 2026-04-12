@@ -11,6 +11,7 @@ import {
   getMapAppName,
   isSpotComplete,
 } from '@/lib/config/constants'
+import { APPROVAL_THRESHOLD, type SpotGenre as SpotGenreType, spotGenreConfig as genreConfig } from '@/lib/config/tags'
 import type { AppSpot } from '@/lib/supabase/adapters'
 import type { SpotPhoto } from '@/lib/useSpotPhotos'
 import EventCard from '@/components/EventCard'
@@ -19,6 +20,8 @@ import { useFavoriteSpots } from '@/lib/useFavoriteSpots'
 import { useSpotPhotos } from '@/lib/useSpotPhotos'
 import { compressImage } from '@/lib/useMyEntries'
 import { useProfile } from '@/lib/useProfile'
+import { useAuth } from '@/lib/supabase/useAuth'
+import { createClient } from '@/lib/supabase/client'
 import { useToday } from '@/lib/useToday'
 import { useTranslations } from 'next-intl'
 
@@ -439,9 +442,82 @@ function SpotDetailScreen({
   onMemberFilter: (name: string) => void
 }) {
   const t = useTranslations()
+  const { user } = useAuth()
   const [showUrlInput, setShowUrlInput] = useState(false)
   const [urlInput, setUrlInput] = useState('')
   const [urlSubmitted, setUrlSubmitted] = useState(false)
+
+  // ── 編集モード ──
+  const isConfirmed = spot.verifiedCount >= APPROVAL_THRESHOLD
+  const [editing, setEditing] = useState(false)
+  const [editSaving, setEditSaving] = useState(false)
+  const [editRequestSent, setEditRequestSent] = useState(false)
+  const [editName, setEditName] = useState(spot.name)
+  const [editAddress, setEditAddress] = useState(spot.address)
+  const [editGenre, setEditGenre] = useState(spot.genre.toUpperCase())
+  const [editMembers, setEditMembers] = useState<string[]>(spot.members)
+  const [editSourceUrl, setEditSourceUrl] = useState(spot.sourceUrl ?? '')
+  const [editOfficialUrl, setEditOfficialUrl] = useState(spot.officialUrl ?? '')
+  const [editMemo, setEditMemo] = useState(spot.description)
+
+  const ALL_GENRE_KEYS: SpotGenreType[] = ['CAFE', 'RESTAURANT', 'FASHION', 'ENTERTAINMENT', 'MUSIC', 'OTHER']
+
+  const toggleMember = (name: string) => {
+    setEditMembers((prev) => prev.includes(name) ? prev.filter((m) => m !== name) : [...prev, name])
+  }
+
+  const handleEditSave = async () => {
+    setEditSaving(true)
+    const supabase = createClient()
+    const userId = user?.id
+
+    // related_artists を "#SEVENTEEN #S.COUPS #WONWOO" 形式に変換
+    const relatedArtists = editMembers.length > 0 && !editMembers.includes('ALL')
+      ? '#SEVENTEEN ' + editMembers.map((m) => `#${m}`).join(' ')
+      : '#SEVENTEEN'
+
+    if (isConfirmed) {
+      // 承認済み → 修正依頼として投稿
+      const changes: { field_name: string; old_value: string; new_value: string }[] = []
+      if (editName !== spot.name) changes.push({ field_name: 'spot_name', old_value: spot.name, new_value: editName })
+      if (editAddress !== spot.address) changes.push({ field_name: 'spot_address', old_value: spot.address, new_value: editAddress })
+      if (editGenre !== spot.genre.toUpperCase()) changes.push({ field_name: 'genre', old_value: spot.genre.toUpperCase(), new_value: editGenre })
+      if (editSourceUrl !== (spot.sourceUrl ?? '')) changes.push({ field_name: 'source_url', old_value: spot.sourceUrl ?? '', new_value: editSourceUrl })
+      if (editOfficialUrl !== (spot.officialUrl ?? '')) changes.push({ field_name: 'spot_url', old_value: spot.officialUrl ?? '', new_value: editOfficialUrl })
+      if (editMemo !== spot.description) changes.push({ field_name: 'memo', old_value: spot.description, new_value: editMemo })
+      const origRelated = spot.members.includes('ALL') ? '#SEVENTEEN' : '#SEVENTEEN ' + spot.members.map((m) => `#${m}`).join(' ')
+      if (relatedArtists !== origRelated) changes.push({ field_name: 'related_artists', old_value: origRelated, new_value: relatedArtists })
+
+      if (changes.length > 0) {
+        for (const c of changes) {
+          await supabase.from('edit_requests').insert({
+            spot_id: spot.id,
+            ...c,
+            submitted_by: userId,
+          })
+        }
+        setEditRequestSent(true)
+      }
+    } else {
+      // 未承認 → 直接更新 + verified_count リセット
+      const updates: Record<string, unknown> = {
+        spot_name: editName,
+        spot_address: editAddress,
+        genre: editGenre,
+        related_artists: relatedArtists,
+        source_url: editSourceUrl || null,
+        spot_url: editOfficialUrl || null,
+        memo: editMemo || null,
+        verified_count: 0,
+        status: 'pending',
+      }
+      await supabase.from('spots').update(updates).eq('id', spot.id)
+    }
+
+    setEditSaving(false)
+    setEditing(false)
+  }
+
   const mapUrl = getMapUrl(spot)
   const mapName = getMapAppName(spot)
   const isKorea = spot.city === 'Seoul' || spot.city === 'Busan' || spot.city === 'Incheon'
@@ -491,6 +567,16 @@ function SpotDetailScreen({
         <div className="flex-1 min-w-0">
           <p className="text-sm font-black tracking-wider" style={{ color: '#1C1C1E' }}>MAP</p>
         </div>
+        {user && !editing && (
+          <button onClick={() => setEditing(true)}
+            className="w-9 h-9 flex items-center justify-center rounded-full flex-shrink-0"
+            style={{ background: '#F0F0F5', border: '1px solid #E5E5EA' }}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#636366" strokeWidth="2">
+              <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" />
+              <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" />
+            </svg>
+          </button>
+        )}
         <button onClick={onToggleFav}
           className="w-9 h-9 flex items-center justify-center rounded-full flex-shrink-0"
           style={{ background: isFavorite ? 'rgba(251,113,133,0.15)' : '#FFFFFF', border: '1px solid #E5E5EA' }}>
@@ -506,26 +592,137 @@ function SpotDetailScreen({
           {/* ── 基本情報 ── */}
           <div className="rounded-2xl overflow-hidden" style={{ background: '#FFFFFF' }}>
             <div className="px-4 py-4">
-              <p className="text-base font-black mb-1" style={{ color: '#1C1C1E' }}>{spot.name}</p>
-              {spot.nameLocal && spot.nameLocal !== spot.name && (
-                <p className="text-sm font-semibold mb-1" style={{ color: '#636366' }}>{spot.nameLocal}</p>
-              )}
-              <p className="text-sm mb-2" style={{ color: '#8E8E93' }}>📍 {spot.address}</p>
-              {spot.contributor && (
-                <div className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-[11px] font-semibold mb-1"
-                  style={{ background: '#F0F0F5', color: '#636366' }}>
-                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                    <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" /><circle cx="12" cy="7" r="4" />
-                  </svg>
-                  {spot.contributor}
+              {editing ? (
+                <div className="flex flex-col gap-3">
+                  {/* スポット名 */}
+                  <div>
+                    <label className="text-xs font-bold mb-1.5 block" style={{ color: '#636366' }}>{t('Map.spotName')}</label>
+                    <input type="text" value={editName} onChange={(e) => setEditName(e.target.value)}
+                      className="w-full px-3 py-2.5 rounded-xl text-sm font-bold outline-none"
+                      style={{ color: '#1C1C1E', background: '#FFFFFF', border: '1.5px solid #F3B4E3' }} />
+                  </div>
+                  {/* 住所 */}
+                  <div>
+                    <label className="text-xs font-bold mb-1.5 block" style={{ color: '#636366' }}>{t('Map.address')}</label>
+                    <input type="text" value={editAddress} onChange={(e) => setEditAddress(e.target.value)}
+                      className="w-full px-3 py-2.5 rounded-xl text-sm outline-none"
+                      style={{ color: '#1C1C1E', background: '#FFFFFF', border: '1.5px solid #F3B4E3' }} />
+                  </div>
+                  {/* ジャンル */}
+                  <div>
+                    <label className="text-xs font-bold mb-1.5 block" style={{ color: '#636366' }}>{t('Map.genre')}</label>
+                    <div className="flex flex-wrap gap-2">
+                      {ALL_GENRE_KEYS.map((g) => {
+                        const gc = genreConfig[g]
+                        const selected = editGenre === g
+                        return (
+                          <button key={g} onClick={() => setEditGenre(g)}
+                            className="px-3 py-1.5 rounded-full text-xs font-bold"
+                            style={selected
+                              ? { background: gc.color, color: '#FFFFFF' }
+                              : { background: gc.bg, color: gc.color }
+                            }>
+                            {gc.icon} {gc.label}
+                          </button>
+                        )
+                      })}
+                    </div>
+                  </div>
+                  {/* メンバータグ */}
+                  <div>
+                    <label className="text-xs font-bold mb-1.5 block" style={{ color: '#636366' }}>{t('Map.memberTag')}</label>
+                    <div className="flex flex-wrap gap-1.5">
+                      {seventeenMembers.map((m) => {
+                        const selected = editMembers.includes(m.name)
+                        return (
+                          <button key={m.id} onClick={() => toggleMember(m.name)}
+                            className="px-2.5 py-1 rounded-full text-[11px] font-bold"
+                            style={selected
+                              ? { background: m.color, color: '#FFFFFF' }
+                              : { background: m.color + '18', color: m.color }
+                            }>
+                            {m.name}
+                          </button>
+                        )
+                      })}
+                    </div>
+                  </div>
+                  {/* ソースURL */}
+                  <div>
+                    <label className="text-xs font-bold mb-1.5 block" style={{ color: '#636366' }}>{t('Map.sourceUrl')}</label>
+                    <input type="url" value={editSourceUrl} onChange={(e) => setEditSourceUrl(e.target.value)}
+                      placeholder="https://..."
+                      className="w-full px-3 py-2.5 rounded-xl text-sm outline-none"
+                      style={{ color: '#1C1C1E', background: '#FFFFFF', border: '1.5px solid #F3B4E3' }} />
+                  </div>
+                  {/* 公式URL */}
+                  <div>
+                    <label className="text-xs font-bold mb-1.5 block" style={{ color: '#636366' }}>{t('Map.officialUrl')}</label>
+                    <input type="url" value={editOfficialUrl} onChange={(e) => setEditOfficialUrl(e.target.value)}
+                      placeholder="https://..."
+                      className="w-full px-3 py-2.5 rounded-xl text-sm outline-none"
+                      style={{ color: '#1C1C1E', background: '#FFFFFF', border: '1.5px solid #F3B4E3' }} />
+                  </div>
+                  {/* メモ */}
+                  <div>
+                    <label className="text-xs font-bold mb-1.5 block" style={{ color: '#636366' }}>{t('Map.memo')}</label>
+                    <textarea value={editMemo} onChange={(e) => setEditMemo(e.target.value)}
+                      rows={3}
+                      className="w-full px-3 py-2.5 rounded-xl text-sm outline-none resize-none"
+                      style={{ color: '#1C1C1E', background: '#FFFFFF', border: '1.5px solid #F3B4E3' }} />
+                  </div>
                 </div>
-              )}
-              {isIncomplete && (
-                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full"
-                  style={{ background: 'rgba(245,158,11,0.15)', color: '#F59E0B' }}>{t('Map.infoWanted')}</span>
+              ) : (
+                <>
+                  <p className="text-base font-black mb-1" style={{ color: '#1C1C1E' }}>{spot.name}</p>
+                  {spot.nameLocal && spot.nameLocal !== spot.name && (
+                    <p className="text-sm font-semibold mb-1" style={{ color: '#636366' }}>{spot.nameLocal}</p>
+                  )}
+                  <p className="text-sm mb-2" style={{ color: '#8E8E93' }}>📍 {spot.address}</p>
+                  {spot.contributor && (
+                    <div className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-[11px] font-semibold mb-1"
+                      style={{ background: '#F0F0F5', color: '#636366' }}>
+                      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                        <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" /><circle cx="12" cy="7" r="4" />
+                      </svg>
+                      {spot.contributor}
+                    </div>
+                  )}
+                  {isIncomplete && (
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full"
+                      style={{ background: 'rgba(245,158,11,0.15)', color: '#F59E0B' }}>{t('Map.infoWanted')}</span>
+                  )}
+                </>
               )}
             </div>
           </div>
+
+          {/* 修正依頼送信済みバナー */}
+          {editRequestSent && (
+            <div className="px-3 py-2.5 rounded-xl flex items-center gap-2"
+              style={{ background: 'rgba(52,211,153,0.1)', border: '1px solid rgba(52,211,153,0.3)' }}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#34D399" strokeWidth="2.5">
+                <polyline points="20 6 9 17 4 12" />
+              </svg>
+              <p className="text-xs font-bold" style={{ color: '#34D399' }}>{t('Map.editRequestSent')}</p>
+            </div>
+          )}
+
+          {/* 編集モード: 保存 / キャンセル */}
+          {editing && (
+            <div className="flex gap-2">
+              <button onClick={() => { setEditing(false); setEditName(spot.name); setEditAddress(spot.address); setEditGenre(spot.genre.toUpperCase()); setEditMembers(spot.members); setEditSourceUrl(spot.sourceUrl ?? ''); setEditOfficialUrl(spot.officialUrl ?? ''); setEditMemo(spot.description) }}
+                className="flex-1 py-3.5 rounded-xl text-sm font-bold"
+                style={{ background: '#F0F0F5', color: '#636366' }}>
+                {t('Common.cancel')}
+              </button>
+              <button onClick={handleEditSave} disabled={editSaving}
+                className="flex-1 py-3.5 rounded-xl text-sm font-bold"
+                style={{ background: '#34D399', color: '#FFFFFF' }}>
+                {editSaving ? t('Common.saving') : isConfirmed ? t('Map.submitEditRequest') : t('Map.saveEdit')}
+              </button>
+            </div>
+          )}
 
           {/* マップ・HP */}
           <div className="flex gap-3">
