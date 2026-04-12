@@ -456,34 +456,19 @@ function SpotDetailScreen({
   const [editName, setEditName] = useState(spot.name)
   const [editAddress, setEditAddress] = useState(spot.address)
   const [editGenre, setEditGenre] = useState(spot.genre.toUpperCase())
-  const [editMembers, setEditMembers] = useState<string[]>(spot.members)
-  const [editSourceUrl, setEditSourceUrl] = useState(spot.sourceUrl ?? '')
   const [editOfficialUrl, setEditOfficialUrl] = useState(spot.officialUrl ?? '')
-  const [editMemo, setEditMemo] = useState(spot.description)
 
   const ALL_GENRE_KEYS: SpotGenreType[] = ['CAFE', 'RESTAURANT', 'FASHION', 'ENTERTAINMENT', 'MUSIC', 'OTHER']
 
-  const toggleMember = (name: string) => {
-    setEditMembers((prev) => prev.includes(name) ? prev.filter((m) => m !== name) : [...prev, name])
-  }
-
   const handleEditSave = async () => {
     setEditSaving(true)
-
-    // related_artists を "#SEVENTEEN #S.COUPS #WONWOO" 形式に変換
-    const relatedArtists = editMembers.length > 0 && !editMembers.includes('ALL')
-      ? '#SEVENTEEN ' + editMembers.map((m) => `#${m}`).join(' ')
-      : '#SEVENTEEN'
 
     // サーバーAPI経由で更新（RLSバイパス）
     const updates: Record<string, unknown> = {
       spot_name: editName,
       spot_address: editAddress,
       genre: editGenre,
-      related_artists: relatedArtists,
-      source_url: editSourceUrl || null,
       spot_url: editOfficialUrl || null,
-      memo: editMemo || null,
     }
     if (!isConfirmed) {
       updates.verified_count = 0
@@ -628,47 +613,12 @@ function SpotDetailScreen({
                       })}
                     </div>
                   </div>
-                  {/* メンバータグ */}
-                  <div>
-                    <label className="text-xs font-bold mb-1.5 block" style={{ color: '#636366' }}>{t('Map.memberTag')}</label>
-                    <div className="flex flex-wrap gap-1.5">
-                      {seventeenMembers.map((m) => {
-                        const selected = editMembers.includes(m.name)
-                        return (
-                          <button key={m.id} onClick={() => toggleMember(m.name)}
-                            className="px-2.5 py-1 rounded-full text-[11px] font-bold"
-                            style={selected
-                              ? { background: m.color, color: '#FFFFFF' }
-                              : { background: m.color + '18', color: m.color }
-                            }>
-                            {m.name}
-                          </button>
-                        )
-                      })}
-                    </div>
-                  </div>
-                  {/* ソースURL */}
-                  <div>
-                    <label className="text-xs font-bold mb-1.5 block" style={{ color: '#636366' }}>{t('Map.sourceUrl')}</label>
-                    <input type="url" value={editSourceUrl} onChange={(e) => setEditSourceUrl(e.target.value)}
-                      placeholder="https://..."
-                      className="w-full px-3 py-2.5 rounded-xl text-sm outline-none"
-                      style={{ color: '#1C1C1E', background: '#FFFFFF', border: '1.5px solid #F3B4E3' }} />
-                  </div>
                   {/* 公式URL */}
                   <div>
                     <label className="text-xs font-bold mb-1.5 block" style={{ color: '#636366' }}>{t('Map.officialUrl')}</label>
                     <input type="url" value={editOfficialUrl} onChange={(e) => setEditOfficialUrl(e.target.value)}
                       placeholder="https://..."
                       className="w-full px-3 py-2.5 rounded-xl text-sm outline-none"
-                      style={{ color: '#1C1C1E', background: '#FFFFFF', border: '1.5px solid #F3B4E3' }} />
-                  </div>
-                  {/* メモ */}
-                  <div>
-                    <label className="text-xs font-bold mb-1.5 block" style={{ color: '#636366' }}>{t('Map.memo')}</label>
-                    <textarea value={editMemo} onChange={(e) => setEditMemo(e.target.value)}
-                      rows={3}
-                      className="w-full px-3 py-2.5 rounded-xl text-sm outline-none resize-none"
                       style={{ color: '#1C1C1E', background: '#FFFFFF', border: '1.5px solid #F3B4E3' }} />
                   </div>
                 </div>
@@ -711,7 +661,7 @@ function SpotDetailScreen({
           {/* 編集モード: 保存 / キャンセル */}
           {editing && (
             <div className="flex gap-2">
-              <button onClick={() => { setEditing(false); setEditName(spot.name); setEditAddress(spot.address); setEditGenre(spot.genre.toUpperCase()); setEditMembers(spot.members); setEditSourceUrl(spot.sourceUrl ?? ''); setEditOfficialUrl(spot.officialUrl ?? ''); setEditMemo(spot.description) }}
+              <button onClick={() => { setEditing(false); setEditName(spot.name); setEditAddress(spot.address); setEditGenre(spot.genre.toUpperCase()); setEditOfficialUrl(spot.officialUrl ?? '') }}
                 className="flex-1 py-3.5 rounded-xl text-sm font-bold"
                 style={{ background: '#F0F0F5', color: '#636366' }}>
                 {t('Common.cancel')}
@@ -825,15 +775,8 @@ function SpotDetailScreen({
                 <PhotoCard key={photo.id} photo={photo}
                   isUserPhoto={userPhotos.some((p) => p.id === photo.id)}
                   onRemove={() => onRemovePhoto(photo.id)}
-                  onRequestUpload={onOpenUpload}
-                  spotMemo={spot.description}
-                  onAddSourceUrl={async (photoId, url, date) => {
-                    const { createClient } = await import('@/lib/supabase/client')
-                    const sb = createClient()
-                    const updates: Record<string, string> = { source_url: url }
-                    if (date) updates.visit_date = date
-                    await sb.from('spot_photos').update(updates).eq('id', photoId)
-                  }} />
+                  spotId={spot.id}
+                  onSavePhoto={onRefresh} />
               ))}
             </div>
           )}
@@ -908,33 +851,67 @@ function SpotDetailScreen({
 
 // ─── 写真カード ─────────────────────────────────────────────
 function PhotoCard({
-  photo, isUserPhoto, onRemove, onRequestUpload, spotMemo, onAddSourceUrl,
+  photo, isUserPhoto, onRemove, spotId, onSavePhoto,
 }: {
   photo: SpotPhoto
   isUserPhoto: boolean
   onRemove: () => void
-  onRequestUpload?: () => void
-  spotMemo?: string
-  onAddSourceUrl?: (photoId: string, url: string, date?: string) => void
+  spotId: string
+  onSavePhoto?: () => Promise<void>
 }) {
   const t = useTranslations()
-  const [showSourceInput, setShowSourceInput] = useState(false)
-  const [sourceInput, setSourceInput] = useState('')
-  const [dateInput, setDateInput] = useState(photo.date || '')
+  const [showEdit, setShowEdit] = useState(false)
+  const [editSourceUrl, setEditSourceUrl] = useState(photo.sourceUrl || '')
+  const [editDate, setEditDate] = useState(photo.date || '')
+  const [editMembers, setEditMembers] = useState<string[]>(photo.tags?.filter(t => t !== 'SEVENTEEN') || [])
+  const [saving, setSaving] = useState(false)
   const [savedSourceUrl, setSavedSourceUrl] = useState(photo.sourceUrl)
+  const [savedTags, setSavedTags] = useState(photo.tags || [])
   const [savedDate, setSavedDate] = useState(photo.date || '')
   const effectiveSourceUrl = savedSourceUrl || photo.sourceUrl
-  const cardContent = (
+
+  const toggleMember = (name: string) => {
+    setEditMembers(prev => prev.includes(name) ? prev.filter(m => m !== name) : [...prev, name])
+  }
+
+  const handleSave = async () => {
+    setSaving(true)
+    const tags = editMembers.length > 0
+      ? '#SEVENTEEN ' + editMembers.map(m => `#${m}`).join(' ')
+      : '#SEVENTEEN'
+    await fetch('/api/update-spot', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        photoId: photo.id,
+        spotId,
+        updates: {
+          source_url: editSourceUrl || null,
+          visit_date: editDate || null,
+          tags,
+        },
+      }),
+    })
+    setSavedSourceUrl(editSourceUrl)
+    setSavedTags(['SEVENTEEN', ...editMembers])
+    setSavedDate(editDate)
+    await onSavePhoto?.()
+    setSaving(false)
+    setShowEdit(false)
+  }
+
+  return (
     <div className="flex-shrink-0 rounded-xl overflow-hidden flex flex-col"
-      style={{ width: 'calc(50vw - 20px)', minWidth: 'calc(50vw - 20px)', background: '#F0F0F5', cursor: effectiveSourceUrl ? 'pointer' : 'default' }}>
-      {/* 画像 */}
-      <div className="relative overflow-hidden">
+      style={{ width: 'calc(50vw - 20px)', minWidth: 'calc(50vw - 20px)', background: '#F0F0F5' }}>
+      {/* 画像 — タップでソースURLへ */}
+      <div className="relative overflow-hidden"
+        onClick={() => { if (effectiveSourceUrl) window.open(effectiveSourceUrl, '_blank') }}
+        style={{ cursor: effectiveSourceUrl ? 'pointer' : 'default' }}>
         {photo.imageUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img src={photo.imageUrl} alt="" className="w-full" style={{ display: 'block' }} />
         ) : (
-          <div className="w-full h-full flex items-center justify-center"
-            style={{ background: 'linear-gradient(135deg, #1C1C1F 0%, #252528 100%)' }}>
+          <div className="w-full flex items-center justify-center" style={{ height: 120, background: 'linear-gradient(135deg, #1C1C1F 0%, #252528 100%)' }}>
             <span className="text-3xl opacity-30">📷</span>
           </div>
         )}
@@ -948,8 +925,19 @@ function PhotoCard({
             </svg>
           </button>
         )}
-        {/* 編集ボタン（各写真） */}
-        <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShowSourceInput(true) }}
+        {/* ソースありアイコン（左下） */}
+        {effectiveSourceUrl && (
+          <div className="absolute bottom-1.5 left-1.5 w-5 h-5 rounded-full flex items-center justify-center"
+            style={{ background: 'rgba(0,0,0,0.6)' }}>
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" strokeWidth="2.5">
+              <path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6" />
+              <polyline points="15 3 21 3 21 9" />
+              <line x1="10" y1="14" x2="21" y2="3" />
+            </svg>
+          </div>
+        )}
+        {/* 編集ボタン（右下） */}
+        <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShowEdit(true) }}
           className="absolute bottom-1.5 right-1.5 w-6 h-6 rounded-full flex items-center justify-center"
           style={{ background: 'rgba(0,0,0,0.6)' }}>
           <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" strokeWidth="2.5">
@@ -960,9 +948,9 @@ function PhotoCard({
       </div>
       {/* タグ + 日付 */}
       <div className="px-2 py-2 flex flex-col gap-1">
-        {photo.tags && photo.tags.length > 0 && (
+        {savedTags.length > 0 && (
           <div className="flex flex-wrap gap-1">
-            {photo.tags.map((tag) => {
+            {savedTags.map((tag) => {
               const m = seventeenMembers.find((x) => x.name === tag)
               const isSVT = tag === 'SEVENTEEN'
               return (
@@ -978,83 +966,85 @@ function PhotoCard({
           </div>
         )}
         <p className="text-[10px] leading-tight" style={{ color: '#8E8E93' }}>
-          {(savedDate || photo.date).replace(/-/g, '/')}
+          {(savedDate || photo.date || '').replace(/-/g, '/')}
         </p>
         {photo.contributor && (
           <p className="text-[9px] font-semibold" style={{ color: '#B0B0B5' }}>👤 {photo.contributor}</p>
         )}
-        {/* ソースURLがない場合の警告 */}
         {!effectiveSourceUrl && (
-          <div className="flex items-center gap-1 mt-1 text-left flex-wrap" style={{ color: '#F59E0B' }}>
+          <div className="flex items-center gap-1 mt-1" style={{ color: '#F59E0B' }}>
             <span className="text-[9px]">！</span>
             <span className="text-[9px] font-bold">{t('Map.addSourceUrl')}</span>
           </div>
         )}
-        {showSourceInput && (
-          <div className="fixed inset-0 z-[70] flex items-center justify-center px-6" onClick={() => setShowSourceInput(false)}>
-            <div className="absolute inset-0" style={{ background: 'rgba(0,0,0,0.5)' }} />
-            <div className="relative w-full max-w-sm rounded-2xl p-5 flex flex-col gap-3"
-              style={{ background: '#F8F9FA' }}
-              onClick={(e) => e.stopPropagation()}>
-              <p className="text-sm font-bold" style={{ color: '#1C1C1E' }}>写真を編集</p>
-              {(photo.caption || spotMemo) && (
-                <p className="text-xs" style={{ color: '#8E8E93' }}>{photo.caption || spotMemo}</p>
-              )}
-              <div>
-                <label className="text-xs font-medium" style={{ color: '#636366' }}>ソースURL</label>
-                <input
-                  type="url"
-                  value={sourceInput || effectiveSourceUrl || ''}
-                  onChange={(e) => setSourceInput(e.target.value)}
-                  placeholder="https://..."
-                  autoFocus
-                  className="w-full px-3 py-2.5 rounded-xl text-sm outline-none"
-                  style={{ background: '#FFFFFF', border: '1px solid #E5E5EA', color: '#1C1C1E' }}
-                />
-              </div>
-              <div>
-                <label className="text-xs font-medium" style={{ color: '#636366' }}>訪問日</label>
-                <input
-                  type="date"
-                  value={dateInput}
-                  onChange={(e) => setDateInput(e.target.value)}
-                  className="w-full px-3 py-2.5 rounded-xl text-sm outline-none"
-                  style={{ background: '#FFFFFF', border: '1px solid #E5E5EA', color: '#1C1C1E' }}
-                />
-              </div>
-              <div className="flex gap-2">
-                {effectiveSourceUrl && (
-                  <a href={effectiveSourceUrl} target="_blank" rel="noopener noreferrer"
-                    className="flex-1 py-2.5 rounded-xl text-sm font-bold text-center"
-                    style={{ background: '#F0F0F5', color: '#636366' }}>
-                    開く ↗
-                  </a>
-                )}
-                <button onClick={() => setShowSourceInput(false)}
-                  className="flex-1 py-2.5 rounded-xl text-sm font-bold"
-                  style={{ background: '#F0F0F5', color: '#636366' }}>
-                  {t('Common.cancel')}
-                </button>
-                <button
-                  onClick={() => {
-                    const url = sourceInput.trim() || effectiveSourceUrl || ''
-                    if (url) { onAddSourceUrl?.(photo.id, url, dateInput); setSavedSourceUrl(url); setSavedDate(dateInput) }
-                    setShowSourceInput(false)
-                  }}
-                  className="flex-1 py-2.5 rounded-xl text-sm font-bold"
-                  style={{ background: '#F3B4E3', color: '#FFF' }}>
-                  {t('Common.save')}
-                </button>
+      </div>
+      {/* 写真編集モーダル */}
+      {showEdit && (
+        <div className="fixed inset-0 z-[70] flex items-center justify-center px-6" onClick={() => setShowEdit(false)}>
+          <div className="absolute inset-0" style={{ background: 'rgba(0,0,0,0.5)' }} />
+          <div className="relative w-full max-w-sm rounded-2xl p-5 flex flex-col gap-3"
+            style={{ background: '#F8F9FA' }}
+            onClick={(e) => e.stopPropagation()}>
+            <p className="text-sm font-bold" style={{ color: '#1C1C1E' }}>写真を編集</p>
+            {/* メンバータグ */}
+            <div>
+              <label className="text-xs font-medium mb-1.5 block" style={{ color: '#636366' }}>メンバー</label>
+              <div className="flex flex-wrap gap-1.5">
+                {seventeenMembers.map((m) => {
+                  const selected = editMembers.includes(m.name)
+                  return (
+                    <button key={m.id} onClick={() => toggleMember(m.name)}
+                      className="px-2.5 py-1 rounded-full text-[11px] font-bold"
+                      style={selected
+                        ? { background: m.color, color: '#FFFFFF' }
+                        : { background: m.color + '18', color: m.color }
+                      }>
+                      {m.name}
+                    </button>
+                  )
+                })}
               </div>
             </div>
+            {/* ソースURL */}
+            <div>
+              <label className="text-xs font-medium mb-1 block" style={{ color: '#636366' }}>ソースURL</label>
+              <input type="url" value={editSourceUrl} onChange={(e) => setEditSourceUrl(e.target.value)}
+                placeholder="https://..."
+                className="w-full px-3 py-2.5 rounded-xl text-sm outline-none"
+                style={{ background: '#FFFFFF', border: '1px solid #E5E5EA', color: '#1C1C1E' }} />
+            </div>
+            {/* 訪問日 */}
+            <div>
+              <label className="text-xs font-medium mb-1 block" style={{ color: '#636366' }}>訪問日</label>
+              <input type="date" value={editDate} onChange={(e) => setEditDate(e.target.value)}
+                className="w-full px-3 py-2.5 rounded-xl text-sm outline-none"
+                style={{ background: '#FFFFFF', border: '1px solid #E5E5EA', color: '#1C1C1E' }} />
+            </div>
+            {/* ボタン */}
+            <div className="flex gap-2">
+              {effectiveSourceUrl && (
+                <a href={effectiveSourceUrl} target="_blank" rel="noopener noreferrer"
+                  className="py-2.5 px-3 rounded-xl text-sm font-bold text-center"
+                  style={{ background: '#F0F0F5', color: '#636366' }}>
+                  ↗
+                </a>
+              )}
+              <button onClick={() => setShowEdit(false)}
+                className="flex-1 py-2.5 rounded-xl text-sm font-bold"
+                style={{ background: '#F0F0F5', color: '#636366' }}>
+                {t('Common.cancel')}
+              </button>
+              <button onClick={handleSave} disabled={saving}
+                className="flex-1 py-2.5 rounded-xl text-sm font-bold"
+                style={{ background: '#F3B4E3', color: '#FFF' }}>
+                {saving ? t('Common.saving') : t('Common.save')}
+              </button>
+            </div>
           </div>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   )
-
-  return <>{cardContent}</>
-
 }
 
 // ─── 写真投稿モーダル ───────────────────────────────────────
