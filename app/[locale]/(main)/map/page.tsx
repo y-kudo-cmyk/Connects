@@ -776,7 +776,7 @@ function SpotDetailScreen({
               </button>
             </div>
           ) : (
-            <div className="flex gap-2 px-4 overflow-x-auto" style={{ scrollbarWidth: 'none' }}>
+            <div className="flex gap-2 px-4 overflow-x-auto" style={{ scrollbarWidth: 'thin' }}>
               {confirmedPhotos.map((photo) => (
                 <PhotoCard key={photo.id} photo={photo}
                   isUserPhoto={userPhotos.some((p) => p.id === photo.id)}
