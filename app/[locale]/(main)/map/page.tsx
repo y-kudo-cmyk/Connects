@@ -925,16 +925,6 @@ function PhotoCard({
             <span className="text-3xl opacity-30">📷</span>
           </div>
         )}
-        {/* ユーザー投稿は削除ボタン */}
-        {isUserPhoto && (
-          <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); onRemove() }}
-            className="absolute top-1.5 right-1.5 w-6 h-6 rounded-full flex items-center justify-center"
-            style={{ background: 'rgba(0,0,0,0.75)' }}>
-            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" strokeWidth="2.5">
-              <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
-            </svg>
-          </button>
-        )}
         {/* ソースありアイコン（左下） */}
         {effectiveSourceUrl && (
           <div className="absolute bottom-1.5 left-1.5 w-5 h-5 rounded-full flex items-center justify-center"
