@@ -10,9 +10,9 @@ const ONESIGNAL_APP_ID = process.env.NEXT_PUBLIC_ONESIGNAL_APP_ID!
 const ONESIGNAL_API_KEY = process.env.ONESIGNAL_REST_API_KEY!
 
 // ── OneSignal 送信 ───────────────────────────────────────────
-async function sendNotification(userIds: string[], heading: string, content: string, url?: string) {
-  if (userIds.length === 0) return { success: false, reason: 'no users' }
-
+async function sendNotification(_userIds: string[], heading: string, content: string, url?: string) {
+  // TODO: external_id での個別送信に切り替える（OneSignal login 紐づけ修正後）
+  // 現在は全サブスクライバーに送信
   const res = await fetch('https://onesignal.com/api/v1/notifications', {
     method: 'POST',
     headers: {
@@ -21,8 +21,7 @@ async function sendNotification(userIds: string[], heading: string, content: str
     },
     body: JSON.stringify({
       app_id: ONESIGNAL_APP_ID,
-      include_aliases: { external_id: userIds },
-      target_channel: 'push',
+      included_segments: ['All'],
       headings: { en: heading, ja: heading },
       contents: { en: content, ja: content },
       url: url || 'https://connects-nu.vercel.app',
