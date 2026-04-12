@@ -46,7 +46,7 @@ export default function SupabaseDataProvider({ children }: { children: React.Rea
 
     Promise.all([
       fetchAllEvents(),
-      supabase.from('spots').select('*').order('spot_name'),
+      supabase.from('spots').select('*, submitter:profiles!submitted_by(nickname)').order('spot_name'),
       supabase.from('spot_photos').select('*'),
     ]).then(([allEvents, spotsRes, photosRes]) => {
       setEvents(allEvents.map(toAppEvent))

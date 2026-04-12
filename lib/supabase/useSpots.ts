@@ -22,6 +22,8 @@ export type SupabaseSpot = {
   status: string
   verified_count: number
   x_posted: boolean
+  submitted_by: string | null
+  submitter?: { nickname: string } | null
 }
 
 export type SupabaseSpotPhoto = {
