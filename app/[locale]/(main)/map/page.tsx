@@ -948,17 +948,15 @@ function PhotoCard({
             </svg>
           </button>
         )}
-        {/* ソースアイコン */}
-        {effectiveSourceUrl && (
-          <div className="absolute bottom-1.5 right-1.5 w-5 h-5 rounded-full flex items-center justify-center"
-            style={{ background: 'rgba(0,0,0,0.6)' }}>
-            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" strokeWidth="2.5">
-              <path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6" />
-              <polyline points="15 3 21 3 21 9" />
-              <line x1="10" y1="14" x2="21" y2="3" />
-            </svg>
-          </div>
-        )}
+        {/* 編集ボタン（各写真） */}
+        <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShowSourceInput(true) }}
+          className="absolute bottom-1.5 right-1.5 w-6 h-6 rounded-full flex items-center justify-center"
+          style={{ background: 'rgba(0,0,0,0.6)' }}>
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" strokeWidth="2.5">
+            <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" />
+            <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" />
+          </svg>
+        </button>
       </div>
       {/* タグ + 日付 */}
       <div className="px-2 py-2 flex flex-col gap-1">
@@ -985,17 +983,12 @@ function PhotoCard({
         {photo.contributor && (
           <p className="text-[9px] font-semibold" style={{ color: '#B0B0B5' }}>👤 {photo.contributor}</p>
         )}
-        {/* ソースURLがない場合 */}
-        {!effectiveSourceUrl && onAddSourceUrl && !showSourceInput && (
-          <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShowSourceInput(true) }}
-            className="flex items-center gap-1 mt-1 text-left flex-wrap"
-            style={{ color: '#F59E0B' }}>
+        {/* ソースURLがない場合の警告 */}
+        {!effectiveSourceUrl && (
+          <div className="flex items-center gap-1 mt-1 text-left flex-wrap" style={{ color: '#F59E0B' }}>
             <span className="text-[9px]">！</span>
             <span className="text-[9px] font-bold">{t('Map.addSourceUrl')}</span>
-            {(photo.caption || spotMemo) && (
-              <span className="text-[9px] font-normal" style={{ color: '#8E8E93' }}>{photo.caption || spotMemo}</span>
-            )}
-          </button>
+          </div>
         )}
         {showSourceInput && (
           <div className="fixed inset-0 z-[70] flex items-center justify-center px-6" onClick={() => setShowSourceInput(false)}>
@@ -1003,19 +996,22 @@ function PhotoCard({
             <div className="relative w-full max-w-sm rounded-2xl p-5 flex flex-col gap-3"
               style={{ background: '#F8F9FA' }}
               onClick={(e) => e.stopPropagation()}>
-              <p className="text-sm font-bold" style={{ color: '#1C1C1E' }}>ソースURLを追加</p>
+              <p className="text-sm font-bold" style={{ color: '#1C1C1E' }}>写真を編集</p>
               {(photo.caption || spotMemo) && (
                 <p className="text-xs" style={{ color: '#8E8E93' }}>{photo.caption || spotMemo}</p>
               )}
-              <input
-                type="url"
-                value={sourceInput}
-                onChange={(e) => setSourceInput(e.target.value)}
-                placeholder="https://..."
-                autoFocus
-                className="w-full px-3 py-2.5 rounded-xl text-sm outline-none"
-                style={{ background: '#FFFFFF', border: '1px solid #E5E5EA', color: '#1C1C1E' }}
-              />
+              <div>
+                <label className="text-xs font-medium" style={{ color: '#636366' }}>ソースURL</label>
+                <input
+                  type="url"
+                  value={sourceInput || effectiveSourceUrl || ''}
+                  onChange={(e) => setSourceInput(e.target.value)}
+                  placeholder="https://..."
+                  autoFocus
+                  className="w-full px-3 py-2.5 rounded-xl text-sm outline-none"
+                  style={{ background: '#FFFFFF', border: '1px solid #E5E5EA', color: '#1C1C1E' }}
+                />
+              </div>
               <div>
                 <label className="text-xs font-medium" style={{ color: '#636366' }}>訪問日</label>
                 <input
@@ -1027,16 +1023,26 @@ function PhotoCard({
                 />
               </div>
               <div className="flex gap-2">
+                {effectiveSourceUrl && (
+                  <a href={effectiveSourceUrl} target="_blank" rel="noopener noreferrer"
+                    className="flex-1 py-2.5 rounded-xl text-sm font-bold text-center"
+                    style={{ background: '#F0F0F5', color: '#636366' }}>
+                    開く ↗
+                  </a>
+                )}
                 <button onClick={() => setShowSourceInput(false)}
                   className="flex-1 py-2.5 rounded-xl text-sm font-bold"
                   style={{ background: '#F0F0F5', color: '#636366' }}>
                   {t('Common.cancel')}
                 </button>
                 <button
-                  onClick={() => { if(sourceInput.trim()) { onAddSourceUrl?.(photo.id, sourceInput.trim(), dateInput); setSavedSourceUrl(sourceInput.trim()); setSavedDate(dateInput); setShowSourceInput(false) } }}
-                  disabled={!sourceInput.trim()}
+                  onClick={() => {
+                    const url = sourceInput.trim() || effectiveSourceUrl || ''
+                    if (url) { onAddSourceUrl?.(photo.id, url, dateInput); setSavedSourceUrl(url); setSavedDate(dateInput) }
+                    setShowSourceInput(false)
+                  }}
                   className="flex-1 py-2.5 rounded-xl text-sm font-bold"
-                  style={{ background: sourceInput.trim() ? '#F3B4E3' : '#E5E5EA', color: sourceInput.trim() ? '#FFF' : '#8E8E93' }}>
+                  style={{ background: '#F3B4E3', color: '#FFF' }}>
                   {t('Common.save')}
                 </button>
               </div>
@@ -1047,67 +1053,8 @@ function PhotoCard({
     </div>
   )
 
-  if (effectiveSourceUrl) {
-    return (
-      <div className="flex-shrink-0 cursor-pointer" onClick={() => setShowSourceInput(true)}>
-        {cardContent}
-        {showSourceInput && (
-          <div className="fixed inset-0 z-[70] flex items-center justify-center px-6" onClick={(e) => { e.stopPropagation(); setShowSourceInput(false) }}>
-            <div className="absolute inset-0" style={{ background: 'rgba(0,0,0,0.5)' }} />
-            <div className="relative w-full max-w-sm rounded-2xl p-5 flex flex-col gap-3"
-              style={{ background: '#F8F9FA' }}
-              onClick={(e) => e.stopPropagation()}>
-              <p className="text-sm font-bold" style={{ color: '#1C1C1E' }}>ソースURL</p>
-              <input
-                type="url"
-                value={sourceInput || effectiveSourceUrl}
-                onChange={(e) => setSourceInput(e.target.value)}
-                autoFocus
-                className="w-full px-3 py-2.5 rounded-xl text-sm outline-none"
-                style={{ background: '#FFFFFF', border: '1px solid #E5E5EA', color: '#1C1C1E' }}
-              />
-              <div>
-                <label className="text-xs font-medium" style={{ color: '#636366' }}>訪問日</label>
-                <input
-                  type="date"
-                  value={dateInput || savedDate}
-                  onChange={(e) => setDateInput(e.target.value)}
-                  className="w-full px-3 py-2.5 rounded-xl text-sm outline-none"
-                  style={{ background: '#FFFFFF', border: '1px solid #E5E5EA', color: '#1C1C1E' }}
-                />
-              </div>
-              <div className="flex gap-2">
-                <a href={effectiveSourceUrl} target="_blank" rel="noopener noreferrer"
-                  className="flex-1 py-2.5 rounded-xl text-sm font-bold text-center"
-                  style={{ background: '#F0F0F5', color: '#636366' }}>
-                  開く ↗
-                </a>
-                <button
-                  onClick={() => {
-                    const url = sourceInput.trim() || effectiveSourceUrl
-                    if(url) { onAddSourceUrl?.(photo.id, url, dateInput); setSavedSourceUrl(url); setSavedDate(dateInput) }
-                    setShowSourceInput(false)
-                  }}
-                  className="flex-1 py-2.5 rounded-xl text-sm font-bold"
-                  style={{ background: '#F3B4E3', color: '#FFF' }}>
-                  {t('Common.save')}
-                </button>
-              </div>
-              <button onClick={() => setShowSourceInput(false)}
-                className="py-2 text-xs font-bold" style={{ color: '#8E8E93' }}>
-                {t('Common.cancel')}
-              </button>
-            </div>
-          </div>
-        )}
-      </div>
-    )
-  }
-  return (
-    <div className="flex-shrink-0 cursor-pointer" onClick={() => setShowSourceInput(true)}>
-      {cardContent}
-    </div>
-  )
+  return <>{cardContent}</>
+
 }
 
 // ─── 写真投稿モーダル ───────────────────────────────────────
