@@ -156,7 +156,7 @@ export default function NewSchedulePreview() {
 
                   {/* Title */}
                   <p className="text-xs font-semibold leading-tight flex-1" style={{ color: '#1C1C1E' }}>
-                    {event.title}
+                    {event.title}{event.subTitle ? ` — ${event.subTitle}` : ''}
                   </p>
 
                   {event.venue && (
