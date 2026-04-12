@@ -483,13 +483,11 @@ function SpotDetailScreen({
   const mapUrl = getMapUrl(spot)
   const mapName = getMapAppName(spot)
   const isKorea = spot.city === 'Seoul' || spot.city === 'Busan' || spot.city === 'Incheon'
-  const seedPhotos: SpotPhoto[] = (spot.photos ?? []).map((p) => ({ ...p, imageUrl: p.imageUrl ?? '', sourceUrl: p.sourceUrl ?? '', platform: p.platform ?? '', status: 'confirmed' as const }))
+  const seedPhotos: SpotPhoto[] = (spot.photos ?? []).map((p) => ({ ...p, imageUrl: p.imageUrl ?? '', sourceUrl: p.sourceUrl ?? '', platform: p.platform ?? '', status: p.status as 'pending' | 'confirmed' ?? 'pending' }))
   const allPhotos: SpotPhoto[] = [...seedPhotos, ...userPhotos]
-  const pendingPhotos = userPhotos.filter((p) => p.status === 'pending')
   // Remove duplicate photos (same imageUrl)
   const seen = new Set<string>()
-  const confirmedPhotos = allPhotos.filter((p) => {
-    if (p.status !== 'confirmed') return false
+  const uniquePhotos = allPhotos.filter((p) => {
     if (!p.imageUrl) return true
     if (seen.has(p.imageUrl)) return false
     seen.add(p.imageUrl)
@@ -714,7 +712,7 @@ function SpotDetailScreen({
           <p className="text-xs font-semibold mb-2" style={{ color: '#8E8E93' }}>{t('Map.photos')}</p>
         </div>
         <div className="pb-4">
-          {confirmedPhotos.length === 0 ? (
+          {uniquePhotos.length === 0 ? (
             <div className="mx-4">
               <button onClick={onOpenUpload}
                 className="w-full rounded-2xl flex flex-col items-center justify-center gap-2 p-4"
@@ -728,7 +726,7 @@ function SpotDetailScreen({
             </div>
           ) : (
             <div className="flex gap-2 px-4 overflow-x-auto" style={{ scrollbarWidth: 'thin' }}>
-              {confirmedPhotos.map((photo) => (
+              {uniquePhotos.map((photo) => (
                 <PhotoCard key={photo.id} photo={photo}
                   isUserPhoto={userPhotos.some((p) => p.id === photo.id)}
                   onRemove={() => onRemovePhoto(photo.id)}
@@ -743,51 +741,6 @@ function SpotDetailScreen({
         </div>
 
         <div className="px-4 flex flex-col gap-4 pb-28">
-
-          {/* 承認待ち写真 */}
-          {pendingPhotos.length > 0 && (
-            <div>
-              <div className="flex items-center gap-2 mb-3">
-                <span className="text-xs font-bold px-2 py-0.5 rounded-full"
-                  style={{ background: 'rgba(245,158,11,0.15)', color: '#F59E0B' }}>{t('Map.pendingLabel')}</span>
-                <p className="text-xs font-bold" style={{ color: '#F59E0B' }}>{t('Map.pendingPhotos')} {pendingPhotos.length}{t('My.pendingCount')}</p>
-              </div>
-              <div className="flex flex-col gap-2">
-                {pendingPhotos.map((photo) => (
-                  <div key={photo.id} className="flex items-center gap-3 p-3 rounded-xl"
-                    style={{ background: '#FFFFFF', border: '1px solid rgba(245,158,11,0.3)' }}>
-                    {photo.imageUrl ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={photo.imageUrl} alt="" className="w-12 h-12 rounded-lg object-cover flex-shrink-0" />
-                    ) : (
-                      <div className="w-12 h-12 rounded-lg flex items-center justify-center flex-shrink-0 text-xl"
-                        style={{ background: '#F0F0F5' }}>📷</div>
-                    )}
-                    <div className="flex-1 min-w-0">
-                      <p className="text-xs font-semibold truncate" style={{ color: '#1C1C1E' }}>
-                        {photo.caption || photo.contributor}
-                      </p>
-                      <p className="text-[11px]" style={{ color: '#8E8E93' }}>{photo.date}</p>
-                    </div>
-                    <div className="flex gap-1 flex-shrink-0">
-                      <button onClick={() => onConfirmPhoto(photo.id)}
-                        className="flex items-center gap-1 px-3 py-2 rounded-full text-xs font-bold"
-                        style={{ background: 'rgba(52,211,153,0.15)', color: '#34D399' }}>
-                        ✓ {photo.votes ?? 0}/3
-                      </button>
-                      <button onClick={() => onRemovePhoto(photo.id)}
-                        className="w-9 h-9 rounded-full flex items-center justify-center"
-                        style={{ background: 'rgba(248,113,113,0.1)' }}>
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#F87171" strokeWidth="2.5">
-                          <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
-                        </svg>
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
 
           {/* 写真を投稿するボタン */}
           <button onClick={onOpenUpload}
