@@ -611,14 +611,32 @@ function SpotDetailScreen({
         </div>
         <div className="pb-4">
           {confirmedPhotos.length === 0 ? (
-            <button onClick={onOpenUpload}
-              className="mx-4 w-[calc(100%-32px)] flex flex-col items-center justify-center gap-2 rounded-2xl"
-              style={{ height: 160, background: '#EEEFF4' }}>
-              <span className="text-4xl">📷</span>
-              <span className="text-sm font-semibold" style={{ color: '#636366' }}>{t('Map.firstPhoto')}</span>
-            </button>
+            <div className="px-4 flex gap-2">
+              {/* メモ情報カード */}
+              {spot.description && (
+                <div className="flex-shrink-0 rounded-2xl flex flex-col items-center justify-center gap-2 p-3"
+                  style={{ width: 'calc(50vw - 20px)', minWidth: 'calc(50vw - 20px)', height: 160, background: '#F0F0F5', border: '1px dashed #C7C7CC' }}>
+                  <span className="text-xs font-semibold text-center" style={{ color: '#636366' }}>{spot.description}</span>
+                </div>
+              )}
+              <button onClick={onOpenUpload}
+                className="flex-shrink-0 rounded-2xl flex flex-col items-center justify-center gap-2"
+                style={{ width: 'calc(50vw - 20px)', minWidth: 'calc(50vw - 20px)', height: 160, background: '#EEEFF4' }}>
+                <span className="text-4xl">📷</span>
+                <span className="text-sm font-semibold" style={{ color: '#636366' }}>{t('Map.firstPhoto')}</span>
+              </button>
+            </div>
           ) : (
             <div className="flex gap-2 px-4 overflow-x-auto" style={{ scrollbarWidth: 'none' }}>
+              {/* 画像なし枠（メモ情報 + アップロード促し）を先頭に */}
+              {spot.description && confirmedPhotos.length < 3 && (
+                <div className="flex-shrink-0 rounded-2xl flex flex-col items-center justify-center gap-2 p-3"
+                  style={{ width: 'calc(50vw - 20px)', minWidth: 'calc(50vw - 20px)', height: 160, background: '#F0F0F5', border: '1px dashed #C7C7CC', cursor: 'pointer' }}
+                  onClick={onOpenUpload}>
+                  <span className="text-xs font-semibold text-center" style={{ color: '#636366' }}>{spot.description}</span>
+                  <span className="text-[10px]" style={{ color: '#8E8E93' }}>📷 {t('Map.firstPhoto')}</span>
+                </div>
+              )}
               {confirmedPhotos.map((photo) => (
                 <PhotoCard key={photo.id} photo={photo}
                   isUserPhoto={userPhotos.some((p) => p.id === photo.id)}
