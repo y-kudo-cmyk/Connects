@@ -12,6 +12,7 @@ import {
   isSpotComplete,
 } from '@/lib/config/constants'
 import { APPROVAL_THRESHOLD, type SpotGenre as SpotGenreType, spotGenreConfig as genreConfig } from '@/lib/config/tags'
+import { useVoting } from '@/lib/supabase/useVoting'
 import type { AppSpot } from '@/lib/supabase/adapters'
 import type { SpotPhoto } from '@/lib/useSpotPhotos'
 import EventCard from '@/components/EventCard'
@@ -443,12 +444,10 @@ function SpotDetailScreen({
 }) {
   const t = useTranslations()
   const { user } = useAuth()
+  const { hasVoted, voteCount, isConfirmed, loading: voteLoading, submitVote } = useVoting('spot', spot.id, user?.id ?? null)
   const [showUrlInput, setShowUrlInput] = useState(false)
   const [urlInput, setUrlInput] = useState('')
   const [urlSubmitted, setUrlSubmitted] = useState(false)
-
-  // ── 編集モード ──
-  const isConfirmed = spot.verifiedCount >= APPROVAL_THRESHOLD
   const [editing, setEditing] = useState(false)
   const [editSaving, setEditSaving] = useState(false)
   const [editRequestSent, setEditRequestSent] = useState(false)
@@ -571,7 +570,7 @@ function SpotDetailScreen({
               ? { background: 'rgba(52,211,153,0.15)', color: '#34D399' }
               : { background: 'rgba(245,158,11,0.12)', color: '#F59E0B' }
             }>
-            {isConfirmed ? '✓ ' + t('Schedule.approved') : `${spot.verifiedCount}/${APPROVAL_THRESHOLD} ${t('Schedule.pendingApproval')}`}
+            {isConfirmed ? '✓ ' + t('Schedule.approved') : `${voteCount}/${APPROVAL_THRESHOLD} ${t('Schedule.pendingApproval')}`}
           </span>
         </div>
         {user && !editing && (
@@ -582,6 +581,16 @@ function SpotDetailScreen({
               <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" />
               <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" />
             </svg>
+          </button>
+        )}
+        {user && !isConfirmed && (
+          <button onClick={submitVote} disabled={hasVoted || voteLoading}
+            className="flex items-center gap-1 px-3 py-2 rounded-full text-xs font-bold flex-shrink-0"
+            style={hasVoted
+              ? { background: 'rgba(52,211,153,0.15)', color: '#34D399' }
+              : { background: 'rgba(243,180,227,0.12)', color: '#F3B4E3' }
+            }>
+            {hasVoted ? '✓' : '👍'} {t('Schedule.approveButton')}
           </button>
         )}
         <button onClick={onToggleFav}

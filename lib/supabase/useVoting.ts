@@ -11,13 +11,12 @@ export const VOTE_THRESHOLD = 3
 /**
  * 投票対象の種別。将来 spot_photo, edit_request 等を追加可能。
  */
-type VotableType = 'event'
+type VotableType = 'event' | 'spot'
 
 /** テーブル名と外部キー名のマッピング */
 const VOTE_TABLES: Record<VotableType, { table: string; fk: string }> = {
   event: { table: 'event_votes', fk: 'event_id' },
-  // spot_photo: { table: 'spot_photo_votes', fk: 'photo_id' },
-  // edit_request: { table: 'edit_request_votes', fk: 'edit_request_id' },
+  spot: { table: 'spot_votes', fk: 'spot_id' },
 }
 
 type VotingResult = {
