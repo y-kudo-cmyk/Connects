@@ -632,7 +632,12 @@ function SpotDetailScreen({
                   isUserPhoto={userPhotos.some((p) => p.id === photo.id)}
                   onRemove={() => onRemovePhoto(photo.id)}
                   onRequestUpload={onOpenUpload}
-                  spotMemo={spot.description} />
+                  spotMemo={spot.description}
+                  onAddSourceUrl={async (photoId, url) => {
+                    const { createClient } = await import('@/lib/supabase/client')
+                    const sb = createClient()
+                    await sb.from('spot_photos').update({ source_url: url }).eq('id', photoId)
+                  }} />
               ))}
             </div>
           )}
@@ -707,15 +712,18 @@ function SpotDetailScreen({
 
 // ─── 写真カード ─────────────────────────────────────────────
 function PhotoCard({
-  photo, isUserPhoto, onRemove, onRequestUpload, spotMemo,
+  photo, isUserPhoto, onRemove, onRequestUpload, spotMemo, onAddSourceUrl,
 }: {
   photo: SpotPhoto
   isUserPhoto: boolean
   onRemove: () => void
   onRequestUpload?: () => void
   spotMemo?: string
+  onAddSourceUrl?: (photoId: string, url: string) => void
 }) {
   const t = useTranslations()
+  const [showSourceInput, setShowSourceInput] = useState(false)
+  const [sourceInput, setSourceInput] = useState('')
   const cardContent = (
     <div className="flex-shrink-0 rounded-xl overflow-hidden flex flex-col"
       style={{ width: 'calc(50vw - 20px)', minWidth: 'calc(50vw - 20px)', background: '#F0F0F5', cursor: photo.sourceUrl ? 'pointer' : 'default' }}>
@@ -775,8 +783,8 @@ function PhotoCard({
           {photo.date.replace(/-/g, '/')}
         </p>
         {/* ソースURLがない場合 */}
-        {!photo.sourceUrl && onRequestUpload && (
-          <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); onRequestUpload() }}
+        {!photo.sourceUrl && onAddSourceUrl && !showSourceInput && (
+          <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShowSourceInput(true) }}
             className="flex items-center gap-1 mt-1 text-left flex-wrap"
             style={{ color: '#F59E0B' }}>
             <span className="text-[9px]">！</span>
@@ -785,6 +793,33 @@ function PhotoCard({
               <span className="text-[9px] font-normal" style={{ color: '#8E8E93' }}>{photo.caption || spotMemo}</span>
             )}
           </button>
+        )}
+        {showSourceInput && (
+          <div className="mt-1 flex flex-col gap-1" onClick={(e) => e.stopPropagation()}>
+            <input
+              type="url"
+              value={sourceInput}
+              onChange={(e) => setSourceInput(e.target.value)}
+              placeholder="https://..."
+              autoFocus
+              className="w-full px-2 py-1.5 rounded-lg text-[10px] outline-none"
+              style={{ background: '#F0F0F5', color: '#1C1C1E', border: '1px solid #E5E5EA' }}
+            />
+            <div className="flex gap-1">
+              <button onClick={() => setShowSourceInput(false)}
+                className="flex-1 py-1 rounded-lg text-[9px] font-bold"
+                style={{ background: '#F0F0F5', color: '#636366' }}>
+                {t('Common.cancel')}
+              </button>
+              <button
+                onClick={() => { if(sourceInput.trim()) { onAddSourceUrl?.(photo.id, sourceInput.trim()); setShowSourceInput(false) } }}
+                disabled={!sourceInput.trim()}
+                className="flex-1 py-1 rounded-lg text-[9px] font-bold"
+                style={{ background: sourceInput.trim() ? '#F3B4E3' : '#E5E5EA', color: sourceInput.trim() ? '#FFF' : '#8E8E93' }}>
+                {t('Common.save')}
+              </button>
+            </div>
+          </div>
         )}
       </div>
     </div>
