@@ -832,7 +832,11 @@ function PhotoCard({
       </a>
     )
   }
-  return <div className="flex-shrink-0">{cardContent}</div>
+  return (
+    <div className="flex-shrink-0 cursor-pointer" onClick={() => setShowSourceInput(true)}>
+      {cardContent}
+    </div>
+  )
 }
 
 // ─── 写真投稿モーダル ───────────────────────────────────────
