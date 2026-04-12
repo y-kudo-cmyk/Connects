@@ -35,6 +35,7 @@ export type NotifSettings = {
 }
 
 export type ProfileData = {
+  membershipNumber: string
   nickname: string
   bio: string
   bannerImage: string
@@ -49,6 +50,7 @@ export type ProfileData = {
 }
 
 const DEFAULT: ProfileData = {
+  membershipNumber: '',
   nickname: '',
   bio: '',
   bannerImage: '',
@@ -87,6 +89,7 @@ export function useProfile() {
       .eq('user_id', user.id)
 
     setProfile({
+      membershipNumber: p.membership_number ?? '',
       nickname: p.nickname ?? '',
       bio: '',
       bannerImage: p.banner_url ?? '',

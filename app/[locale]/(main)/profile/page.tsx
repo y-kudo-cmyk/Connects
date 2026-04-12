@@ -16,7 +16,7 @@ const LANGUAGES = [
   { code: 'ko' as const, flag: '🇰🇷', label: '한국어' },
 ]
 
-const USER_ID = 'CARAT#28596'
+// membership_number from profile (e.g. U000001)
 
 const RANKS = [
   { key: 'none',     label: 'None',     color: '#8E8E93', bg: '#F0F0F5',   initial: '○', min: 0,   next: 1   },
@@ -262,7 +262,7 @@ export default function ProfilePage() {
           <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#636366" strokeWidth="2">
             <rect x="2" y="5" width="20" height="14" rx="2" /><line x1="2" y1="10" x2="22" y2="10" />
           </svg>
-          <span className="text-xs font-mono font-semibold" style={{ color: '#636366' }}>{USER_ID}</span>
+          <span className="text-xs font-mono font-semibold" style={{ color: '#636366' }}>{profile.membershipNumber || ''}</span>
         </div>
 
         {editingBio ? (
