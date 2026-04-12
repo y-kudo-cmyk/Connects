@@ -8,6 +8,7 @@ import type { AppEvent } from '@/lib/supabase/adapters'
 import EventDetailModal from './EventDetailModal'
 import { useTranslations } from 'next-intl'
 import { useToday } from '@/lib/useToday'
+import { useProfile } from '@/lib/useProfile'
 import { cityToCountryCode } from '@/lib/countryUtils'
 import { VOTE_THRESHOLD } from '@/lib/supabase/useVoting'
 
@@ -21,6 +22,7 @@ function md(s: string) {
 
 export default function TodayScheduleSection() {
   const today = useToday()
+  const { profile } = useProfile()
   const { events: allEvents } = useSupabaseData()
   const t = useTranslations()
   const dayNames = t.raw('Calendar.dayNames') as string[]
@@ -35,11 +37,18 @@ export default function TodayScheduleSection() {
       // 単発: 当日のみ
       return e.date === today
     })
-    // Sort: LIVE first, then today-only, then period
+    // Sort: LIVE first → home country → overseas → period last
+    const homeCountry = profile.country || 'JP'
     return filtered.sort((a, b) => {
+      // 1. LIVE first
       const aIsLive = a.tags?.includes('LIVE') ? 0 : 1
       const bIsLive = b.tags?.includes('LIVE') ? 0 : 1
       if (aIsLive !== bIsLive) return aIsLive - bIsLive
+      // 2. Home country first
+      const aIsHome = (a.city || '') === homeCountry ? 0 : 1
+      const bIsHome = (b.city || '') === homeCountry ? 0 : 1
+      if (aIsHome !== bIsHome) return aIsHome - bIsHome
+      // 3. Period events last
       const aIsPeriod = a.dateEnd ? 1 : 0
       const bIsPeriod = b.dateEnd ? 1 : 0
       return aIsPeriod - bIsPeriod
