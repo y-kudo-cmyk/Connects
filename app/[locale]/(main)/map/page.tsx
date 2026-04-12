@@ -53,7 +53,7 @@ const ALL_TAGS = ['SEVENTEEN', ...seventeenMembers.map((m) => m.name)]
 export default function MapPage() {
   const TODAY = useToday()
   const t = useTranslations()
-  const { events, spots: allSpots } = useSupabaseData()
+  const { events, spots: allSpots, refreshSpots } = useSupabaseData()
   const [search, setSearch] = useState('')
   const [memberFilter, setMemberFilter] = useState('ALL')
   const [limitedFilter, setLimitedFilter] = useState(false)
@@ -123,6 +123,7 @@ export default function MapPage() {
           isIncomplete={incompleteIds.has(detailSpot.id)}
           onClose={() => setDetailSpot(null)}
           onMemberFilter={(name) => { setMemberFilter(name); setDetailSpot(null) }}
+          onRefresh={refreshSpots}
         />
         {uploadSpot && (
           <PhotoUploadModal
@@ -429,7 +430,7 @@ function PlatformBadge({ platform }: { platform?: SpotPlatform }) {
 
 // ─── スポット詳細画面（フルスクリーン） ──────────────────────
 function SpotDetailScreen({
-  spot, isFavorite, onToggleFav, userPhotos, onRemovePhoto, onConfirmPhoto, onOpenUpload, isIncomplete, onClose, onMemberFilter,
+  spot, isFavorite, onToggleFav, userPhotos, onRemovePhoto, onConfirmPhoto, onOpenUpload, isIncomplete, onClose, onMemberFilter, onRefresh,
 }: {
   spot: AppSpot
   isFavorite: boolean
@@ -441,6 +442,7 @@ function SpotDetailScreen({
   isIncomplete: boolean
   onClose: () => void
   onMemberFilter: (name: string) => void
+  onRefresh?: () => Promise<void>
 }) {
   const t = useTranslations()
   const { user } = useAuth()
@@ -467,52 +469,34 @@ function SpotDetailScreen({
 
   const handleEditSave = async () => {
     setEditSaving(true)
-    const supabase = createClient()
-    const userId = user?.id
 
     // related_artists を "#SEVENTEEN #S.COUPS #WONWOO" 形式に変換
     const relatedArtists = editMembers.length > 0 && !editMembers.includes('ALL')
       ? '#SEVENTEEN ' + editMembers.map((m) => `#${m}`).join(' ')
       : '#SEVENTEEN'
 
-    if (isConfirmed) {
-      // 承認済み → 修正依頼として投稿
-      const changes: { field_name: string; old_value: string; new_value: string }[] = []
-      if (editName !== spot.name) changes.push({ field_name: 'spot_name', old_value: spot.name, new_value: editName })
-      if (editAddress !== spot.address) changes.push({ field_name: 'spot_address', old_value: spot.address, new_value: editAddress })
-      if (editGenre !== spot.genre.toUpperCase()) changes.push({ field_name: 'genre', old_value: spot.genre.toUpperCase(), new_value: editGenre })
-      if (editSourceUrl !== (spot.sourceUrl ?? '')) changes.push({ field_name: 'source_url', old_value: spot.sourceUrl ?? '', new_value: editSourceUrl })
-      if (editOfficialUrl !== (spot.officialUrl ?? '')) changes.push({ field_name: 'spot_url', old_value: spot.officialUrl ?? '', new_value: editOfficialUrl })
-      if (editMemo !== spot.description) changes.push({ field_name: 'memo', old_value: spot.description, new_value: editMemo })
-      const origRelated = spot.members.includes('ALL') ? '#SEVENTEEN' : '#SEVENTEEN ' + spot.members.map((m) => `#${m}`).join(' ')
-      if (relatedArtists !== origRelated) changes.push({ field_name: 'related_artists', old_value: origRelated, new_value: relatedArtists })
-
-      if (changes.length > 0) {
-        for (const c of changes) {
-          await supabase.from('edit_requests').insert({
-            spot_id: spot.id,
-            ...c,
-            submitted_by: userId,
-          })
-        }
-        setEditRequestSent(true)
-      }
-    } else {
-      // 未承認 → 直接更新 + verified_count リセット
-      const updates: Record<string, unknown> = {
-        spot_name: editName,
-        spot_address: editAddress,
-        genre: editGenre,
-        related_artists: relatedArtists,
-        source_url: editSourceUrl || null,
-        spot_url: editOfficialUrl || null,
-        memo: editMemo || null,
-        verified_count: 0,
-        status: 'pending',
-      }
-      await supabase.from('spots').update(updates).eq('id', spot.id)
+    // サーバーAPI経由で更新（RLSバイパス）
+    const updates: Record<string, unknown> = {
+      spot_name: editName,
+      spot_address: editAddress,
+      genre: editGenre,
+      related_artists: relatedArtists,
+      source_url: editSourceUrl || null,
+      spot_url: editOfficialUrl || null,
+      memo: editMemo || null,
+    }
+    if (!isConfirmed) {
+      updates.verified_count = 0
+      updates.status = 'pending'
     }
 
+    await fetch('/api/update-spot', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ spotId: spot.id, updates }),
+    })
+
+    await onRefresh?.()
     setEditSaving(false)
     setEditing(false)
   }
