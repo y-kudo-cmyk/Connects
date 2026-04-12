@@ -303,7 +303,8 @@ export default function MapPage() {
                   const fav = isFavorite(spot.id)
                   const incomplete = incompleteIds.has(spot.id)
                   const userPhotos = getPhotos(spot.id)
-                  const totalPhotos = (spot.photos?.length ?? 0) + userPhotos.length
+                  const uniquePhotoUrls = new Set((spot.photos ?? []).map((p) => p.imageUrl).filter(Boolean))
+                  const totalPhotos = uniquePhotoUrls.size + userPhotos.length
                   return (
                     <div key={spot.id} className="rounded-xl overflow-hidden relative"
                       style={{
