@@ -446,13 +446,11 @@ function SpotDetailScreen({
 }) {
   const t = useTranslations()
   const { user } = useAuth()
-  const { hasVoted, voteCount, isConfirmed, loading: voteLoading, submitVote } = useVoting('spot', spot.id, user?.id ?? null)
   const [showUrlInput, setShowUrlInput] = useState(false)
   const [urlInput, setUrlInput] = useState('')
   const [urlSubmitted, setUrlSubmitted] = useState(false)
   const [editing, setEditing] = useState(false)
   const [editSaving, setEditSaving] = useState(false)
-  const [editRequestSent, setEditRequestSent] = useState(false)
   const [editName, setEditName] = useState(spot.name)
   const [editAddress, setEditAddress] = useState(spot.address)
   const [editGenre, setEditGenre] = useState(spot.genre.toUpperCase())
@@ -469,10 +467,6 @@ function SpotDetailScreen({
       spot_address: editAddress,
       genre: editGenre,
       spot_url: editOfficialUrl || null,
-    }
-    if (!isConfirmed) {
-      updates.verified_count = 0
-      updates.status = 'pending'
     }
 
     await fetch('/api/update-spot', {
@@ -532,15 +526,8 @@ function SpotDetailScreen({
             <polyline points="15 18 9 12 15 6" />
           </svg>
         </button>
-        <div className="flex-1 min-w-0 flex items-center gap-2">
+        <div className="flex-1 min-w-0">
           <p className="text-sm font-black tracking-wider" style={{ color: '#1C1C1E' }}>MAP</p>
-          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full"
-            style={isConfirmed
-              ? { background: 'rgba(52,211,153,0.15)', color: '#34D399' }
-              : { background: 'rgba(245,158,11,0.12)', color: '#F59E0B' }
-            }>
-            {isConfirmed ? '✓ ' + t('Schedule.approved') : `${voteCount}/${APPROVAL_THRESHOLD} ${t('Schedule.pendingApproval')}`}
-          </span>
         </div>
         {user && !editing && (
           <button onClick={() => setEditing(true)}
@@ -552,22 +539,6 @@ function SpotDetailScreen({
             </svg>
           </button>
         )}
-        {user && !isConfirmed && (() => {
-          const spotComplete = !!(spot.name && spot.address && spot.genre)
-          return (
-            <button onClick={submitVote} disabled={hasVoted || voteLoading || !spotComplete}
-              title={!spotComplete ? '名前・住所・ジャンルが必要です' : ''}
-              className="flex items-center gap-1 px-3 py-2 rounded-full text-xs font-bold flex-shrink-0"
-              style={hasVoted
-                ? { background: 'rgba(52,211,153,0.15)', color: '#34D399' }
-                : !spotComplete
-                  ? { background: '#F0F0F5', color: '#8E8E93' }
-                  : { background: 'rgba(243,180,227,0.12)', color: '#F3B4E3' }
-              }>
-              {hasVoted ? '✓' : !spotComplete ? '⚠' : '👍'} {t('Schedule.approveButton')}
-            </button>
-          )
-        })()}
         <button onClick={onToggleFav}
           className="w-9 h-9 flex items-center justify-center rounded-full flex-shrink-0"
           style={{ background: isFavorite ? 'rgba(251,113,133,0.15)' : '#FFFFFF', border: '1px solid #E5E5EA' }}>
@@ -644,17 +615,6 @@ function SpotDetailScreen({
             </div>
           </div>
 
-          {/* 修正依頼送信済みバナー */}
-          {editRequestSent && (
-            <div className="px-3 py-2.5 rounded-xl flex items-center gap-2"
-              style={{ background: 'rgba(52,211,153,0.1)', border: '1px solid rgba(52,211,153,0.3)' }}>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#34D399" strokeWidth="2.5">
-                <polyline points="20 6 9 17 4 12" />
-              </svg>
-              <p className="text-xs font-bold" style={{ color: '#34D399' }}>{t('Map.editRequestSent')}</p>
-            </div>
-          )}
-
           {/* 編集モード: 保存 / キャンセル */}
           {editing && (
             <div className="flex gap-2">
@@ -666,7 +626,7 @@ function SpotDetailScreen({
               <button onClick={handleEditSave} disabled={editSaving}
                 className="flex-1 py-3.5 rounded-xl text-sm font-bold"
                 style={{ background: '#34D399', color: '#FFFFFF' }}>
-                {editSaving ? t('Common.saving') : isConfirmed ? t('Map.submitEditRequest') : t('Map.saveEdit')}
+                {editSaving ? t('Common.saving') : t('Map.saveEdit')}
               </button>
             </div>
           )}
