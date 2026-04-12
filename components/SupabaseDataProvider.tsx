@@ -3,6 +3,7 @@
 import { useEffect, useState, createContext, useContext } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { toAppEvent, toAppSpot, type AppEvent, type AppSpot } from '@/lib/supabase/adapters'
+import type { SupabaseEvent } from '@/lib/supabase/useEvents'
 import type { SupabaseSpotPhoto } from '@/lib/supabase/useSpots'
 
 const supabase = createClient()
@@ -25,14 +26,30 @@ export default function SupabaseDataProvider({ children }: { children: React.Rea
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
+    async function fetchAllEvents(): Promise<SupabaseEvent[]> {
+      const all: SupabaseEvent[] = []
+      let from = 0
+      const pageSize = 1000
+      while (true) {
+        const { data } = await supabase
+          .from('events')
+          .select('*, submitter:profiles!submitted_by(nickname)')
+          .order('start_date', { ascending: true })
+          .range(from, from + pageSize - 1)
+        if (!data || data.length === 0) break
+        all.push(...(data as SupabaseEvent[]))
+        if (data.length < pageSize) break
+        from += pageSize
+      }
+      return all
+    }
+
     Promise.all([
-      supabase.from('events').select('*').order('start_date', { ascending: true }),
+      fetchAllEvents(),
       supabase.from('spots').select('*').order('spot_name'),
       supabase.from('spot_photos').select('*'),
-    ]).then(([eventsRes, spotsRes, photosRes]) => {
-      if (eventsRes.data) {
-        setEvents(eventsRes.data.map(toAppEvent))
-      }
+    ]).then(([allEvents, spotsRes, photosRes]) => {
+      setEvents(allEvents.map(toAppEvent))
       if (spotsRes.data && photosRes.data) {
         const photos = photosRes.data as SupabaseSpotPhoto[]
         setSpots(spotsRes.data.map(s => toAppSpot(s, photos.filter(p => p.spot_id === s.id))))
