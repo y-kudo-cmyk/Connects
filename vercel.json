@@ -11,6 +11,10 @@
     {
       "path": "/api/post-x?type=evening",
       "schedule": "0 12 * * *"
+    },
+    {
+      "path": "/api/notify-schedule",
+      "schedule": "0 * * * *"
     }
   ]
 }
