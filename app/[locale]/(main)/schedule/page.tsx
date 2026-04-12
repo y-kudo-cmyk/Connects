@@ -13,6 +13,7 @@ import { useTodos } from '@/lib/useTodos'
 import { useTranslations } from 'next-intl'
 import { useToday } from '@/lib/useToday'
 import AddScheduleModal from '@/components/AddScheduleModal'
+import EventDetailModal from '@/components/EventDetailModal'
 
 function getDaysInMonth(y: number, m: number) { return new Date(y, m + 1, 0).getDate() }
 function getFirstDay(y: number, m: number) { return new Date(y, m, 1).getDay() }
@@ -55,6 +56,7 @@ export default function SchedulePage() {
   const { addEntry, removeEntry, entries, hasEntry } = useMyEntries()
   const { todos, addTodo, removeTodo, hasTodo } = useTodos()
   const [showAddSchedule, setShowAddSchedule] = useState(false)
+  const [detailEvent, setDetailEvent] = useState<AppEvent | null>(null)
   const t = useTranslations()
   const eventsRef = useRef<HTMLDivElement>(null)
 
@@ -308,7 +310,9 @@ export default function SchedulePage() {
               return (
                 <div key={event.id}>
                   <div className="rounded-2xl overflow-hidden" style={{ background: '#FFFFFF', border: '1px solid #E5E5EA' }}>
-                    <EventCard event={event} />
+                    <div onClick={() => setDetailEvent(event)} className="cursor-pointer">
+                      <EventCard event={event} />
+                    </div>
                     {/* アクションバー：ソース | MY | TODO */}
                     <div className="flex gap-2 px-3 py-2.5" style={{ borderTop: '1px solid #F0F0F5' }}>
                       {/* ソース */}
@@ -473,6 +477,9 @@ export default function SchedulePage() {
 
       {showAddSchedule && (
         <AddScheduleModal onClose={() => setShowAddSchedule(false)} />
+      )}
+      {detailEvent && (
+        <EventDetailModal event={detailEvent} onClose={() => setDetailEvent(null)} showConfirmButton />
       )}
     </div>
   )
