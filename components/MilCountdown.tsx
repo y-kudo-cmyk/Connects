@@ -51,12 +51,14 @@ export default function MilCountdown() {
         <p className="text-[11px] font-bold tracking-wider" style={{ color: '#8E8E93' }}>MILITARY DISCHARGE</p>
       </div>
 
-      {/* メンバーカード横並び */}
+      {/* メンバーカード横並び（残り日数少ない順） */}
       <div className="grid grid-cols-4 gap-2">
-        {MEMBERS.map((m, i) => {
-          const d = days[i] ?? 0
+        {MEMBERS.map((m, i) => ({ m, d: days[i] ?? 0 }))
+          .sort((a, b) => a.d - b.d)
+          .map(({ m, d }) => {
           const discharged = d === 0
           return (
+            /* eslint-disable-next-line react/jsx-key */
             <div
               key={m.nameEn}
               className="flex flex-col items-center rounded-2xl overflow-hidden"
@@ -111,6 +113,7 @@ export default function MilCountdown() {
           )
         })}
       </div>
+
     </div>
   )
 }
