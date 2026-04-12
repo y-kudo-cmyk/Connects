@@ -564,8 +564,15 @@ function SpotDetailScreen({
             <polyline points="15 18 9 12 15 6" />
           </svg>
         </button>
-        <div className="flex-1 min-w-0">
+        <div className="flex-1 min-w-0 flex items-center gap-2">
           <p className="text-sm font-black tracking-wider" style={{ color: '#1C1C1E' }}>MAP</p>
+          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full"
+            style={isConfirmed
+              ? { background: 'rgba(52,211,153,0.15)', color: '#34D399' }
+              : { background: 'rgba(245,158,11,0.12)', color: '#F59E0B' }
+            }>
+            {isConfirmed ? '✓ ' + t('Schedule.approved') : `${spot.verifiedCount}/${APPROVAL_THRESHOLD} ${t('Schedule.pendingApproval')}`}
+          </span>
         </div>
         {user && !editing && (
           <button onClick={() => setEditing(true)}
@@ -753,9 +760,6 @@ function SpotDetailScreen({
                   <span className="text-xs">！</span>
                   {t('Map.hpWanted')}
                 </div>
-                {spot.description && (
-                  <span className="text-[10px] font-normal" style={{ color: '#8E8E93' }}>{spot.description}</span>
-                )}
               </button>
             )}
           </div>
