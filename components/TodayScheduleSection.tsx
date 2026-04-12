@@ -37,22 +37,22 @@ export default function TodayScheduleSection() {
       // 単発: 当日のみ
       return e.date === today
     })
-    // Sort: LIVE first → home country → overseas → period last
+    // Sort priority: LIVE(home) → LIVE(overseas) → TICKET(home) → EVENT single(home) → other(home) → overseas → period
     const homeCountry = profile.country || 'JP'
-    return filtered.sort((a, b) => {
-      // 1. LIVE first
-      const aIsLive = a.tags?.includes('LIVE') ? 0 : 1
-      const bIsLive = b.tags?.includes('LIVE') ? 0 : 1
-      if (aIsLive !== bIsLive) return aIsLive - bIsLive
-      // 2. Home country first
-      const aIsHome = (a.city || '') === homeCountry ? 0 : 1
-      const bIsHome = (b.city || '') === homeCountry ? 0 : 1
-      if (aIsHome !== bIsHome) return aIsHome - bIsHome
-      // 3. Period events last
-      const aIsPeriod = a.dateEnd ? 1 : 0
-      const bIsPeriod = b.dateEnd ? 1 : 0
-      return aIsPeriod - bIsPeriod
-    })
+    function sortKey(e: AppEvent): number {
+      const isHome = (e.city || '') === homeCountry || !(e.city)
+      const isPeriod = !!e.dateEnd
+      const tag = e.tags?.[0] || ''
+      if (tag === 'LIVE' && isHome) return 0
+      if (tag === 'LIVE') return 1
+      if (tag === 'TICKET' && isHome) return 2
+      if (tag === 'EVENT' && isHome && !isPeriod) return 3
+      if (isHome && !isPeriod) return 4
+      if (isHome) return 5
+      if (!isPeriod) return 6
+      return 7
+    }
+    return filtered.sort((a, b) => sortKey(a) - sortKey(b))
   }, [today, allEvents])
 
   const d = new Date(today)
