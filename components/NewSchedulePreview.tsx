@@ -61,7 +61,7 @@ export default function NewSchedulePreview() {
   }
 
   const upcoming = events
-    .filter((e) => e.date >= TODAY && !dismissed.has(e.id))
+    .filter((e) => e.date >= TODAY && !dismissed.has(e.id) && !e.tags?.includes('BIRTHDAY'))
     .slice(0, 8)
 
   if (upcoming.length === 0) return null
