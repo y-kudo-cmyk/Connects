@@ -1034,24 +1034,21 @@ function PushDebugPanel() {
         setInfo(prev => [...prev, '許可結果: ' + result])
         if (result === 'granted') {
           setInfo(prev => [...prev, '✅ 通知が許可されました！'])
-          // PushManagerで購読
+          // OneSignalに登録
           try {
-            const reg = await navigator.serviceWorker.ready
-            const sub = await reg.pushManager.subscribe({
-              userVisibleOnly: true,
-              applicationServerKey: 'BPkMwJSBCx1FVjGJbmojgMjXhLVjOVJDMnPCv8-ASHNz8gKyJCscLMfhriPMCqaeBxPpnLjXJtW8LFw1C5ZxvCA',
-            })
-            setInfo(prev => [...prev, 'Push購読: OK', 'endpoint: ' + sub.endpoint.slice(0, 50) + '...'])
-          } catch (e: any) {
-            setInfo(prev => [...prev, 'Push購読エラー: ' + e?.message])
-            // OneSignalもトライ
-            try {
-              const { promptPush } = await import('@/lib/onesignal/client')
-              await promptPush()
-              setInfo(prev => [...prev, 'OneSignal登録: OK'])
-            } catch (e2: any) {
-              setInfo(prev => [...prev, 'OneSignal: ' + e2?.message])
+            const { initOneSignal, loginOneSignal } = await import('@/lib/onesignal/client')
+            await initOneSignal()
+            setInfo(prev => [...prev, 'OneSignal init: OK'])
+            // ユーザーIDを紐づけ
+            const { createClient } = await import('@/lib/supabase/client')
+            const sb = createClient()
+            const { data: { user } } = await sb.auth.getUser()
+            if (user) {
+              await loginOneSignal(user.id)
+              setInfo(prev => [...prev, 'OneSignal login: OK (' + user.id.slice(0, 8) + '...)'])
             }
+          } catch (e2: any) {
+            setInfo(prev => [...prev, 'OneSignal登録エラー: ' + e2?.message])
           }
         }
       } else {
