@@ -99,7 +99,7 @@ async function morningNotification(currentTime: string, today: string) {
   const heading = `📅 今日のスケジュール ${todayEvents.length}件`
 
   const userIds = users.map(u => u.id)
-  const result = await sendNotification(userIds, heading, content, 'https://connects-git-kudodev-y-kudo-cmyks-projects.vercel.app/')
+  const result = await sendNotification(userIds, heading, content, 'https://connects-git-kudodev-y-kudo-cmyks-projects.vercel.app/notification?type=morning&date=' + today)
   return { type: 'morning', users: userIds.length, ...result }
 }
 
@@ -173,7 +173,7 @@ async function eveningNotification(currentTime: string, today: string) {
   const heading = ending.length > 0 ? '⏰ 締切あり！明日のスケジュール' : `🌙 明日のスケジュール ${tomorrowEvents.length}件`
 
   const userIds = users.map(u => u.id)
-  const result = await sendNotification(userIds, heading, content, 'https://connects-git-kudodev-y-kudo-cmyks-projects.vercel.app/')
+  const result = await sendNotification(userIds, heading, content, 'https://connects-git-kudodev-y-kudo-cmyks-projects.vercel.app/notification?type=evening&date=' + today)
   return { type: 'evening', users: userIds.length, ...result }
 }
 
