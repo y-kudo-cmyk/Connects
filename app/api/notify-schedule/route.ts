@@ -24,7 +24,7 @@ async function sendNotification(_userIds: string[], heading: string, content: st
       included_segments: ['All'],
       headings: { en: heading, ja: heading },
       contents: { en: content, ja: content },
-      url: url || 'https://connects-nu.vercel.app',
+      url: url || 'https://connects-git-kudodev-y-kudo-cmyks-projects.vercel.app',
     }),
   })
   const data = await res.json()
@@ -98,7 +98,7 @@ async function morningNotification(currentTime: string, today: string) {
   }
 
   const userIds = users.map(u => u.id)
-  const result = await sendNotification(userIds, '📅 今日のスケジュール', content, 'https://connects-nu.vercel.app/schedule')
+  const result = await sendNotification(userIds, '📅 今日のスケジュール', content, 'https://connects-git-kudodev-y-kudo-cmyks-projects.vercel.app/')
   return { type: 'morning', users: userIds.length, ...result }
 }
 
@@ -162,7 +162,7 @@ async function eveningNotification(currentTime: string, today: string) {
   }
 
   const userIds = users.map(u => u.id)
-  const result = await sendNotification(userIds, '🔔 締切＆明日のスケジュール', content, 'https://connects-nu.vercel.app/schedule')
+  const result = await sendNotification(userIds, '🔔 締切＆明日のスケジュール', content, 'https://connects-git-kudodev-y-kudo-cmyks-projects.vercel.app/schedule')
   return { type: 'evening', users: userIds.length, ...result }
 }
 
@@ -204,7 +204,7 @@ async function myEventReminder(currentTime: string, today: string) {
       content += `・${e.event_title} ${targetTime}〜\n`
     })
 
-    await sendNotification([user.id], '⏰ 1時間後に開始', content.trim(), 'https://connects-nu.vercel.app/my')
+    await sendNotification([user.id], '⏰ 1時間後に開始', content.trim(), 'https://connects-git-kudodev-y-kudo-cmyks-projects.vercel.app/my')
     sent++
   }
 
