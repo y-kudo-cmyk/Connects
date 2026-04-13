@@ -1013,9 +1013,26 @@ function PushDebugPanel() {
 
   const handlePermission = async () => {
     try {
+      // SW状態を確認
+      if ('serviceWorker' in navigator) {
+        const reg = await navigator.serviceWorker.ready
+        setInfo(prev => [...prev, 'SW ready: ' + (reg.active ? 'active' : 'waiting')])
+        setInfo(prev => [...prev, 'pushManager: ' + (reg.pushManager ? 'あり' : 'なし')])
+      }
       if (typeof Notification !== 'undefined') {
+        setInfo(prev => [...prev, '許可ダイアログ表示中...'])
         const result = await Notification.requestPermission()
         setInfo(prev => [...prev, '許可結果: ' + result])
+        if (result === 'granted') {
+          // OneSignalにも反映
+          try {
+            const { promptPush } = await import('@/lib/onesignal/client')
+            await promptPush()
+            setInfo(prev => [...prev, 'OneSignal登録: OK'])
+          } catch (e: any) {
+            setInfo(prev => [...prev, 'OneSignal登録エラー: ' + e?.message])
+          }
+        }
       } else {
         setInfo(prev => [...prev, '❌ このブラウザは通知非対応です'])
       }
