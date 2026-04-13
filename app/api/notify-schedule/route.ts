@@ -59,17 +59,26 @@ async function morningNotification(currentTime: string, today: string) {
 
   if (!users || users.length === 0) return { type: 'morning', skipped: true }
 
-  // 今日のイベントを取得
-  const { data: events } = await supabase
-    .from('events')
-    .select('event_title, sub_event_title, tag, start_date, end_date')
-    .lte('start_date', today + 'T23:59:59')
-    .order('start_date')
-
-  const todayEvents = (events || []).filter(e => {
-    const startDate = e.start_date?.slice(0, 10)
-    const endDate = e.end_date?.slice(0, 10) || startDate
-    return startDate && startDate <= today && today <= endDate!
+  // 今日のイベントを取得（単日 + 期間）
+  const [{ data: singleDay }, { data: periodEvents }] = await Promise.all([
+    // 今日開始のイベント
+    supabase.from('events')
+      .select('event_title, sub_event_title, tag, start_date, end_date')
+      .gte('start_date', today + 'T00:00:00')
+      .lte('start_date', today + 'T23:59:59'),
+    // 期間中のイベント（start <= today AND end >= today）
+    supabase.from('events')
+      .select('event_title, sub_event_title, tag, start_date, end_date')
+      .lte('start_date', today + 'T23:59:59')
+      .gte('end_date', today + 'T00:00:00'),
+  ])
+  // 重複排除してマージ
+  const seen = new Set<string>()
+  const todayEvents = [...(singleDay || []), ...(periodEvents || [])].filter(e => {
+    const key = e.event_title + e.start_date
+    if (seen.has(key)) return false
+    seen.add(key)
+    return true
   })
 
   if (todayEvents.length === 0) return { type: 'morning', skipped: true, reason: 'no events' }
@@ -108,11 +117,24 @@ async function eveningNotification(currentTime: string, today: string) {
   tomorrow.setDate(tomorrow.getDate() + 1)
   const tomorrowStr = tomorrow.toISOString().slice(0, 10)
 
-  const { data: events } = await supabase
-    .from('events')
-    .select('event_title, sub_event_title, tag, start_date')
-    .gte('start_date', tomorrowStr + 'T00:00:00')
-    .lte('start_date', tomorrowStr + 'T23:59:59')
+  // 明日のイベント（単日 + 期間）
+  const [{ data: tmrSingle }, { data: tmrPeriod }] = await Promise.all([
+    supabase.from('events')
+      .select('event_title, sub_event_title, tag, start_date, end_date')
+      .gte('start_date', tomorrowStr + 'T00:00:00')
+      .lte('start_date', tomorrowStr + 'T23:59:59'),
+    supabase.from('events')
+      .select('event_title, sub_event_title, tag, start_date, end_date')
+      .lte('start_date', tomorrowStr + 'T23:59:59')
+      .gte('end_date', tomorrowStr + 'T00:00:00'),
+  ])
+  const tmrSeen = new Set<string>()
+  const tomorrowEvents = [...(tmrSingle || []), ...(tmrPeriod || [])].filter(e => {
+    const key = e.event_title + e.start_date
+    if (tmrSeen.has(key)) return false
+    tmrSeen.add(key)
+    return true
+  })
 
   // 今日締切のイベント
   const { data: endingEvents } = await supabase
@@ -122,7 +144,6 @@ async function eveningNotification(currentTime: string, today: string) {
     .lte('end_date', today + 'T23:59:59')
     .in('tag', ['TICKET'])
 
-  const tomorrowEvents = events || []
   const ending = endingEvents || []
 
   if (tomorrowEvents.length === 0 && ending.length === 0) {
