@@ -22,6 +22,7 @@ export async function initOneSignal(): Promise<boolean> {
     await OneSignal.init({
       appId: APP_ID,
       allowLocalhostAsSecureOrigin: process.env.NODE_ENV === 'development',
+      serviceWorkerPath: '/OneSignalSDKWorker.js',
     })
 
     return true
@@ -50,10 +51,22 @@ export async function logoutOneSignal(): Promise<void> {
 }
 
 /**
- * 通知許可をユーザーに求める（Slidedown表示）
+ * 通知許可をユーザーに求める
+ * iOS PWA では Slidedown が動かないため Notifications.requestPermission() を使う
+ * ※ iOS ではユーザージェスチャー（ボタンタップ等）から呼ぶ必要がある
  */
 export async function promptPush(): Promise<void> {
   const ready = await initPromise
   if (!ready) return
-  await OneSignal.Slidedown.promptPush()
+
+  // iOS PWA 判定
+  const isIOSPWA = /iPhone|iPad|iPod/.test(navigator.userAgent) &&
+    ('standalone' in navigator && (navigator as unknown as { standalone: boolean }).standalone)
+
+  if (isIOSPWA) {
+    // iOS PWA: ネイティブの通知許可ダイアログを使う
+    await OneSignal.Notifications.requestPermission()
+  } else {
+    await OneSignal.Slidedown.promptPush()
+  }
 }

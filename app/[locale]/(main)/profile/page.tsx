@@ -502,6 +502,18 @@ export default function ProfilePage() {
 
           {notifExpanded && (
             <div style={{ borderTop: '1px solid #F0F0F5', background: '#FAFAFA' }}>
+              {/* 通知許可ボタン */}
+              <div className="px-5 py-3">
+                <button
+                  onClick={async () => {
+                    const { promptPush } = await import('@/lib/onesignal/client')
+                    await promptPush()
+                  }}
+                  className="w-full py-2.5 rounded-xl text-sm font-bold"
+                  style={{ background: 'linear-gradient(135deg, #F3B4E3, #C97AB8)', color: '#FFFFFF' }}>
+                  🔔 通知を許可する
+                </button>
+              </div>
               {/* 朝の通知 */}
               <div className="px-5 py-3 flex items-center gap-3">
                 <span className="text-sm flex-1" style={{ color: '#1C1C1E' }}>{t('Profile.notifMorning')}</span>
