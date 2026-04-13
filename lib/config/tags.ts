@@ -18,6 +18,7 @@ export type ScheduleTag =
   | 'YOUTUBE'
   | 'RADIO'
   | 'LIVEVIEWING'
+  | 'INFO'
 
 export const scheduleTagConfig: Record<ScheduleTag, { label: string; icon: string; color: string; bg: string }> = {
   LIVE:       { label: 'LIVE',       icon: '🎤', color: '#F3B4E3', bg: 'rgba(243,180,227,0.15)' },
@@ -34,6 +35,7 @@ export const scheduleTagConfig: Record<ScheduleTag, { label: string; icon: strin
   YOUTUBE:    { label: 'YOUTUBE',    icon: '▶️', color: '#EF4444', bg: 'rgba(239,68,68,0.15)'   },
   RADIO:       { label: 'RADIO',     icon: '📻', color: '#4ADE80', bg: 'rgba(74,222,128,0.15)'  },
   LIVEVIEWING: { label: 'LIVE VIEWING/CINEMA', icon: '🎬', color: '#818CF8', bg: 'rgba(129,140,248,0.15)' },
+  INFO:         { label: 'INFO',              icon: '📢', color: '#6B7280', bg: 'rgba(107,114,128,0.15)' },
 }
 
 // DB → アプリのタグ変換マップ（Glideデータ移行用）
@@ -53,6 +55,8 @@ export const dbTagToScheduleTag: Record<string, ScheduleTag> = {
   'RADIO':        'RADIO',
   'LIVEVIEWING':  'LIVEVIEWING',
   'LIVE VIEWING': 'LIVEVIEWING',
+  'INFO':           'INFO',
+  'INFORMATION':    'INFO',
 }
 
 // ── スポットジャンル ─────────────────────────────────────────
