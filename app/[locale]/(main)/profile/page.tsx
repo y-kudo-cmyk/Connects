@@ -503,11 +503,30 @@ export default function ProfilePage() {
           {notifExpanded && (
             <div style={{ borderTop: '1px solid #F0F0F5', background: '#FAFAFA' }}>
               {/* 通知許可ボタン */}
-              <div className="px-5 py-3">
+              <div className="px-5 py-3 flex flex-col gap-2">
                 <button
                   onClick={async () => {
-                    const { promptPush } = await import('@/lib/onesignal/client')
-                    await promptPush()
+                    const info: string[] = []
+                    info.push('UA: ' + navigator.userAgent.slice(0, 60))
+                    info.push('Notification API: ' + (typeof Notification !== 'undefined' ? 'あり' : 'なし'))
+                    info.push('SW API: ' + ('serviceWorker' in navigator ? 'あり' : 'なし'))
+                    info.push('standalone: ' + (('standalone' in navigator && (navigator as any).standalone) ? 'YES' : 'NO'))
+                    if (typeof Notification !== 'undefined') {
+                      info.push('Permission: ' + Notification.permission)
+                    }
+                    if ('serviceWorker' in navigator) {
+                      const regs = await navigator.serviceWorker.getRegistrations()
+                      info.push('SW count: ' + regs.length)
+                      regs.forEach((r, i) => info.push('SW' + i + ': ' + r.active?.scriptURL?.slice(-40)))
+                    }
+                    try {
+                      const { promptPush } = await import('@/lib/onesignal/client')
+                      await promptPush()
+                      info.push('promptPush: OK')
+                    } catch (e: any) {
+                      info.push('promptPush error: ' + e?.message)
+                    }
+                    alert(info.join('\n'))
                   }}
                   className="w-full py-2.5 rounded-xl text-sm font-bold"
                   style={{ background: 'linear-gradient(135deg, #F3B4E3, #C97AB8)', color: '#FFFFFF' }}>
