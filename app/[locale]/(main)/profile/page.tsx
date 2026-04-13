@@ -1021,16 +1021,37 @@ function PushDebugPanel() {
       }
       if (typeof Notification !== 'undefined') {
         setInfo(prev => [...prev, '許可ダイアログ表示中...'])
-        const result = await Notification.requestPermission()
+        // callback形式とPromise形式の両方を試す（iOS互換）
+        let result: string
+        try {
+          result = await new Promise<string>((resolve) => {
+            const p = Notification.requestPermission((r) => resolve(r))
+            if (p && typeof p.then === 'function') p.then(resolve)
+          })
+        } catch {
+          result = Notification.permission
+        }
         setInfo(prev => [...prev, '許可結果: ' + result])
         if (result === 'granted') {
-          // OneSignalにも反映
+          setInfo(prev => [...prev, '✅ 通知が許可されました！'])
+          // PushManagerで購読
           try {
-            const { promptPush } = await import('@/lib/onesignal/client')
-            await promptPush()
-            setInfo(prev => [...prev, 'OneSignal登録: OK'])
+            const reg = await navigator.serviceWorker.ready
+            const sub = await reg.pushManager.subscribe({
+              userVisibleOnly: true,
+              applicationServerKey: 'BPkMwJSBCx1FVjGJbmojgMjXhLVjOVJDMnPCv8-ASHNz8gKyJCscLMfhriPMCqaeBxPpnLjXJtW8LFw1C5ZxvCA',
+            })
+            setInfo(prev => [...prev, 'Push購読: OK', 'endpoint: ' + sub.endpoint.slice(0, 50) + '...'])
           } catch (e: any) {
-            setInfo(prev => [...prev, 'OneSignal登録エラー: ' + e?.message])
+            setInfo(prev => [...prev, 'Push購読エラー: ' + e?.message])
+            // OneSignalもトライ
+            try {
+              const { promptPush } = await import('@/lib/onesignal/client')
+              await promptPush()
+              setInfo(prev => [...prev, 'OneSignal登録: OK'])
+            } catch (e2: any) {
+              setInfo(prev => [...prev, 'OneSignal: ' + e2?.message])
+            }
           }
         }
       } else {
