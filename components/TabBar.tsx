@@ -91,7 +91,7 @@ export default function TabBar() {
         borderTop: '1px solid #2E2E32',
         paddingBottom: 'env(safe-area-inset-bottom, 8px)',
       }}
-      className="fixed bottom-0 left-0 right-0 z-50 flex justify-around items-center pt-2"
+      className="fixed bottom-0 left-0 right-0 z-50 flex justify-around items-center pt-3 pb-1"
     >
       {tabs.map((tab) => {
         const active = isActive(tab.href)
