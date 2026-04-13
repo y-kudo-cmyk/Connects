@@ -89,8 +89,8 @@ export default function TabBar() {
       style={{
         background: '#F8F9FA',
         borderTop: '1px solid #2E2E32',
-        paddingTop: 8,
-        paddingBottom: 'max(env(safe-area-inset-bottom, 0px), 20px)',
+        paddingTop: 6,
+        paddingBottom: 'max(env(safe-area-inset-bottom, 0px), 10px)',
       }}
       className="fixed bottom-0 left-0 right-0 z-50 flex justify-around items-center"
     >
