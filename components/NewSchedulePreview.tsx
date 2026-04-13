@@ -102,7 +102,7 @@ export default function NewSchedulePreview() {
                 <button
                   onClick={() => setDetailEvent(event)}
                   className="w-full relative overflow-hidden"
-                  style={{ height: 140 }}
+                  style={{ height: 200 }}
                 >
                   {event.image ? (
                     // eslint-disable-next-line @next/next/no-img-element
