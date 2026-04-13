@@ -286,7 +286,7 @@ function MockProfile() {
   )
 }
 
-const screenMocks: Record<string, () => JSX.Element> = {
+const screenMocks: Record<string, () => React.ReactNode> = {
   home: MockHome,
   my: MockMy,
   schedule: MockSchedule,
