@@ -86,19 +86,20 @@ async function morningNotification(currentTime: string, today: string) {
   const liveEvents = todayEvents.filter(e => e.tag === 'LIVE')
   const ticketEvents = todayEvents.filter(e => e.tag === 'TICKET')
 
-  let content = `📅 今日のスケジュール ${todayEvents.length}件`
-  if (liveEvents.length > 0) {
-    content += `\n🎤 ${liveEvents[0].event_title}${liveEvents[0].sub_event_title ? ' — ' + liveEvents[0].sub_event_title : ''}`
+  const tagIcon: Record<string, string> = { LIVE: '🎤', TICKET: '🎫', CD: '💿', TV: '📺', POPUP: '🏪', MERCH: '🛒', MAGAZINE: '📖', EVENT: '❤️', LIVEVIEWING: '🎬', INFO: '📢', RADIO: '📻', YOUTUBE: '▶️' }
+  const lines: string[] = []
+  for (const e of todayEvents.slice(0, 4)) {
+    const icon = tagIcon[e.tag] || '📌'
+    const title = e.event_title + (e.sub_event_title ? ' — ' + e.sub_event_title : '')
+    lines.push(`${icon} ${title}`)
   }
-  if (ticketEvents.length > 0) {
-    content += `\n🎫 ${ticketEvents[0].event_title}${ticketEvents[0].sub_event_title ? ' — ' + ticketEvents[0].sub_event_title : ''}`
-  }
-  if (todayEvents.length > 2) {
-    content += `\n...他${todayEvents.length - 2}件`
-  }
+  if (todayEvents.length > 4) lines.push(`...他${todayEvents.length - 4}件`)
+
+  const content = lines.join('\n')
+  const heading = `おはようございます☀️ 今日のスケジュール ${todayEvents.length}件`
 
   const userIds = users.map(u => u.id)
-  const result = await sendNotification(userIds, '📅 今日のスケジュール', content, 'https://connects-git-kudodev-y-kudo-cmyks-projects.vercel.app/')
+  const result = await sendNotification(userIds, heading, content, 'https://connects-git-kudodev-y-kudo-cmyks-projects.vercel.app/')
   return { type: 'morning', users: userIds.length, ...result }
 }
 
@@ -150,19 +151,29 @@ async function eveningNotification(currentTime: string, today: string) {
     return { type: 'evening', skipped: true, reason: 'no events' }
   }
 
-  let content = ''
+  const tagIcon: Record<string, string> = { LIVE: '🎤', TICKET: '🎫', CD: '💿', TV: '📺', POPUP: '🏪', MERCH: '🛒', MAGAZINE: '📖', EVENT: '❤️', LIVEVIEWING: '🎬', INFO: '📢', RADIO: '📻', YOUTUBE: '▶️' }
+  const lines: string[] = []
   if (ending.length > 0) {
-    content += `⏰ 今日締切: ${ending[0].event_title}${ending[0].sub_event_title ? ' — ' + ending[0].sub_event_title : ''}`
-    if (ending.length > 1) content += ` 他${ending.length - 1}件`
+    lines.push('⏰ 今日締切:')
+    for (const e of ending.slice(0, 2)) {
+      lines.push(`  🎫 ${e.event_title}${e.sub_event_title ? ' — ' + e.sub_event_title : ''}`)
+    }
+    if (ending.length > 2) lines.push(`  ...他${ending.length - 2}件`)
   }
   if (tomorrowEvents.length > 0) {
-    if (content) content += '\n'
-    content += `📅 明日: ${tomorrowEvents[0].event_title}${tomorrowEvents[0].sub_event_title ? ' — ' + tomorrowEvents[0].sub_event_title : ''}`
-    if (tomorrowEvents.length > 1) content += ` 他${tomorrowEvents.length - 1}件`
+    lines.push(`📅 明日のスケジュール ${tomorrowEvents.length}件:`)
+    for (const e of tomorrowEvents.slice(0, 3)) {
+      const icon = tagIcon[e.tag] || '📌'
+      lines.push(`  ${icon} ${e.event_title}${e.sub_event_title ? ' — ' + e.sub_event_title : ''}`)
+    }
+    if (tomorrowEvents.length > 3) lines.push(`  ...他${tomorrowEvents.length - 3}件`)
   }
 
+  const content = lines.join('\n')
+  const heading = ending.length > 0 ? '⏰ 締切あり！明日のスケジュール' : `🌙 明日のスケジュール ${tomorrowEvents.length}件`
+
   const userIds = users.map(u => u.id)
-  const result = await sendNotification(userIds, '🔔 締切＆明日のスケジュール', content, 'https://connects-git-kudodev-y-kudo-cmyks-projects.vercel.app/schedule')
+  const result = await sendNotification(userIds, heading, content, 'https://connects-git-kudodev-y-kudo-cmyks-projects.vercel.app/')
   return { type: 'evening', users: userIds.length, ...result }
 }
 
