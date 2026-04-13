@@ -90,7 +90,7 @@ export default function TabBar() {
         background: '#F8F9FA',
         borderTop: '1px solid #2E2E32',
         paddingTop: 14,
-        paddingBottom: 'max(env(safe-area-inset-bottom, 0px), 36px)',
+        paddingBottom: 'max(env(safe-area-inset-bottom, 0px), 44px)',
       }}
       className="fixed bottom-0 left-0 right-0 z-50 flex justify-around items-center"
     >
