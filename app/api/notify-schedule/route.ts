@@ -96,7 +96,7 @@ async function morningNotification(currentTime: string, today: string) {
   if (todayEvents.length > 4) lines.push(`...他${todayEvents.length - 4}件`)
 
   const content = lines.join('\n')
-  const heading = `おはようございます☀️ 今日のスケジュール ${todayEvents.length}件`
+  const heading = `📅 今日のスケジュール ${todayEvents.length}件`
 
   const userIds = users.map(u => u.id)
   const result = await sendNotification(userIds, heading, content, 'https://connects-git-kudodev-y-kudo-cmyks-projects.vercel.app/')
