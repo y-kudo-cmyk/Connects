@@ -145,9 +145,8 @@ async function eveningNotification(currentTime: string, today: string) {
   return { type: 'evening', users: userIds.length, ...result }
 }
 
-// ── 3. MYイベントリマインダー ────────────────────────────────
-async function myEventReminder(today: string) {
-  // notif_event_reminder=true のユーザー
+// ── 3. MYイベントリマインダー（1時間前） ─────────────────────
+async function myEventReminder(currentTime: string, today: string) {
   const { data: users } = await supabase
     .from('profiles')
     .select('id')
@@ -155,31 +154,40 @@ async function myEventReminder(today: string) {
 
   if (!users || users.length === 0) return { type: 'reminder', skipped: true }
 
-  // 明日のイベント（リマインダー = 開始前日）
-  const tomorrow = new Date(today + 'T00:00:00Z')
-  tomorrow.setDate(tomorrow.getDate() + 1)
-  const tomorrowStr = tomorrow.toISOString().slice(0, 10)
+  // 現在時刻の1時間後 = リマインダー対象の開始時刻
+  const [h, m] = currentTime.split(':').map(Number)
+  const targetHour = String(h + 1).padStart(2, '0')
+  const targetTime = `${targetHour}:00`
 
+  let sent = 0
   for (const user of users) {
-    // ユーザーのMYエントリーで明日のもの
     const { data: entries } = await supabase
       .from('my_entries')
-      .select('title, date, time')
+      .select('event_title, start_date')
       .eq('user_id', user.id)
-      .gte('date', tomorrowStr)
-      .lte('date', tomorrowStr)
 
     if (!entries || entries.length === 0) continue
 
-    let content = `📌 明日のMYスケジュール\n`
-    entries.forEach(e => {
-      content += `・${e.title}${e.time ? ' ' + e.time : ''}\n`
+    // 今日の、1時間後に開始するイベントを抽出
+    const upcoming = entries.filter(e => {
+      if (!e.start_date) return false
+      const date = e.start_date.slice(0, 10)
+      const time = e.start_date.slice(11, 16)
+      return date === today && time === targetTime
     })
 
-    await sendNotification([user.id], '📌 明日のMYスケジュール', content.trim(), 'https://connects-nu.vercel.app/my')
+    if (upcoming.length === 0) continue
+
+    let content = `⏰ まもなく開始！\n`
+    upcoming.forEach(e => {
+      content += `・${e.event_title} ${targetTime}〜\n`
+    })
+
+    await sendNotification([user.id], '⏰ 1時間後に開始', content.trim(), 'https://connects-nu.vercel.app/my')
+    sent++
   }
 
-  return { type: 'reminder', users: users.length }
+  return { type: 'reminder', users: sent }
 }
 
 // ── API Route（毎時 Cron で呼ばれる） ────────────────────────
@@ -199,8 +207,8 @@ export async function GET(request: NextRequest) {
   const results = await Promise.all([
     morningNotification(currentTime, date),
     eveningNotification(currentTime, date),
-    // リマインダーは朝8時に1回だけ
-    currentTime === '08:00' ? myEventReminder(date) : { type: 'reminder', skipped: true, reason: 'not 8am' },
+    // リマインダーは毎時実行（1時間前通知）
+    myEventReminder(currentTime, date),
   ])
 
   return NextResponse.json({ time: currentTime, date, results })
