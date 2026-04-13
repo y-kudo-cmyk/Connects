@@ -13,7 +13,7 @@ export default function NotificationPage() {
   const searchParams = useSearchParams()
   const router = useRouter()
   const TODAY = useToday()
-  const { events } = useSupabaseData()
+  const { events, loading } = useSupabaseData()
   const [detailEvent, setDetailEvent] = useState<AppEvent | null>(null)
 
   const type = searchParams.get('type') || 'morning'
@@ -103,7 +103,12 @@ export default function NotificationPage() {
         )}
 
         {/* イベント一覧 */}
-        {displayEvents.length === 0 && type !== 'evening' && (
+        {loading && (
+          <div className="flex flex-col items-center justify-center py-16">
+            <span className="text-sm font-bold" style={{ color: '#8E8E93' }}>読み込み中...</span>
+          </div>
+        )}
+        {!loading && displayEvents.length === 0 && type !== 'evening' && (
           <div className="flex flex-col items-center justify-center py-16">
             <span className="text-4xl mb-3">🎉</span>
             <p className="text-sm font-bold" style={{ color: '#8E8E93' }}>スケジュールはありません</p>
