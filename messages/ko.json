@@ -259,7 +259,17 @@
     "genreFashion": "패션",
     "genreEntertainment": "엔터테인먼트",
     "genreMusic": "음악",
-    "genreOther": "기타"
+    "genreOther": "기타",
+    "spotName": "스팟 이름",
+    "address": "주소",
+    "genre": "장르",
+    "memberTag": "멤버 태그",
+    "sourceUrl": "소스 URL",
+    "officialUrl": "공식 URL",
+    "memo": "메모",
+    "editRequestSent": "수정 요청이 전송되었습니다 (승인 후 반영됩니다)",
+    "submitEditRequest": "수정 요청 전송",
+    "saveEdit": "저장"
   },
   "Seat": {
     "seatViewFromHere": "이 좌석에서의 전망",

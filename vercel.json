@@ -15,6 +15,10 @@
     {
       "path": "/api/notify-schedule",
       "schedule": "0 * * * *"
+    },
+    {
+      "path": "/api/scrape-schedule",
+      "schedule": "10 * * * *"
     }
   ]
 }

@@ -16,6 +16,7 @@ const MONTH_SHORT = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct'
 export default function NewSchedulePreview() {
   const TODAY = useToday()
   const t = useTranslations()
+  const dayNamesShort = t.raw('Calendar.dayNamesShort') as string[]
   const [dismissed, setDismissed] = useState<Set<string>>(new Set())
   const { events } = useSupabaseData()
   const [detailEvent, setDetailEvent] = useState<AppEvent | null>(null)
@@ -60,7 +61,8 @@ export default function NewSchedulePreview() {
   }
 
   const upcoming = events
-    .filter((e) => e.date >= TODAY && !dismissed.has(e.id))
+    .filter((e) => e.date >= TODAY && !dismissed.has(e.id) && !e.tags?.includes('BIRTHDAY'))
+    .sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''))
     .slice(0, 8)
 
   if (upcoming.length === 0) return null
@@ -101,7 +103,7 @@ export default function NewSchedulePreview() {
                 <button
                   onClick={() => setDetailEvent(event)}
                   className="w-full relative overflow-hidden"
-                  style={{ height: 90 }}
+                  style={{ height: 200 }}
                 >
                   {event.image ? (
                     // eslint-disable-next-line @next/next/no-img-element
@@ -151,13 +153,18 @@ export default function NewSchedulePreview() {
                     className="text-[10px] font-black px-2 py-0.5 rounded-full self-start"
                     style={{ background: cfg.bg, color: cfg.color }}
                   >
-                    {MONTH_SHORT[d.getMonth()]} {d.getDate()}{event.time && event.time !== '00:00' ? ` ${event.time}` : ''}
+                    {d.getMonth()+1}/{d.getDate()}({dayNamesShort[d.getDay()]}){event.time && event.time !== '00:00' ? ` ${event.time}` : ''}
                   </span>
 
                   {/* Title */}
-                  <p className="text-xs font-semibold leading-tight flex-1" style={{ color: '#1C1C1E' }}>
+                  <p className="text-[10px] leading-tight" style={{ color: '#8E8E93' }}>
                     {event.title}
                   </p>
+                  {event.subTitle && (
+                    <p className="text-xs font-bold leading-tight" style={{ color: '#1C1C1E' }}>
+                      {event.subTitle}
+                    </p>
+                  )}
 
                   {event.venue && (
                     <p className="text-[10px]" style={{ color: '#8E8E93' }}>📍 {event.venue}</p>

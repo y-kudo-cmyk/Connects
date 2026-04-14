@@ -16,7 +16,7 @@ const LANGUAGES = [
   { code: 'ko' as const, flag: '🇰🇷', label: '한국어' },
 ]
 
-const USER_ID = 'CARAT#28596'
+// membership_number from profile (e.g. U000001)
 
 const RANKS = [
   { key: 'none',     label: 'None',     color: '#8E8E93', bg: '#F0F0F5',   initial: '○', min: 0,   next: 1   },
@@ -262,7 +262,7 @@ export default function ProfilePage() {
           <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#636366" strokeWidth="2">
             <rect x="2" y="5" width="20" height="14" rx="2" /><line x1="2" y1="10" x2="22" y2="10" />
           </svg>
-          <span className="text-xs font-mono font-semibold" style={{ color: '#636366' }}>{USER_ID}</span>
+          <span className="text-xs font-mono font-semibold" style={{ color: '#636366' }}>{profile.membershipNumber || ''}</span>
         </div>
 
         {editingBio ? (
@@ -502,6 +502,8 @@ export default function ProfilePage() {
 
           {notifExpanded && (
             <div style={{ borderTop: '1px solid #F0F0F5', background: '#FAFAFA' }}>
+              {/* 通知デバッグ情報 + 許可ボタン */}
+              <PushDebugPanel />
               {/* 朝の通知 */}
               <div className="px-5 py-3 flex items-center gap-3">
                 <span className="text-sm flex-1" style={{ color: '#1C1C1E' }}>{t('Profile.notifMorning')}</span>
@@ -973,6 +975,109 @@ export default function ProfilePage() {
             </div>
           </div>
         </div>
+      )}
+    </div>
+  )
+}
+
+function PushDebugPanel() {
+  const [info, setInfo] = useState<string[]>([])
+  const [checked, setChecked] = useState(false)
+
+  const check = async () => {
+    const lines: string[] = []
+    const isIOS = /iPhone|iPad|iPod/.test(navigator.userAgent)
+    const isStandalone = ('standalone' in navigator && (navigator as any).standalone) || window.matchMedia('(display-mode: standalone)').matches
+    lines.push(isIOS ? '📱 iPhone' : '💻 その他')
+    lines.push(isStandalone ? '✅ ホーム画面から起動' : '⚠️ ブラウザから起動（ホーム画面に追加してください）')
+    lines.push(typeof Notification !== 'undefined' ? '✅ Notification API 対応' : '❌ Notification API 非対応')
+    lines.push('serviceWorker' in navigator ? '✅ Service Worker 対応' : '❌ Service Worker 非対応')
+    if (typeof Notification !== 'undefined') {
+      lines.push('現在の許可状態: ' + Notification.permission)
+    }
+    if ('serviceWorker' in navigator) {
+      const regs = await navigator.serviceWorker.getRegistrations()
+      lines.push('Service Worker 登録数: ' + regs.length)
+      if (regs.length === 0) lines.push('⚠️ Service Workerが未登録')
+    }
+    // iOSバージョンチェック
+    if (isIOS) {
+      const match = navigator.userAgent.match(/OS (\d+)_/)
+      const ver = match ? parseInt(match[1]) : 0
+      lines.push('iOS version: ' + ver)
+      if (ver < 16) lines.push('❌ iOS 16.4以上が必要です')
+    }
+    setInfo(lines)
+    setChecked(true)
+  }
+
+  const handlePermission = async () => {
+    try {
+      // SW状態を確認
+      if ('serviceWorker' in navigator) {
+        const reg = await navigator.serviceWorker.ready
+        setInfo(prev => [...prev, 'SW ready: ' + (reg.active ? 'active' : 'waiting')])
+        setInfo(prev => [...prev, 'pushManager: ' + (reg.pushManager ? 'あり' : 'なし')])
+      }
+      if (typeof Notification !== 'undefined') {
+        setInfo(prev => [...prev, '許可ダイアログ表示中...'])
+        // callback形式とPromise形式の両方を試す（iOS互換）
+        let result: string
+        try {
+          result = await new Promise<string>((resolve) => {
+            const p = Notification.requestPermission((r) => resolve(r))
+            if (p && typeof p.then === 'function') p.then(resolve)
+          })
+        } catch {
+          result = Notification.permission
+        }
+        setInfo(prev => [...prev, '許可結果: ' + result])
+        if (result === 'granted') {
+          setInfo(prev => [...prev, '✅ 通知が許可されました！'])
+          // OneSignalに登録
+          try {
+            const { initOneSignal, loginOneSignal } = await import('@/lib/onesignal/client')
+            await initOneSignal()
+            setInfo(prev => [...prev, 'OneSignal init: OK'])
+            // ユーザーIDを紐づけ
+            const { createClient } = await import('@/lib/supabase/client')
+            const sb = createClient()
+            const { data: { user } } = await sb.auth.getUser()
+            if (user) {
+              await loginOneSignal(user.id)
+              setInfo(prev => [...prev, 'OneSignal login: OK (' + user.id.slice(0, 8) + '...)'])
+            }
+          } catch (e2: any) {
+            setInfo(prev => [...prev, 'OneSignal登録エラー: ' + e2?.message])
+          }
+        }
+      } else {
+        setInfo(prev => [...prev, '❌ このブラウザは通知非対応です'])
+      }
+    } catch (e: any) {
+      setInfo(prev => [...prev, 'エラー: ' + e?.message])
+    }
+  }
+
+  return (
+    <div className="px-5 py-3 flex flex-col gap-2">
+      {!checked ? (
+        <button onClick={check}
+          className="w-full py-2.5 rounded-xl text-sm font-bold"
+          style={{ background: 'linear-gradient(135deg, #F3B4E3, #C97AB8)', color: '#FFFFFF' }}>
+          🔔 通知の状態を確認
+        </button>
+      ) : (
+        <>
+          <div className="rounded-xl p-3 text-xs leading-relaxed" style={{ background: '#F0F0F5', color: '#1C1C1E' }}>
+            {info.map((line, i) => <p key={i}>{line}</p>)}
+          </div>
+          <button onClick={handlePermission}
+            className="w-full py-2.5 rounded-xl text-sm font-bold"
+            style={{ background: 'linear-gradient(135deg, #F3B4E3, #C97AB8)', color: '#FFFFFF' }}>
+            🔔 通知を許可する
+          </button>
+        </>
       )}
     </div>
   )

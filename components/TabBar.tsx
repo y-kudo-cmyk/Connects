@@ -89,9 +89,10 @@ export default function TabBar() {
       style={{
         background: '#F8F9FA',
         borderTop: '1px solid #2E2E32',
-        paddingBottom: 'env(safe-area-inset-bottom, 8px)',
+        paddingTop: 12,
+        paddingBottom: 'max(env(safe-area-inset-bottom, 0px), 28px)',
       }}
-      className="fixed bottom-0 left-0 right-0 z-50 flex justify-around items-center pt-2"
+      className="fixed bottom-0 left-0 right-0 z-50 flex justify-around items-center"
     >
       {tabs.map((tab) => {
         const active = isActive(tab.href)

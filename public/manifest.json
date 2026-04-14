@@ -3,7 +3,9 @@
   "short_name": "Connects+",
   "description": "K-POP Fan Community",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
+  "orientation": "portrait",
   "background_color": "#131315",
   "theme_color": "#131315",
   "icons": [
@@ -15,6 +17,12 @@
     {
       "src": "/icon-512.png",
       "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/apple-touch-icon.png",
+      "sizes": "180x180",
       "type": "image/png"
     }
   ]

@@ -25,19 +25,19 @@ export const cardTypeConfig: Record<CardType, { label: string; color: string; bg
 }
 
 export const seventeenMembers = [
-  { id: 'scoups',   name: "S.Coups",  color: '#3B82F6', photo: '/scoups.jpg'   },
-  { id: 'jeonghan', name: 'Jeonghan', color: '#8B5CF6', photo: '/jeonghan.jpg' },
-  { id: 'joshua',   name: 'Joshua',   color: '#06B6D4', photo: undefined       },
-  { id: 'jun',      name: 'Jun',      color: '#10B981', photo: undefined       },
-  { id: 'hoshi',    name: 'Hoshi',    color: '#F59E0B', photo: '/hoshi.jpg'    },
-  { id: 'wonwoo',   name: 'Wonwoo',   color: '#6366F1', photo: '/wonwoo.jpg'   },
-  { id: 'woozi',    name: 'Woozi',    color: '#EC4899', photo: '/woozi.jpg'    },
-  { id: 'dk',       name: 'DK',       color: '#F97316', photo: '/dk.jpg'       },
-  { id: 'mingyu',   name: 'Mingyu',   color: '#14B8A6', photo: '/mingyu.jpg'   },
-  { id: 'the8',     name: 'The8',     color: '#84CC16', photo: undefined       },
-  { id: 'seungkwan',name: 'Seungkwan',color: '#EF4444', photo: '/seungkwan.jpg'},
-  { id: 'vernon',   name: 'Vernon',   color: '#A78BFA', photo: '/vernon.jpg'   },
-  { id: 'dino',     name: 'Dino',     color: '#FB923C', photo: '/dino.jpg'     },
+  { id: 'scoups',   name: 'S.COUPS',   color: '#3B82F6', photo: '/scoups.jpg'   },
+  { id: 'jeonghan', name: 'JEONGHAN',  color: '#8B5CF6', photo: '/jeonghan.jpg' },
+  { id: 'joshua',   name: 'JOSHUA',    color: '#06B6D4', photo: undefined       },
+  { id: 'jun',      name: 'JUN',       color: '#10B981', photo: undefined       },
+  { id: 'hoshi',    name: 'HOSHI',     color: '#F59E0B', photo: '/hoshi.jpg'    },
+  { id: 'wonwoo',   name: 'WONWOO',    color: '#6366F1', photo: '/wonwoo.jpg'   },
+  { id: 'woozi',    name: 'WOOZI',     color: '#EC4899', photo: '/woozi.jpg'    },
+  { id: 'dk',       name: 'DK',        color: '#F97316', photo: '/dk.jpg'       },
+  { id: 'mingyu',   name: 'MINGYU',    color: '#14B8A6', photo: '/mingyu.jpg'   },
+  { id: 'the8',     name: 'THE 8',     color: '#84CC16', photo: undefined       },
+  { id: 'seungkwan',name: 'SEUNGKWAN', color: '#EF4444', photo: '/seungkwan.jpg'},
+  { id: 'vernon',   name: 'VERNON',    color: '#A78BFA', photo: '/vernon.jpg'   },
+  { id: 'dino',     name: 'DINO',      color: '#FB923C', photo: '/dino.jpg'     },
 ]
 
 export type EventType = 'concert' | 'fanmeet' | 'release' | 'broadcast' | 'birthday' | 'variety'
@@ -96,9 +96,12 @@ export type PilgrimageSpot = {
 }
 
 /** スポットが「情報完備」かどうか（ピンの色判定用） */
-export function isSpotComplete(spot: { photos?: { id: string }[] }, confirmedUserPhotoCount: number): boolean {
+export function isSpotComplete(spot: { photos?: { id: string; sourceUrl?: string; tags?: string[] }[]; members?: string[]; sourceUrl?: string; name?: string; address?: string; genre?: string }, confirmedUserPhotoCount: number): boolean {
   const seedCount = spot.photos?.length ?? 0
-  return (seedCount + confirmedUserPhotoCount) > 0
+  const hasPhotos = (seedCount + confirmedUserPhotoCount) > 0
+  const hasMembers = (spot.members ?? []).some(m => m !== 'ALL')
+  const hasSource = !!(spot.sourceUrl || spot.photos?.some(p => p.sourceUrl))
+  return hasPhotos && hasMembers && hasSource
 }
 
 /** 韓国 → NAVER MAP / 日本 → Google Maps */

@@ -11,6 +11,8 @@ import {
   getMapAppName,
   isSpotComplete,
 } from '@/lib/config/constants'
+import { APPROVAL_THRESHOLD, type SpotGenre as SpotGenreType, spotGenreConfig as genreConfig } from '@/lib/config/tags'
+import { useVoting } from '@/lib/supabase/useVoting'
 import type { AppSpot } from '@/lib/supabase/adapters'
 import type { SpotPhoto } from '@/lib/useSpotPhotos'
 import EventCard from '@/components/EventCard'
@@ -19,6 +21,8 @@ import { useFavoriteSpots } from '@/lib/useFavoriteSpots'
 import { useSpotPhotos } from '@/lib/useSpotPhotos'
 import { compressImage } from '@/lib/useMyEntries'
 import { useProfile } from '@/lib/useProfile'
+import { useAuth } from '@/lib/supabase/useAuth'
+import { createClient } from '@/lib/supabase/client'
 import { useToday } from '@/lib/useToday'
 import { useTranslations } from 'next-intl'
 
@@ -49,7 +53,7 @@ const ALL_TAGS = ['SEVENTEEN', ...seventeenMembers.map((m) => m.name)]
 export default function MapPage() {
   const TODAY = useToday()
   const t = useTranslations()
-  const { events, spots: allSpots } = useSupabaseData()
+  const { events, spots: allSpots, refreshSpots } = useSupabaseData()
   const [search, setSearch] = useState('')
   const [memberFilter, setMemberFilter] = useState('ALL')
   const [limitedFilter, setLimitedFilter] = useState(false)
@@ -74,7 +78,8 @@ export default function MapPage() {
       if (!matchName && !matchDesc && !matchMember && !matchAddress) return false
     }
     if (memberFilter !== 'ALL') {
-      if (!spot.members.includes('ALL') && !spot.members.includes(memberFilter)) return false
+      const filterUpper = memberFilter.toUpperCase()
+      if (!spot.members.includes('ALL') && !spot.members.some((m) => m.toUpperCase() === filterUpper)) return false
     }
     return true
   })
@@ -95,13 +100,13 @@ export default function MapPage() {
       }
     })
     return set
-  }, [photoMap])
+  }, [allSpots, photoMap, getConfirmedCount])
 
   const handleSpotSelect = useCallback((id: string) => {
     setSelectedId(id)
     const spot = allSpots.find((s) => s.id === id)
     if (spot) setPreviewSpot(spot)
-  }, [])
+  }, [allSpots])
 
   // 詳細画面表示中
   if (detailSpot) {
@@ -118,12 +123,13 @@ export default function MapPage() {
           isIncomplete={incompleteIds.has(detailSpot.id)}
           onClose={() => setDetailSpot(null)}
           onMemberFilter={(name) => { setMemberFilter(name); setDetailSpot(null) }}
+          onRefresh={refreshSpots}
         />
         {uploadSpot && (
           <PhotoUploadModal
             spot={uploadSpot}
             defaultContributor={profile.nickname || t('Common.user')}
-            onSave={(photo) => { addPhoto(uploadSpot.id, { ...photo, status: 'pending', votes: 0 }); setUploadSpot(null) }}
+            onSave={async (photos) => { for (const photo of photos) { await addPhoto(uploadSpot.id, { ...photo, status: 'pending', votes: 0 }) } setUploadSpot(null) }}
             onClose={() => setUploadSpot(null)}
           />
         )}
@@ -303,7 +309,9 @@ export default function MapPage() {
                   const fav = isFavorite(spot.id)
                   const incomplete = incompleteIds.has(spot.id)
                   const userPhotos = getPhotos(spot.id)
-                  const totalPhotos = (spot.photos?.length ?? 0) + userPhotos.length
+                  const seedUrls = new Set((spot.photos ?? []).map((p) => p.imageUrl).filter(Boolean))
+                  const userOnly = userPhotos.filter((p) => !seedUrls.has(p.imageUrl))
+                  const totalPhotos = seedUrls.size + userOnly.length
                   return (
                     <div key={spot.id} className="rounded-xl overflow-hidden relative"
                       style={{
@@ -422,7 +430,7 @@ function PlatformBadge({ platform }: { platform?: SpotPlatform }) {
 
 // ─── スポット詳細画面（フルスクリーン） ──────────────────────
 function SpotDetailScreen({
-  spot, isFavorite, onToggleFav, userPhotos, onRemovePhoto, onConfirmPhoto, onOpenUpload, isIncomplete, onClose, onMemberFilter,
+  spot, isFavorite, onToggleFav, userPhotos, onRemovePhoto, onConfirmPhoto, onOpenUpload, isIncomplete, onClose, onMemberFilter, onRefresh,
 }: {
   spot: AppSpot
   isFavorite: boolean
@@ -434,18 +442,57 @@ function SpotDetailScreen({
   isIncomplete: boolean
   onClose: () => void
   onMemberFilter: (name: string) => void
+  onRefresh?: () => Promise<void>
 }) {
   const t = useTranslations()
+  const { user } = useAuth()
   const [showUrlInput, setShowUrlInput] = useState(false)
   const [urlInput, setUrlInput] = useState('')
   const [urlSubmitted, setUrlSubmitted] = useState(false)
+  const [editing, setEditing] = useState(false)
+  const [editSaving, setEditSaving] = useState(false)
+  const [editName, setEditName] = useState(spot.name)
+  const [editAddress, setEditAddress] = useState(spot.address)
+  const [editGenre, setEditGenre] = useState(spot.genre.toUpperCase())
+  const [editOfficialUrl, setEditOfficialUrl] = useState(spot.officialUrl ?? '')
+
+  const ALL_GENRE_KEYS: SpotGenreType[] = ['CAFE', 'RESTAURANT', 'FASHION', 'ENTERTAINMENT', 'MUSIC', 'OTHER']
+
+  const handleEditSave = async () => {
+    setEditSaving(true)
+
+    // サーバーAPI経由で更新（RLSバイパス）
+    const updates: Record<string, unknown> = {
+      spot_name: editName,
+      spot_address: editAddress,
+      genre: editGenre,
+      spot_url: editOfficialUrl || null,
+    }
+
+    await fetch('/api/update-spot', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ spotId: spot.id, updates }),
+    })
+
+    await onRefresh?.()
+    setEditSaving(false)
+    setEditing(false)
+  }
+
   const mapUrl = getMapUrl(spot)
   const mapName = getMapAppName(spot)
   const isKorea = spot.city === 'Seoul' || spot.city === 'Busan' || spot.city === 'Incheon'
-  const seedPhotos: SpotPhoto[] = (spot.photos ?? []).map((p) => ({ ...p, imageUrl: p.imageUrl ?? '', sourceUrl: p.sourceUrl ?? '', platform: p.platform ?? '', status: 'confirmed' as const }))
+  const seedPhotos: SpotPhoto[] = (spot.photos ?? []).map((p) => ({ ...p, imageUrl: p.imageUrl ?? '', sourceUrl: p.sourceUrl ?? '', platform: p.platform ?? '', status: p.status as 'pending' | 'confirmed' ?? 'pending' }))
   const allPhotos: SpotPhoto[] = [...seedPhotos, ...userPhotos]
-  const pendingPhotos = userPhotos.filter((p) => p.status === 'pending')
-  const confirmedPhotos = allPhotos.filter((p) => p.status === 'confirmed')
+  // Remove duplicate photos (same imageUrl)
+  const seen = new Set<string>()
+  const uniquePhotos = allPhotos.filter((p) => {
+    if (!p.imageUrl) return true
+    if (seen.has(p.imageUrl)) return false
+    seen.add(p.imageUrl)
+    return true
+  })
 
   const handleUrlSubmit = () => {
     if (!urlInput.trim()) return
@@ -480,6 +527,16 @@ function SpotDetailScreen({
         <div className="flex-1 min-w-0">
           <p className="text-sm font-black tracking-wider" style={{ color: '#1C1C1E' }}>MAP</p>
         </div>
+        {user && !editing && (
+          <button onClick={() => setEditing(true)}
+            className="w-9 h-9 flex items-center justify-center rounded-full flex-shrink-0"
+            style={{ background: '#F0F0F5', border: '1px solid #E5E5EA' }}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#636366" strokeWidth="2">
+              <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" />
+              <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" />
+            </svg>
+          </button>
+        )}
         <button onClick={onToggleFav}
           className="w-9 h-9 flex items-center justify-center rounded-full flex-shrink-0"
           style={{ background: isFavorite ? 'rgba(251,113,133,0.15)' : '#FFFFFF', border: '1px solid #E5E5EA' }}>
@@ -495,26 +552,82 @@ function SpotDetailScreen({
           {/* ── 基本情報 ── */}
           <div className="rounded-2xl overflow-hidden" style={{ background: '#FFFFFF' }}>
             <div className="px-4 py-4">
-              <p className="text-base font-black mb-1" style={{ color: '#1C1C1E' }}>{spot.name}</p>
-              {spot.nameLocal && spot.nameLocal !== spot.name && (
-                <p className="text-sm font-semibold mb-1" style={{ color: '#636366' }}>{spot.nameLocal}</p>
-              )}
-              <p className="text-sm mb-2" style={{ color: '#8E8E93' }}>📍 {spot.address}</p>
-              {spot.contributor && (
-                <div className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-[11px] font-semibold mb-1"
-                  style={{ background: '#F0F0F5', color: '#636366' }}>
-                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                    <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" /><circle cx="12" cy="7" r="4" />
-                  </svg>
-                  {spot.contributor}
+              {editing ? (
+                <div className="flex flex-col gap-3">
+                  {/* スポット名 */}
+                  <div>
+                    <label className="text-xs font-bold mb-1.5 block" style={{ color: '#636366' }}>{t('Map.spotName')}</label>
+                    <input type="text" value={editName} onChange={(e) => setEditName(e.target.value)}
+                      className="w-full px-3 py-2.5 rounded-xl text-sm font-bold outline-none"
+                      style={{ color: '#1C1C1E', background: '#FFFFFF', border: '1.5px solid #F3B4E3' }} />
+                  </div>
+                  {/* 住所 */}
+                  <div>
+                    <label className="text-xs font-bold mb-1.5 block" style={{ color: '#636366' }}>{t('Map.address')}</label>
+                    <input type="text" value={editAddress} onChange={(e) => setEditAddress(e.target.value)}
+                      className="w-full px-3 py-2.5 rounded-xl text-sm outline-none"
+                      style={{ color: '#1C1C1E', background: '#FFFFFF', border: '1.5px solid #F3B4E3' }} />
+                  </div>
+                  {/* ジャンル */}
+                  <div>
+                    <label className="text-xs font-bold mb-1.5 block" style={{ color: '#636366' }}>{t('Map.genre')}</label>
+                    <div className="flex flex-wrap gap-2">
+                      {ALL_GENRE_KEYS.map((g) => {
+                        const gc = genreConfig[g]
+                        const selected = editGenre === g
+                        return (
+                          <button key={g} onClick={() => setEditGenre(g)}
+                            className="px-3 py-1.5 rounded-full text-xs font-bold"
+                            style={selected
+                              ? { background: gc.color, color: '#FFFFFF' }
+                              : { background: gc.bg, color: gc.color }
+                            }>
+                            {gc.icon} {gc.label}
+                          </button>
+                        )
+                      })}
+                    </div>
+                  </div>
+                  {/* 公式URL */}
+                  <div>
+                    <label className="text-xs font-bold mb-1.5 block" style={{ color: '#636366' }}>{t('Map.officialUrl')}</label>
+                    <input type="url" value={editOfficialUrl} onChange={(e) => setEditOfficialUrl(e.target.value)}
+                      placeholder="https://..."
+                      className="w-full px-3 py-2.5 rounded-xl text-sm outline-none"
+                      style={{ color: '#1C1C1E', background: '#FFFFFF', border: '1.5px solid #F3B4E3' }} />
+                  </div>
                 </div>
-              )}
-              {isIncomplete && (
-                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full"
-                  style={{ background: 'rgba(245,158,11,0.15)', color: '#F59E0B' }}>{t('Map.infoWanted')}</span>
+              ) : (
+                <>
+                  <p className="text-base font-black mb-1" style={{ color: '#1C1C1E' }}>{spot.name}</p>
+                  {spot.nameLocal && spot.nameLocal !== spot.name && (
+                    <p className="text-sm font-semibold mb-1" style={{ color: '#636366' }}>{spot.nameLocal}</p>
+                  )}
+                  <p className="text-sm mb-2" style={{ color: '#8E8E93' }}>📍 {spot.address}</p>
+                  {isIncomplete && (
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full"
+                      style={{ background: 'rgba(245,158,11,0.15)', color: '#F59E0B' }}>{t('Map.infoWanted')}</span>
+                  )}
+                </>
               )}
             </div>
           </div>
+
+          {/* 編集モード: 保存 / キャンセル */}
+          {editing && (
+            <div className="flex gap-2">
+              <button onClick={() => { setEditing(false); setEditName(spot.name); setEditAddress(spot.address); setEditGenre(spot.genre.toUpperCase()); setEditOfficialUrl(spot.officialUrl ?? '') }}
+                className="flex-1 py-3.5 rounded-xl text-sm font-bold"
+                style={{ background: '#F0F0F5', color: '#636366' }}>
+                {t('Common.cancel')}
+              </button>
+              <button onClick={handleEditSave} disabled={editSaving}
+                className="flex-1 py-3.5 rounded-xl text-sm font-bold"
+                style={{ background: '#34D399', color: '#FFFFFF' }}>
+                {editSaving ? t('Common.saving') : t('Map.saveEdit')}
+              </button>
+            </div>
+          )}
 
           {/* マップ・HP */}
           <div className="flex gap-3">
@@ -539,10 +652,12 @@ function SpotDetailScreen({
               </a>
             ) : (
               <button onClick={() => setShowUrlInput(true)}
-                className="flex-1 flex items-center justify-center gap-2 py-3.5 rounded-2xl text-sm font-bold"
+                className="flex-1 flex flex-col items-center justify-center gap-1 py-3 rounded-2xl text-sm font-bold"
                 style={{ background: '#FFFFFF', color: '#F59E0B', border: '1px dashed rgba(245,158,11,0.5)' }}>
-                <span className="text-xs">！</span>
-                {t('Map.hpWanted')}
+                <div className="flex items-center gap-1">
+                  <span className="text-xs">！</span>
+                  {t('Map.hpWanted')}
+                </div>
               </button>
             )}
           </div>
@@ -597,71 +712,35 @@ function SpotDetailScreen({
           <p className="text-xs font-semibold mb-2" style={{ color: '#8E8E93' }}>{t('Map.photos')}</p>
         </div>
         <div className="pb-4">
-          {confirmedPhotos.length === 0 ? (
-            <button onClick={onOpenUpload}
-              className="mx-4 w-[calc(100%-32px)] flex flex-col items-center justify-center gap-2 rounded-2xl"
-              style={{ height: 160, background: '#EEEFF4' }}>
-              <span className="text-4xl">📷</span>
-              <span className="text-sm font-semibold" style={{ color: '#636366' }}>{t('Map.firstPhoto')}</span>
-            </button>
+          {uniquePhotos.length === 0 ? (
+            <div className="mx-4">
+              <button onClick={onOpenUpload}
+                className="w-full rounded-2xl flex flex-col items-center justify-center gap-2 p-4"
+                style={{ height: 160, background: '#F0F0F5', border: '1px dashed #C7C7CC' }}>
+                {spot.description && (
+                  <span className="text-xs font-semibold text-center mb-1" style={{ color: '#636366' }}>{spot.description}</span>
+                )}
+                <span className="text-sm font-semibold" style={{ color: '#8E8E93' }}>画像を追加してください</span>
+                <span className="text-3xl">📷</span>
+              </button>
+            </div>
           ) : (
-            <div className="flex gap-2 px-4 overflow-x-auto" style={{ scrollbarWidth: 'none' }}>
-              {confirmedPhotos.map((photo) => (
+            <div className="flex gap-2 px-4 overflow-x-auto" style={{ scrollbarWidth: 'thin' }}>
+              {uniquePhotos.map((photo) => (
                 <PhotoCard key={photo.id} photo={photo}
                   isUserPhoto={userPhotos.some((p) => p.id === photo.id)}
                   onRemove={() => onRemovePhoto(photo.id)}
-                  onRequestUpload={onOpenUpload} />
+                  spotId={spot.id}
+                  spotMemo={spot.description}
+                  spotContributor={spot.submittedByName}
+                  onSavePhoto={onRefresh}
+                  onVotePhoto={(photoId) => onConfirmPhoto(photoId)} />
               ))}
             </div>
           )}
         </div>
 
         <div className="px-4 flex flex-col gap-4 pb-28">
-
-          {/* 承認待ち写真 */}
-          {pendingPhotos.length > 0 && (
-            <div>
-              <div className="flex items-center gap-2 mb-3">
-                <span className="text-xs font-bold px-2 py-0.5 rounded-full"
-                  style={{ background: 'rgba(245,158,11,0.15)', color: '#F59E0B' }}>{t('Map.pendingLabel')}</span>
-                <p className="text-xs font-bold" style={{ color: '#F59E0B' }}>{t('Map.pendingPhotos')} {pendingPhotos.length}{t('My.pendingCount')}</p>
-              </div>
-              <div className="flex flex-col gap-2">
-                {pendingPhotos.map((photo) => (
-                  <div key={photo.id} className="flex items-center gap-3 p-3 rounded-xl"
-                    style={{ background: '#FFFFFF', border: '1px solid rgba(245,158,11,0.3)' }}>
-                    {photo.imageUrl ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={photo.imageUrl} alt="" className="w-12 h-12 rounded-lg object-cover flex-shrink-0" />
-                    ) : (
-                      <div className="w-12 h-12 rounded-lg flex items-center justify-center flex-shrink-0 text-xl"
-                        style={{ background: '#F0F0F5' }}>📷</div>
-                    )}
-                    <div className="flex-1 min-w-0">
-                      <p className="text-xs font-semibold truncate" style={{ color: '#1C1C1E' }}>
-                        {photo.caption || photo.contributor}
-                      </p>
-                      <p className="text-[11px]" style={{ color: '#8E8E93' }}>{photo.date}</p>
-                    </div>
-                    <div className="flex gap-1 flex-shrink-0">
-                      <button onClick={() => onConfirmPhoto(photo.id)}
-                        className="flex items-center gap-1 px-3 py-2 rounded-full text-xs font-bold"
-                        style={{ background: 'rgba(52,211,153,0.15)', color: '#34D399' }}>
-                        ✓ {photo.votes ?? 0}/3
-                      </button>
-                      <button onClick={() => onRemovePhoto(photo.id)}
-                        className="w-9 h-9 rounded-full flex items-center justify-center"
-                        style={{ background: 'rgba(248,113,113,0.1)' }}>
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#F87171" strokeWidth="2.5">
-                          <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
-                        </svg>
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
 
           {/* 写真を投稿するボタン */}
           <button onClick={onOpenUpload}
@@ -685,41 +764,78 @@ function SpotDetailScreen({
 
 // ─── 写真カード ─────────────────────────────────────────────
 function PhotoCard({
-  photo, isUserPhoto, onRemove, onRequestUpload,
+  photo, isUserPhoto, onRemove, spotId, spotMemo, spotContributor, onSavePhoto, onVotePhoto,
 }: {
   photo: SpotPhoto
   isUserPhoto: boolean
   onRemove: () => void
-  onRequestUpload?: () => void
+  spotId: string
+  spotMemo?: string
+  spotContributor?: string
+  onSavePhoto?: () => Promise<void>
+  onVotePhoto?: (photoId: string) => void
 }) {
   const t = useTranslations()
-  const cardContent = (
+  const [showEdit, setShowEdit] = useState(false)
+  const [editSourceUrl, setEditSourceUrl] = useState(photo.sourceUrl || '')
+  const [editDate, setEditDate] = useState(photo.date || '')
+  const [editMembers, setEditMembers] = useState<string[]>(
+    (photo.tags || []).filter(t => t !== 'SEVENTEEN')
+  )
+  const [saving, setSaving] = useState(false)
+  const [savedSourceUrl, setSavedSourceUrl] = useState(photo.sourceUrl)
+  const [savedTags, setSavedTags] = useState(photo.tags || [])
+  const [savedDate, setSavedDate] = useState(photo.date || '')
+  const effectiveSourceUrl = savedSourceUrl || photo.sourceUrl
+
+  const toggleMember = (name: string) => {
+    setEditMembers(prev => prev.includes(name) ? prev.filter(m => m !== name) : [...prev, name])
+  }
+
+  const handleSave = async () => {
+    setSaving(true)
+    const tags = editMembers.length > 0
+      ? '#SEVENTEEN ' + editMembers.map(m => `#${m}`).join(' ')
+      : '#SEVENTEEN'
+    await fetch('/api/update-spot', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        photoId: photo.id,
+        spotId,
+        updates: {
+          source_url: editSourceUrl || null,
+          visit_date: editDate || null,
+          tags,
+        },
+      }),
+    })
+    setSavedSourceUrl(editSourceUrl)
+    setSavedTags(['SEVENTEEN', ...editMembers])
+    setSavedDate(editDate)
+    await onSavePhoto?.()
+    setSaving(false)
+    setShowEdit(false)
+  }
+
+  return (
     <div className="flex-shrink-0 rounded-xl overflow-hidden flex flex-col"
-      style={{ width: 'calc(50vw - 20px)', minWidth: 'calc(50vw - 20px)', background: '#F0F0F5', cursor: photo.sourceUrl ? 'pointer' : 'default' }}>
-      {/* 画像 */}
-      <div className="relative overflow-hidden">
+      style={{ width: 'calc(50vw - 20px)', minWidth: 'calc(50vw - 20px)', background: '#F0F0F5' }}>
+      {/* 画像 — タップでソースURLへ */}
+      <div className="relative overflow-hidden"
+        onClick={() => { if (effectiveSourceUrl) window.open(effectiveSourceUrl, '_blank') }}
+        style={{ cursor: effectiveSourceUrl ? 'pointer' : 'default' }}>
         {photo.imageUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img src={photo.imageUrl} alt="" className="w-full" style={{ display: 'block' }} />
         ) : (
-          <div className="w-full h-full flex items-center justify-center"
-            style={{ background: 'linear-gradient(135deg, #1C1C1F 0%, #252528 100%)' }}>
+          <div className="w-full flex items-center justify-center" style={{ height: 120, background: 'linear-gradient(135deg, #1C1C1F 0%, #252528 100%)' }}>
             <span className="text-3xl opacity-30">📷</span>
           </div>
         )}
-        {/* ユーザー投稿は削除ボタン */}
-        {isUserPhoto && (
-          <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); onRemove() }}
-            className="absolute top-1.5 right-1.5 w-6 h-6 rounded-full flex items-center justify-center"
-            style={{ background: 'rgba(0,0,0,0.75)' }}>
-            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" strokeWidth="2.5">
-              <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
-            </svg>
-          </button>
-        )}
-        {/* ソースアイコン */}
-        {photo.sourceUrl && (
-          <div className="absolute bottom-1.5 right-1.5 w-5 h-5 rounded-full flex items-center justify-center"
+        {/* ソースありアイコン（左下） */}
+        {effectiveSourceUrl && (
+          <div className="absolute bottom-1.5 left-1.5 w-5 h-5 rounded-full flex items-center justify-center"
             style={{ background: 'rgba(0,0,0,0.6)' }}>
             <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" strokeWidth="2.5">
               <path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6" />
@@ -728,12 +844,21 @@ function PhotoCard({
             </svg>
           </div>
         )}
+        {/* 編集ボタン（右下） */}
+        <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShowEdit(true) }}
+          className="absolute bottom-1.5 right-1.5 w-6 h-6 rounded-full flex items-center justify-center"
+          style={{ background: 'rgba(0,0,0,0.6)' }}>
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" strokeWidth="2.5">
+            <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" />
+            <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" />
+          </svg>
+        </button>
       </div>
       {/* タグ + 日付 */}
       <div className="px-2 py-2 flex flex-col gap-1">
-        {photo.tags && photo.tags.length > 0 && (
+        {savedTags.length > 0 && (
           <div className="flex flex-wrap gap-1">
-            {photo.tags.map((tag) => {
+            {savedTags.map((tag) => {
               const m = seventeenMembers.find((x) => x.name === tag)
               const isSVT = tag === 'SEVENTEEN'
               return (
@@ -749,29 +874,128 @@ function PhotoCard({
           </div>
         )}
         <p className="text-[10px] leading-tight" style={{ color: '#8E8E93' }}>
-          {photo.date.replace(/-/g, '/')}
+          {(savedDate || photo.date || '').replace(/-/g, '/')}
         </p>
-        {/* ソースURLがない場合 */}
-        {!photo.sourceUrl && onRequestUpload && (
-          <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); onRequestUpload() }}
-            className="flex items-center gap-1 mt-1 text-left"
-            style={{ color: '#F59E0B' }}>
+        {(photo.contributor || spotContributor) && (
+          <p className="text-[9px] font-semibold" style={{ color: '#B0B0B5' }}>👤 {photo.contributor || spotContributor}</p>
+        )}
+        {!effectiveSourceUrl && (
+          <div className="flex items-center gap-1 mt-1" style={{ color: '#F59E0B' }}>
             <span className="text-[9px]">！</span>
             <span className="text-[9px] font-bold">{t('Map.addSourceUrl')}</span>
-          </button>
+          </div>
         )}
+        {(photo.caption || spotMemo) && (
+          <p className="text-[9px] leading-tight mt-0.5" style={{ color: '#8E8E93' }}>{photo.caption || spotMemo}</p>
+        )}
+        {/* 承認状態バッジ */}
+        {(() => {
+          const isApproved = photo.status === 'confirmed' && (photo.votes ?? 0) >= 3
+          if (isApproved) return (
+            <span className="inline-flex items-center gap-0.5 mt-1 text-[9px] font-bold px-1.5 py-0.5 rounded-full"
+              style={{ background: 'rgba(52,211,153,0.15)', color: '#34D399' }}>✓ {photo.votes}/3</span>
+          )
+          return (
+            <span className="inline-flex items-center gap-0.5 mt-1 text-[9px] font-bold px-1.5 py-0.5 rounded-full"
+              style={{ background: 'rgba(245,158,11,0.12)', color: '#F59E0B' }}>
+              {photo.votes ?? 0}/3
+            </span>
+          )
+        })()}
       </div>
+      {/* 写真編集モーダル */}
+      {showEdit && (
+        <div className="fixed inset-0 z-[70] flex items-center justify-center px-6" onClick={() => setShowEdit(false)}>
+          <div className="absolute inset-0" style={{ background: 'rgba(0,0,0,0.5)' }} />
+          <div className="relative w-full max-w-sm rounded-2xl p-5 flex flex-col gap-3"
+            style={{ background: '#F8F9FA' }}
+            onClick={(e) => e.stopPropagation()}>
+            <p className="text-sm font-bold" style={{ color: '#1C1C1E' }}>写真を編集</p>
+            {/* メンバータグ */}
+            <div>
+              <label className="text-xs font-medium mb-1.5 block" style={{ color: '#636366' }}>メンバー</label>
+              <div className="flex flex-wrap gap-1.5">
+                {seventeenMembers.map((m) => {
+                  const selected = editMembers.includes(m.name)
+                  return (
+                    <button key={m.id} onClick={() => toggleMember(m.name)}
+                      className="px-2.5 py-1 rounded-full text-[11px] font-bold"
+                      style={selected
+                        ? { background: m.color, color: '#FFFFFF' }
+                        : { background: m.color + '18', color: m.color }
+                      }>
+                      {m.name}
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+            {/* ソースURL */}
+            <div>
+              <label className="text-xs font-medium mb-1 block" style={{ color: '#636366' }}>ソースURL</label>
+              <input type="url" value={editSourceUrl} onChange={(e) => setEditSourceUrl(e.target.value)}
+                placeholder="https://..."
+                className="w-full px-3 py-2.5 rounded-xl text-sm outline-none"
+                style={{ background: '#FFFFFF', border: '1px solid #E5E5EA', color: '#1C1C1E' }} />
+            </div>
+            {/* 訪問日 */}
+            <div>
+              <label className="text-xs font-medium mb-1 block" style={{ color: '#636366' }}>訪問日/投稿日</label>
+              <input type="date" value={editDate} onChange={(e) => setEditDate(e.target.value)}
+                className="w-full px-3 py-2.5 rounded-xl text-sm outline-none"
+                style={{ background: '#FFFFFF', border: '1px solid #E5E5EA', color: '#1C1C1E' }} />
+            </div>
+            {/* ソースを開く */}
+            {effectiveSourceUrl && (
+              <a href={effectiveSourceUrl} target="_blank" rel="noopener noreferrer"
+                className="w-full py-2.5 rounded-xl text-sm font-bold text-center block"
+                style={{ background: '#F0F0F5', color: '#636366' }}>
+                ソースを確認 ↗
+              </a>
+            )}
+            {/* 承認ボタン */}
+            {onVotePhoto && (() => {
+              const hasMembers = editMembers.length > 0
+              const hasSource = !!(editSourceUrl || effectiveSourceUrl)
+              const isComplete = hasMembers && hasSource
+              const isApproved = photo.status === 'confirmed' && (photo.votes ?? 0) >= 3
+              if (isApproved) return (
+                <div className="w-full py-3 rounded-xl text-sm font-bold text-center"
+                  style={{ background: 'rgba(52,211,153,0.15)', color: '#34D399' }}>
+                  ✓ 承認済み（{photo.votes}/3）
+                </div>
+              )
+              return (
+                <button
+                  onClick={() => { if (isComplete) { onVotePhoto(photo.id); setShowEdit(false) } }}
+                  disabled={!isComplete}
+                  className="w-full py-3 rounded-xl text-sm font-bold"
+                  style={!isComplete
+                    ? { background: '#F0F0F5', color: '#8E8E93' }
+                    : { background: 'rgba(52,211,153,0.15)', color: '#34D399' }
+                  }>
+                  {!isComplete ? '⚠ メンバーとソースURLを入力してください' : `👍 承認する（${photo.votes ?? 0}/3）`}
+                </button>
+              )
+            })()}
+            {/* 保存・キャンセル */}
+            <div className="flex gap-2">
+              <button onClick={() => setShowEdit(false)}
+                className="flex-1 py-2.5 rounded-xl text-sm font-bold"
+                style={{ background: '#F0F0F5', color: '#636366' }}>
+                {t('Common.cancel')}
+              </button>
+              <button onClick={handleSave} disabled={saving}
+                className="flex-1 py-2.5 rounded-xl text-sm font-bold"
+                style={{ background: '#F3B4E3', color: '#FFF' }}>
+                {saving ? t('Common.saving') : t('Common.save')}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
-
-  if (photo.sourceUrl) {
-    return (
-      <a href={photo.sourceUrl} target="_blank" rel="noopener noreferrer" className="flex-shrink-0">
-        {cardContent}
-      </a>
-    )
-  }
-  return <div className="flex-shrink-0">{cardContent}</div>
 }
 
 // ─── 写真投稿モーダル ───────────────────────────────────────
@@ -780,11 +1004,11 @@ function PhotoUploadModal({
 }: {
   spot: AppSpot
   defaultContributor: string
-  onSave: (photo: SpotPhoto) => void
+  onSave: (photos: SpotPhoto[]) => void
   onClose: () => void
 }) {
   const t = useTranslations()
-  const [imageDataUrl, setImageDataUrl] = useState<string | undefined>(undefined)
+  const [images, setImages] = useState<string[]>([])
   const [sourceUrl, setSourceUrl] = useState('')
   const [platform, setPlatform] = useState<SpotPlatform>('instagram')
   const [selectedTags, setSelectedTags] = useState<string[]>([])
@@ -800,15 +1024,24 @@ function PhotoUploadModal({
   }
 
   const handleImagePick = async (files: FileList | null) => {
-    if (!files || !files[0]) return
-    const url = await compressImage(files[0], 1200, 0.85)
-    setImageDataUrl(url)
+    if (!files || files.length === 0) return
+    const newImages: string[] = []
+    for (let i = 0; i < Math.min(files.length, 3 - images.length); i++) {
+      const url = await compressImage(files[i], 1200, 0.85)
+      newImages.push(url)
+    }
+    setImages(prev => [...prev, ...newImages].slice(0, 3))
+  }
+
+  const removeImage = (index: number) => {
+    setImages(prev => prev.filter((_, i) => i !== index))
   }
 
   const handleSave = () => {
-    const photo: SpotPhoto = {
-      id: Date.now().toString(),
-      imageUrl: imageDataUrl ?? '',
+    const imgs = images.length > 0 ? images : ['']
+    const photos: SpotPhoto[] = imgs.map(img => ({
+      id: Date.now().toString() + Math.random().toString(36).slice(2, 6),
+      imageUrl: img,
       sourceUrl: sourceUrl.trim() || '',
       platform,
       tags: selectedTags,
@@ -817,8 +1050,8 @@ function PhotoUploadModal({
       caption: caption.trim() || undefined,
       status: 'pending',
       votes: 0,
-    }
-    onSave(photo)
+    }))
+    onSave(photos)
   }
 
   const memberColors: Record<string, string> = Object.fromEntries(
@@ -849,31 +1082,34 @@ function PhotoUploadModal({
         {/* Scrollable content */}
         <div className="flex-1 min-h-0 overflow-y-auto px-4 py-4 flex flex-col gap-4">
 
-          {/* 画像 */}
+          {/* 画像（最大3枚） */}
           <div>
-            <label className="text-xs font-bold mb-2 block" style={{ color: '#636366' }}>{t('Map.photoLabel')}</label>
-            {imageDataUrl ? (
-              <div className="relative rounded-xl overflow-hidden" style={{ aspectRatio: '4/3' }}>
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={imageDataUrl} alt="" className="w-full h-full object-contain" style={{ background: '#000' }} />
-                <button onClick={() => setImageDataUrl(undefined)}
-                  className="absolute top-2 right-2 w-8 h-8 rounded-full flex items-center justify-center"
-                  style={{ background: 'rgba(0,0,0,0.7)' }}>
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" strokeWidth="2">
-                    <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
-                  </svg>
+            <label className="text-xs font-bold mb-2 block" style={{ color: '#636366' }}>{t('Map.photoLabel')} <span style={{ color: '#8E8E93', fontWeight: 400 }}>（最大3枚）</span></label>
+            <div className="flex gap-2">
+              {images.map((img, i) => (
+                <div key={i} className="relative rounded-xl overflow-hidden flex-1" style={{ aspectRatio: '1' }}>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={img} alt="" className="w-full h-full object-cover" />
+                  <button onClick={() => removeImage(i)}
+                    className="absolute top-1 right-1 w-6 h-6 rounded-full flex items-center justify-center"
+                    style={{ background: 'rgba(0,0,0,0.7)' }}>
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" strokeWidth="2.5">
+                      <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+                    </svg>
+                  </button>
+                </div>
+              ))}
+              {images.length < 3 && (
+                <button onClick={() => fileRef.current?.click()}
+                  className="rounded-xl flex flex-col items-center justify-center gap-1 flex-1"
+                  style={{ aspectRatio: '1', border: '2px dashed #E5E5EA', color: '#8E8E93', minHeight: 80 }}>
+                  <span className="text-2xl">📷</span>
+                  <span className="text-[10px]">{images.length === 0 ? t('Map.photoAdd') : '追加'}</span>
                 </button>
-              </div>
-            ) : (
-              <button onClick={() => fileRef.current?.click()}
-                className="w-full h-32 rounded-xl flex flex-col items-center justify-center gap-2"
-                style={{ border: '2px dashed #E5E5EA', color: '#8E8E93' }}>
-                <span className="text-3xl">📷</span>
-                <span className="text-xs">{t('Map.photoAdd')}</span>
-              </button>
-            )}
-            <input ref={fileRef} type="file" accept="image/*" className="hidden"
-              onChange={(e) => handleImagePick(e.target.files)} />
+              )}
+            </div>
+            <input ref={fileRef} type="file" accept="image/*" multiple className="hidden"
+              onChange={(e) => { handleImagePick(e.target.files); e.target.value = '' }} />
           </div>
 
           {/* 来店日 */}

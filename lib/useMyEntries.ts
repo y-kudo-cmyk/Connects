@@ -103,7 +103,7 @@ export function useMyEntries() {
     await supabase.from('my_entries').insert({
       user_id: user.id,
       event_id: entry.eventId || null,
-      tag: entry.type || null,
+      tag: entry.tags?.[0] || entry.type || null,
       event_title: entry.title,
       start_date: entry.date ? (entry.time ? `${entry.date}T${entry.time}:00` : `${entry.date}T00:00:00`) : null,
       end_date: entry.dateEnd ? `${entry.dateEnd}T00:00:00` : null,

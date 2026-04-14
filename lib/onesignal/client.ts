@@ -19,10 +19,21 @@ export async function initOneSignal(): Promise<boolean> {
     }
     if (typeof window === 'undefined') return false
 
+    // Service Workerを先に手動登録（iOS PWAで必要）
+    if ('serviceWorker' in navigator) {
+      try {
+        await navigator.serviceWorker.register('/OneSignalSDKWorker.js', { scope: '/' })
+      } catch (e) {
+        console.warn('[OneSignal] SW registration failed:', e)
+      }
+    }
+
     await OneSignal.init({
       appId: APP_ID,
+      safari_web_id: 'web.onesignal.auto.2068edc0-2ec7-4d8d-bc37-83913e3acbff',
       allowLocalhostAsSecureOrigin: process.env.NODE_ENV === 'development',
-    })
+      serviceWorkerPath: '/OneSignalSDKWorker.js',
+    } as any)
 
     return true
   })()
@@ -50,10 +61,22 @@ export async function logoutOneSignal(): Promise<void> {
 }
 
 /**
- * 通知許可をユーザーに求める（Slidedown表示）
+ * 通知許可をユーザーに求める
+ * iOS PWA では Slidedown が動かないため Notifications.requestPermission() を使う
+ * ※ iOS ではユーザージェスチャー（ボタンタップ等）から呼ぶ必要がある
  */
 export async function promptPush(): Promise<void> {
   const ready = await initPromise
   if (!ready) return
-  await OneSignal.Slidedown.promptPush()
+
+  // iOS PWA 判定
+  const isIOSPWA = /iPhone|iPad|iPod/.test(navigator.userAgent) &&
+    ('standalone' in navigator && (navigator as unknown as { standalone: boolean }).standalone)
+
+  if (isIOSPWA) {
+    // iOS PWA: ネイティブの通知許可ダイアログを使う
+    await OneSignal.Notifications.requestPermission()
+  } else {
+    await OneSignal.Slidedown.promptPush()
+  }
 }

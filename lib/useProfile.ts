@@ -35,6 +35,7 @@ export type NotifSettings = {
 }
 
 export type ProfileData = {
+  membershipNumber: string
   nickname: string
   bio: string
   bannerImage: string
@@ -49,6 +50,7 @@ export type ProfileData = {
 }
 
 const DEFAULT: ProfileData = {
+  membershipNumber: '',
   nickname: '',
   bio: '',
   bannerImage: '',
@@ -86,7 +88,18 @@ export function useProfile() {
       .select('*')
       .eq('user_id', user.id)
 
+    // 実際の投稿数をカウント（post_countカラムに頼らない）
+    const { count: spotCount } = await supabase
+      .from('spots')
+      .select('*', { count: 'exact', head: true })
+      .eq('submitted_by', user.id)
+    const { count: photoCount } = await supabase
+      .from('spot_photos')
+      .select('*', { count: 'exact', head: true })
+      .eq('submitted_by', user.id)
+
     setProfile({
+      membershipNumber: p.membership_number ?? '',
       nickname: p.nickname ?? '',
       bio: '',
       bannerImage: p.banner_url ?? '',
@@ -115,7 +128,7 @@ export function useProfile() {
         note: fc.note ?? undefined,
       })),
       stats: {
-        posts: p.post_count ?? 0,
+        posts: (spotCount ?? 0) + (photoCount ?? 0),
         approvals: p.approval_total ?? 0,
         edits: p.edit_report_count ?? 0,
         referrals: 0,

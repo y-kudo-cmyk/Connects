@@ -8,6 +8,7 @@ import type { AppEvent } from '@/lib/supabase/adapters'
 import EventDetailModal from './EventDetailModal'
 import { useTranslations } from 'next-intl'
 import { useToday } from '@/lib/useToday'
+import { useProfile } from '@/lib/useProfile'
 import { cityToCountryCode } from '@/lib/countryUtils'
 import { VOTE_THRESHOLD } from '@/lib/supabase/useVoting'
 
@@ -21,6 +22,7 @@ function md(s: string) {
 
 export default function TodayScheduleSection() {
   const today = useToday()
+  const { profile } = useProfile()
   const { events: allEvents } = useSupabaseData()
   const t = useTranslations()
   const dayNames = t.raw('Calendar.dayNames') as string[]
@@ -35,16 +37,23 @@ export default function TodayScheduleSection() {
       // 単発: 当日のみ
       return e.date === today
     })
-    // Sort: LIVE first, then today-only, then period
-    return filtered.sort((a, b) => {
-      const aIsLive = a.tags?.includes('LIVE') ? 0 : 1
-      const bIsLive = b.tags?.includes('LIVE') ? 0 : 1
-      if (aIsLive !== bIsLive) return aIsLive - bIsLive
-      const aIsPeriod = a.dateEnd ? 1 : 0
-      const bIsPeriod = b.dateEnd ? 1 : 0
-      return aIsPeriod - bIsPeriod
-    })
-  }, [today])
+    // Sort priority: LIVE(home) → LIVE(overseas) → TICKET(home) → EVENT single(home) → other(home) → overseas → period
+    const homeCountry = profile.country || 'JP'
+    function sortKey(e: AppEvent): number {
+      const isHome = (e.city || '') === homeCountry || !(e.city)
+      const isPeriod = !!e.dateEnd
+      const tag = e.tags?.[0] || ''
+      if (tag === 'LIVE' && isHome) return 0
+      if (tag === 'LIVE') return 1
+      if (tag === 'TICKET' && isHome) return 2
+      if (tag === 'EVENT' && isHome && !isPeriod) return 3
+      if (isHome && !isPeriod) return 4
+      if (isHome) return 5
+      if (!isPeriod) return 6
+      return 7
+    }
+    return filtered.sort((a, b) => sortKey(a) - sortKey(b))
+  }, [today, allEvents])
 
   const d = new Date(today)
   const dayJa = dayNames[d.getDay()]
@@ -166,7 +175,7 @@ export default function TodayScheduleSection() {
                       )}
                     </div>
                     <p className="text-sm font-bold leading-snug" style={{ color: '#1C1C1E' }}>
-                      {event.title}
+                      {event.title}{event.subTitle ? ` — ${event.subTitle}` : ''}
                     </p>
                     <p className="text-xs font-semibold mt-0.5" style={{ color: cfg.color }}>
                       {dateStr}

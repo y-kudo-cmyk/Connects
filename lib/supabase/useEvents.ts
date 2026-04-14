@@ -26,6 +26,7 @@ export type SupabaseEvent = {
   status: string
   verified_count: number
   submitter?: { nickname: string } | null
+  created_at?: string
 }
 
 export function useEvents() {
