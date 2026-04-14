@@ -174,9 +174,14 @@ export default function TodayScheduleSection() {
                         </span>
                       )}
                     </div>
-                    <p className="text-sm font-bold leading-snug" style={{ color: '#1C1C1E' }}>
-                      {event.title}{event.subTitle ? ` — ${event.subTitle}` : ''}
+                    <p className="text-[10px] leading-snug" style={{ color: '#8E8E93' }}>
+                      {event.title}
                     </p>
+                    {event.subTitle && (
+                      <p className="text-sm font-semibold leading-snug" style={{ color: '#1C1C1E' }}>
+                        {event.subTitle}
+                      </p>
+                    )}
                     <p className="text-xs font-semibold mt-0.5" style={{ color: cfg.color }}>
                       {dateStr}
                     </p>

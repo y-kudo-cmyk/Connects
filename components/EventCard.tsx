@@ -64,9 +64,14 @@ export default function EventCard({ event, compact = false }: EventCardProps) {
               {event.verifiedCount >= VOTE_THRESHOLD ? '✓' : `${event.verifiedCount}/${VOTE_THRESHOLD}`}
             </span>
           </div>
-          <p className="text-sm font-semibold leading-tight truncate mt-0.5" style={{ color: '#1C1C1E' }}>
-            {event.title}{event.subTitle ? ` — ${event.subTitle}` : ''}
+          <p className="text-[10px] leading-tight truncate mt-0.5" style={{ color: '#8E8E93' }}>
+            {event.title}
           </p>
+          {event.subTitle && (
+            <p className="text-sm font-semibold leading-tight truncate" style={{ color: '#1C1C1E' }}>
+              {event.subTitle}
+            </p>
+          )}
           <p className="text-[11px] mt-0.5" style={{ color: '#8E8E93' }}>
             {dateTime}{event.venue ? ` · ${event.venue}` : ''}
           </p>
@@ -133,9 +138,14 @@ export default function EventCard({ event, compact = false }: EventCardProps) {
             {event.verifiedCount >= VOTE_THRESHOLD ? '✓' : `${event.verifiedCount}/${VOTE_THRESHOLD}`}
           </span>
         </div>
-        <h3 className="text-sm font-bold leading-snug" style={{ color: '#1C1C1E' }}>
-          {event.title}{event.subTitle ? ` — ${event.subTitle}` : ''}
-        </h3>
+        <p className="text-[10px] leading-snug" style={{ color: '#8E8E93' }}>
+          {event.title}
+        </p>
+        {event.subTitle && (
+          <h3 className="text-sm font-semibold leading-snug" style={{ color: '#1C1C1E' }}>
+            {event.subTitle}
+          </h3>
+        )}
         <p className="text-xs font-semibold" style={{ color: cfg.color }}>{dateTime}</p>
         {(event.venue || event.city) && (
           <div className="flex items-center gap-1">
