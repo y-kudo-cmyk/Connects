@@ -157,11 +157,11 @@ export default function NewSchedulePreview() {
                   </span>
 
                   {/* Title */}
-                  <p className="text-xs font-bold leading-tight" style={{ color: '#1C1C1E' }}>
+                  <p className="text-[10px] leading-tight" style={{ color: '#8E8E93' }}>
                     {event.title}
                   </p>
                   {event.subTitle && (
-                    <p className="text-[10px] leading-tight" style={{ color: '#8E8E93' }}>
+                    <p className="text-xs font-bold leading-tight" style={{ color: '#1C1C1E' }}>
                       {event.subTitle}
                     </p>
                   )}
