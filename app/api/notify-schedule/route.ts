@@ -148,29 +148,27 @@ async function eveningNotification(currentTime: string, today: string, testMode 
     return { type: 'evening', skipped: true, reason: 'no events' }
   }
 
-  const tagIcon: Record<string, string> = { LIVE: '🎤', TICKET: '🎫', CD: '💿', TV: '📺', POPUP: '🏪', MERCH: '🛒', MAGAZINE: '📖', EVENT: '❤️', LIVEVIEWING: '🎬', INFO: '📢', RADIO: '📻', YOUTUBE: '▶️' }
-  const lines: string[] = []
+  // ヘッディングに要点を詰める（iPhoneは本文が見えにくいため）
+  let heading = ''
   if (ending.length > 0) {
-    lines.push('⏰ 今日締切:')
-    for (const e of ending.slice(0, 2)) {
-      lines.push(`  🎫 ${e.event_title}${e.sub_event_title ? ' — ' + e.sub_event_title : ''}`)
-    }
-    if (ending.length > 2) lines.push(`  ...他${ending.length - 2}件`)
-  }
-  if (tomorrowEvents.length > 0) {
-    lines.push(`📅 明日のスケジュール ${tomorrowEvents.length}件:`)
-    for (const e of tomorrowEvents.slice(0, 3)) {
-      const icon = tagIcon[e.tag] || '📌'
-      lines.push(`  ${icon} ${e.event_title}${e.sub_event_title ? ' — ' + e.sub_event_title : ''}`)
-    }
-    if (tomorrowEvents.length > 3) lines.push(`  ...他${tomorrowEvents.length - 3}件`)
+    heading = `⏰ 今日締切: ${ending[0].event_title.slice(0, 20)}`
+    if (ending.length > 1) heading += ` 他${ending.length - 1}件`
+  } else if (tomorrowEvents.length > 0) {
+    heading = `🌙 明日${tomorrowEvents.length}件`
   }
 
-  const content = lines.join('\n')
-  const heading = ending.length > 0 ? '⏰ 締切あり！明日のスケジュール' : `🌙 明日のスケジュール ${tomorrowEvents.length}件`
+  const tagIcon: Record<string, string> = { LIVE: '🎤', TICKET: '🎫', CD: '💿', TV: '📺', POPUP: '🏪', MERCH: '🛒', MAGAZINE: '📖', EVENT: '❤️', LIVEVIEWING: '🎬', INFO: '📢', RADIO: '📻', YOUTUBE: '▶️' }
+  const parts: string[] = []
+  if (ending.length > 0) parts.push(`⏰締切${ending.length}件`)
+  if (tomorrowEvents.length > 0) {
+    const top = tomorrowEvents[0]
+    const icon = tagIcon[top.tag] || '📌'
+    parts.push(`${icon}${top.event_title.slice(0, 25)}${tomorrowEvents.length > 1 ? ` 他${tomorrowEvents.length - 1}件` : ''}`)
+  }
+  const content = parts.join(' / ')
 
   const userIds = users.map(u => u.id)
-  const result = await sendNotification(userIds, heading, content, 'https://connects-nu.vercel.app/notification?type=evening&date=' + today)
+  const result = await sendNotification(userIds, heading, content, 'https://connects-nu.vercel.app/')
   return { type: 'evening', users: userIds.length, ...result }
 }
 
