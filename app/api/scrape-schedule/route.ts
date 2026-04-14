@@ -54,7 +54,10 @@ function categoryToTag(category: string, title: string): string {
     if (title.includes('先行') || title.includes('抽選') || title.includes('当落') || title.includes('一般発売')) return 'TICKET'
     return 'LIVE'
   }
-  if (category === 'RELEASE') return 'CD'
+  if (category === 'RELEASE') {
+    if (title.includes('MERCHANDISE') || title.includes('グッズ') || title.includes('Merch')) return 'MERCH'
+    return 'CD'
+  }
   if (category === 'MEDIA') return title.includes('ラジオ') || title.includes('RADIO') ? 'RADIO' : 'TV'
   if (category === 'CARAT') return 'INFO'
   if (category === 'OTHER') return 'INFO'
