@@ -29,9 +29,10 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
 
       if (data && data.length > 0) {
         setAllowed(true)
-        // ログイン通知（初回のみ）
+        // ログイン通知（初回のみ、工藤さん自身は除外）
+        const ADMIN_ID = '86c91b90-0060-4a3d-bf10-d5c846604882'
         const notified = sessionStorage.getItem('login-notified')
-        if (!notified) {
+        if (!notified && user!.id !== ADMIN_ID) {
           sessionStorage.setItem('login-notified', '1')
           fetch('/api/notify-admin', {
             method: 'POST',
