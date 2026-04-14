@@ -9,6 +9,7 @@ import {
   Music,
   LayoutDashboard,
   ArrowLeft,
+  MessageSquare,
 } from "lucide-react"
 import { Link, usePathname } from "@/i18n/navigation"
 
@@ -60,6 +61,11 @@ const navItems = [
     title: "アーティスト管理",
     url: "/admin/artists",
     icon: Music,
+  },
+  {
+    title: "フィードバック",
+    url: "/admin/feedback",
+    icon: MessageSquare,
   },
 ]
 
