@@ -135,10 +135,18 @@ export default function NotificationPage() {
           return (
             <button key={event.id} onClick={() => setDetailEvent(event)}
               className="rounded-2xl overflow-hidden text-left" style={{ background: '#FFFFFF' }}>
-              {event.image && (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={event.image} alt="" className="w-full h-32 object-cover object-top" />
-              )}
+              <div className="relative h-32 overflow-hidden">
+                {event.image ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={event.image} alt="" className="w-full h-full object-cover object-top"
+                    onError={(e) => { e.currentTarget.style.display = 'none'; e.currentTarget.nextElementSibling?.removeAttribute('hidden') }} />
+                ) : null}
+                <div hidden={!!event.image} className="w-full h-full flex items-center justify-center"
+                  style={{ background: 'linear-gradient(135deg, #E8D5F5 0%, #D5E5F5 50%, #F5D5E8 100%)' }}>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src="/logo.png" alt="" className="w-10 h-10 opacity-40" />
+                </div>
+              </div>
               <div className="p-4">
                 <div className="flex items-center gap-2 mb-2">
                   <span className="text-[9px] font-bold px-1.5 py-0.5 rounded" style={{ background: cfg.bg, color: cfg.color }}>{cfg.icon} {cfg.label}</span>

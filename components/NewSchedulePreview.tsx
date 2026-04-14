@@ -5,13 +5,12 @@ import { scheduleTagConfig, type ScheduleTag } from '@/lib/config/tags'
 import { useSupabaseData } from './SupabaseDataProvider'
 import type { AppEvent } from '@/lib/supabase/adapters'
 import { useMyEntries } from '@/lib/useMyEntries'
+import { useAuth } from '@/lib/supabase/useAuth'
 import EventDetailModal from './EventDetailModal'
 import { useTranslations } from 'next-intl'
 import { useToday } from '@/lib/useToday'
 import { countryFlag, cityToCountryCode } from '@/lib/countryUtils'
 import { VOTE_THRESHOLD } from '@/lib/supabase/useVoting'
-const DISMISSED_KEY = 'cp-dismissed'
-
 const MONTH_SHORT = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
 
 export default function NewSchedulePreview() {
@@ -22,19 +21,21 @@ export default function NewSchedulePreview() {
   const { events } = useSupabaseData()
   const [detailEvent, setDetailEvent] = useState<AppEvent | null>(null)
   const { addEntry, hasEntry } = useMyEntries()
+  const { user } = useAuth()
+  const dismissedKey = `cp-dismissed-${user?.id || 'anon'}`
 
   useEffect(() => {
     try {
-      const raw = localStorage.getItem(DISMISSED_KEY)
+      const raw = localStorage.getItem(dismissedKey)
       if (raw) setDismissed(new Set(JSON.parse(raw)))
     } catch {}
-  }, [])
+  }, [dismissedKey])
 
   const dismiss = (id: string) => {
     setDismissed((prev) => {
       const next = new Set(prev)
       next.add(id)
-      try { localStorage.setItem(DISMISSED_KEY, JSON.stringify([...next])) } catch {}
+      try { localStorage.setItem(dismissedKey, JSON.stringify([...next])) } catch {}
       return next
     })
   }
