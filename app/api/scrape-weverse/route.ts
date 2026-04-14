@@ -108,16 +108,36 @@ export async function GET(request: NextRequest) {
     maxRequestsPerCrawl: 1,
   }
 
+  // デバッグ: 設定内容をログ
+  log.push(`APIFY_TOKEN: ${APIFY_TOKEN ? 'set (' + APIFY_TOKEN.slice(0, 10) + '...)' : 'MISSING'}`)
+  log.push(`ACCESS_TOKEN: ${WEVERSE_ACCESS_TOKEN ? 'set (' + WEVERSE_ACCESS_TOKEN.slice(0, 20) + '...)' : 'MISSING'}`)
+  log.push(`REFRESH_TOKEN: ${WEVERSE_REFRESH_TOKEN ? 'set (' + WEVERSE_REFRESH_TOKEN.slice(0, 20) + '...)' : 'MISSING'}`)
+  log.push(`Cookie JSON length: ${cookies.length}`)
+
   // Apify実行
-  const runRes = await fetch(`https://api.apify.com/v2/acts/apify~playwright-scraper/runs?token=${APIFY_TOKEN}&waitForFinish=120`, {
+  const apifyUrl = `https://api.apify.com/v2/acts/apify~playwright-scraper/runs?token=${APIFY_TOKEN}&waitForFinish=180`
+  log.push(`Apify URL: ${apifyUrl.replace(APIFY_TOKEN, 'xxx')}`)
+
+  const runRes = await fetch(apifyUrl, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(config),
   })
   const runData = await runRes.json()
 
+  log.push(`Apify status: ${runData.data?.status}`)
+  log.push(`Apify run ID: ${runData.data?.id}`)
+  log.push(`Apify statusMessage: ${runData.data?.statusMessage || 'none'}`)
+
   if (runData.data?.status !== 'SUCCEEDED') {
-    log.push(`Apify run failed: ${runData.data?.status}`)
+    // 失敗ログを取得
+    if (runData.data?.id) {
+      try {
+        const logRes = await fetch(`https://api.apify.com/v2/actor-runs/${runData.data.id}/log?token=${APIFY_TOKEN}`)
+        const apifyLog = await logRes.text()
+        log.push(`Apify log (last 500): ${apifyLog.slice(-500)}`)
+      } catch {}
+    }
     return NextResponse.json({ log, inserted: 0 })
   }
 
@@ -125,6 +145,10 @@ export async function GET(request: NextRequest) {
   const datasetId = runData.data.defaultDatasetId
   const itemsRes = await fetch(`https://api.apify.com/v2/datasets/${datasetId}/items?token=${APIFY_TOKEN}`)
   const items = await itemsRes.json()
+
+  log.push(`Dataset items: ${items?.length}`)
+  log.push(`Text length: ${items?.[0]?.text?.length || 0}`)
+  log.push(`Text preview: ${items?.[0]?.text?.slice(0, 200) || 'empty'}`)
 
   if (!items?.[0]?.text) {
     log.push('No text content from Weverse')
