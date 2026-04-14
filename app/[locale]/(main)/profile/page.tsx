@@ -610,16 +610,10 @@ export default function ProfilePage() {
               </svg>
             </div>
             <span className="flex-1 text-sm font-medium" style={{ color: '#1C1C1E' }}>{t('Profile.linkX')}</span>
-            <button
-              onClick={() => update({ xLinked: !profile.xLinked })}
-              className="px-3 py-1.5 rounded-full text-xs font-bold"
-              style={profile.xLinked
-                ? { background: '#F0F0F5', color: '#636366' }
-                : { background: '#00000010', color: '#1C1C1E' }
-              }
-            >
-              {profile.xLinked ? t('Profile.linked') : t('Profile.linkNow')}
-            </button>
+            <span className="px-3 py-1.5 rounded-full text-xs font-bold"
+              style={{ background: '#F0F0F5', color: '#8E8E93' }}>
+              準備中
+            </span>
           </div>
 
           {/* 言語 */}
