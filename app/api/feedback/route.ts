@@ -24,6 +24,21 @@ export async function POST(req: NextRequest) {
   })
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+
+  // 工藤さんにLINE通知
+  const ADMIN_LINE_ID = 'Ub88e74f829aeecc9d5fa1cfee7161199'
+  const LINE_TOKEN = process.env.LINE_CHANNEL_ACCESS_TOKEN
+  if (LINE_TOKEN) {
+    await fetch('https://api.line.me/v2/bot/message/push', {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${LINE_TOKEN}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        to: ADMIN_LINE_ID,
+        messages: [{ type: 'text', text: `📝 フィードバック\n${nickname || '匿名'}さんより:\n\n${message.trim().slice(0, 200)}` }],
+      }),
+    }).catch(() => {})
+  }
+
   return NextResponse.json({ ok: true })
 }
 

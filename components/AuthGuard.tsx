@@ -29,6 +29,16 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
 
       if (data && data.length > 0) {
         setAllowed(true)
+        // ログイン通知（初回のみ）
+        const notified = sessionStorage.getItem('login-notified')
+        if (!notified) {
+          sessionStorage.setItem('login-notified', '1')
+          fetch('/api/notify-admin', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ type: 'login', message: `🔔 ログイン\n${email} がログインしました` }),
+          }).catch(() => {})
+        }
         return
       }
 
