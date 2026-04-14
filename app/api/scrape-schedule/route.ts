@@ -99,12 +99,14 @@ export async function GET(request: NextRequest) {
 
   const allItems = allPageItems.filter(item => item.date === today)
 
-  // 既存イベントのキーを取得
-  const { data: existing } = await supabase.from('events').select('event_title, start_date')
+  // 既存イベントのキーを取得（タイトル+日付 と ソースURL の両方でチェック）
+  const { data: existing } = await supabase.from('events').select('event_title, start_date, source_url')
   const existingKeys = new Set<string>()
+  const existingUrls = new Set<string>()
   for (const e of existing || []) {
     const d = e.start_date ? e.start_date.slice(0, 10) : ''
     existingKeys.add(`${normalize(e.event_title)}::${d}`)
+    if (e.source_url) existingUrls.add(e.source_url)
   }
 
   const newEvents: Record<string, unknown>[] = []
@@ -112,8 +114,11 @@ export async function GET(request: NextRequest) {
 
   for (const item of allItems) {
     const key = `${normalize(item.title)}::${item.date}`
+    const fullUrl = item.url ? `${BASE_URL}${item.url}` : ''
     if (existingKeys.has(key)) continue
+    if (fullUrl && existingUrls.has(fullUrl)) continue
     existingKeys.add(key)
+    if (fullUrl) existingUrls.add(fullUrl)
 
     newEvents.push({
       tag: categoryToTag(item.category, item.title),
@@ -155,8 +160,11 @@ export async function GET(request: NextRequest) {
       const krDate = article.reg_date.slice(0, 10)
       const krTitle = article.subject.replace(/\s+/g, ' ').trim()
       const krKey = `${normalize(krTitle)}::${krDate}`
+      const krUrl = `https://pledis.co.kr/artist/detail/seventeen/notice/${idx}/`
       if (existingKeys.has(krKey)) continue
+      if (existingUrls.has(krUrl)) continue
       existingKeys.add(krKey)
+      existingUrls.add(krUrl)
 
       newEvents.push({
         tag: krTitle.includes('FAN MEETING') || krTitle.includes('CONCERT') || krTitle.includes('TOUR') ? 'LIVE'
