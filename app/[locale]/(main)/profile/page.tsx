@@ -833,13 +833,13 @@ export default function ProfilePage() {
       {/* ─── ご意見フォームモーダル ─── */}
       {showFeedback && (
         <div
-          className="fixed inset-0 flex items-end justify-center"
+          className="fixed inset-0 flex items-center justify-center px-4"
           style={{ background: 'rgba(0,0,0,0.5)', zIndex: 200 }}
           onClick={() => setShowFeedback(false)}
         >
           <div
-            className="w-full max-w-lg rounded-t-2xl p-5 overflow-y-auto"
-            style={{ background: '#FFFFFF', paddingBottom: 'max(24px, env(safe-area-inset-bottom))', maxHeight: '85vh' }}
+            className="w-full max-w-lg rounded-2xl p-5 overflow-y-auto"
+            style={{ background: '#FFFFFF', maxHeight: '80vh' }}
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex justify-center mb-4">
