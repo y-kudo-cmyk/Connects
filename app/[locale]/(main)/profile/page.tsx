@@ -157,7 +157,7 @@ export default function ProfilePage() {
   const nextRank = RANKS[rankIndex + 1] ?? null
 
   return (
-    <div className="flex flex-col min-h-full" style={{ background: '#F8F9FA' }}>
+    <div className="flex flex-col" style={{ background: '#F8F9FA' }}>
 
       {/* ─── 固定ヘッダー ─── */}
       <div
