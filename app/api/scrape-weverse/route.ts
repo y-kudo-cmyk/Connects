@@ -82,15 +82,19 @@ export async function GET(request: NextRequest) {
     {name: 'wes_artistId', value: '7', domain: '.weverse.io', path: '/', sameSite: 'None', secure: true},
   ])).toString('base64')
 
+  // Cookieを安全にエスケープしてpreNavigationHooksに埋め込む
+  const escapedCookies = JSON.stringify([
+    {name: 'we2_access_token', value: WEVERSE_ACCESS_TOKEN, domain: '.weverse.io', path: '/', sameSite: 'Lax'},
+    {name: 'we2_refresh_token', value: WEVERSE_REFRESH_TOKEN, domain: '.weverse.io', path: '/', sameSite: 'Lax'},
+    {name: 'we2_device_id', value: WEVERSE_DEVICE_ID, domain: '.weverse.io', path: '/', sameSite: 'Lax'},
+    {name: 'wes_artistId', value: '7', domain: '.weverse.io', path: '/', sameSite: 'Lax'},
+  ]).replace(/\\/g, '\\\\').replace(/"/g, '\\"')
+
   const config = {
     startUrls: [{ url: 'https://weverse.io/seventeen/notice?hl=ja' }],
     pageFunction: [
       'async function pageFunction(context) {',
       '  const { page, request } = context;',
-      '  const cookieB64 = "' + cookieData + '";',
-      '  const cookies = JSON.parse(Buffer.from(cookieB64, "base64").toString());',
-      '  await page.context().addCookies(cookies);',
-      '  await page.reload({waitUntil: "networkidle"});',
       '  await page.waitForTimeout(3000);',
       '  try {',
       '    const buttons = await page.locator("button");',
@@ -109,10 +113,15 @@ export async function GET(request: NextRequest) {
       '}',
     ].join('\n'),
     proxyConfiguration: { useApifyProxy: true },
-    preNavigationHooks: '[]',
+    preNavigationHooks: '[async ({page}) => { await page.context().addCookies(JSON.parse("' + escapedCookies + '")); }]',
     maxRequestsPerCrawl: 1,
   }
+  log.push('escapedCookies length: ' + escapedCookies.length)
+  log.push('preNavigationHooks preview: ' + config.preNavigationHooks.slice(0, 100))
 
+  // デバッグ: pageFunctionの中身をログ
+  log.push(`pageFunction preview: ${config.pageFunction?.slice(0, 200)}`)
+  log.push(`Full config JSON length: ${JSON.stringify(config).length}`)
   // デバッグ: 設定内容をログ
   log.push(`APIFY_TOKEN: ${APIFY_TOKEN ? 'set (' + APIFY_TOKEN.slice(0, 10) + '...)' : 'MISSING'}`)
   log.push(`ACCESS_TOKEN: ${WEVERSE_ACCESS_TOKEN ? 'set (' + WEVERSE_ACCESS_TOKEN.slice(0, 20) + '...)' : 'MISSING'}`)
