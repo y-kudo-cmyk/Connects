@@ -10,28 +10,36 @@ const supabase = createClient(
 
 const BASE_URL = 'https://www.seventeen-17.jp'
 
-// ── HTML → イベント抽出 ─────────────────────────────────────
-type ScrapedItem = { title: string; date: string; category: string }
+// ── NEWSページから記事を抽出 ────────────────────────────────
+type NewsItem = { title: string; date: string; category: string; url: string }
 
-function extractScheduleItems(html: string, year: number, month: number): ScrapedItem[] {
+function extractNewsItems(html: string): NewsItem[] {
   const $ = (cheerio.load || cheerio.default?.load || cheerio)(html)
-  const items: ScrapedItem[] = []
+  const items: NewsItem[] = []
 
-  $('.schedule-list-item').each((_: number, listItem: unknown) => {
-    const dateText = $(listItem).find('.schedule-date').text().trim()
-    const dateMatch = dateText.match(/(\d{1,2})\.(\d{1,2})/)
+  $('dl[onclick]').each((_: number, el: unknown) => {
+    const onclick = $(el).attr('onclick') || ''
+    const hrefMatch = onclick.match(/location\.href='([^']+)'/)
+    const url = hrefMatch ? hrefMatch[1] : ''
+
+    const dt = $(el).find('dt')
+    const dd = $(el).find('dd')
+
+    // 日付: "2026.4.13" → "2026-04-13"
+    const dateText = dt.clone().children().remove().end().text().trim()
+    const dateMatch = dateText.match(/(\d{4})\.(\d{1,2})\.(\d{1,2})/)
     if (!dateMatch) return
-    const day = parseInt(dateMatch[2])
-    if (day < 1 || day > 31) return
-    const dateStr = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`
+    const dateStr = `${dateMatch[1]}-${String(parseInt(dateMatch[2])).padStart(2, '0')}-${String(parseInt(dateMatch[3])).padStart(2, '0')}`
 
-    $(listItem).find('.schedule-event-item').each((_: number, eventEl: unknown) => {
-      const title = $(eventEl).find('.schedule-title-text').text().trim().replace(/\s+/g, ' ')
-      const category = $(eventEl).find('.schedule-category-label').text().trim()
-      if (title && title.length > 3) {
-        items.push({ title, date: dateStr, category: category || 'OTHER' })
-      }
-    })
+    // カテゴリ
+    const category = dt.find('.category').text().trim()
+
+    // タイトル
+    const title = dd.text().trim().replace(/\s+/g, ' ')
+
+    if (title && title.length > 3) {
+      items.push({ title, date: dateStr, category, url })
+    }
   })
 
   return items
@@ -43,11 +51,13 @@ function categoryToTag(category: string, title: string): string {
     if (title.includes('サイン会') || title.includes('POP-UP') || title.includes('ポップアップ')) return 'EVENT'
     if (title.includes('ライブビューイング') || title.includes('ライブ・ビューイング')) return 'LIVEVIEWING'
     if (title.includes('ファンミ') || title.includes('FANMEETING')) return 'LIVE'
+    if (title.includes('先行') || title.includes('抽選') || title.includes('当落') || title.includes('一般発売')) return 'TICKET'
     return 'LIVE'
   }
   if (category === 'RELEASE') return 'CD'
-  if (category === 'MAGAZINE') return 'MAGAZINE'
-  if (category === 'TV/RADIO') return title.includes('ラジオ') || title.includes('RADIO') ? 'RADIO' : 'TV'
+  if (category === 'MEDIA') return title.includes('ラジオ') || title.includes('RADIO') ? 'RADIO' : 'TV'
+  if (category === 'CARAT') return 'INFO'
+  if (category === 'OTHER') return 'INFO'
   return 'EVENT'
 }
 
@@ -68,16 +78,18 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  const now = new Date()
-  const jst = new Date(now.getTime() + 9 * 60 * 60 * 1000)
-  const thisYear = jst.getUTCFullYear()
-  const thisMonth = jst.getUTCMonth() + 1
-
-  // 当月 + 来月の2ヶ月分
-  const months = [
-    { year: thisYear, month: thisMonth },
-    { year: thisMonth === 12 ? thisYear + 1 : thisYear, month: thisMonth === 12 ? 1 : thisMonth + 1 },
-  ]
+  // NEWSページの最初の2ページ（最新40件）をスクレイピング
+  const allItems: NewsItem[] = []
+  for (const page of [1, 2]) {
+    const url = page === 1
+      ? `${BASE_URL}/posts/information`
+      : `${BASE_URL}/posts/information?page=${page}`
+    const res = await fetch(url)
+    if (!res.ok) continue
+    const html = await res.text()
+    allItems.push(...extractNewsItems(html))
+    await new Promise(r => setTimeout(r, 300))
+  }
 
   // 既存イベントのキーを取得
   const { data: existing } = await supabase.from('events').select('event_title, start_date')
@@ -88,41 +100,30 @@ export async function GET(request: NextRequest) {
   }
 
   const newEvents: Record<string, unknown>[] = []
-  const log: string[] = []
+  const log: string[] = [`Scraped ${allItems.length} items from NEWS`]
 
-  for (const { year, month } of months) {
-    const url = `${BASE_URL}/posts/schedule?year=${year}&month=${month}`
-    const res = await fetch(url)
-    if (!res.ok) { log.push(`${year}/${month}: HTTP ${res.status}`); continue }
-    const html = await res.text()
-    const items = extractScheduleItems(html, year, month)
-    log.push(`${year}/${month}: ${items.length}件検出`)
+  for (const item of allItems) {
+    const key = `${normalize(item.title)}::${item.date}`
+    if (existingKeys.has(key)) continue
+    existingKeys.add(key)
 
-    for (const item of items) {
-      const key = `${normalize(item.title)}::${item.date}`
-      if (existingKeys.has(key)) continue
-      existingKeys.add(key)
-
-      newEvents.push({
-        tag: categoryToTag(item.category, item.title),
-        artist_id: 'A000000',
-        event_title: item.title,
-        sub_event_title: '',
-        start_date: `${item.date}T00:00:00`,
-        end_date: null,
-        spot_name: '',
-        spot_address: '',
-        country: (item.title.includes('韓国') || item.title.match(/KOREA|SEOUL|INCHEON|BUSAN/i)) ? 'KR' : 'JP',
-        image_url: '',
-        source_url: `${BASE_URL}/posts/schedule`,
-        status: 'confirmed',
-        verified_count: 3,
-        related_artists: '',
-        submitted_by: null,
-      })
-    }
-
-    await new Promise(r => setTimeout(r, 300))
+    newEvents.push({
+      tag: categoryToTag(item.category, item.title),
+      artist_id: 'A000000',
+      event_title: item.title,
+      sub_event_title: '',
+      start_date: `${item.date}T00:00:00`,
+      end_date: null,
+      spot_name: '',
+      spot_address: '',
+      country: (item.title.includes('韓国') || item.title.match(/KOREA|SEOUL|INCHEON|BUSAN/i)) ? 'KR' : 'JP',
+      image_url: '',
+      source_url: item.url ? `${BASE_URL}${item.url}` : `${BASE_URL}/posts/information`,
+      status: 'confirmed',
+      verified_count: 3,
+      related_artists: '',
+      submitted_by: null,
+    })
   }
 
   // DB挿入
@@ -136,7 +137,7 @@ export async function GET(request: NextRequest) {
     }
   }
 
-  log.push(`New: ${inserted}, Skipped: ${existingKeys.size - inserted}`)
+  log.push(`New: ${inserted}, Total checked: ${allItems.length}`)
 
-  return NextResponse.json({ log, inserted, total: newEvents.length })
+  return NextResponse.json({ log, inserted, total: allItems.length })
 }
