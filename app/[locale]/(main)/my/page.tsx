@@ -989,53 +989,34 @@ function EditModal({ entry, onClose, onSave, onRemove }: {
 
           {/* チケット画像（LIVE/TICKET/EVENT/POPUPのみ） */}
           {showTicketSection && (
-            <>
-              <EditSection label={t('My.ticketImage')}>
-                <div className="flex gap-2 overflow-x-auto pb-1" style={{ scrollbarWidth: 'none' }}>
-                  {ticketImages.map((img, i) => (
-                    <div key={i} className="flex-shrink-0 relative rounded-xl overflow-hidden"
-                      style={{ width: 64, height: 88 }}>
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src={img} alt="" className="w-full h-full object-cover" />
-                      <button onClick={() => setTicketImages((p) => p.filter((_, j) => j !== i))}
-                        className="absolute top-1 right-1 w-6 h-6 rounded-full flex items-center justify-center"
-                        style={{ background: 'rgba(0,0,0,0.65)' }}>
-                        <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" strokeWidth="3">
-                          <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
-                        </svg>
-                      </button>
-                    </div>
-                  ))}
-                  <button onClick={() => ticketFileRef.current?.click()}
-                    className="flex-shrink-0 rounded-xl flex flex-col items-center justify-center gap-1"
-                    style={{ width: 64, height: 88, border: '2px dashed #E5E5EA', color: '#8E8E93' }}>
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                      <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
-                    </svg>
-                    <span className="text-[10px]">{t('Common.add')}</span>
-                  </button>
-                </div>
-                <input ref={ticketFileRef} type="file" accept="image/*" multiple className="hidden"
-                  onChange={(e) => handleTicketUpload(e.target.files)} />
-              </EditSection>
-
-              {/* 座席情報 */}
-              <div className="rounded-2xl p-4" style={{ background: '#FFFFFF' }}>
-                <SeatInfoForm value={seatInfo} onChange={setSeatInfo}
-                  ticketImages={ticketImages} autoAnalyzeTrigger={autoAnalyzeTrigger} />
+            <EditSection label={t('My.ticketImage')}>
+              <div className="flex gap-2 overflow-x-auto pb-1" style={{ scrollbarWidth: 'none' }}>
+                {ticketImages.map((img, i) => (
+                  <div key={i} className="flex-shrink-0 relative rounded-xl overflow-hidden"
+                    style={{ width: 64, height: 88 }}>
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={img} alt="" className="w-full h-full object-cover" />
+                    <button onClick={() => setTicketImages((p) => p.filter((_, j) => j !== i))}
+                      className="absolute top-1 right-1 w-6 h-6 rounded-full flex items-center justify-center"
+                      style={{ background: 'rgba(0,0,0,0.65)' }}>
+                      <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" strokeWidth="3">
+                        <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+                      </svg>
+                    </button>
+                  </div>
+                ))}
+                <button onClick={() => ticketFileRef.current?.click()}
+                  className="flex-shrink-0 rounded-xl flex flex-col items-center justify-center gap-1"
+                  style={{ width: 64, height: 88, border: '2px dashed #E5E5EA', color: '#8E8E93' }}>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                    <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
+                  </svg>
+                  <span className="text-[10px]">{t('Common.add')}</span>
+                </button>
               </div>
-            </>
-          )}
-
-          {/* 座席眺め */}
-          {seatInfo.fields?.some((f) => f.value.trim()) && (
-            <div className="rounded-2xl p-4" style={{ background: '#FFFFFF' }}>
-              <SeatViewPreview seatInfo={seatInfo} venue={entry.venue}
-                eventName={entry.title} eventDate={entry.customDate ?? entry.date} />
-              <p className="text-[10px] mt-2 px-1" style={{ color: '#F59E0B' }}>
-                ⚠ 座席からの眺め画像は他のユーザーにも公開されます
-              </p>
-            </div>
+              <input ref={ticketFileRef} type="file" accept="image/*" multiple className="hidden"
+                onChange={(e) => handleTicketUpload(e.target.files)} />
+            </EditSection>
           )}
 
           {/* メモ */}
