@@ -18,8 +18,23 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
     async function checkAccess() {
       const email = user!.email
       if (!email) { setAllowed(false); return }
+      const normalized = email.toLowerCase().trim()
 
-      // 既にprofileがあるか
+      // Glide既存ユーザー → 無条件OK
+      const { data: glideUser } = await supabase
+        .from('glide_users')
+        .select('mail')
+        .ilike('mail', normalized)
+        .limit(1)
+
+      const isGlideUser = glideUser && glideUser.length > 0
+
+      if (isGlideUser) {
+        setAllowed(true)
+        return
+      }
+
+      // 既にprofileがある（以前ログイン済みの新規ユーザー）→ OK
       const { data: profile } = await supabase
         .from('profiles')
         .select('id')
@@ -51,7 +66,7 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
         fetch('/api/notify-admin', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ type: 'login', message: `🔔 新規ログイン\n${email} がログインしました` }),
+          body: JSON.stringify({ type: 'login', message: `🔔 新規テスター登録\n${email} がログインしました` }),
         }).catch(() => {})
       }
     }
