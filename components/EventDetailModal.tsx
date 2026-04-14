@@ -164,6 +164,7 @@ export default function EventDetailModal({
         dateEnd: event.dateEnd,
         eventId: event.id,
         title: event.title,
+        subTitle: event.subTitle,
         type: event.type,
         tags: event.tags ? [...event.tags] : [],
         color: event.artistColor,
@@ -174,6 +175,7 @@ export default function EventDetailModal({
         memo: '',
         images: event.image ? [event.image] : [],
         createdAt: new Date().toISOString(),
+        sourceUrl: event.sourceUrl,
       })
     }
   }

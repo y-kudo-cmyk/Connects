@@ -700,6 +700,11 @@ function EntryCard({ entry, onEdit, onRemove }: {
           <p className="text-[10px] leading-snug" style={{ color: '#8E8E93' }}>
             {entry.title}
           </p>
+          {entry.subTitle && (
+            <p className="text-sm font-semibold leading-snug" style={{ color: '#1C1C1E' }}>
+              {entry.subTitle}
+            </p>
+          )}
           <p className="text-xs font-semibold" style={{ color }}>{dateStr}</p>
           {(entry.venue || entry.city) && (
             <div className="flex items-center gap-1">
@@ -712,6 +717,14 @@ function EntryCard({ entry, onEdit, onRemove }: {
                 {entry.venue}{entry.venue && entry.city ? ' · ' : ''}{entry.city}
               </span>
             </div>
+          )}
+          {entry.sourceUrl && (
+            <a href={entry.sourceUrl} target="_blank" rel="noopener noreferrer"
+              onClick={(e) => e.stopPropagation()}
+              className="text-[10px] font-bold truncate"
+              style={{ color: '#60A5FA' }}>
+              🔗 ソース ↗
+            </a>
           )}
           {entry.memo && (
             <p className="text-[11px] leading-snug line-clamp-1"

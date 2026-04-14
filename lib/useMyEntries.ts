@@ -20,6 +20,7 @@ export type MyEntry = {
   date: string
   eventId?: string
   title: string
+  subTitle?: string
   type: string
   tags?: string[]
   color: string
@@ -35,6 +36,7 @@ export type MyEntry = {
   memo: string
   images: string[]
   createdAt: string
+  sourceUrl?: string
 }
 
 type DbMyEntry = {
@@ -66,6 +68,7 @@ function toApp(row: DbMyEntry): MyEntry {
     id: row.id,
     eventId: row.event_id ?? undefined,
     title: row.event_title ?? '',
+    subTitle: row.sub_event_title ?? undefined,
     type: row.tag ?? '',
     tags: row.tag ? [row.tag] : [],
     color: '',
@@ -79,6 +82,7 @@ function toApp(row: DbMyEntry): MyEntry {
     memo: row.memo ?? '',
     images: row.image_url ? [row.image_url] : [],
     createdAt: row.created_at,
+    sourceUrl: row.source_url ?? undefined,
   }
 }
 
@@ -105,11 +109,13 @@ export function useMyEntries() {
       event_id: entry.eventId || null,
       tag: entry.tags?.[0] || entry.type || null,
       event_title: entry.title,
+      sub_event_title: entry.subTitle || null,
       start_date: entry.date ? (entry.time ? `${entry.date}T${entry.time}:00` : `${entry.date}T00:00:00`) : null,
       end_date: entry.dateEnd ? `${entry.dateEnd}T00:00:00` : null,
       spot_name: entry.venue || null,
       spot_address: entry.city || null,
       image_url: entry.images?.[0] || null,
+      source_url: entry.sourceUrl || null,
       notes: null,
       ticket_image_url: entry.ticketImages?.[0] || null,
       seat_info: entry.seatInfo || null,

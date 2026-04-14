@@ -68,6 +68,7 @@ export default function SchedulePage() {
       date: event.date,
       eventId: event.id,
       title: event.title,
+      subTitle: event.subTitle,
       type: event.type,
       tags: event.tags,
       color: event.artistColor,
@@ -79,6 +80,7 @@ export default function SchedulePage() {
       memo: '',
       images: event.image ? [event.image] : [],
       createdAt: new Date().toISOString(),
+      sourceUrl: event.sourceUrl,
     })
   }
 
