@@ -83,12 +83,14 @@ export async function GET(request: NextRequest) {
   ])).toString('base64')
 
   // Cookieを安全にエスケープしてpreNavigationHooksに埋め込む
-  const escapedCookies = JSON.stringify([
-    {name: 'we2_access_token', value: WEVERSE_ACCESS_TOKEN, domain: '.weverse.io', path: '/', sameSite: 'Lax'},
-    {name: 'we2_refresh_token', value: WEVERSE_REFRESH_TOKEN, domain: '.weverse.io', path: '/', sameSite: 'Lax'},
-    {name: 'we2_device_id', value: WEVERSE_DEVICE_ID, domain: '.weverse.io', path: '/', sameSite: 'Lax'},
-    {name: 'wes_artistId', value: '7', domain: '.weverse.io', path: '/', sameSite: 'Lax'},
-  ]).replace(/\\/g, '\\\\').replace(/"/g, '\\"')
+  const cookieArr: {name: string; value: string; domain: string; path: string}[] = []
+  if (WEVERSE_ACCESS_TOKEN) cookieArr.push({name: 'we2_access_token', value: WEVERSE_ACCESS_TOKEN, domain: '.weverse.io', path: '/'})
+  if (WEVERSE_REFRESH_TOKEN) cookieArr.push({name: 'we2_refresh_token', value: WEVERSE_REFRESH_TOKEN, domain: '.weverse.io', path: '/'})
+  cookieArr.push({name: 'we2_device_id', value: WEVERSE_DEVICE_ID, domain: '.weverse.io', path: '/'})
+  cookieArr.push({name: 'wes_artistId', value: '7', domain: '.weverse.io', path: '/'})
+  const escapedCookies = JSON.stringify(cookieArr).replace(/\\/g, '\\\\').replace(/"/g, '\\"')
+  log.push('Cookie count: ' + cookieArr.length)
+  log.push('Cookie values check: ' + cookieArr.map(c => c.name + '=' + (c.value ? c.value.length + 'chars' : 'EMPTY')).join(', '))
 
   const config = {
     startUrls: [{ url: 'https://weverse.io/seventeen/notice?hl=ja' }],
