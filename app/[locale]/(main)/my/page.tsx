@@ -882,12 +882,14 @@ function EditModal({ entry, onClose, onSave, onRemove }: {
   const t = useTranslations()
 
   const isPeriod = !!entry.dateEnd
-  const cfg = eventTypeConfig[entry.type as keyof typeof eventTypeConfig]
-  const color = cfg?.color ?? entry.color
+  const editTag = (entry.tags?.[0] || entry.type) as ScheduleTag
+  const editTagCfg = scheduleTagConfig[editTag]
+  const cfg = editTagCfg || eventTypeConfig[entry.type as keyof typeof eventTypeConfig]
+  const color = editTagCfg?.color ?? cfg?.color ?? entry.color
   const dateStr = fmtDateRange(entry.date, entry.time, entry.dateEnd)
-  // チケット画像・座席情報を表示するタグ
-  const TICKET_TAGS = ['LIVE', 'EVENT', 'POPUP']
-  const showTicketSection = !entry.tags?.length || entry.tags.some((t) => TICKET_TAGS.includes(t))
+  // チケット画像・座席情報を表示するタグ（場所があるイベント）
+  const TICKET_TAGS = ['LIVE', 'EVENT', 'POPUP', 'LIVEVIEWING']
+  const showTicketSection = entry.venue || !entry.tags?.length || entry.tags.some((t) => TICKET_TAGS.includes(t))
 
   const handleTicketUpload = async (files: FileList | null) => {
     if (!files) return
@@ -934,7 +936,7 @@ function EditModal({ entry, onClose, onSave, onRemove }: {
             <div className="flex items-center gap-1.5 mb-0.5">
               <span className="text-[10px] font-bold px-2 py-0.5 rounded-full"
                 style={{ background: color, color: '#F8F9FA' }}>
-                {cfg?.label ?? entry.type}
+                {editTagCfg ? `${editTagCfg.icon} ${editTagCfg.label}` : cfg?.label ?? entry.type}
               </span>
             </div>
             <p className="text-sm font-bold truncate" style={{ color: '#1C1C1E' }}>{entry.title}</p>
@@ -1030,6 +1032,9 @@ function EditModal({ entry, onClose, onSave, onRemove }: {
             <div className="rounded-2xl p-4" style={{ background: '#FFFFFF' }}>
               <SeatViewPreview seatInfo={seatInfo} venue={entry.venue}
                 eventName={entry.title} eventDate={entry.customDate ?? entry.date} />
+              <p className="text-[10px] mt-2 px-1" style={{ color: '#F59E0B' }}>
+                ⚠ 座席からの眺め画像は他のユーザーにも公開されます
+              </p>
             </div>
           )}
 
