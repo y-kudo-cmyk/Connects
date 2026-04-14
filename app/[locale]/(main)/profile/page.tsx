@@ -389,42 +389,15 @@ export default function ProfilePage() {
       {/* ─── 紹介コード ─── */}
       <div className="px-4 mb-4">
         <p className="text-xs font-semibold mb-2" style={{ color: '#8E8E93' }}>{t('Common.yourRefCode')}</p>
-        <div className="rounded-2xl p-4" style={{ background: '#FFFFFF' }}>
-          <div className="flex items-center justify-between mb-3">
-            <span className="text-2xl font-black font-mono tracking-widest" style={{ color: '#F3B4E3' }}>
-              {myCode}
+        <div className="rounded-2xl p-4" style={{ background: '#FFFFFF', opacity: 0.5 }}>
+          <div className="flex items-center justify-between">
+            <span className="text-sm font-bold" style={{ color: '#8E8E93' }}>
+              紹介コード機能
             </span>
-            <button
-              onClick={() => {
-                navigator.clipboard.writeText(myCode).then(() => {
-                  setCopied(true); setTimeout(() => setCopied(false), 2000)
-                })
-              }}
-              className="px-3 py-2 rounded-xl text-xs font-bold"
-              style={{ background: copied ? '#06C75520' : '#F3B4E320', color: copied ? '#06C755' : '#F3B4E3' }}
-            >
-              {copied ? t('Common.copied') : t('Common.copy')}
-            </button>
+            <span className="px-3 py-1.5 rounded-full text-xs font-bold" style={{ background: '#F0F0F5', color: '#8E8E93' }}>
+              準備中
+            </span>
           </div>
-          <button
-            onClick={() => {
-              const url = `${window.location.origin}/join?ref=${myCode}`
-              navigator.clipboard.writeText(url).then(() => {
-                setCopied(true); setTimeout(() => setCopied(false), 2000)
-              })
-            }}
-            className="w-full flex items-center gap-2 px-3 py-2.5 rounded-xl text-xs font-semibold"
-            style={{ background: '#F3B4E310', color: '#8E8E93' }}
-          >
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#F3B4E3" strokeWidth="2">
-              <path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/>
-              <path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/>
-            </svg>
-            <span>{t('Common.copyRefUrl')}</span>
-          </button>
-          <p className="text-[10px] mt-2" style={{ color: '#636366' }}>
-            {t('Common.shareCodeMsg')}
-          </p>
         </div>
       </div>
 
