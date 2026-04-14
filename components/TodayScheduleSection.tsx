@@ -9,7 +9,7 @@ import EventDetailModal from './EventDetailModal'
 import { useTranslations } from 'next-intl'
 import { useToday } from '@/lib/useToday'
 import { useProfile } from '@/lib/useProfile'
-import { cityToCountryCode } from '@/lib/countryUtils'
+import { cityToCountryCode, countryFlag } from '@/lib/countryUtils'
 import { VOTE_THRESHOLD } from '@/lib/supabase/useVoting'
 
 // DAY_JA は i18n の dayNames で置き換え
@@ -186,9 +186,16 @@ export default function TodayScheduleSection() {
                       {dateStr}
                     </p>
                     {(event.venue || event.city) && (
-                      <p className="text-[11px] mt-0.5 truncate" style={{ color: '#8E8E93' }}>
-                        📍 {event.venue}{event.venue && event.city ? ' · ' : ''}{event.city}
-                      </p>
+                      <div className="flex items-center gap-1 mt-0.5">
+                        {event.city && (
+                          <span style={{ fontSize: 12, lineHeight: 1 }}>
+                            {countryFlag(cityToCountryCode(event.city))}
+                          </span>
+                        )}
+                        <p className="text-[11px] truncate" style={{ color: '#8E8E93' }}>
+                          {event.venue}{event.venue && event.city ? ' · ' : ''}{event.city}
+                        </p>
+                      </div>
                     )}
                   </div>
                 </button>
