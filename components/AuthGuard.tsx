@@ -16,20 +16,23 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
     if (!user) { setAllowed(null); return }
 
     async function checkAccess() {
-      // このユーザーのprofileが既にあるか
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('id')
-        .eq('id', user!.id)
-        .maybeSingle()
+      const email = user!.email
+      if (!email) { setAllowed(false); return }
 
-      if (profile) {
-        // 既に登録済み → OK
+      // glide_usersにメールが存在するか確認
+      const normalized = email.toLowerCase().trim()
+      const { data } = await supabase
+        .from('glide_users')
+        .select('mail')
+        .ilike('mail', normalized)
+        .limit(1)
+
+      if (data && data.length > 0) {
         setAllowed(true)
         return
       }
 
-      // 新規ユーザー → 人数制限チェック
+      // 人数制限チェック（既存ユーザー以外）
       const { count } = await supabase
         .from('profiles')
         .select('*', { count: 'exact', head: true })
@@ -40,7 +43,7 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
         return
       }
 
-      setAllowed(true)
+      setAllowed(false)
     }
 
     checkAccess()
