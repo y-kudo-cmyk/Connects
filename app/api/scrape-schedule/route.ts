@@ -78,18 +78,16 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  // NEWSページの最初の2ページ（最新40件）をスクレイピング
-  const allItems: NewsItem[] = []
-  for (const page of [1, 2]) {
-    const url = page === 1
-      ? `${BASE_URL}/posts/information`
-      : `${BASE_URL}/posts/information?page=${page}`
-    const res = await fetch(url)
-    if (!res.ok) continue
-    const html = await res.text()
-    allItems.push(...extractNewsItems(html))
-    await new Promise(r => setTimeout(r, 300))
-  }
+  // 今日の日付（JST）
+  const now = new Date()
+  const jst = new Date(now.getTime() + 9 * 60 * 60 * 1000)
+  const today = jst.toISOString().slice(0, 10)
+
+  // NEWSページ1ページ目だけ取得（当日の記事は必ず最初に来る）
+  const res2 = await fetch(`${BASE_URL}/posts/information`)
+  if (!res2.ok) return NextResponse.json({ error: 'Fetch failed' }, { status: 500 })
+  const html = await res2.text()
+  const allItems = extractNewsItems(html).filter(item => item.date === today)
 
   // 既存イベントのキーを取得
   const { data: existing } = await supabase.from('events').select('event_title, start_date')
