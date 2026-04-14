@@ -16,58 +16,44 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
     if (!user) { setAllowed(null); return }
 
     async function checkAccess() {
-      const email = user!.email
-      if (!email) { setAllowed(false); return }
-      const normalized = email.toLowerCase().trim()
+      try {
+        // まず全員OK（人数制限だけチェック）
+        const { count } = await supabase
+          .from('profiles')
+          .select('*', { count: 'exact', head: true })
 
-      // Glide既存ユーザー → 無条件OK
-      const { data: glideUser } = await supabase
-        .from('glide_users')
-        .select('mail')
-        .ilike('mail', normalized)
-        .limit(1)
+        if ((count ?? 0) >= MAX_USERS) {
+          // 既にprofileがあるユーザーはOK
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('id')
+            .eq('id', user!.id)
+            .maybeSingle()
+          if (profile) {
+            setAllowed(true)
+            return
+          }
+          setFull(true)
+          setAllowed(false)
+          return
+        }
 
-      const isGlideUser = glideUser && glideUser.length > 0
-
-      if (isGlideUser) {
         setAllowed(true)
-        return
-      }
 
-      // 既にprofileがある（以前ログイン済みの新規ユーザー）→ OK
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('id')
-        .eq('id', user!.id)
-        .maybeSingle()
-
-      if (profile) {
+        // ログイン通知
+        const ADMIN_ID = '86c91b90-0060-4a3d-bf10-d5c846604882'
+        const notified = sessionStorage.getItem('login-notified')
+        if (!notified && user!.id !== ADMIN_ID) {
+          sessionStorage.setItem('login-notified', '1')
+          fetch('/api/notify-admin', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ type: 'login', message: `🔔 ログイン\n${user!.email} がログインしました` }),
+          }).catch(() => {})
+        }
+      } catch {
+        // エラー時はアクセス許可（ブロックしない）
         setAllowed(true)
-        return
-      }
-
-      // 新規ユーザー → 人数制限チェック
-      const { count } = await supabase
-        .from('profiles')
-        .select('*', { count: 'exact', head: true })
-
-      if ((count ?? 0) >= MAX_USERS) {
-        setFull(true)
-        setAllowed(false)
-        return
-      }
-
-      // OK → ログイン通知
-      setAllowed(true)
-      const ADMIN_ID = '86c91b90-0060-4a3d-bf10-d5c846604882'
-      const notified = sessionStorage.getItem('login-notified')
-      if (!notified && user!.id !== ADMIN_ID) {
-        sessionStorage.setItem('login-notified', '1')
-        fetch('/api/notify-admin', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ type: 'login', message: `🔔 新規テスター登録\n${email} がログインしました` }),
-        }).catch(() => {})
       }
     }
 
