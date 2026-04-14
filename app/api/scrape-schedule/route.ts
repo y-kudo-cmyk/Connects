@@ -83,11 +83,18 @@ export async function GET(request: NextRequest) {
   const jst = new Date(now.getTime() + 9 * 60 * 60 * 1000)
   const today = jst.toISOString().slice(0, 10)
 
-  // NEWSページ1ページ目だけ取得（当日の記事は必ず最初に来る）
+  // NEWSページ取得
   const res2 = await fetch(`${BASE_URL}/posts/information`)
   if (!res2.ok) return NextResponse.json({ error: 'Fetch failed' }, { status: 500 })
   const html = await res2.text()
-  const allItems = extractNewsItems(html).filter(item => item.date === today)
+
+  // 最新記事の日付だけ先にチェック（更新がなければスキップ）
+  const allPageItems = extractNewsItems(html)
+  if (allPageItems.length === 0 || allPageItems[0].date !== today) {
+    return NextResponse.json({ log: ['No new items today'], inserted: 0, total: 0 })
+  }
+
+  const allItems = allPageItems.filter(item => item.date === today)
 
   // 既存イベントのキーを取得
   const { data: existing } = await supabase.from('events').select('event_title, start_date')
