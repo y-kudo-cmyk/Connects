@@ -5,6 +5,7 @@ import { useSearchParams } from 'next/navigation'
 import { useMyEntries, MyEntry, compressImage, SeatInfo } from '@/lib/useMyEntries'
 import { eventTypeConfig } from '@/lib/config/constants'
 import { scheduleTagConfig, type ScheduleTag } from '@/lib/config/tags'
+import { countryFlag } from '@/lib/countryUtils'
 import { useTranslations } from 'next-intl'
 import SeatInfoForm from '@/components/SeatInfoForm'
 import SeatViewPreview from '@/components/SeatViewPreview'
@@ -667,69 +668,59 @@ function EntryCard({ entry, onEdit, onRemove }: {
 
   return (
     <>
-      <div className="rounded-2xl overflow-hidden flex"
-        style={{ background: '#FFFFFF', border: '1px solid #E5E5EA', minHeight: 104 }}>
+      <button onClick={onEdit} className="rounded-2xl overflow-hidden flex text-left w-full"
+        style={{ background: '#FFFFFF', minHeight: 104 }}>
 
         {/* 左：画像 */}
-        <button
-          className="flex-shrink-0 relative overflow-hidden"
-          style={{ width: 88 }}
-          onClick={() => mainImage && setViewerSrc(mainImage)}
-          disabled={!mainImage}
-        >
+        <div className="flex-shrink-0 relative overflow-hidden" style={{ width: 88 }}>
           {mainImage ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img src={mainImage} alt={entry.title}
               className="w-full h-full object-cover object-top" />
           ) : (
             <div className="w-full h-full flex items-center justify-center"
-              style={{ background: `linear-gradient(160deg, ${color}35 0%, ${color}12 100%)` }}>
-              <span className="text-lg font-black opacity-25" style={{ color }}>
-                {entry.title.slice(0, 2).toUpperCase()}
+              style={{ background: 'linear-gradient(135deg, #E8D5F5 0%, #D5E5F5 50%, #F5D5E8 100%)' }}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/logo.png" alt="" className="w-10 h-10 opacity-40" />
+            </div>
+          )}
+          <div className="absolute inset-y-0 right-0 w-0.5" style={{ background: color }} />
+        </div>
+
+        {/* 右：情報 */}
+        <div className="flex-1 min-w-0 px-3 py-2.5 flex flex-col justify-center gap-1">
+          <div className="flex items-center gap-1 flex-wrap">
+            <span className="text-[10px] font-bold px-1.5 py-0.5 rounded"
+              style={{ background: tagCfg?.bg ?? cfg?.bg ?? color + '20', color }}>{label}</span>
+            {isPeriod && (
+              <span className="text-[10px] font-bold px-1.5 py-0.5 rounded"
+                style={{ background: 'rgba(0,0,0,0.06)', color: '#8E8E93' }}>{t('Common.period')}</span>
+            )}
+          </div>
+          <p className="text-[10px] leading-snug" style={{ color: '#8E8E93' }}>
+            {entry.title}
+          </p>
+          <p className="text-xs font-semibold" style={{ color }}>{dateStr}</p>
+          {(entry.venue || entry.city) && (
+            <div className="flex items-center gap-1">
+              {entry.city && (
+                <span style={{ fontSize: 12, lineHeight: 1 }}>
+                  {countryFlag(entry.city)}
+                </span>
+              )}
+              <span className="text-[11px] truncate" style={{ color: '#8E8E93' }}>
+                {entry.venue}{entry.venue && entry.city ? ' · ' : ''}{entry.city}
               </span>
             </div>
           )}
-          {/* タイプカラーライン */}
-          <div className="absolute inset-y-0 right-0 w-0.5" style={{ background: color }} />
-        </button>
-
-        {/* 右：情報（タップで編集） */}
-        <button onClick={onEdit} className="flex-1 min-w-0 flex flex-col justify-between px-3 py-2.5 text-left">
-          <div className="flex items-start justify-between gap-2">
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-1 mb-1">
-                <span className="text-[10px] font-bold px-1.5 py-0.5 rounded"
-                  style={{ background: cfg?.bg ?? color + '20', color }}>{label}</span>
-                {isPeriod && (
-                  <span className="text-[10px] font-bold px-1.5 py-0.5 rounded"
-                    style={{ background: 'rgba(0,0,0,0.06)', color: '#8E8E93' }}>{t('Common.period')}</span>
-                )}
-              </div>
-              <p className="text-sm font-bold leading-snug" style={{ color: '#1C1C1E' }}>
-                {entry.title}
-              </p>
-              <p className="text-xs font-semibold mt-0.5" style={{ color }}>{dateStr}</p>
-              {entry.venue && (
-                <p className="text-[11px] mt-0.5 truncate" style={{ color: '#8E8E93' }}>{entry.venue}</p>
-              )}
-              {entry.seatInfo?.fields?.some((f) => f.value.trim()) && (
-                <p className="text-[11px] mt-0.5 font-semibold" style={{ color: '#3B82F6' }}>
-                  🪑 {entry.seatInfo.fields.filter((f) => f.value.trim()).map((f) => f.value).join(' / ')}
-                </p>
-              )}
-            </div>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#C7C7CC" strokeWidth="2" className="flex-shrink-0">
-              <polyline points="9 18 15 12 9 6" />
-            </svg>
-          </div>
           {entry.memo && (
-            <p className="text-[11px] mt-1 leading-snug line-clamp-2"
-              style={{ color: '#636366', whiteSpace: 'pre-wrap' }}>
+            <p className="text-[11px] leading-snug line-clamp-1"
+              style={{ color: '#636366' }}>
               📝 {entry.memo}
             </p>
           )}
-        </button>
-      </div>
+        </div>
+      </button>
 
       {viewerSrc && <ImageViewer src={viewerSrc} onClose={() => setViewerSrc(null)} />}
     </>
