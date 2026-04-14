@@ -7,6 +7,7 @@ const supabase = createClient(
 )
 
 const APIFY_TOKEN = process.env.APIFY_API_TOKEN!
+const WEVERSE_ACCESS_TOKEN = process.env.WEVERSE_ACCESS_TOKEN || ''
 const WEVERSE_REFRESH_TOKEN = process.env.WEVERSE_REFRESH_TOKEN!
 const WEVERSE_DEVICE_ID = process.env.WEVERSE_DEVICE_ID || '0b8011ed-b279-4a31-9b30-c5883ab154fd'
 
@@ -97,6 +98,7 @@ export async function GET(request: NextRequest) {
     preNavigationHooks: `[
       async ({page}) => {
         await page.context().addCookies([
+          {name: 'we2_access_token', value: '${WEVERSE_ACCESS_TOKEN}', domain: '.weverse.io', path: '/'},
           {name: 'we2_refresh_token', value: '${WEVERSE_REFRESH_TOKEN}', domain: '.weverse.io', path: '/'},
           {name: 'we2_device_id', value: '${WEVERSE_DEVICE_ID}', domain: '.weverse.io', path: '/'},
           {name: 'wes_artistId', value: '7', domain: '.weverse.io', path: '/'},
