@@ -17,42 +17,46 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
 
     async function checkAccess() {
       try {
-        // まず全員OK（人数制限だけチェック）
-        const { count } = await supabase
-          .from('profiles')
-          .select('*', { count: 'exact', head: true })
+        const email = user!.email || ''
 
-        if ((count ?? 0) >= MAX_USERS) {
-          // 既にprofileがあるユーザーはOK
-          const { data: profile } = await supabase
+        // profileがあるか確認
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('id')
+          .eq('id', user!.id)
+          .maybeSingle()
+
+        if (!profile) {
+          // 人数制限チェック
+          const { count } = await supabase
             .from('profiles')
-            .select('id')
-            .eq('id', user!.id)
-            .maybeSingle()
-          if (profile) {
-            setAllowed(true)
+            .select('*', { count: 'exact', head: true })
+
+          if ((count ?? 0) >= MAX_USERS) {
+            setFull(true)
+            setAllowed(false)
             return
           }
-          setFull(true)
-          setAllowed(false)
-          return
+
+          // profileを作成 + glide_my_entriesを移行
+          await fetch('/api/create-profile', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+          })
+
+          // ログイン通知
+          const ADMIN_ID = '86c91b90-0060-4a3d-bf10-d5c846604882'
+          if (user!.id !== ADMIN_ID) {
+            fetch('/api/notify-admin', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ type: 'login', message: `🔔 新規登録\n${email} がログインしました` }),
+            }).catch(() => {})
+          }
         }
 
         setAllowed(true)
-
-        // ログイン通知
-        const ADMIN_ID = '86c91b90-0060-4a3d-bf10-d5c846604882'
-        const notified = sessionStorage.getItem('login-notified')
-        if (!notified && user!.id !== ADMIN_ID) {
-          sessionStorage.setItem('login-notified', '1')
-          fetch('/api/notify-admin', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ type: 'login', message: `🔔 ログイン\n${user!.email} がログインしました` }),
-          }).catch(() => {})
-        }
       } catch {
-        // エラー時はアクセス許可（ブロックしない）
         setAllowed(true)
       }
     }
