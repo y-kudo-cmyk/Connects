@@ -10,7 +10,7 @@ export default async function FeedbackPage() {
 
   return (
     <>
-      <AdminHeader title="フィードバック" description="ユーザーからのご意見一覧" />
+      <AdminHeader />
       <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
         {(!feedback || feedback.length === 0) ? (
           <div className="flex items-center justify-center py-20 text-muted-foreground">
