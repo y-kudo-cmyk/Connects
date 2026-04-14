@@ -132,7 +132,7 @@ export default function MyPage() {
     }
   }
 
-  // 選択日のエントリ (LIVE→TICKET→EVENT(single)→other→period)
+  // 選択日のエントリ (LIVE→TICKET→MERCH→other→period)
   const dayEntries = filteredEntries.filter((e) => {
     if (e.dateEnd) return e.date <= selectedDate && selectedDate <= e.dateEnd
     return (e.customDate ?? e.date) === selectedDate
@@ -142,7 +142,7 @@ export default function MyPage() {
       const isPeriod = !!e.dateEnd
       if (tag === 'LIVE') return 0
       if (tag === 'TICKET') return 1
-      if (tag === 'EVENT' && !isPeriod) return 2
+      if (tag === 'MERCH') return 2
       if (!isPeriod) return 3
       return 4
     }
@@ -653,9 +653,11 @@ function EntryCard({ entry, onEdit, onRemove }: {
 }) {
   const [viewerSrc, setViewerSrc] = useState<string | null>(null)
   const t = useTranslations()
-  const cfg = eventTypeConfig[entry.type as keyof typeof eventTypeConfig]
-  const color = cfg?.color ?? entry.color
-  const label = cfg?.label ?? entry.type
+  const tag = (entry.tags?.[0] || entry.type) as ScheduleTag
+  const tagCfg = scheduleTagConfig[tag]
+  const cfg = tagCfg || eventTypeConfig[entry.type as keyof typeof eventTypeConfig]
+  const color = tagCfg?.color ?? cfg?.color ?? entry.color
+  const label = tagCfg ? `${tagCfg.icon} ${tagCfg.label}` : cfg?.label ?? entry.type
   // 来場日が登録済みなら期間ではなくその日として扱う
   const isPeriod = !!entry.dateEnd && !entry.customDate
   const dateStr = entry.customDate
