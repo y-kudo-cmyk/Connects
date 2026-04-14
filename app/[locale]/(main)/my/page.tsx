@@ -880,7 +880,9 @@ function EditModal({ entry, onClose, onSave, onRemove }: {
   const [images, setImages] = useState<string[]>(entry.images ?? [])
   const [autoAnalyzeTrigger, setAutoAnalyzeTrigger] = useState(0)
   const [showConfirmRemove, setShowConfirmRemove] = useState(false)
+  const [viewImages, setViewImages] = useState<string[]>([])
   const ticketFileRef = useRef<HTMLInputElement>(null)
+  const viewFileRef = useRef<HTMLInputElement>(null)
   const photoFileRef = useRef<HTMLInputElement>(null)
   const t = useTranslations()
 
@@ -901,6 +903,13 @@ function EditModal({ entry, onClose, onSave, onRemove }: {
     const next = [...ticketImages, ...results]
     setTicketImages(next)
     setAutoAnalyzeTrigger((v) => v + 1)
+  }
+
+  const handleViewUpload = async (files: FileList | null) => {
+    if (!files) return
+    const results: string[] = []
+    for (const f of Array.from(files)) results.push(await compressImage(f))
+    setViewImages((prev) => [...prev, ...results])
   }
 
   const handlePhotoUpload = async (files: FileList | null) => {
@@ -1019,6 +1028,41 @@ function EditModal({ entry, onClose, onSave, onRemove }: {
               </div>
               <input ref={ticketFileRef} type="file" accept="image/*" multiple className="hidden"
                 onChange={(e) => handleTicketUpload(e.target.files)} />
+            </EditSection>
+          )}
+
+          {/* 視野画像（LIVE/EVENTのみ） */}
+          {showTicketSection && (
+            <EditSection label="座席からの眺め">
+              <div className="flex flex-wrap gap-2">
+                {viewImages.map((img: string, i: number) => (
+                  <div key={i} className="relative rounded-xl overflow-hidden"
+                    style={{ width: 100, aspectRatio: '16/9' }}>
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={img} alt="" className="w-full h-full object-cover" />
+                    <button onClick={() => setViewImages((p: string[]) => p.filter((_: string, j: number) => j !== i))}
+                      className="absolute top-1 right-1 w-6 h-6 rounded-full flex items-center justify-center"
+                      style={{ background: 'rgba(0,0,0,0.65)' }}>
+                      <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" strokeWidth="3">
+                        <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+                      </svg>
+                    </button>
+                  </div>
+                ))}
+                <button onClick={() => viewFileRef.current?.click()}
+                  className="rounded-xl flex flex-col items-center justify-center gap-1"
+                  style={{ width: 100, aspectRatio: '16/9', border: '2px dashed #E5E5EA', color: '#8E8E93' }}>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                    <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
+                  </svg>
+                  <span className="text-[10px]">{t('Common.add')}</span>
+                </button>
+              </div>
+              <input ref={viewFileRef} type="file" accept="image/*" multiple className="hidden"
+                onChange={(e) => handleViewUpload(e.target.files)} />
+              <p className="text-[10px] mt-2" style={{ color: '#F59E0B' }}>
+                ⚠ この画像は他のユーザーにも公開されます
+              </p>
             </EditSection>
           )}
 
