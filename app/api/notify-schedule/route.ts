@@ -98,7 +98,7 @@ async function morningNotification(currentTime: string, today: string, testMode 
   const heading = `📅 今日のスケジュール ${todayEvents.length}件`
 
   const userIds = users.map(u => u.id)
-  const result = await sendNotification(userIds, heading, content, 'https://connects-nu.vercel.app/notification?type=morning&date=' + today)
+  const result = await sendNotification(userIds, heading, content, 'https://connects-nu.vercel.app/')
   return { type: 'morning', users: userIds.length, ...result }
 }
 
