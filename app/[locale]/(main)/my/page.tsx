@@ -690,8 +690,7 @@ function EntryCard({ entry, onEdit, onRemove }: {
         {/* 右：情報 */}
         <div className="flex-1 min-w-0 px-3 py-2.5 flex flex-col justify-center gap-1">
           <div className="flex items-center gap-1 flex-wrap">
-            <span className="text-[10px] font-bold px-1.5 py-0.5 rounded"
-              style={{ background: tagCfg?.bg ?? cfg?.bg ?? color + '20', color }}>{label}</span>
+            <span className="text-sm">{tagCfg?.icon ?? '📌'}</span>
             {isPeriod && (
               <span className="text-[10px] font-bold px-1.5 py-0.5 rounded"
                 style={{ background: 'rgba(0,0,0,0.06)', color: '#8E8E93' }}>{t('Common.period')}</span>
