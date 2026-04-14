@@ -47,13 +47,14 @@ export default function NewSchedulePreview() {
         eventId: event.id,
         title: event.title,
         type: event.type,
+        tags: event.tags ? [...event.tags] : [],
         color: event.artistColor,
         venue: event.venue,
         city: event.city,
         time: event.time,
         ticketImages: [],
         memo: '',
-        images: [],
+        images: event.image ? [event.image] : [],
         createdAt: new Date().toISOString(),
       })
     }

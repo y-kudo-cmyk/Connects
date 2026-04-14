@@ -172,7 +172,7 @@ export default function EventDetailModal({
         time: event.time,
         ticketImages: [],
         memo: '',
-        images: [],
+        images: event.image ? [event.image] : [],
         createdAt: new Date().toISOString(),
       })
     }
