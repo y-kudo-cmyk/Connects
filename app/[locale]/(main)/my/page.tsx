@@ -689,16 +689,16 @@ function EntryCard({ entry, onEdit, onRemove }: {
 
         {/* 右：情報 */}
         <div className="flex-1 min-w-0 px-3 py-2.5 flex flex-col justify-center gap-1">
-          <div className="flex items-center gap-1 flex-wrap">
-            <span className="text-sm">{tagCfg?.icon ?? '📌'}</span>
+          <div className="flex items-center gap-1">
+            <span className="text-sm flex-shrink-0">{tagCfg?.icon ?? '📌'}</span>
+            <p className="text-[10px] leading-snug truncate" style={{ color: '#8E8E93' }}>
+              {entry.title}
+            </p>
             {isPeriod && (
-              <span className="text-[10px] font-bold px-1.5 py-0.5 rounded"
+              <span className="text-[10px] font-bold px-1.5 py-0.5 rounded flex-shrink-0"
                 style={{ background: 'rgba(0,0,0,0.06)', color: '#8E8E93' }}>{t('Common.period')}</span>
             )}
           </div>
-          <p className="text-[10px] leading-snug" style={{ color: '#8E8E93' }}>
-            {entry.title}
-          </p>
           {entry.subTitle && (
             <p className="text-sm font-semibold leading-snug" style={{ color: '#1C1C1E' }}>
               {entry.subTitle}
