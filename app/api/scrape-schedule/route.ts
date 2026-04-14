@@ -131,6 +131,53 @@ export async function GET(request: NextRequest) {
     })
   }
 
+  // ── 韓国 Pledis サイトもチェック ─────────────────────────────
+  // 最新IDXをDBから取得して、それ以降の記事を探す
+  const { data: lastKr } = await supabase
+    .from('events')
+    .select('source_url')
+    .ilike('source_url', '%pledis.co.kr%')
+    .order('created_at', { ascending: false })
+    .limit(1)
+  const lastIdxMatch = lastKr?.[0]?.source_url?.match(/\/(\d+)\//)
+  const startIdx = lastIdxMatch ? parseInt(lastIdxMatch[1]) + 1 : 17423
+
+  for (let idx = startIdx; idx <= startIdx + 10; idx++) {
+    try {
+      const krRes = await fetch(`https://pledis.co.kr/resources/_data/json/frontend/KOR/artist/seventeen/notice/view/${idx}.json`)
+      if (!krRes.ok) continue
+      const article = await krRes.json()
+      if (!article.subject || !article.reg_date) continue
+
+      const krDate = article.reg_date.slice(0, 10)
+      const krTitle = article.subject.replace(/\s+/g, ' ').trim()
+      const krKey = `${normalize(krTitle)}::${krDate}`
+      if (existingKeys.has(krKey)) continue
+      existingKeys.add(krKey)
+
+      newEvents.push({
+        tag: krTitle.includes('FAN MEETING') || krTitle.includes('CONCERT') || krTitle.includes('TOUR') ? 'LIVE'
+          : krTitle.includes('Album') || krTitle.includes('발매') ? 'CD'
+          : 'INFO',
+        artist_id: 'A000000',
+        event_title: krTitle,
+        sub_event_title: '',
+        start_date: `${krDate}T00:00:00`,
+        end_date: null,
+        spot_name: '',
+        spot_address: '',
+        country: 'KR',
+        image_url: '',
+        source_url: `https://pledis.co.kr/artist/detail/seventeen/notice/${idx}/`,
+        status: 'confirmed',
+        verified_count: 3,
+        related_artists: '',
+        submitted_by: null,
+      })
+      log.push(`KR: ${krDate} ${krTitle.slice(0, 50)}`)
+    } catch { /* skip */ }
+  }
+
   // DB挿入
   let inserted = 0
   if (newEvents.length > 0) {
