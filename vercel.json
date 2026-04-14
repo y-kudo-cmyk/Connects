@@ -19,10 +19,6 @@
     {
       "path": "/api/scrape-schedule",
       "schedule": "10 * * * *"
-    },
-    {
-      "path": "/api/scrape-weverse",
-      "schedule": "20 * * * *"
     }
   ]
 }
