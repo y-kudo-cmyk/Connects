@@ -18,6 +18,7 @@ export default function NotificationPage() {
 
   const type = searchParams.get('type') || 'morning'
   const date = searchParams.get('date') || TODAY
+  const message = searchParams.get('message') || ''
 
   // 明日の日付
   const tomorrow = new Date(date + 'T00:00:00Z')
@@ -43,13 +44,17 @@ export default function NotificationPage() {
     ? `📅 今日のスケジュール`
     : type === 'evening'
       ? `🌙 明日のスケジュール`
-      : `⏰ まもなく開始`
+      : type === 'admin'
+        ? `📢 運営からのお知らせ`
+        : `⏰ まもなく開始`
 
   const subtitle = type === 'morning'
     ? `${date.replace(/-/g, '/')} · ${todayEvents.length}件`
     : type === 'evening'
       ? `${tomorrowStr.replace(/-/g, '/')} · ${tomorrowEvents.length}件`
-      : ''
+      : type === 'admin'
+        ? date.replace(/-/g, '/')
+        : ''
 
   return (
     <div className="min-h-screen flex flex-col" style={{ background: '#F8F9FA' }}>
@@ -69,6 +74,15 @@ export default function NotificationPage() {
       </header>
 
       <div className="flex-1 px-4 py-4 flex flex-col gap-3">
+        {/* 運営からのお知らせ */}
+        {type === 'admin' && message && (
+          <div className="rounded-2xl p-5" style={{ background: '#FFFFFF' }}>
+            <p className="text-sm leading-relaxed whitespace-pre-line" style={{ color: '#1C1C1E' }}>
+              {decodeURIComponent(message)}
+            </p>
+          </div>
+        )}
+
         {/* 締切イベント（夜のみ） */}
         {type === 'evening' && endingToday.length > 0 && (
           <>
@@ -141,6 +155,14 @@ export default function NotificationPage() {
                 </p>
                 {event.venue && (
                   <p className="text-xs mt-1" style={{ color: '#8E8E93' }}>📍 {event.venue}</p>
+                )}
+                {event.sourceUrl && (
+                  <a href={event.sourceUrl} target="_blank" rel="noopener noreferrer"
+                    onClick={(e) => e.stopPropagation()}
+                    className="inline-flex items-center gap-1 mt-2 text-[10px] font-bold px-2 py-1 rounded-full"
+                    style={{ background: 'rgba(96,165,250,0.1)', color: '#60A5FA' }}>
+                    🔗 {event.sourceName || 'ソース'} ↗
+                  </a>
                 )}
               </div>
             </button>
