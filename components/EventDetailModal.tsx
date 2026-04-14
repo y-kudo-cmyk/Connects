@@ -289,10 +289,15 @@ export default function EventDetailModal({
               </div>
             </div>
           ) : (
-            <div className="rounded-2xl mb-4 flex items-center justify-center"
-              style={{ aspectRatio: '16/9', background: 'linear-gradient(135deg, #E8D5F5 0%, #D5E5F5 50%, #F5D5E8 100%)' }}>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/logo.png" alt="" className="w-16 h-16 opacity-40" />
+            <div className="mb-4">
+              <button onClick={() => { setEditing(true); imageFileRef.current?.click() }}
+                className="w-full rounded-2xl flex flex-col items-center justify-center gap-2"
+                style={{ aspectRatio: '16/9', background: 'linear-gradient(135deg, #E8D5F5 0%, #D5E5F5 50%, #F5D5E8 100%)', cursor: 'pointer' }}>
+                <span className="text-3xl">📷</span>
+                <span className="text-xs font-bold" style={{ color: '#8E8E93' }}>画像を追加</span>
+              </button>
+              <input ref={imageFileRef} type="file" accept="image/*" className="hidden"
+                onChange={(e) => handleImageUpload(e.target.files)} />
             </div>
           )}
 
