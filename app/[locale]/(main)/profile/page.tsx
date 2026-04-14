@@ -838,8 +838,8 @@ export default function ProfilePage() {
           onClick={() => setShowFeedback(false)}
         >
           <div
-            className="w-full max-w-lg rounded-t-2xl p-5"
-            style={{ background: '#FFFFFF', paddingBottom: 'max(24px, env(safe-area-inset-bottom))' }}
+            className="w-full max-w-lg rounded-t-2xl p-5 overflow-y-auto"
+            style={{ background: '#FFFFFF', paddingBottom: 'max(24px, env(safe-area-inset-bottom))', maxHeight: '85vh' }}
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex justify-center mb-4">
