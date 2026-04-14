@@ -31,6 +31,8 @@ function getEventTags(e: AppEvent): ScheduleTag[] {
 type Region = 'HOME' | 'OVERSEAS'
 
 function matchRegion(e: AppEvent, region: Region, homeCountry: string): boolean {
+  // LIVEはどの地域でも表示
+  if (e.tags?.includes('LIVE')) return true
   if (!e.city) return true
   const code = e.city.split(', ').pop() ?? ''
   const isHome = code === homeCountry
@@ -131,9 +133,10 @@ export default function SchedulePage() {
       ? e.date <= selectedDate && selectedDate <= e.dateEnd
       : e.date === selectedDate
   ).sort((a, b) => {
-    const aIsLive = a.tags?.includes('LIVE') ? 0 : 1
-    const bIsLive = b.tags?.includes('LIVE') ? 0 : 1
-    if (aIsLive !== bIsLive) return aIsLive - bIsLive
+    const order: Record<string, number> = { LIVE: 0, TICKET: 1, MERCH: 2 }
+    const aOrder = order[a.tags?.[0] || ''] ?? 3
+    const bOrder = order[b.tags?.[0] || ''] ?? 3
+    if (aOrder !== bOrder) return aOrder - bOrder
     const aIsPeriod = a.dateEnd ? 1 : 0
     const bIsPeriod = b.dateEnd ? 1 : 0
     return aIsPeriod - bIsPeriod
