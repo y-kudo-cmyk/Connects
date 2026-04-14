@@ -129,7 +129,7 @@ export default function MapPage() {
           <PhotoUploadModal
             spot={uploadSpot}
             defaultContributor={profile.nickname || t('Common.user')}
-            onSave={(photo) => { addPhoto(uploadSpot.id, { ...photo, status: 'pending', votes: 0 }); setUploadSpot(null) }}
+            onSave={async (photos) => { for (const photo of photos) { await addPhoto(uploadSpot.id, { ...photo, status: 'pending', votes: 0 }) } setUploadSpot(null) }}
             onClose={() => setUploadSpot(null)}
           />
         )}
@@ -1004,7 +1004,7 @@ function PhotoUploadModal({
 }: {
   spot: AppSpot
   defaultContributor: string
-  onSave: (photo: SpotPhoto) => void
+  onSave: (photos: SpotPhoto[]) => void
   onClose: () => void
 }) {
   const t = useTranslations()
@@ -1038,23 +1038,20 @@ function PhotoUploadModal({
   }
 
   const handleSave = () => {
-    // 各画像を1枚ずつ保存
     const imgs = images.length > 0 ? images : ['']
-    for (const img of imgs) {
-      const photo: SpotPhoto = {
-        id: Date.now().toString() + Math.random().toString(36).slice(2, 6),
-        imageUrl: img,
-        sourceUrl: sourceUrl.trim() || '',
-        platform,
-        tags: selectedTags,
-        contributor: defaultContributor,
-        date,
-        caption: caption.trim() || undefined,
-        status: 'pending',
-        votes: 0,
-      }
-      onSave(photo)
-    }
+    const photos: SpotPhoto[] = imgs.map(img => ({
+      id: Date.now().toString() + Math.random().toString(36).slice(2, 6),
+      imageUrl: img,
+      sourceUrl: sourceUrl.trim() || '',
+      platform,
+      tags: selectedTags,
+      contributor: defaultContributor,
+      date,
+      caption: caption.trim() || undefined,
+      status: 'pending',
+      votes: 0,
+    }))
+    onSave(photos)
   }
 
   const memberColors: Record<string, string> = Object.fromEntries(
