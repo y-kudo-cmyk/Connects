@@ -37,8 +37,8 @@ export default function LoginPage() {
   }
 
   const handleOtpVerify = async () => {
-    if (!otp.trim() || otp.length !== 6) {
-      setEmailError('6桁のコードを入力してください')
+    if (!otp.trim()) {
+      setEmailError('コードを入力してください')
       return
     }
     setOtpLoading(true)
@@ -68,16 +68,16 @@ export default function LoginPage() {
         </div>
         <h2 className="text-lg font-bold mb-2" style={{ color: '#1C1C1E' }}>認証コードを入力</h2>
         <p className="text-sm text-center leading-relaxed mb-4" style={{ color: '#8E8E93' }}>
-          {email} に6桁のコードを送信しました
+          {email} にコードを送信しました
         </p>
         <input
           type="text"
           inputMode="numeric"
-          maxLength={6}
+          maxLength={8}
           value={otp}
           onChange={(e) => { setOtp(e.target.value.replace(/\D/g, '')); setEmailError('') }}
-          placeholder="000000"
-          className="w-48 px-4 py-3.5 rounded-2xl text-2xl text-center font-bold tracking-[0.5em] outline-none"
+          placeholder="00000000"
+          className="w-56 px-4 py-3.5 rounded-2xl text-2xl text-center font-bold tracking-[0.3em] outline-none"
           style={{ background: '#FFFFFF', border: '1.5px solid #E5E5EA', color: '#1C1C1E' }}
           onFocus={(e) => (e.target.style.borderColor = '#F3B4E3')}
           onBlur={(e) => (e.target.style.borderColor = '#E5E5EA')}
@@ -89,11 +89,11 @@ export default function LoginPage() {
         )}
         <button
           onClick={handleOtpVerify}
-          disabled={otpLoading || otp.length !== 6}
-          className="mt-4 w-48 py-3.5 rounded-2xl text-sm font-bold"
+          disabled={otpLoading || otp.length < 6}
+          className="mt-4 w-56 py-3.5 rounded-2xl text-sm font-bold"
           style={{
-            background: otp.length === 6 ? '#F3B4E3' : '#F0F0F5',
-            color: otp.length === 6 ? '#FFFFFF' : '#8E8E93',
+            background: otp.length >= 6 ? '#F3B4E3' : '#F0F0F5',
+            color: otp.length >= 6 ? '#FFFFFF' : '#8E8E93',
           }}
         >
           {otpLoading ? '確認中...' : 'ログイン'}
