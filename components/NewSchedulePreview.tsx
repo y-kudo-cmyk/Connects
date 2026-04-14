@@ -8,6 +8,7 @@ import { useMyEntries } from '@/lib/useMyEntries'
 import EventDetailModal from './EventDetailModal'
 import { useTranslations } from 'next-intl'
 import { useToday } from '@/lib/useToday'
+import { countryFlag, cityToCountryCode } from '@/lib/countryUtils'
 import { VOTE_THRESHOLD } from '@/lib/supabase/useVoting'
 const DISMISSED_KEY = 'cp-dismissed'
 
@@ -170,8 +171,13 @@ export default function NewSchedulePreview() {
                     </p>
                   )}
 
-                  {event.venue && (
-                    <p className="text-[10px]" style={{ color: '#8E8E93' }}>📍 {event.venue}</p>
+                  {(event.venue || event.city) && (
+                    <div className="flex items-center gap-1">
+                      {event.city && (
+                        <span style={{ fontSize: 10 }}>{countryFlag(cityToCountryCode(event.city))}</span>
+                      )}
+                      <p className="text-[10px] truncate" style={{ color: '#8E8E93' }}>{event.venue}</p>
+                    </div>
                   )}
                 </button>
 

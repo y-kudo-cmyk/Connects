@@ -8,6 +8,7 @@ import { scheduleTagConfig, type ScheduleTag } from '@/lib/config/tags'
 import { useToday } from '@/lib/useToday'
 import type { AppEvent } from '@/lib/supabase/adapters'
 import EventDetailModal from '@/components/EventDetailModal'
+import { countryFlag, cityToCountryCode } from '@/lib/countryUtils'
 
 export default function NotificationPage() {
   const searchParams = useSearchParams()
@@ -153,8 +154,15 @@ export default function NotificationPage() {
                 <p className="text-sm font-bold" style={{ color: '#1C1C1E' }}>
                   {event.title}{event.subTitle ? ` — ${event.subTitle}` : ''}
                 </p>
-                {event.venue && (
-                  <p className="text-xs mt-1" style={{ color: '#8E8E93' }}>📍 {event.venue}</p>
+                {(event.venue || event.city) && (
+                  <div className="flex items-center gap-1 mt-1">
+                    {event.city && (
+                      <span style={{ fontSize: 12, lineHeight: 1 }}>{countryFlag(cityToCountryCode(event.city))}</span>
+                    )}
+                    <p className="text-xs truncate" style={{ color: '#8E8E93' }}>
+                      {event.venue}{event.venue && event.city ? ' · ' : ''}{event.city}
+                    </p>
+                  </div>
                 )}
                 {event.sourceUrl && (
                   <a href={event.sourceUrl} target="_blank" rel="noopener noreferrer"
