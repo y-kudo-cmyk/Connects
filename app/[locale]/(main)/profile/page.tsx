@@ -728,7 +728,7 @@ export default function ProfilePage() {
       <div className="mx-4 mb-4" style={{ height: 1, background: '#E5E5EA' }} />
 
       {/* ─── サインアウト＋退会 ─── */}
-      <div className="px-4 pb-28 flex flex-col gap-3">
+      <div className="px-4 flex flex-col gap-3" style={{ paddingBottom: 'calc(100px + env(safe-area-inset-bottom, 0px))' }}>
         {/* ご意見フォーム */}
         <button
           onClick={() => { setFeedbackMsg(''); setFeedbackState('idle'); setShowFeedback(true) }}
