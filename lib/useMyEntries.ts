@@ -33,6 +33,7 @@ export type MyEntry = {
   reservationNote?: string
   ticketImages?: string[]
   seatInfo?: SeatInfo
+  notes?: string
   memo: string
   images: string[]
   createdAt: string
@@ -79,6 +80,7 @@ function toApp(row: DbMyEntry): MyEntry {
     city: row.spot_address ?? undefined,
     ticketImages: row.ticket_image_url ? [row.ticket_image_url] : [],
     seatInfo: row.seat_info ?? undefined,
+    notes: row.notes ?? undefined,
     memo: row.memo ?? '',
     images: row.image_url ? [row.image_url] : [],
     createdAt: row.created_at,
@@ -116,7 +118,7 @@ export function useMyEntries() {
       spot_address: entry.city || null,
       image_url: entry.images?.[0] || null,
       source_url: entry.sourceUrl || null,
-      notes: null,
+      notes: entry.notes || null,
       ticket_image_url: entry.ticketImages?.[0] || null,
       seat_info: entry.seatInfo || null,
       memo: entry.memo || null,

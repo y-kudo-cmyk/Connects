@@ -176,6 +176,7 @@ export default function EventDetailModal({
         images: event.image ? [event.image] : [],
         createdAt: new Date().toISOString(),
         sourceUrl: event.sourceUrl,
+        notes: event.notes,
       })
     }
   }
