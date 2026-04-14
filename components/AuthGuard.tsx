@@ -19,31 +19,19 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
       const email = user!.email
       if (!email) { setAllowed(false); return }
 
-      // glide_usersにメールが存在するか確認
-      const normalized = email.toLowerCase().trim()
-      const { data } = await supabase
-        .from('glide_users')
-        .select('mail')
-        .ilike('mail', normalized)
-        .limit(1)
+      // 既にprofileがあるか
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('id', user!.id)
+        .maybeSingle()
 
-      if (data && data.length > 0) {
+      if (profile) {
         setAllowed(true)
-        // ログイン通知（初回のみ、工藤さん自身は除外）
-        const ADMIN_ID = '86c91b90-0060-4a3d-bf10-d5c846604882'
-        const notified = sessionStorage.getItem('login-notified')
-        if (!notified && user!.id !== ADMIN_ID) {
-          sessionStorage.setItem('login-notified', '1')
-          fetch('/api/notify-admin', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ type: 'login', message: `🔔 ログイン\n${email} がログインしました` }),
-          }).catch(() => {})
-        }
         return
       }
 
-      // 人数制限チェック（既存ユーザー以外）
+      // 新規ユーザー → 人数制限チェック
       const { count } = await supabase
         .from('profiles')
         .select('*', { count: 'exact', head: true })
@@ -54,7 +42,18 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
         return
       }
 
-      setAllowed(false)
+      // OK → ログイン通知
+      setAllowed(true)
+      const ADMIN_ID = '86c91b90-0060-4a3d-bf10-d5c846604882'
+      const notified = sessionStorage.getItem('login-notified')
+      if (!notified && user!.id !== ADMIN_ID) {
+        sessionStorage.setItem('login-notified', '1')
+        fetch('/api/notify-admin', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ type: 'login', message: `🔔 新規ログイン\n${email} がログインしました` }),
+        }).catch(() => {})
+      }
     }
 
     checkAccess()
