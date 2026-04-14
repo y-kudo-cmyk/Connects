@@ -357,9 +357,16 @@ export default function EventDetailModal({
                       <input type="date" value={editStartDate} onChange={(e) => setEditStartDate(e.target.value)}
                         className="flex-1 px-3 py-2 rounded-xl text-sm outline-none"
                         style={{ background: '#FFFFFF', border: '1.5px solid #F3B4E3', color: '#1C1C1E' }} />
-                      <input type="time" value={editStartTime} onChange={(e) => setEditStartTime(e.target.value)}
-                        className="w-28 px-3 py-2 rounded-xl text-sm outline-none"
-                        style={{ background: '#FFFFFF', border: '1.5px solid #F3B4E3', color: '#1C1C1E' }} />
+                      {event.tags?.includes('LIVE') ? (
+                        <span className="w-28 px-3 py-2 rounded-xl text-sm"
+                          style={{ background: '#F0F0F5', color: '#8E8E93' }}>
+                          {editStartTime || '--:--'}
+                        </span>
+                      ) : (
+                        <input type="time" value={editStartTime} onChange={(e) => setEditStartTime(e.target.value)}
+                          className="w-28 px-3 py-2 rounded-xl text-sm outline-none"
+                          style={{ background: '#FFFFFF', border: '1.5px solid #F3B4E3', color: '#1C1C1E' }} />
+                      )}
                     </div>
                     <div className="flex items-center gap-2">
                       <span className="text-xs" style={{ color: '#8E8E93' }}>〜</span>
