@@ -34,7 +34,7 @@ export const scheduleTagConfig: Record<ScheduleTag, { label: string; icon: strin
   TV:         { label: 'TV',         icon: '📺', color: '#60A5FA', bg: 'rgba(96,165,250,0.15)'  },
   YOUTUBE:    { label: 'YOUTUBE',    icon: '▶️', color: '#EF4444', bg: 'rgba(239,68,68,0.15)'   },
   RADIO:       { label: 'RADIO',     icon: '📻', color: '#4ADE80', bg: 'rgba(74,222,128,0.15)'  },
-  LIVEVIEWING: { label: 'LIVE VIEWING/CINEMA', icon: '🎬', color: '#818CF8', bg: 'rgba(129,140,248,0.15)' },
+  LIVEVIEWING: { label: 'LIVE VIEWING/CINEMA', icon: '🎥', color: '#818CF8', bg: 'rgba(129,140,248,0.15)' },
   INFO:         { label: 'INFO',              icon: '📢', color: '#6B7280', bg: 'rgba(107,114,128,0.15)' },
 }
 
