@@ -62,6 +62,7 @@ export default function NewSchedulePreview() {
 
   const upcoming = events
     .filter((e) => e.date >= TODAY && !dismissed.has(e.id) && !e.tags?.includes('BIRTHDAY'))
+    .sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''))
     .slice(0, 8)
 
   if (upcoming.length === 0) return null
