@@ -24,17 +24,15 @@ export default function NotificationPage() {
   tomorrow.setDate(tomorrow.getDate() + 1)
   const tomorrowStr = tomorrow.toISOString().slice(0, 10)
 
-  // 対象イベントを計算
+  // 対象イベントを計算（TodayScheduleSectionと同じロジック）
   const todayEvents = events.filter(e => {
-    const start = e.date
-    const end = e.dateEnd || start
-    return start <= date && date <= end
+    if (e.dateEnd) return e.date <= date && e.dateEnd >= date
+    return e.date === date
   })
 
   const tomorrowEvents = events.filter(e => {
-    const start = e.date
-    const end = e.dateEnd || start
-    return start <= tomorrowStr && tomorrowStr <= end
+    if (e.dateEnd) return e.date <= tomorrowStr && e.dateEnd >= tomorrowStr
+    return e.date === tomorrowStr
   })
 
   const endingToday = events.filter(e => e.dateEnd === date && e.tags?.includes('TICKET'))
