@@ -867,16 +867,24 @@ export default function ProfilePage() {
                   value={feedbackMsg}
                   onChange={(e) => setFeedbackMsg(e.target.value)}
                   placeholder={t('Profile.feedbackPlaceholder')}
-                  rows={5}
+                  rows={3}
                   maxLength={500}
-                  className="w-full px-3 py-3 rounded-xl text-sm outline-none resize-none mb-1"
+                  className="w-full px-3 py-3 rounded-xl text-sm outline-none resize-none"
                   style={{ background: '#F8F9FA', border: '1px solid #E5E5EA', color: '#1C1C1E' }}
+                  onFocus={() => {
+                    setTimeout(() => {
+                      document.querySelector('[data-feedback-submit]')?.scrollIntoView({ behavior: 'smooth', block: 'end' })
+                    }, 300)
+                  }}
                 />
-                <p className="text-[10px] text-right mb-4" style={{ color: '#C7C7CC' }}>{feedbackMsg.length}/500</p>
-                {feedbackState === 'error' && (
-                  <p className="text-xs mb-3 text-center" style={{ color: '#EF4444' }}>{t('Profile.feedbackError')}</p>
-                )}
+                <div className="flex items-center justify-between mt-1 mb-2">
+                  <p className="text-[10px]" style={{ color: '#C7C7CC' }}>{feedbackMsg.length}/500</p>
+                  {feedbackState === 'error' && (
+                    <p className="text-[10px]" style={{ color: '#EF4444' }}>{t('Profile.feedbackError')}</p>
+                  )}
+                </div>
                 <button
+                  data-feedback-submit
                   onClick={sendFeedback}
                   disabled={!feedbackMsg.trim() || feedbackState === 'sending'}
                   className="w-full py-3.5 rounded-xl text-sm font-bold"
