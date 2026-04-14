@@ -234,11 +234,12 @@ export async function GET(request: NextRequest) {
   }
 
   const { date, time } = getJST()
+  const testMode = request.nextUrl.searchParams.get('test') === 'true'
   const currentTime = time // "13:00" 形式
 
   const results = await Promise.all([
-    morningNotification(currentTime, date),
-    eveningNotification(currentTime, date),
+    morningNotification(testMode ? '08:00' : currentTime, date),
+    eveningNotification(testMode ? '23:00' : currentTime, date),
     // リマインダーは毎時実行（1時間前通知）
     myEventReminder(currentTime, date),
   ])
