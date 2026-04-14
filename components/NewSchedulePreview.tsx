@@ -22,22 +22,26 @@ export default function NewSchedulePreview() {
   const [detailEvent, setDetailEvent] = useState<AppEvent | null>(null)
   const { addEntry, hasEntry } = useMyEntries()
   const { user } = useAuth()
-  const dismissedKey = `cp-dismissed-${user?.id || 'anon'}`
 
   useEffect(() => {
-    try {
-      const raw = localStorage.getItem(dismissedKey)
-      if (raw) setDismissed(new Set(JSON.parse(raw)))
-    } catch {}
-  }, [dismissedKey])
+    if (!user) return
+    const sb = require('@/lib/supabase/client').createClient()
+    sb.from('user_dismissals').select('target_id').eq('user_id', user.id).eq('type', 'schedule')
+      .then(({ data }: { data: { target_id: string }[] | null }) => {
+        if (data) setDismissed(new Set(data.map((d: { target_id: string }) => d.target_id)))
+      })
+  }, [user])
 
   const dismiss = (id: string) => {
     setDismissed((prev) => {
       const next = new Set(prev)
       next.add(id)
-      try { localStorage.setItem(dismissedKey, JSON.stringify([...next])) } catch {}
       return next
     })
+    if (user) {
+      const sb = require('@/lib/supabase/client').createClient()
+      sb.from('user_dismissals').upsert({ user_id: user.id, type: 'schedule', target_id: id }).then(() => {})
+    }
   }
 
   const importAndDismiss = (event: AppEvent) => {
