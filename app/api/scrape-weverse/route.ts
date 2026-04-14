@@ -74,37 +74,37 @@ export async function GET(request: NextRequest) {
   const log: string[] = []
 
   // 1. Apify Playwright Scraper を実行
+  const cookies = JSON.stringify([
+    {name: 'we2_access_token', value: WEVERSE_ACCESS_TOKEN, domain: '.weverse.io', path: '/'},
+    {name: 'we2_refresh_token', value: WEVERSE_REFRESH_TOKEN, domain: '.weverse.io', path: '/'},
+    {name: 'we2_device_id', value: WEVERSE_DEVICE_ID, domain: '.weverse.io', path: '/'},
+    {name: 'wes_artistId', value: '7', domain: '.weverse.io', path: '/'},
+  ])
+
   const config = {
     startUrls: [{ url: 'https://weverse.io/seventeen/notice?hl=ja' }],
-    pageFunction: `async function pageFunction(context) {
-      const { page, request } = context;
-      await page.waitForTimeout(3000);
-      try {
-        const buttons = await page.locator('button');
-        const count = await buttons.count();
-        for (let i = 0; i < count; i++) {
-          const text = await buttons.nth(i).innerText();
-          if (text.includes('すべて同意') || text.includes('同意')) {
-            await buttons.nth(i).click();
-            break;
-          }
-        }
-      } catch(e) {}
-      await page.waitForTimeout(12000);
-      const text = await page.evaluate(() => document.body.innerText);
-      return { url: request.url, text };
-    }`,
+    pageFunction: [
+      'async function pageFunction(context) {',
+      '  const { page, request } = context;',
+      '  await page.waitForTimeout(3000);',
+      '  try {',
+      '    const buttons = await page.locator("button");',
+      '    const count = await buttons.count();',
+      '    for (let i = 0; i < count; i++) {',
+      '      const text = await buttons.nth(i).innerText();',
+      '      if (text.includes("すべて同意") || text.includes("同意")) {',
+      '        await buttons.nth(i).click();',
+      '        break;',
+      '      }',
+      '    }',
+      '  } catch(e) {}',
+      '  await page.waitForTimeout(12000);',
+      '  const text = await page.evaluate(() => document.body.innerText);',
+      '  return { url: request.url, text };',
+      '}',
+    ].join('\n'),
     proxyConfiguration: { useApifyProxy: true },
-    preNavigationHooks: `[
-      async ({page}) => {
-        await page.context().addCookies([
-          {name: 'we2_access_token', value: '${WEVERSE_ACCESS_TOKEN}', domain: '.weverse.io', path: '/'},
-          {name: 'we2_refresh_token', value: '${WEVERSE_REFRESH_TOKEN}', domain: '.weverse.io', path: '/'},
-          {name: 'we2_device_id', value: '${WEVERSE_DEVICE_ID}', domain: '.weverse.io', path: '/'},
-          {name: 'wes_artistId', value: '7', domain: '.weverse.io', path: '/'},
-        ]);
-      }
-    ]`,
+    preNavigationHooks: '[async ({page}) => { await page.context().addCookies(' + cookies + '); }]',
     maxRequestsPerCrawl: 1,
   }
 
