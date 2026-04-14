@@ -76,10 +76,10 @@ export async function GET(request: NextRequest) {
   // 1. Apify Playwright Scraper を実行
   // CookieをBase64エンコードしてpageFunction内でデコード → addCookies
   const cookieData = Buffer.from(JSON.stringify([
-    {name: 'we2_access_token', value: WEVERSE_ACCESS_TOKEN, domain: '.weverse.io', path: '/'},
-    {name: 'we2_refresh_token', value: WEVERSE_REFRESH_TOKEN, domain: '.weverse.io', path: '/'},
-    {name: 'we2_device_id', value: WEVERSE_DEVICE_ID, domain: '.weverse.io', path: '/'},
-    {name: 'wes_artistId', value: '7', domain: '.weverse.io', path: '/'},
+    {name: 'we2_access_token', value: WEVERSE_ACCESS_TOKEN, domain: '.weverse.io', path: '/', sameSite: 'None', secure: true},
+    {name: 'we2_refresh_token', value: WEVERSE_REFRESH_TOKEN, domain: '.weverse.io', path: '/', sameSite: 'None', secure: true},
+    {name: 'we2_device_id', value: WEVERSE_DEVICE_ID, domain: '.weverse.io', path: '/', sameSite: 'None', secure: true},
+    {name: 'wes_artistId', value: '7', domain: '.weverse.io', path: '/', sameSite: 'None', secure: true},
   ])).toString('base64')
 
   const config = {
