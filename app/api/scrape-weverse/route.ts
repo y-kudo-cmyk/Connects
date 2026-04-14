@@ -74,18 +74,23 @@ export async function GET(request: NextRequest) {
   const log: string[] = []
 
   // 1. Apify Playwright Scraper を実行
-  const cookies = JSON.stringify([
+  // CookieをBase64エンコードしてpageFunction内でデコード → addCookies
+  const cookieData = Buffer.from(JSON.stringify([
     {name: 'we2_access_token', value: WEVERSE_ACCESS_TOKEN, domain: '.weverse.io', path: '/'},
     {name: 'we2_refresh_token', value: WEVERSE_REFRESH_TOKEN, domain: '.weverse.io', path: '/'},
     {name: 'we2_device_id', value: WEVERSE_DEVICE_ID, domain: '.weverse.io', path: '/'},
     {name: 'wes_artistId', value: '7', domain: '.weverse.io', path: '/'},
-  ])
+  ])).toString('base64')
 
   const config = {
     startUrls: [{ url: 'https://weverse.io/seventeen/notice?hl=ja' }],
     pageFunction: [
       'async function pageFunction(context) {',
       '  const { page, request } = context;',
+      '  const cookieB64 = "' + cookieData + '";',
+      '  const cookies = JSON.parse(Buffer.from(cookieB64, "base64").toString());',
+      '  await page.context().addCookies(cookies);',
+      '  await page.reload({waitUntil: "networkidle"});',
       '  await page.waitForTimeout(3000);',
       '  try {',
       '    const buttons = await page.locator("button");',
@@ -104,7 +109,7 @@ export async function GET(request: NextRequest) {
       '}',
     ].join('\n'),
     proxyConfiguration: { useApifyProxy: true },
-    preNavigationHooks: '[async ({page}) => { await page.context().addCookies(' + cookies + '); }]',
+    preNavigationHooks: '[]',
     maxRequestsPerCrawl: 1,
   }
 
