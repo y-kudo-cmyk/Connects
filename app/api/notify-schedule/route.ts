@@ -49,13 +49,10 @@ function formatMD(dateStr: string) {
 }
 
 // ── 1. 朝の通知 ─────────────────────────────────────────────
-async function morningNotification(currentTime: string, today: string) {
-  // notif_morning_on=true かつ notif_morning_time が現在時刻のユーザー
-  const { data: users } = await supabase
-    .from('profiles')
-    .select('id')
-    .eq('notif_morning_on', true)
-    .eq('notif_morning_time', currentTime)
+async function morningNotification(currentTime: string, today: string, testMode = false) {
+  let query = supabase.from('profiles').select('id').eq('notif_morning_on', true)
+  if (!testMode) query = query.eq('notif_morning_time', currentTime)
+  const { data: users } = await query
 
   if (!users || users.length === 0) return { type: 'morning', skipped: true }
 
@@ -104,12 +101,10 @@ async function morningNotification(currentTime: string, today: string) {
 }
 
 // ── 2. 夜の通知 ─────────────────────────────────────────────
-async function eveningNotification(currentTime: string, today: string) {
-  const { data: users } = await supabase
-    .from('profiles')
-    .select('id')
-    .eq('notif_evening_on', true)
-    .eq('notif_evening_time', currentTime)
+async function eveningNotification(currentTime: string, today: string, testMode = false) {
+  let query = supabase.from('profiles').select('id').eq('notif_evening_on', true)
+  if (!testMode) query = query.eq('notif_evening_time', currentTime)
+  const { data: users } = await query
 
   if (!users || users.length === 0) return { type: 'evening', skipped: true }
 
@@ -238,8 +233,8 @@ export async function GET(request: NextRequest) {
   const currentTime = time // "13:00" 形式
 
   const results = await Promise.all([
-    morningNotification(testMode ? '08:00' : currentTime, date),
-    eveningNotification(testMode ? '23:00' : currentTime, date),
+    morningNotification(currentTime, date, testMode),
+    eveningNotification(currentTime, date, testMode),
     // リマインダーは毎時実行（1時間前通知）
     myEventReminder(currentTime, date),
   ])
