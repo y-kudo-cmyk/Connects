@@ -898,8 +898,12 @@ function EditModal({ entry, onClose, onSave, onRemove }: {
 
   const handleTicketUpload = async (files: FileList | null) => {
     if (!files) return
+    const { uploadImage } = await import('@/lib/supabase/uploadImage')
     const results: string[] = []
-    for (const f of Array.from(files)) results.push(await compressImage(f))
+    for (const f of Array.from(files)) {
+      const url = await uploadImage('event-images', f, 800, 0.72)
+      if (url) results.push(url)
+    }
     const next = [...ticketImages, ...results]
     setTicketImages(next)
     setAutoAnalyzeTrigger((v) => v + 1)
@@ -907,15 +911,23 @@ function EditModal({ entry, onClose, onSave, onRemove }: {
 
   const handleViewUpload = async (files: FileList | null) => {
     if (!files) return
+    const { uploadImage } = await import('@/lib/supabase/uploadImage')
     const results: string[] = []
-    for (const f of Array.from(files)) results.push(await compressImage(f))
+    for (const f of Array.from(files)) {
+      const url = await uploadImage('event-images', f, 1200, 0.8)
+      if (url) results.push(url)
+    }
     setViewImages((prev) => [...prev, ...results])
   }
 
   const handlePhotoUpload = async (files: FileList | null) => {
     if (!files) return
+    const { uploadImage } = await import('@/lib/supabase/uploadImage')
     const results: string[] = []
-    for (const f of Array.from(files)) results.push(await compressImage(f))
+    for (const f of Array.from(files)) {
+      const url = await uploadImage('event-images', f, 1200, 0.85)
+      if (url) results.push(url)
+    }
     setImages((prev) => [...prev, ...results])
   }
 
