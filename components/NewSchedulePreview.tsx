@@ -157,9 +157,14 @@ export default function NewSchedulePreview() {
                   </span>
 
                   {/* Title */}
-                  <p className="text-xs font-semibold leading-tight flex-1" style={{ color: '#1C1C1E' }}>
-                    {event.title}{event.subTitle ? ` — ${event.subTitle}` : ''}
+                  <p className="text-xs font-bold leading-tight" style={{ color: '#1C1C1E' }}>
+                    {event.title}
                   </p>
+                  {event.subTitle && (
+                    <p className="text-[10px] leading-tight" style={{ color: '#8E8E93' }}>
+                      {event.subTitle}
+                    </p>
+                  )}
 
                   {event.venue && (
                     <p className="text-[10px]" style={{ color: '#8E8E93' }}>📍 {event.venue}</p>
