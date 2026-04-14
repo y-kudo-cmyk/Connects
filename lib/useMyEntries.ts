@@ -64,6 +64,15 @@ type DbMyEntry = {
   updated_at: string
 }
 
+/** image_urlフィールドをパース: JSON配列 or 単一URL → string[] */
+function parseImageField(val: string | null): string[] {
+  if (!val) return []
+  if (val.startsWith('[')) {
+    try { return JSON.parse(val) } catch { return [val] }
+  }
+  return [val]
+}
+
 function toApp(row: DbMyEntry): MyEntry {
   return {
     id: row.id,
@@ -78,11 +87,11 @@ function toApp(row: DbMyEntry): MyEntry {
     time: row.start_date?.slice(11, 16) ?? undefined,
     venue: row.spot_name ?? undefined,
     city: row.spot_address ?? undefined,
-    ticketImages: row.ticket_image_url ? [row.ticket_image_url] : [],
+    ticketImages: parseImageField(row.ticket_image_url),
     seatInfo: row.seat_info ?? undefined,
     notes: row.notes ?? undefined,
     memo: row.memo ?? '',
-    images: row.image_url ? [row.image_url] : [],
+    images: parseImageField(row.image_url),
     createdAt: row.created_at,
     sourceUrl: row.source_url ?? undefined,
   }
@@ -116,10 +125,10 @@ export function useMyEntries() {
       end_date: entry.dateEnd ? `${entry.dateEnd}T00:00:00` : null,
       spot_name: entry.venue || null,
       spot_address: entry.city || null,
-      image_url: entry.images?.[0] || null,
+      image_url: entry.images?.length ? JSON.stringify(entry.images) : null,
       source_url: entry.sourceUrl || null,
       notes: entry.notes || null,
-      ticket_image_url: entry.ticketImages?.[0] || null,
+      ticket_image_url: entry.ticketImages?.length ? JSON.stringify(entry.ticketImages) : null,
       seat_info: entry.seatInfo || null,
       memo: entry.memo || null,
     })
@@ -133,8 +142,8 @@ export function useMyEntries() {
     if (updates.venue !== undefined) dbUpdates.spot_name = updates.venue || null
     if (updates.memo !== undefined) dbUpdates.memo = updates.memo || null
     if (updates.seatInfo !== undefined) dbUpdates.seat_info = updates.seatInfo || null
-    if (updates.ticketImages !== undefined) dbUpdates.ticket_image_url = updates.ticketImages?.[0] || null
-    if (updates.images !== undefined) dbUpdates.image_url = updates.images?.[0] || null
+    if (updates.ticketImages !== undefined) dbUpdates.ticket_image_url = updates.ticketImages?.length ? JSON.stringify(updates.ticketImages) : null
+    if (updates.images !== undefined) dbUpdates.image_url = updates.images?.length ? JSON.stringify(updates.images) : null
     if (updates.date !== undefined) {
       const time = updates.time ?? updates.customTime ?? '00:00'
       dbUpdates.start_date = `${updates.date}T${time}:00`
