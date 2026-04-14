@@ -242,16 +242,23 @@ export default function EventDetailModal({
             <div className="mb-4">
               <label className="text-xs font-bold mb-1.5 block" style={{ color: '#636366' }}>{t('Schedule.imageLabel')}</label>
               {editImageUrl ? (
-                <div className="relative rounded-2xl overflow-hidden">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={editImageUrl} alt="" className="w-full rounded-2xl" style={{ display: 'block' }} />
-                  <button onClick={() => setEditImageUrl('')}
-                    className="absolute top-2 right-2 w-8 h-8 rounded-full flex items-center justify-center"
-                    style={{ background: 'rgba(0,0,0,0.7)' }}>
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" strokeWidth="2">
-                      <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
-                    </svg>
-                  </button>
+                <div>
+                  <div className="rounded-2xl overflow-hidden">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={editImageUrl} alt="" className="w-full" style={{ display: 'block' }} />
+                  </div>
+                  <div className="flex gap-2 mt-2">
+                    <button onClick={() => imageFileRef.current?.click()}
+                      className="flex-1 py-2.5 rounded-xl text-xs font-bold"
+                      style={{ background: '#F0F0F5', color: '#636366' }}>
+                      📷 画像を変更
+                    </button>
+                    <button onClick={() => setEditImageUrl('')}
+                      className="py-2.5 px-4 rounded-xl text-xs font-bold"
+                      style={{ background: '#FEE2E2', color: '#EF4444' }}>
+                      削除
+                    </button>
+                  </div>
                 </div>
               ) : (
                 <button onClick={() => !imageUploading && imageFileRef.current?.click()}
