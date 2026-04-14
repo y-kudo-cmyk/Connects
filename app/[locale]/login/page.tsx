@@ -13,6 +13,8 @@ export default function LoginPage() {
   const [emailError, setEmailError] = useState('')
   const [emailLoading, setEmailLoading] = useState(false)
   const [emailSent, setEmailSent] = useState(false)
+  const [otp, setOtp] = useState('')
+  const [otpLoading, setOtpLoading] = useState(false)
 
   useEffect(() => {
     if (!loading && user) router.replace('/')
@@ -34,6 +36,27 @@ export default function LoginPage() {
     setEmailLoading(false)
   }
 
+  const handleOtpVerify = async () => {
+    if (!otp.trim() || otp.length !== 6) {
+      setEmailError('6桁のコードを入力してください')
+      return
+    }
+    setOtpLoading(true)
+    try {
+      const { createClient } = await import('@/lib/supabase/client')
+      const sb = createClient()
+      const { error } = await sb.auth.verifyOtp({ email: email.trim(), token: otp.trim(), type: 'email' })
+      if (error) {
+        setEmailError(error.message)
+      } else {
+        router.replace('/')
+      }
+    } catch (e: any) {
+      setEmailError(e?.message || 'エラーが発生しました')
+    }
+    setOtpLoading(false)
+  }
+
   if (emailSent) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center px-6" style={{ background: '#FFFFFF' }}>
@@ -43,14 +66,42 @@ export default function LoginPage() {
             <polyline points="22,6 12,13 2,6" />
           </svg>
         </div>
-        <h2 className="text-lg font-bold mb-2" style={{ color: '#1C1C1E' }}>{t('Auth.loginCheckEmail')}</h2>
-        <p className="text-sm text-center leading-relaxed" style={{ color: '#8E8E93' }}>
-          {t('Auth.loginEmailSent')}
+        <h2 className="text-lg font-bold mb-2" style={{ color: '#1C1C1E' }}>認証コードを入力</h2>
+        <p className="text-sm text-center leading-relaxed mb-4" style={{ color: '#8E8E93' }}>
+          {email} に6桁のコードを送信しました
         </p>
+        <input
+          type="text"
+          inputMode="numeric"
+          maxLength={6}
+          value={otp}
+          onChange={(e) => { setOtp(e.target.value.replace(/\D/g, '')); setEmailError('') }}
+          placeholder="000000"
+          className="w-48 px-4 py-3.5 rounded-2xl text-2xl text-center font-bold tracking-[0.5em] outline-none"
+          style={{ background: '#FFFFFF', border: '1.5px solid #E5E5EA', color: '#1C1C1E' }}
+          onFocus={(e) => (e.target.style.borderColor = '#F3B4E3')}
+          onBlur={(e) => (e.target.style.borderColor = '#E5E5EA')}
+          onKeyDown={(e) => e.key === 'Enter' && handleOtpVerify()}
+          autoFocus
+        />
+        {emailError && (
+          <p className="text-xs mt-2" style={{ color: '#EF4444' }}>{emailError}</p>
+        )}
         <button
-          onClick={() => setEmailSent(false)}
-          className="mt-6 text-sm font-bold"
-          style={{ color: '#F3B4E3' }}
+          onClick={handleOtpVerify}
+          disabled={otpLoading || otp.length !== 6}
+          className="mt-4 w-48 py-3.5 rounded-2xl text-sm font-bold"
+          style={{
+            background: otp.length === 6 ? '#F3B4E3' : '#F0F0F5',
+            color: otp.length === 6 ? '#FFFFFF' : '#8E8E93',
+          }}
+        >
+          {otpLoading ? '確認中...' : 'ログイン'}
+        </button>
+        <button
+          onClick={() => { setEmailSent(false); setOtp(''); setEmailError('') }}
+          className="mt-4 text-sm font-bold"
+          style={{ color: '#8E8E93' }}
         >
           {t('Common.back')}
         </button>
