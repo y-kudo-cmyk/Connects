@@ -89,18 +89,6 @@ export default function LoginPage() {
           <span className="flex-1 text-center">{t('Auth.loginGoogle')}</span>
         </button>
 
-        {/* X */}
-        <button
-          onClick={() => signInWithTwitter()}
-          className="w-full flex items-center gap-3 px-5 py-4 rounded-2xl text-sm font-bold"
-          style={{ background: '#000000', color: '#FFFFFF' }}
-        >
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" className="flex-shrink-0">
-            <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.744l7.73-8.835L1.254 2.25H8.08l4.253 5.622 5.912-5.622zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
-          </svg>
-          <span className="flex-1 text-center">{t('Auth.loginX')}</span>
-        </button>
-
         {/* 区切り */}
         <div className="relative flex items-center gap-3 my-1">
           <div className="flex-1 h-px" style={{ background: '#E5E5EA' }} />
