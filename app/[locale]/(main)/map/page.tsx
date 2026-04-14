@@ -1008,7 +1008,7 @@ function PhotoUploadModal({
   onClose: () => void
 }) {
   const t = useTranslations()
-  const [imageDataUrl, setImageDataUrl] = useState<string | undefined>(undefined)
+  const [images, setImages] = useState<string[]>([])
   const [sourceUrl, setSourceUrl] = useState('')
   const [platform, setPlatform] = useState<SpotPlatform>('instagram')
   const [selectedTags, setSelectedTags] = useState<string[]>([])
@@ -1024,25 +1024,37 @@ function PhotoUploadModal({
   }
 
   const handleImagePick = async (files: FileList | null) => {
-    if (!files || !files[0]) return
-    const url = await compressImage(files[0], 1200, 0.85)
-    setImageDataUrl(url)
+    if (!files || files.length === 0) return
+    const newImages: string[] = []
+    for (let i = 0; i < Math.min(files.length, 3 - images.length); i++) {
+      const url = await compressImage(files[i], 1200, 0.85)
+      newImages.push(url)
+    }
+    setImages(prev => [...prev, ...newImages].slice(0, 3))
+  }
+
+  const removeImage = (index: number) => {
+    setImages(prev => prev.filter((_, i) => i !== index))
   }
 
   const handleSave = () => {
-    const photo: SpotPhoto = {
-      id: Date.now().toString(),
-      imageUrl: imageDataUrl ?? '',
-      sourceUrl: sourceUrl.trim() || '',
-      platform,
-      tags: selectedTags,
-      contributor: defaultContributor,
-      date,
-      caption: caption.trim() || undefined,
-      status: 'pending',
-      votes: 0,
+    // 各画像を1枚ずつ保存
+    const imgs = images.length > 0 ? images : ['']
+    for (const img of imgs) {
+      const photo: SpotPhoto = {
+        id: Date.now().toString() + Math.random().toString(36).slice(2, 6),
+        imageUrl: img,
+        sourceUrl: sourceUrl.trim() || '',
+        platform,
+        tags: selectedTags,
+        contributor: defaultContributor,
+        date,
+        caption: caption.trim() || undefined,
+        status: 'pending',
+        votes: 0,
+      }
+      onSave(photo)
     }
-    onSave(photo)
   }
 
   const memberColors: Record<string, string> = Object.fromEntries(
@@ -1073,31 +1085,34 @@ function PhotoUploadModal({
         {/* Scrollable content */}
         <div className="flex-1 min-h-0 overflow-y-auto px-4 py-4 flex flex-col gap-4">
 
-          {/* 画像 */}
+          {/* 画像（最大3枚） */}
           <div>
-            <label className="text-xs font-bold mb-2 block" style={{ color: '#636366' }}>{t('Map.photoLabel')}</label>
-            {imageDataUrl ? (
-              <div className="relative rounded-xl overflow-hidden" style={{ aspectRatio: '4/3' }}>
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={imageDataUrl} alt="" className="w-full h-full object-contain" style={{ background: '#000' }} />
-                <button onClick={() => setImageDataUrl(undefined)}
-                  className="absolute top-2 right-2 w-8 h-8 rounded-full flex items-center justify-center"
-                  style={{ background: 'rgba(0,0,0,0.7)' }}>
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" strokeWidth="2">
-                    <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
-                  </svg>
+            <label className="text-xs font-bold mb-2 block" style={{ color: '#636366' }}>{t('Map.photoLabel')} <span style={{ color: '#8E8E93', fontWeight: 400 }}>（最大3枚）</span></label>
+            <div className="flex gap-2">
+              {images.map((img, i) => (
+                <div key={i} className="relative rounded-xl overflow-hidden flex-1" style={{ aspectRatio: '1' }}>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={img} alt="" className="w-full h-full object-cover" />
+                  <button onClick={() => removeImage(i)}
+                    className="absolute top-1 right-1 w-6 h-6 rounded-full flex items-center justify-center"
+                    style={{ background: 'rgba(0,0,0,0.7)' }}>
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" strokeWidth="2.5">
+                      <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+                    </svg>
+                  </button>
+                </div>
+              ))}
+              {images.length < 3 && (
+                <button onClick={() => fileRef.current?.click()}
+                  className="rounded-xl flex flex-col items-center justify-center gap-1 flex-1"
+                  style={{ aspectRatio: '1', border: '2px dashed #E5E5EA', color: '#8E8E93', minHeight: 80 }}>
+                  <span className="text-2xl">📷</span>
+                  <span className="text-[10px]">{images.length === 0 ? t('Map.photoAdd') : '追加'}</span>
                 </button>
-              </div>
-            ) : (
-              <button onClick={() => fileRef.current?.click()}
-                className="w-full h-32 rounded-xl flex flex-col items-center justify-center gap-2"
-                style={{ border: '2px dashed #E5E5EA', color: '#8E8E93' }}>
-                <span className="text-3xl">📷</span>
-                <span className="text-xs">{t('Map.photoAdd')}</span>
-              </button>
-            )}
-            <input ref={fileRef} type="file" accept="image/*" className="hidden"
-              onChange={(e) => handleImagePick(e.target.files)} />
+              )}
+            </div>
+            <input ref={fileRef} type="file" accept="image/*" multiple className="hidden"
+              onChange={(e) => { handleImagePick(e.target.files); e.target.value = '' }} />
           </div>
 
           {/* 来店日 */}
