@@ -482,7 +482,7 @@ export default function SchedulePage() {
       })()}
 
       {showAddSchedule && (
-        <AddScheduleModal onClose={() => setShowAddSchedule(false)} />
+        <AddScheduleModal onClose={() => setShowAddSchedule(false)} onRefresh={refreshEvents} />
       )}
       {detailEvent && (
         <EventDetailModal event={detailEvent} onClose={() => setDetailEvent(null)} onRefresh={refreshEvents} showConfirmButton />

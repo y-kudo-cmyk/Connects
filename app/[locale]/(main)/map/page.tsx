@@ -410,6 +410,7 @@ export default function MapPage() {
         <NewSpotModal
           defaultContributor={profile.nickname || t('Common.user')}
           onClose={() => setShowNewSpot(false)}
+          onRefresh={refreshSpots}
         />
       )}
 
@@ -1199,10 +1200,11 @@ function PhotoUploadModal({
 
 // ─── 新規スポット投稿モーダル ──────────────────────────────
 function NewSpotModal({
-  defaultContributor, onClose,
+  defaultContributor, onClose, onRefresh,
 }: {
   defaultContributor: string
   onClose: () => void
+  onRefresh?: () => Promise<void>
 }) {
   const t = useTranslations()
   const [name, setName] = useState('')
@@ -1311,6 +1313,7 @@ function NewSpotModal({
         }),
       })
     } catch {}
+    await onRefresh?.()
     setSubmitted(true)
   }
 

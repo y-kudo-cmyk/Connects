@@ -9,7 +9,7 @@ import { uploadImage } from '@/lib/supabase/uploadImage'
 
 const supabase = createClient()
 
-export default function AddScheduleModal({ onClose }: { onClose: () => void }) {
+export default function AddScheduleModal({ onClose, onRefresh }: { onClose: () => void; onRefresh?: () => Promise<void> }) {
   const t = useTranslations()
   const { user } = useAuth()
   const [title, setTitle] = useState('')
@@ -80,6 +80,7 @@ export default function AddScheduleModal({ onClose }: { onClose: () => void }) {
       return
     }
 
+    await onRefresh?.()
     setSaving(false)
     setDone(true)
   }
