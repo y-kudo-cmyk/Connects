@@ -65,8 +65,8 @@ export default function PwaInstallBanner() {
             </p>
             <p className="text-xs leading-relaxed" style={{ color: '#636366' }}>
               {isIOS
-                ? 'Safariの下の共有ボタン（□↑）→「ホーム画面に追加」でアプリのように使えます'
-                : 'ブラウザメニュー → 「ホーム画面に追加」でアプリのように使えます'}
+                ? 'ホーム画面から直接アクセスでき、フルスクリーンで快適に使えます。Safariの下の共有ボタン（□↑）→「ホーム画面に追加」'
+                : 'ホーム画面から直接アクセスでき、フルスクリーンで快適に使えます。ブラウザメニュー →「ホーム画面に追加」'}
             </p>
           </div>
           <button onClick={() => {
@@ -92,7 +92,7 @@ export default function PwaInstallBanner() {
               通知をONにしよう
             </p>
             <p className="text-xs leading-relaxed mb-2" style={{ color: '#636366' }}>
-              スケジュールの更新やチケット締切をプッシュ通知でお知らせします
+              チケット申込締切や明日のスケジュールを見逃さない！毎朝・毎晩のお知らせで大事な情報をキャッチ
             </p>
             <button onClick={handleEnableNotif}
               className="px-4 py-2 rounded-xl text-xs font-bold"
