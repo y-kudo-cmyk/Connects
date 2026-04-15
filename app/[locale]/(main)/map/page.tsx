@@ -494,14 +494,17 @@ function SpotDetailScreen({
     return true
   })
 
-  const handleUrlSubmit = () => {
+  const handleUrlSubmit = async () => {
     if (!urlInput.trim()) return
     try {
-      const existing = JSON.parse(localStorage.getItem('cp-url-submissions') || '[]')
-      existing.push({ spotId: spot.id, spotName: spot.name, url: urlInput.trim(), type: 'officialUrl', createdAt: new Date().toISOString(), status: 'pending' })
-      localStorage.setItem('cp-url-submissions', JSON.stringify(existing))
+      await fetch('/api/update-spot', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ spotId: spot.id, updates: { spot_url: urlInput.trim() } }),
+      })
     } catch {}
     setUrlSubmitted(true)
+    await onRefresh?.()
     setTimeout(() => { setShowUrlInput(false); setUrlSubmitted(false); setUrlInput('') }, 1500)
   }
 
