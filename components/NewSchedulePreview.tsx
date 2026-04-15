@@ -210,6 +210,14 @@ export default function NewSchedulePreview() {
             )
           })}
         </div>
+        {!localStorage.getItem('tip-newschedule-dismissed') && (
+          <button
+            onClick={(e) => { (e.target as HTMLElement).style.display = 'none'; localStorage.setItem('tip-newschedule-dismissed', '1') }}
+            className="text-[10px] text-center mt-2 px-4 w-full"
+            style={{ color: '#8E8E93' }}>
+            💡 参加予定は「+ MY」、それ以外は「確認」で消化しよう！0件が理想です
+          </button>
+        )}
       </section>
 
       {detailEvent && (
