@@ -1138,14 +1138,16 @@ function PhotoUploadModal({
             </div>
             <input ref={fileRef} type="file" accept="image/*" multiple className="hidden"
               onChange={(e) => { handleImagePick(e.target.files); e.target.value = '' }} />
-            {images.length > 0 && (
-              <button onClick={handleAnalyze} disabled={analyzing}
-                className="w-full mt-2 py-2.5 rounded-xl text-sm font-bold flex items-center justify-center gap-2"
-                style={{ background: analyzing ? '#F0F0F5' : 'linear-gradient(135deg, #F3B4E3, #C97AB8)', color: analyzing ? '#8E8E93' : '#FFFFFF' }}>
-                {analyzing ? '🔍 AI解析中...' : '🔍 画像からAI解析'}
-              </button>
-            )}
           </div>
+
+          {/* AI解析ボタン */}
+          {images.length > 0 && (
+            <button onClick={handleAnalyze} disabled={analyzing}
+              className="w-full py-3 rounded-xl text-sm font-bold flex items-center justify-center gap-2"
+              style={{ background: analyzing ? '#F0F0F5' : 'linear-gradient(135deg, #F3B4E3, #C97AB8)', color: analyzing ? '#8E8E93' : '#FFFFFF' }}>
+              {analyzing ? '🔍 AI解析中...' : '🔍 画像からAI解析'}
+            </button>
+          )}
 
           {/* 来店日 */}
           <div>
