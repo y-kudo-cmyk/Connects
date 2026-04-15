@@ -37,9 +37,9 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
         setAllowed(true)
 
         // ログイン通知（セッションごとに1回）
-        const ADMIN_ID = '86c91b90-0060-4a3d-bf10-d5c846604882'
+        const ADMIN_IDS = ['86c91b90-0060-4a3d-bf10-d5c846604882', '65ba4bc6-917d-4689-aeaf-8d4b5b01a004']
         const notified = sessionStorage.getItem('login-notified')
-        if (!notified && user!.id !== ADMIN_ID) {
+        if (!notified && !ADMIN_IDS.includes(user!.id)) {
           sessionStorage.setItem('login-notified', '1')
           fetch('/api/notify-admin', {
             method: 'POST',
