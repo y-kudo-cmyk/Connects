@@ -1015,7 +1015,6 @@ function PhotoUploadModal({
   const today = useToday()
   const [date, setDate] = useState(today)
   const [caption, setCaption] = useState('')
-  const [analyzing, setAnalyzing] = useState(false)
   const fileRef = useRef<HTMLInputElement>(null)
 
   const toggleTag = (tag: string) => {
@@ -1032,31 +1031,6 @@ function PhotoUploadModal({
       newImages.push(url)
     }
     setImages(prev => [...prev, ...newImages].slice(0, 3))
-  }
-
-  const handleAnalyze = async () => {
-    if (images.length === 0) return
-    setAnalyzing(true)
-    try {
-      const base64 = images[0].replace(/^data:image\/\w+;base64,/, '')
-      const res = await fetch('/api/analyze-spot', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ imageBase64: base64, mediaType: 'image/jpeg' }),
-      })
-      if (res.ok) {
-        const data = await res.json()
-        if (data.spots?.[0]) {
-          const s = data.spots[0]
-          if (s.members?.length > 0) {
-            setSelectedTags(s.members.map((m: string) => m.toUpperCase()))
-          }
-          if (s.sourceUrl && !sourceUrl) setSourceUrl(s.sourceUrl)
-          if (s.description && !caption) setCaption(s.description)
-        }
-      }
-    } catch {}
-    setAnalyzing(false)
   }
 
   const removeImage = (index: number) => {
@@ -1139,15 +1113,6 @@ function PhotoUploadModal({
             <input ref={fileRef} type="file" accept="image/*" multiple className="hidden"
               onChange={(e) => { handleImagePick(e.target.files); e.target.value = '' }} />
           </div>
-
-          {/* AI解析ボタン */}
-          {images.length > 0 && (
-            <button onClick={handleAnalyze} disabled={analyzing}
-              className="w-full py-3 rounded-xl text-sm font-bold flex items-center justify-center gap-2"
-              style={{ background: analyzing ? '#F0F0F5' : 'linear-gradient(135deg, #F3B4E3, #C97AB8)', color: analyzing ? '#8E8E93' : '#FFFFFF' }}>
-              {analyzing ? '🔍 AI解析中...' : '🔍 画像からAI解析'}
-            </button>
-          )}
 
           {/* 来店日 */}
           <div>
@@ -1264,10 +1229,41 @@ function NewSpotModal({
     setImageDataUrl(url)
   }
 
+  const [analyzing, setAnalyzing] = useState(false)
+
   const handleScreenshotPick = async (files: FileList | null) => {
     if (!files || !files[0]) return
     const url = await compressImage(files[0], 1200, 0.85)
     setScreenshotUrl(url)
+  }
+
+  const handleAnalyze = async () => {
+    if (!screenshotUrl) return
+    setAnalyzing(true)
+    try {
+      const base64 = screenshotUrl.replace(/^data:image\/\w+;base64,/, '')
+      const res = await fetch('/api/analyze-spot', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ imageBase64: base64, mediaType: 'image/jpeg' }),
+      })
+      if (res.ok) {
+        const data = await res.json()
+        if (data.spots?.[0]) {
+          const s = data.spots[0]
+          if (s.name && !name) setName(s.name)
+          if (s.nameLocal && !nameLocal) setNameLocal(s.nameLocal)
+          if (s.address && !address) setAddress(s.address)
+          if (s.city && !city) setCity(s.city)
+          if (s.genre) setGenre(s.genre as SpotGenre)
+          if (s.members?.length > 0) setSelectedMembers(s.members.map((m: string) => m.toUpperCase()))
+          if (s.description && !description) setDescription(s.description)
+          if (s.officialUrl && !officialUrl) setOfficialUrl(s.officialUrl)
+          if (s.sourceUrl && !sourceUrl) setSourceUrl(s.sourceUrl)
+        }
+      }
+    } catch {}
+    setAnalyzing(false)
   }
 
   const handleSubmit = () => {
@@ -1369,6 +1365,13 @@ function NewSpotModal({
             )}
             <input ref={ssFileRef} type="file" accept="image/*" className="hidden"
               onChange={(e) => handleScreenshotPick(e.target.files)} />
+            {screenshotUrl && (
+              <button onClick={handleAnalyze} disabled={analyzing}
+                className="w-full mt-2 py-3 rounded-xl text-sm font-bold flex items-center justify-center gap-2"
+                style={{ background: analyzing ? '#F0F0F5' : 'linear-gradient(135deg, #F3B4E3, #C97AB8)', color: analyzing ? '#8E8E93' : '#FFFFFF' }}>
+                {analyzing ? '🔍 AI解析中...' : '🔍 スクショからAI解析'}
+              </button>
+            )}
           </div>
 
           {/* スポット名 */}
