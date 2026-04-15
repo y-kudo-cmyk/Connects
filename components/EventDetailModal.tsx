@@ -10,6 +10,7 @@ import { createClient } from '@/lib/supabase/client'
 import { useVoting, VOTE_THRESHOLD } from '@/lib/supabase/useVoting'
 import { uploadImage } from '@/lib/supabase/uploadImage'
 import { countryFlag, cityToCountryCode } from '@/lib/countryUtils'
+import { seventeenMembers } from '@/lib/config/constants'
 import { useTranslations } from 'next-intl'
 
 const supabase = createClient()
@@ -55,6 +56,9 @@ export default function EventDetailModal({
   const [editEndDate, setEditEndDate] = useState(event.dateEnd ?? '')
   const [editSourceUrl, setEditSourceUrl] = useState(event.sourceUrl ?? '')
   const [editImageUrl, setEditImageUrl] = useState(event.image ?? '')
+  const [editMembers, setEditMembers] = useState<string[]>(
+    (event.relatedArtists || '').split('#').map(s => s.trim()).filter(s => s && s !== 'SEVENTEEN')
+  )
   const [editSaving, setEditSaving] = useState(false)
   const [editRequestSent, setEditRequestSent] = useState(false)
   const imageFileRef = useRef<HTMLInputElement>(null)
@@ -135,12 +139,16 @@ export default function EventDetailModal({
       }
     } else {
       // 直接更新 + カウントリセット
+      const relatedArtists = editMembers.length > 0
+        ? '#SEVENTEEN ' + editMembers.map(m => `#${m}`).join(' ')
+        : '#SEVENTEEN'
       const updates: Record<string, any> = {
         event_title: editTitle,
         spot_name: editVenue,
         notes: editNotes,
         source_url: editSourceUrl,
         image_url: editImageUrl,
+        related_artists: relatedArtists,
         verified_count: 0,
         status: 'pending',
       }
@@ -361,16 +369,9 @@ export default function EventDetailModal({
                       <input type="date" value={editStartDate} onChange={(e) => setEditStartDate(e.target.value)}
                         className="flex-1 px-3 py-2 rounded-xl text-sm outline-none"
                         style={{ background: '#FFFFFF', border: '1.5px solid #F3B4E3', color: '#1C1C1E' }} />
-                      {event.tags?.includes('LIVE') ? (
-                        <span className="w-28 px-3 py-2 rounded-xl text-sm"
-                          style={{ background: '#F0F0F5', color: '#8E8E93' }}>
-                          {editStartTime || '--:--'}
-                        </span>
-                      ) : (
-                        <input type="time" value={editStartTime} onChange={(e) => setEditStartTime(e.target.value)}
-                          className="w-28 px-3 py-2 rounded-xl text-sm outline-none"
-                          style={{ background: '#FFFFFF', border: '1.5px solid #F3B4E3', color: '#1C1C1E' }} />
-                      )}
+                      <input type="time" value={editStartTime} onChange={(e) => setEditStartTime(e.target.value)}
+                        className="w-28 px-3 py-2 rounded-xl text-sm outline-none"
+                        style={{ background: '#FFFFFF', border: '1.5px solid #F3B4E3', color: '#1C1C1E' }} />
                     </div>
                     <div className="flex items-center gap-2">
                       <span className="text-xs" style={{ color: '#8E8E93' }}>〜</span>
@@ -490,6 +491,41 @@ export default function EventDetailModal({
             </div>
           </div>
         </div>
+
+        {/* メンバータグ */}
+        {editing && (
+          <div className="px-4 mb-2">
+            <label className="text-xs font-bold mb-1.5 block" style={{ color: '#636366' }}>メンバー</label>
+            <div className="flex flex-wrap gap-1.5">
+              {seventeenMembers.map((m) => {
+                const selected = editMembers.includes(m.name)
+                return (
+                  <button key={m.id} onClick={() => setEditMembers(prev => selected ? prev.filter(n => n !== m.name) : [...prev, m.name])}
+                    className="px-2.5 py-1 rounded-full text-[11px] font-bold"
+                    style={selected
+                      ? { background: m.color, color: '#FFFFFF' }
+                      : { background: m.color + '18', color: m.color }
+                    }>
+                    {m.name}
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+        )}
+        {!editing && event.relatedArtists && event.relatedArtists !== '#SEVENTEEN' && (
+          <div className="px-4 mb-2 flex flex-wrap gap-1">
+            {event.relatedArtists.split('#').map(s => s.trim()).filter(s => s && s !== 'SEVENTEEN').map(name => {
+              const m = seventeenMembers.find(x => x.name === name)
+              return (
+                <span key={name} className="text-[10px] font-bold px-1.5 py-0.5 rounded"
+                  style={{ background: (m?.color ?? '#9A9A9F') + '18', color: m?.color ?? '#9A9A9F' }}>
+                  #{name}
+                </span>
+              )
+            })}
+          </div>
+        )}
 
         {/* 修正依頼送信済みバナー */}
         {editRequestSent && (
