@@ -104,7 +104,6 @@ export default function PwaInstallBanner() {
                 ⚠ 先にホーム画面に追加してから通知を許可してください
               </p>
             )}
-            </p>
             <button onClick={handleEnableNotif}
               className="px-4 py-2 rounded-xl text-xs font-bold"
               style={{ background: '#F3B4E3', color: '#FFFFFF' }}>
