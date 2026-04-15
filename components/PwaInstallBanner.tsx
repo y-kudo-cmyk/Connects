@@ -16,12 +16,14 @@ export default function PwaInstallBanner() {
     const notifDismissed = localStorage.getItem('notif-banner-dismissed')
 
     // ブラウザで開いている → ホーム画面追加を促す
-    if (!standalone && !(installDismissed && Date.now() - parseInt(installDismissed) < 7 * 24 * 60 * 60 * 1000)) {
-      setShowInstall(true)
+    if (!standalone) {
+      if (!(installDismissed && Date.now() - parseInt(installDismissed) < 7 * 24 * 60 * 60 * 1000)) {
+        setShowInstall(true)
+      }
     }
 
-    // PWAで開いている or ブラウザでも → 通知未許可なら通知を促す
-    if (typeof Notification !== 'undefined' && Notification.permission === 'default') {
+    // 通知未許可なら通知を促す
+    if (typeof Notification !== 'undefined' && Notification.permission !== 'granted') {
       if (!(notifDismissed && Date.now() - parseInt(notifDismissed) < 24 * 60 * 60 * 1000)) {
         setShowNotif(true)
       }
