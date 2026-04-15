@@ -1032,34 +1032,31 @@ function PhotoUploadModal({
       newImages.push(url)
     }
     setImages(prev => [...prev, ...newImages].slice(0, 3))
+  }
 
-    // 1枚目の画像をAI解析
-    if (newImages[0] && selectedTags.length === 0) {
-      setAnalyzing(true)
-      try {
-        const base64 = newImages[0].replace(/^data:image\/\w+;base64,/, '')
-        const res = await fetch('/api/analyze-spot', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ imageBase64: base64, mediaType: 'image/jpeg' }),
-        })
-        if (res.ok) {
-          const data = await res.json()
-          if (data.spots?.[0]) {
-            const s = data.spots[0]
-            // メンバー名を自動選択
-            if (s.members?.length > 0) {
-              setSelectedTags(s.members.map((m: string) => m.toUpperCase()))
-            }
-            // ソースURL
-            if (s.sourceUrl && !sourceUrl) setSourceUrl(s.sourceUrl)
-            // 説明をキャプションに
-            if (s.description && !caption) setCaption(s.description)
+  const handleAnalyze = async () => {
+    if (images.length === 0) return
+    setAnalyzing(true)
+    try {
+      const base64 = images[0].replace(/^data:image\/\w+;base64,/, '')
+      const res = await fetch('/api/analyze-spot', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ imageBase64: base64, mediaType: 'image/jpeg' }),
+      })
+      if (res.ok) {
+        const data = await res.json()
+        if (data.spots?.[0]) {
+          const s = data.spots[0]
+          if (s.members?.length > 0) {
+            setSelectedTags(s.members.map((m: string) => m.toUpperCase()))
           }
+          if (s.sourceUrl && !sourceUrl) setSourceUrl(s.sourceUrl)
+          if (s.description && !caption) setCaption(s.description)
         }
-      } catch {}
-      setAnalyzing(false)
-    }
+      }
+    } catch {}
+    setAnalyzing(false)
   }
 
   const removeImage = (index: number) => {
@@ -1115,7 +1112,6 @@ function PhotoUploadModal({
           <div>
             <label className="text-xs font-bold mb-2 block" style={{ color: '#636366' }}>
               {t('Map.photoLabel')} <span style={{ color: '#8E8E93', fontWeight: 400 }}>（最大3枚）</span>
-              {analyzing && <span className="ml-2" style={{ color: '#F3B4E3' }}>🔍 AI解析中...</span>}
             </label>
             <div className="flex gap-2">
               {images.map((img, i) => (
@@ -1142,6 +1138,13 @@ function PhotoUploadModal({
             </div>
             <input ref={fileRef} type="file" accept="image/*" multiple className="hidden"
               onChange={(e) => { handleImagePick(e.target.files); e.target.value = '' }} />
+            {images.length > 0 && (
+              <button onClick={handleAnalyze} disabled={analyzing}
+                className="w-full mt-2 py-2.5 rounded-xl text-sm font-bold flex items-center justify-center gap-2"
+                style={{ background: analyzing ? '#F0F0F5' : 'linear-gradient(135deg, #F3B4E3, #C97AB8)', color: analyzing ? '#8E8E93' : '#FFFFFF' }}>
+                {analyzing ? '🔍 AI解析中...' : '🔍 画像からAI解析'}
+              </button>
+            )}
           </div>
 
           {/* 来店日 */}
