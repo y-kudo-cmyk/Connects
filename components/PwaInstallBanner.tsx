@@ -5,16 +5,18 @@ import { useState, useEffect } from 'react'
 export default function PwaInstallBanner() {
   const [showInstall, setShowInstall] = useState(false)
   const [showNotif, setShowNotif] = useState(false)
+  const [isStandalone, setIsStandalone] = useState(false)
 
   useEffect(() => {
-    const isStandalone = ('standalone' in navigator && (navigator as any).standalone) ||
+    const standalone = ('standalone' in navigator && (navigator as any).standalone) ||
       window.matchMedia('(display-mode: standalone)').matches
+    setIsStandalone(standalone)
 
     const installDismissed = localStorage.getItem('pwa-banner-dismissed')
     const notifDismissed = localStorage.getItem('notif-banner-dismissed')
 
     // ブラウザで開いている → ホーム画面追加を促す
-    if (!isStandalone && !(installDismissed && Date.now() - parseInt(installDismissed) < 7 * 24 * 60 * 60 * 1000)) {
+    if (!standalone && !(installDismissed && Date.now() - parseInt(installDismissed) < 7 * 24 * 60 * 60 * 1000)) {
       setShowInstall(true)
     }
 
@@ -93,6 +95,13 @@ export default function PwaInstallBanner() {
             </p>
             <p className="text-xs leading-relaxed mb-2" style={{ color: '#636366' }}>
               チケット申込締切や明日のスケジュールを見逃さない！毎朝・毎晩のお知らせで大事な情報をキャッチ
+              {!isStandalone && '\n※ 通知を受け取るにはホーム画面への追加が必要です'}
+            </p>
+            {!isStandalone && (
+              <p className="text-[10px] mb-2" style={{ color: '#F59E0B' }}>
+                ⚠ 先にホーム画面に追加してから通知を許可してください
+              </p>
+            )}
             </p>
             <button onClick={handleEnableNotif}
               className="px-4 py-2 rounded-xl text-xs font-bold"
