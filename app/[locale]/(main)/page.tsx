@@ -3,6 +3,7 @@ import TodayScheduleSection from '@/components/TodayScheduleSection'
 import NewSchedulePreview from '@/components/NewSchedulePreview'
 import TodoSection from '@/components/TodoSection'
 import AddScheduleButton from '@/components/AddScheduleButton'
+import PwaInstallBanner from '@/components/PwaInstallBanner'
 import { createClient } from '@/lib/supabase/server'
 import type { Announcement } from '@/lib/useAnnouncements'
 
@@ -37,6 +38,9 @@ export default async function HomePage() {
       <div className="pt-4" style={{ paddingTop: 'calc(16px + env(safe-area-inset-top, 0px))' }}>
         <AnnouncementsSection announcements={announcements} />
       </div>
+
+      {/* ─── ホーム画面追加バナー ─── */}
+      <PwaInstallBanner />
 
       {/* ─── スケジュール投稿 ─── */}
       <div className="pt-4 px-4">
