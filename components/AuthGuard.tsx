@@ -27,35 +27,26 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
           .maybeSingle()
 
         if (!profile) {
-          // 人数制限チェック
-          const { count } = await supabase
-            .from('profiles')
-            .select('*', { count: 'exact', head: true })
-
-          if ((count ?? 0) >= MAX_USERS) {
-            setFull(true)
-            setAllowed(false)
-            return
-          }
-
           // profileを作成 + glide_my_entriesを移行
           await fetch('/api/create-profile', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
           })
-
-          // ログイン通知
-          const ADMIN_ID = '86c91b90-0060-4a3d-bf10-d5c846604882'
-          if (user!.id !== ADMIN_ID) {
-            fetch('/api/notify-admin', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ type: 'login', message: `🔔 新規登録\n${email} がログインしました` }),
-            }).catch(() => {})
-          }
         }
 
         setAllowed(true)
+
+        // ログイン通知（セッションごとに1回）
+        const ADMIN_ID = '86c91b90-0060-4a3d-bf10-d5c846604882'
+        const notified = sessionStorage.getItem('login-notified')
+        if (!notified && user!.id !== ADMIN_ID) {
+          sessionStorage.setItem('login-notified', '1')
+          fetch('/api/notify-admin', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ type: 'login', message: `🔔 ログイン\n${email}` }),
+          }).catch(() => {})
+        }
       } catch {
         setAllowed(true)
       }
