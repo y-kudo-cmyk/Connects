@@ -8,7 +8,7 @@ export async function POST(req: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  const { spotId, photoId, updates } = await req.json()
+  const { spotId, photoId, updates, _table } = await req.json()
   if ((!spotId && !photoId) || !updates) return NextResponse.json({ error: 'Missing params' }, { status: 400 })
 
   const sb = createServiceClient(
@@ -33,6 +33,10 @@ export async function POST(req: NextRequest) {
       const relatedArtists = [...allTags].map(t => `#${t}`).join(' ')
       await sb.from('spots').update({ related_artists: relatedArtists }).eq('id', spotId)
     }
+  } else if (_table === 'events') {
+    // イベントの更新
+    const { error } = await sb.from('events').update(updates).eq('id', spotId)
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 })
   } else {
     // スポットの更新
     const { error } = await sb.from('spots').update(updates).eq('id', spotId)

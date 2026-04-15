@@ -146,7 +146,11 @@ export default function EventDetailModal({
       }
       if (newStartDate) updates.start_date = newStartDate
       if (newEndDate !== null) updates.end_date = newEndDate || null
-      await supabase.from('events').update(updates).eq('id', event.id)
+      await fetch('/api/update-spot', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ spotId: event.id, updates, _table: 'events' }),
+      })
       // 既存の承認投票を削除
       await supabase.from('event_votes').delete().eq('event_id', event.id)
     }
