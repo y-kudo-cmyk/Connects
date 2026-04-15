@@ -1266,29 +1266,47 @@ function NewSpotModal({
     setAnalyzing(false)
   }
 
-  const handleSubmit = () => {
-    if (!name.trim() || !address.trim() || !imageDataUrl) return
-    // ローカルストレージに保存
+  const handleSubmit = async () => {
+    if (!name.trim() || !address.trim()) return
     try {
-      const existing = JSON.parse(localStorage.getItem('cp-new-spots') || '[]')
-      existing.push({
-        id: `user-spot-${Date.now()}`,
-        name: name.trim(),
-        nameLocal: nameLocal.trim() || name.trim(),
-        address: address.trim(),
-        city: city.trim(),
-        genre,
-        members: selectedMembers.length > 0 ? selectedMembers : ['ALL'],
-        description: description.trim(),
-        officialUrl: officialUrl.trim() || undefined,
-        sourceUrl: sourceUrl.trim() || undefined,
-        imageUrl: imageDataUrl,
-        screenshotUrl: screenshotUrl,
-        contributor: defaultContributor,
-        createdAt: new Date().toISOString(),
-        status: 'pending',
+      // 画像をStorageにアップロード
+      let imageUrl = ''
+      let ssUrl = ''
+      if (imageDataUrl) {
+        const { uploadDataUrl } = await import('@/lib/supabase/uploadImage')
+        imageUrl = await uploadDataUrl('event-images', imageDataUrl) || ''
+      }
+      if (screenshotUrl) {
+        const { uploadDataUrl } = await import('@/lib/supabase/uploadImage')
+        ssUrl = await uploadDataUrl('event-images', screenshotUrl) || ''
+      }
+
+      const relatedArtists = selectedMembers.length > 0
+        ? '#SEVENTEEN ' + selectedMembers.map(m => `#${m}`).join(' ')
+        : '#SEVENTEEN'
+
+      // DBに保存
+      await fetch('/api/update-spot', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          _createSpot: true,
+          updates: {
+            spot_name: name.trim(),
+            spot_address: address.trim(),
+            genre: genre.toUpperCase(),
+            related_artists: relatedArtists,
+            memo: description.trim() || null,
+            spot_url: officialUrl.trim() || null,
+            source_url: sourceUrl.trim() || null,
+            image_url: imageUrl || null,
+            screenshot_url: ssUrl || null,
+            status: 'pending',
+            verified_count: 0,
+            artist_id: 'A000000',
+          },
+        }),
       })
-      localStorage.setItem('cp-new-spots', JSON.stringify(existing))
     } catch {}
     setSubmitted(true)
   }

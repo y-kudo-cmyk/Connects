@@ -8,7 +8,18 @@ export async function POST(req: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  const { spotId, photoId, updates, _table } = await req.json()
+  const { spotId, photoId, updates, _table, _createSpot } = await req.json()
+
+  if (_createSpot && updates) {
+    const sb = createServiceClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!)
+    const { data: lastSpot } = await sb.from('spots').select('id').order('id', { ascending: false }).limit(1)
+    const lastNum = lastSpot?.[0]?.id ? parseInt(lastSpot[0].id.replace('SP', '')) : 0
+    const newId = 'SP' + String(lastNum + 1).padStart(5, '0')
+    const { error } = await sb.from('spots').insert({ id: newId, ...updates, submitted_by: user.id })
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+    return NextResponse.json({ ok: true, id: newId })
+  }
+
   if ((!spotId && !photoId) || !updates) return NextResponse.json({ error: 'Missing params' }, { status: 400 })
 
   const sb = createServiceClient(
