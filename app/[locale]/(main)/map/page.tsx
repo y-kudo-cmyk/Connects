@@ -1015,6 +1015,7 @@ function PhotoUploadModal({
   const today = useToday()
   const [date, setDate] = useState(today)
   const [caption, setCaption] = useState('')
+  const [analyzing, setAnalyzing] = useState(false)
   const fileRef = useRef<HTMLInputElement>(null)
 
   const toggleTag = (tag: string) => {
@@ -1031,6 +1032,34 @@ function PhotoUploadModal({
       newImages.push(url)
     }
     setImages(prev => [...prev, ...newImages].slice(0, 3))
+
+    // 1枚目の画像をAI解析
+    if (newImages[0] && selectedTags.length === 0) {
+      setAnalyzing(true)
+      try {
+        const base64 = newImages[0].replace(/^data:image\/\w+;base64,/, '')
+        const res = await fetch('/api/analyze-spot', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ imageBase64: base64, mediaType: 'image/jpeg' }),
+        })
+        if (res.ok) {
+          const data = await res.json()
+          if (data.spots?.[0]) {
+            const s = data.spots[0]
+            // メンバー名を自動選択
+            if (s.members?.length > 0) {
+              setSelectedTags(s.members.map((m: string) => m.toUpperCase()))
+            }
+            // ソースURL
+            if (s.sourceUrl && !sourceUrl) setSourceUrl(s.sourceUrl)
+            // 説明をキャプションに
+            if (s.description && !caption) setCaption(s.description)
+          }
+        }
+      } catch {}
+      setAnalyzing(false)
+    }
   }
 
   const removeImage = (index: number) => {
@@ -1084,7 +1113,10 @@ function PhotoUploadModal({
 
           {/* 画像（最大3枚） */}
           <div>
-            <label className="text-xs font-bold mb-2 block" style={{ color: '#636366' }}>{t('Map.photoLabel')} <span style={{ color: '#8E8E93', fontWeight: 400 }}>（最大3枚）</span></label>
+            <label className="text-xs font-bold mb-2 block" style={{ color: '#636366' }}>
+              {t('Map.photoLabel')} <span style={{ color: '#8E8E93', fontWeight: 400 }}>（最大3枚）</span>
+              {analyzing && <span className="ml-2" style={{ color: '#F3B4E3' }}>🔍 AI解析中...</span>}
+            </label>
             <div className="flex gap-2">
               {images.map((img, i) => (
                 <div key={i} className="relative rounded-xl overflow-hidden flex-1" style={{ aspectRatio: '1' }}>
