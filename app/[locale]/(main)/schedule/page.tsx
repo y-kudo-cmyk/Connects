@@ -41,7 +41,7 @@ function matchRegion(e: AppEvent, region: Region, homeCountry: string): boolean 
 
 export default function SchedulePage() {
   const TODAY = useToday()
-  const { events } = useSupabaseData()
+  const { events, refreshEvents } = useSupabaseData()
   const now = new Date()
   const [selectedDate, setSelectedDate] = useState(TODAY)
   const [year, setYear] = useState(now.getFullYear())
@@ -485,7 +485,7 @@ export default function SchedulePage() {
         <AddScheduleModal onClose={() => setShowAddSchedule(false)} />
       )}
       {detailEvent && (
-        <EventDetailModal event={detailEvent} onClose={() => setDetailEvent(null)} showConfirmButton />
+        <EventDetailModal event={detailEvent} onClose={() => setDetailEvent(null)} onRefresh={refreshEvents} showConfirmButton />
       )}
     </div>
   )

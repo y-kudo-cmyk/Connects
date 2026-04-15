@@ -18,7 +18,7 @@ export default function NewSchedulePreview() {
   const t = useTranslations()
   const dayNamesShort = t.raw('Calendar.dayNamesShort') as string[]
   const [dismissed, setDismissed] = useState<Set<string>>(new Set())
-  const { events } = useSupabaseData()
+  const { events, refreshEvents } = useSupabaseData()
   const [detailEvent, setDetailEvent] = useState<AppEvent | null>(null)
   const { addEntry, hasEntry } = useMyEntries()
   const { user } = useAuth()
@@ -221,7 +221,7 @@ export default function NewSchedulePreview() {
       </section>
 
       {detailEvent && (
-        <EventDetailModal event={detailEvent} onClose={() => setDetailEvent(null)} />
+        <EventDetailModal event={detailEvent} onClose={() => setDetailEvent(null)} onRefresh={refreshEvents} />
       )}
     </>
   )

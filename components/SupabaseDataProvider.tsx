@@ -13,9 +13,10 @@ type DataContextType = {
   spots: AppSpot[]
   loading: boolean
   refreshSpots: () => Promise<void>
+  refreshEvents: () => Promise<void>
 }
 
-const DataContext = createContext<DataContextType>({ events: [], spots: [], loading: true, refreshSpots: async () => {} })
+const DataContext = createContext<DataContextType>({ events: [], spots: [], loading: true, refreshSpots: async () => {}, refreshEvents: async () => {} })
 
 export function useSupabaseData() {
   return useContext(DataContext)
@@ -25,6 +26,24 @@ export default function SupabaseDataProvider({ children }: { children: React.Rea
   const [events, setEvents] = useState<AppEvent[]>([])
   const [spots, setSpots] = useState<AppSpot[]>([])
   const [loading, setLoading] = useState(true)
+
+  const refreshEvents = useCallback(async () => {
+    const all: SupabaseEvent[] = []
+    let from = 0
+    const pageSize = 1000
+    while (true) {
+      const { data } = await supabase
+        .from('events')
+        .select('*, submitter:profiles!submitted_by(nickname)')
+        .order('start_date', { ascending: true })
+        .range(from, from + pageSize - 1)
+      if (!data || data.length === 0) break
+      all.push(...(data as SupabaseEvent[]))
+      if (data.length < pageSize) break
+      from += pageSize
+    }
+    setEvents(all.map(toAppEvent))
+  }, [])
 
   const refreshSpots = useCallback(async () => {
     const [spotsRes, photosRes] = await Promise.all([
@@ -71,7 +90,7 @@ export default function SupabaseDataProvider({ children }: { children: React.Rea
   }, [])
 
   return (
-    <DataContext.Provider value={{ events, spots, loading, refreshSpots }}>
+    <DataContext.Provider value={{ events, spots, loading, refreshSpots, refreshEvents }}>
       {children}
     </DataContext.Provider>
   )

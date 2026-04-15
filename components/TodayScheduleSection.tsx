@@ -23,7 +23,7 @@ function md(s: string) {
 export default function TodayScheduleSection() {
   const today = useToday()
   const { profile } = useProfile()
-  const { events: allEvents } = useSupabaseData()
+  const { events: allEvents, refreshEvents } = useSupabaseData()
   const t = useTranslations()
   const dayNames = t.raw('Calendar.dayNames') as string[]
   const [detailEvent, setDetailEvent] = useState<AppEvent | null>(null)
@@ -206,7 +206,7 @@ export default function TodayScheduleSection() {
       </section>
 
       {detailEvent && (
-        <EventDetailModal event={detailEvent} onClose={() => setDetailEvent(null)} showConfirmButton />
+        <EventDetailModal event={detailEvent} onClose={() => setDetailEvent(null)} onRefresh={refreshEvents} showConfirmButton />
       )}
     </>
   )

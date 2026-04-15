@@ -14,7 +14,7 @@ export default function NotificationPage() {
   const searchParams = useSearchParams()
   const router = useRouter()
   const TODAY = useToday()
-  const { events, loading } = useSupabaseData()
+  const { events, loading, refreshEvents } = useSupabaseData()
   const [detailEvent, setDetailEvent] = useState<AppEvent | null>(null)
 
   const type = searchParams.get('type') || 'morning'
@@ -196,7 +196,7 @@ export default function NotificationPage() {
       </div>
 
       {detailEvent && (
-        <EventDetailModal event={detailEvent} onClose={() => setDetailEvent(null)} />
+        <EventDetailModal event={detailEvent} onClose={() => setDetailEvent(null)} onRefresh={refreshEvents} />
       )}
     </div>
   )

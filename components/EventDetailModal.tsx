@@ -33,10 +33,12 @@ function formatDateTime(date: string, time: string, dateEnd?: string, timeEnd?: 
 export default function EventDetailModal({
   event,
   onClose,
+  onRefresh,
   showConfirmButton = true,
 }: {
   event: AppEvent
   onClose: () => void
+  onRefresh?: () => Promise<void>
   showConfirmButton?: boolean
 }) {
   const router = useRouter()
@@ -164,6 +166,7 @@ export default function EventDetailModal({
     }
 
     await refetchVotes()
+    await onRefresh?.()
     setEditSaving(false)
     setEditing(false)
   }
