@@ -5,7 +5,7 @@ import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 
 const supabase = createClient()
-const MAX_USERS = 16
+const MAX_USERS = 999999
 
 export default function AuthGuard({ children }: { children: React.ReactNode }) {
   const { user, loading, signOut } = useAuth()
