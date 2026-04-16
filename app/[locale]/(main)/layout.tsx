@@ -8,8 +8,10 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
     <AuthGuard>
       <SupabaseDataProvider>
         <div className="flex flex-col h-full" style={{ background: '#F8F9FA' }}>
-          <TabContainer>{children}</TabContainer>
-          <TabBar />
+          <TabContainer>
+            {children}
+            <TabBar />
+          </TabContainer>
         </div>
       </SupabaseDataProvider>
     </AuthGuard>

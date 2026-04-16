@@ -83,6 +83,9 @@ export default function TabContainer({ children }: { children: React.ReactNode }
     [activeTab, switchTab, mountedTabs]
   )
 
+  // Extract TabBar from children (it's passed as a child from layout)
+  const childArray = Array.isArray(children) ? children : [children]
+
   // For non-tab routes (e.g. /notification), render children normally
   if (!isTabPage) {
     return (
@@ -94,8 +97,9 @@ export default function TabContainer({ children }: { children: React.ReactNode }
             WebkitOverflowScrolling: 'touch',
           }}
         >
-          {children}
+          {childArray[0]}
         </main>
+        {childArray.slice(1)}
       </TabNavigationContext.Provider>
     )
   }
@@ -115,7 +119,6 @@ export default function TabContainer({ children }: { children: React.ReactNode }
               flexDirection: 'column',
               paddingBottom: 'calc(64px + env(safe-area-inset-bottom, 0px))',
               WebkitOverflowScrolling: 'touch',
-              // Each tab panel fills the container and scrolls independently
               height: '100%',
               overflowY: 'auto',
             }}
@@ -124,6 +127,7 @@ export default function TabContainer({ children }: { children: React.ReactNode }
           </div>
         )
       })}
+      {childArray.slice(1)}
     </TabNavigationContext.Provider>
   )
 }
