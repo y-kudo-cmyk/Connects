@@ -205,42 +205,17 @@ export default function MapPage() {
             style={{ background: '#FFFFFF', color: '#1C1C1E', border: '1px solid #2E2E32' }}
           />
         </div>
-        {/* タブ切替: 聖地 / 期間限定 */}
-        <div className="flex mb-2 rounded-lg overflow-hidden" style={{ background: '#E5E5EA' }}>
-          <button
-            onClick={() => { setLimitedFilter(false); setSelectedEventId(null); setPreviewEvent(null) }}
-            className="flex-1 py-1.5 text-xs font-bold text-center transition-colors"
-            style={!limitedFilter
-              ? { background: '#FFFFFF', color: '#1C1C1E', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }
-              : { background: 'transparent', color: '#8E8E93' }
-            }>
-            {t('Map.holyLand')}
-          </button>
-          <button
-            onClick={() => { setLimitedFilter(true); setMemberFilter('ALL'); setFavOnly(false); setSelectedId(null); setPreviewSpot(null) }}
-            className="flex-1 py-1.5 text-xs font-bold text-center transition-colors flex items-center justify-center gap-1"
-            style={limitedFilter
-              ? { background: '#FFFFFF', color: '#1C1C1E', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }
-              : { background: 'transparent', color: '#8E8E93' }
-            }>
-            {activeScheduleEvents.length > 0 && (
-              <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: '#FB923C' }} />
-            )}
-            {t('Map.limitedTime')}
-          </button>
-        </div>
-        {/* フィルター (聖地タブ時のみ) */}
-        {!limitedFilter && (
+        {/* フィルター */}
         <div className="flex gap-2 overflow-x-auto pb-1" style={{ scrollbarWidth: 'none' }}>
-          <button onClick={() => { setMemberFilter('ALL'); setFavOnly(false) }}
+          <button onClick={() => { setMemberFilter('ALL'); setLimitedFilter(false); setFavOnly(false); setSelectedEventId(null); setPreviewEvent(null) }}
             className="flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold"
-            style={memberFilter === 'ALL' && !favOnly
+            style={memberFilter === 'ALL' && !limitedFilter && !favOnly
               ? { background: '#F3B4E3', color: '#FFFFFF' }
               : { background: '#FFFFFF', color: '#636366' }
             }>
             {t('Map.everyone')}
           </button>
-          <button onClick={() => { setFavOnly((v) => !v) }}
+          <button onClick={() => { setFavOnly((v) => !v); setLimitedFilter(false); setSelectedEventId(null); setPreviewEvent(null) }}
             className="flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold flex items-center gap-1"
             style={favOnly
               ? { background: '#FB7185', color: '#FFFFFF' }
@@ -251,10 +226,21 @@ export default function MapPage() {
             </svg>
             {t('Map.favorites')}
           </button>
+          {activeScheduleEvents.length > 0 && (
+            <button onClick={() => { setLimitedFilter((v) => !v); setMemberFilter('ALL'); setSelectedId(null); setPreviewSpot(null) }}
+              className="flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold flex items-center gap-1"
+              style={limitedFilter
+                ? { background: '#FB923C', color: '#FFFFFF' }
+                : { background: 'rgba(251,146,60,0.1)', color: '#FB923C' }
+              }>
+              <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: 'currentColor' }} />
+              {t('Map.limited')}
+            </button>
+          )}
           {seventeenMembers.map((m) => (
-            <button key={m.id} onClick={() => { setMemberFilter(m.name) }}
+            <button key={m.id} onClick={() => { setMemberFilter(m.name); setLimitedFilter(false); setSelectedEventId(null); setPreviewEvent(null) }}
               className="flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold"
-              style={memberFilter === m.name
+              style={memberFilter === m.name && !limitedFilter
                 ? { background: m.color, color: '#1C1C1E' }
                 : { background: '#FFFFFF', color: '#636366' }
               }>
@@ -262,7 +248,6 @@ export default function MapPage() {
             </button>
           ))}
         </div>
-        )}
       </header>
 
 
