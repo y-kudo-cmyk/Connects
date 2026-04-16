@@ -503,7 +503,7 @@ export default function MyPage() {
             const nowStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`
 
             return (
-              <div className="flex flex-col" style={{ height: 'calc(100vh - 148px)' }}>
+              <div className="flex flex-col" style={{ height: 'calc(100vh - 220px)' }}>
                 {/* 日ナビ */}
                 <div className="flex items-center justify-between px-4 py-2 flex-shrink-0">
                   <button onClick={() => {
