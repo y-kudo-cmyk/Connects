@@ -32,6 +32,8 @@ export type AppEvent = {
   subTitle?: string
   submittedByName?: string
   createdAt?: string
+  lat?: number | null
+  lng?: number | null
 }
 
 // タイムゾーンずれを防ぐ: DBの日時文字列から直接 YYYY-MM-DD と HH:MM を取る
@@ -80,6 +82,8 @@ export function toAppEvent(e: SupabaseEvent): AppEvent {
     subTitle: e.sub_event_title || undefined,
     submittedByName: e.submitter?.nickname || undefined,
     createdAt: e.created_at || undefined,
+    lat: e.lat,
+    lng: e.lng,
   }
 }
 

@@ -13,7 +13,7 @@ import {
 } from '@/lib/config/constants'
 import { APPROVAL_THRESHOLD, type SpotGenre as SpotGenreType, spotGenreConfig as genreConfig } from '@/lib/config/tags'
 import { useVoting } from '@/lib/supabase/useVoting'
-import type { AppSpot } from '@/lib/supabase/adapters'
+import type { AppSpot, AppEvent } from '@/lib/supabase/adapters'
 import type { SpotPhoto } from '@/lib/useSpotPhotos'
 import EventCard from '@/components/EventCard'
 import { useSupabaseData } from '@/components/SupabaseDataProvider'
@@ -61,6 +61,8 @@ export default function MapPage() {
   const [limitedFilter, setLimitedFilter] = useState(false)
 
   const [selectedId, setSelectedId] = useState<string | null>(null)
+  const [selectedEventId, setSelectedEventId] = useState<string | null>(null)
+  const [previewEvent, setPreviewEvent] = useState<AppEvent | null>(null)
   const [previewSpot, setPreviewSpot] = useState<AppSpot | null>(null)
   const [detailSpot, setDetailSpot] = useState<AppSpot | null>(null)
   const [uploadSpot, setUploadSpot] = useState<AppSpot | null>(null)
@@ -98,10 +100,21 @@ export default function MapPage() {
   const activeScheduleEvents = useMemo(() => {
     const today = TODAY
     return events.filter((e) =>
-      e.tags?.some((t) => t === 'POPUP' || t === 'EVENT') &&
-      (e.dateEnd ? e.date <= today && today <= e.dateEnd : e.date === today)
+      e.tags?.some((t) => t === 'POPUP' || t === 'EVENT' || t === 'MERCH') &&
+      (e.dateEnd ? e.date <= today && today <= e.dateEnd : e.date >= today)
     )
-  }, [])
+  }, [events, TODAY])
+
+  const mapEvents = useMemo(() => {
+    if (!limitedFilter) return []
+    return activeScheduleEvents.filter((e) => e.lat != null && e.lng != null)
+  }, [limitedFilter, activeScheduleEvents])
+
+  const handleEventSelect = useCallback((id: string) => {
+    setSelectedEventId(id)
+    const ev = activeScheduleEvents.find((e) => e.id === id)
+    if (ev) setPreviewEvent(ev)
+  }, [activeScheduleEvents])
 
   const incompleteIds = useMemo(() => {
     const set = new Set<string>()
@@ -192,17 +205,42 @@ export default function MapPage() {
             style={{ background: '#FFFFFF', color: '#1C1C1E', border: '1px solid #2E2E32' }}
           />
         </div>
-        {/* フィルター */}
+        {/* タブ切替: 聖地 / 期間限定 */}
+        <div className="flex mb-2 rounded-lg overflow-hidden" style={{ background: '#E5E5EA' }}>
+          <button
+            onClick={() => { setLimitedFilter(false); setSelectedEventId(null); setPreviewEvent(null) }}
+            className="flex-1 py-1.5 text-xs font-bold text-center transition-colors"
+            style={!limitedFilter
+              ? { background: '#FFFFFF', color: '#1C1C1E', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }
+              : { background: 'transparent', color: '#8E8E93' }
+            }>
+            {t('Map.holyLand')}
+          </button>
+          <button
+            onClick={() => { setLimitedFilter(true); setMemberFilter('ALL'); setFavOnly(false); setSelectedId(null); setPreviewSpot(null) }}
+            className="flex-1 py-1.5 text-xs font-bold text-center transition-colors flex items-center justify-center gap-1"
+            style={limitedFilter
+              ? { background: '#FFFFFF', color: '#1C1C1E', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }
+              : { background: 'transparent', color: '#8E8E93' }
+            }>
+            {activeScheduleEvents.length > 0 && (
+              <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: '#FB923C' }} />
+            )}
+            {t('Map.limitedTime')}
+          </button>
+        </div>
+        {/* フィルター (聖地タブ時のみ) */}
+        {!limitedFilter && (
         <div className="flex gap-2 overflow-x-auto pb-1" style={{ scrollbarWidth: 'none' }}>
-          <button onClick={() => { setMemberFilter('ALL'); setLimitedFilter(false); setFavOnly(false) }}
+          <button onClick={() => { setMemberFilter('ALL'); setFavOnly(false) }}
             className="flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold"
-            style={memberFilter === 'ALL' && !limitedFilter && !favOnly
+            style={memberFilter === 'ALL' && !favOnly
               ? { background: '#F3B4E3', color: '#FFFFFF' }
               : { background: '#FFFFFF', color: '#636366' }
             }>
             {t('Map.everyone')}
           </button>
-          <button onClick={() => { setFavOnly((v) => !v); setLimitedFilter(false) }}
+          <button onClick={() => { setFavOnly((v) => !v) }}
             className="flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold flex items-center gap-1"
             style={favOnly
               ? { background: '#FB7185', color: '#FFFFFF' }
@@ -213,21 +251,10 @@ export default function MapPage() {
             </svg>
             {t('Map.favorites')}
           </button>
-          {activeScheduleEvents.length > 0 && (
-            <button onClick={() => { setLimitedFilter((v) => !v); setMemberFilter('ALL') }}
-              className="flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold flex items-center gap-1"
-              style={limitedFilter
-                ? { background: '#FB923C', color: '#FFFFFF' }
-                : { background: 'rgba(251,146,60,0.12)', color: '#FB923C' }
-              }>
-              <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: 'currentColor' }} />
-              {t('Map.limited')}
-            </button>
-          )}
           {seventeenMembers.map((m) => (
-            <button key={m.id} onClick={() => { setMemberFilter(m.name); setLimitedFilter(false) }}
+            <button key={m.id} onClick={() => { setMemberFilter(m.name) }}
               className="flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold"
-              style={memberFilter === m.name && !limitedFilter
+              style={memberFilter === m.name
                 ? { background: m.color, color: '#1C1C1E' }
                 : { background: '#FFFFFF', color: '#636366' }
               }>
@@ -235,6 +262,7 @@ export default function MapPage() {
             </button>
           ))}
         </div>
+        )}
       </header>
 
 
@@ -245,9 +273,12 @@ export default function MapPage() {
           selectedId={selectedId}
           onSpotClick={handleSpotSelect}
           incompleteIds={incompleteIds}
+          events={mapEvents}
+          selectedEventId={selectedEventId}
+          onEventClick={handleEventSelect}
         />
         {/* ピンタップ時プレビューカード */}
-        {previewSpot && (
+        {previewSpot && !limitedFilter && (
           <div className="absolute bottom-3 left-3 right-3" style={{ zIndex: 1000 }}>
             <button
               className="w-full text-left"
@@ -283,10 +314,43 @@ export default function MapPage() {
             </button>
           </div>
         )}
+        {/* イベントピンタップ時プレビューカード */}
+        {previewEvent && limitedFilter && (
+          <div className="absolute bottom-3 left-3 right-3" style={{ zIndex: 1000 }}>
+            <div className="rounded-2xl p-3"
+              style={{ background: '#FFFFFF', boxShadow: '0 4px 16px rgba(0,0,0,0.18)' }}>
+              <div className="flex items-start gap-3">
+                <div className="w-10 h-10 rounded-lg flex-shrink-0 flex items-center justify-center text-lg"
+                  style={{ background: 'rgba(251,146,60,0.12)' }}>
+                  🎪
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-bold leading-tight" style={{ color: '#1C1C1E' }}>{previewEvent.title}</p>
+                  {previewEvent.venue && (
+                    <p className="text-[11px] mt-0.5 truncate" style={{ color: '#8E8E93' }}>{previewEvent.venue}</p>
+                  )}
+                  <p className="text-[11px] mt-0.5" style={{ color: '#FB923C' }}>
+                    {previewEvent.date.slice(5).replace('-', '/')}
+                    {previewEvent.dateEnd ? ` - ${previewEvent.dateEnd.slice(5).replace('-', '/')}` : ''}
+                  </p>
+                </div>
+              </div>
+            </div>
+            <button
+              onClick={() => { setPreviewEvent(null); setSelectedEventId(null) }}
+              className="absolute -top-2 -right-1 w-7 h-7 rounded-full flex items-center justify-center"
+              style={{ background: '#1C1C1F', border: '1px solid #3A3A3E', zIndex: 1001 }}
+            >
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" strokeWidth="2.5">
+                <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+              </svg>
+            </button>
+          </div>
+        )}
       </div>
 
       {/* リスト（ピンタップ中は非表示） */}
-      {!previewSpot && (
+      {!previewSpot && !previewEvent && (
         <div className="flex-1 overflow-y-auto">
           <div className="px-4 pt-3 pb-28 flex flex-col gap-3">
             {limitedFilter ? (

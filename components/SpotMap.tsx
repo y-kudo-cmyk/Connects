@@ -4,7 +4,7 @@ import 'leaflet/dist/leaflet.css'
 import L from 'leaflet'
 import { MapContainer, TileLayer, Marker, Circle, useMap } from 'react-leaflet'
 import { useEffect, useRef, useState, useCallback } from 'react'
-import type { AppSpot } from '@/lib/supabase/adapters'
+import type { AppSpot, AppEvent } from '@/lib/supabase/adapters'
 
 function FlyTo({ spot }: { spot: AppSpot | null }) {
   const map = useMap()
@@ -86,6 +86,22 @@ function makeIcon(selected: boolean, incomplete: boolean) {
   })
 }
 
+function makeEventIcon(selected: boolean) {
+  const size = selected ? 42 : 34
+  const border = selected ? 3 : 2
+  const color = selected ? '#FB923C' : '#F97316'
+  const bg = selected ? 'rgba(251,146,60,0.22)' : 'rgba(249,115,22,0.15)'
+  const shadow = selected
+    ? '0 0 0 4px rgba(251,146,60,0.25), 0 3px 10px rgba(0,0,0,0.6)'
+    : '0 2px 6px rgba(0,0,0,0.5)'
+  return L.divIcon({
+    html: `<div style="position:relative;width:${size}px;height:${size}px;border-radius:50%;background:${bg};border:${border}px solid ${color};display:flex;align-items:center;justify-content:center;font-size:${selected ? 18 : 14}px;box-shadow:${shadow}">🎪</div>`,
+    className: '',
+    iconSize: [size, size],
+    iconAnchor: [size / 2, size / 2],
+  })
+}
+
 const myLocationIcon = L.divIcon({
   html: `<div style="width:16px;height:16px;border-radius:50%;background:#3B82F6;border:3px solid #fff;box-shadow:0 0 0 3px rgba(59,130,246,0.35),0 2px 6px rgba(0,0,0,0.5)"></div>`,
   className: '',
@@ -98,11 +114,17 @@ export default function SpotMap({
   selectedId,
   onSpotClick,
   incompleteIds = new Set(),
+  events = [],
+  selectedEventId,
+  onEventClick,
 }: {
   spots: AppSpot[]
   selectedId: string | null
   onSpotClick: (id: string) => void
   incompleteIds?: Set<string>
+  events?: AppEvent[]
+  selectedEventId?: string | null
+  onEventClick?: (id: string) => void
 }) {
   const selected = spots.find((s) => s.id === selectedId) ?? null
   const [myPos, setMyPos] = useState<[number, number] | null>(null)
@@ -141,6 +163,18 @@ export default function SpotMap({
             position={[spot.lat, spot.lng]}
             icon={makeIcon(sel, incomplete)}
             eventHandlers={{ click: () => onSpotClick(spot.id) }}
+          />
+        )
+      })}
+      {events.map((event) => {
+        if (event.lat == null || event.lng == null) return null
+        const sel = event.id === selectedEventId
+        return (
+          <Marker
+            key={`ev-${event.id}`}
+            position={[event.lat, event.lng]}
+            icon={makeEventIcon(sel)}
+            eventHandlers={{ click: () => onEventClick?.(event.id) }}
           />
         )
       })}
