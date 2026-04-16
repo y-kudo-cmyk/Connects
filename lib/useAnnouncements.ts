@@ -10,6 +10,10 @@ export type Announcement = {
   body: string
   date: string
   url?: string
+  title_en?: string
+  body_en?: string
+  title_ko?: string
+  body_ko?: string
 }
 
 export function useAnnouncements(all: Announcement[]) {

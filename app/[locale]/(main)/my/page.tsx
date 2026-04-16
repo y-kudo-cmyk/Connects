@@ -722,7 +722,7 @@ function EntryCard({ entry, onEdit, onRemove }: {
               onClick={(e) => e.stopPropagation()}
               className="text-[10px] font-bold truncate"
               style={{ color: '#60A5FA' }}>
-              🔗 ソース ↗
+              {t('MyPage.sourceLink')}
             </a>
           )}
           {entry.memo && (
@@ -880,7 +880,7 @@ function EditModal({ entry, onClose, onSave, onRemove }: {
   const [images, setImages] = useState<string[]>(entry.images ?? [])
   const [autoAnalyzeTrigger, setAutoAnalyzeTrigger] = useState(0)
   const [showConfirmRemove, setShowConfirmRemove] = useState(false)
-  const [viewImages, setViewImages] = useState<string[]>([])
+  const [viewImages, setViewImages] = useState<string[]>(entry.viewImages ?? [])
   const ticketFileRef = useRef<HTMLInputElement>(null)
   const viewFileRef = useRef<HTMLInputElement>(null)
   const photoFileRef = useRef<HTMLInputElement>(null)
@@ -940,6 +940,7 @@ function EditModal({ entry, onClose, onSave, onRemove }: {
       seatInfo,
       memo,
       images,
+      viewImages,
     })
   }
 
@@ -1045,7 +1046,7 @@ function EditModal({ entry, onClose, onSave, onRemove }: {
 
           {/* 視野画像（LIVE/EVENTのみ） */}
           {showTicketSection && (
-            <EditSection label="座席からの眺め">
+            <EditSection label={t('MyPage.seatView')}>
               <div className="flex flex-wrap gap-2">
                 {viewImages.map((img: string, i: number) => (
                   <div key={i} className="relative rounded-xl overflow-hidden"
@@ -1073,7 +1074,7 @@ function EditModal({ entry, onClose, onSave, onRemove }: {
               <input ref={viewFileRef} type="file" accept="image/*" multiple className="hidden"
                 onChange={(e) => handleViewUpload(e.target.files)} />
               <p className="text-[10px] mt-2" style={{ color: '#F59E0B' }}>
-                ⚠ この画像は他のユーザーにも公開されます
+                {t('MyPage.viewImagePublic')}
               </p>
             </EditSection>
           )}

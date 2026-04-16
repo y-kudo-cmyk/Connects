@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from '@/i18n/navigation'
+import { useTranslations } from 'next-intl'
 
 const tabIcons = [
   { id: 'home', label: 'HOME', icon: (a: boolean) => (
@@ -629,6 +630,7 @@ const screenMocks: Record<string, () => React.ReactNode> = {
 export default function HowToPage() {
   const [activeTab, setActiveTab] = useState('home')
   const router = useRouter()
+  const t = useTranslations('HowTo')
   const Mock = screenMocks[activeTab]
 
   return (
@@ -642,7 +644,7 @@ export default function HowToPage() {
             <polyline points="15 18 9 12 15 6" />
           </svg>
         </button>
-        <h1 className="text-sm font-black" style={{ color: '#1C1C1E' }}>使い方ガイド</h1>
+        <h1 className="text-sm font-black" style={{ color: '#1C1C1E' }}>{t('pageTitle')}</h1>
       </header>
 
       {/* コンテンツ */}

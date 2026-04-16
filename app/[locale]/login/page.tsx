@@ -38,7 +38,7 @@ export default function LoginPage() {
 
   const handleOtpVerify = async () => {
     if (!otp.trim()) {
-      setEmailError('コードを入力してください')
+      setEmailError(t('Login.enterCodePlease'))
       return
     }
     setOtpLoading(true)
@@ -52,7 +52,7 @@ export default function LoginPage() {
         router.replace('/')
       }
     } catch (e: any) {
-      setEmailError(e?.message || 'エラーが発生しました')
+      setEmailError(e?.message || t('Login.errorOccurred'))
     }
     setOtpLoading(false)
   }
@@ -66,9 +66,9 @@ export default function LoginPage() {
             <polyline points="22,6 12,13 2,6" />
           </svg>
         </div>
-        <h2 className="text-lg font-bold mb-2" style={{ color: '#1C1C1E' }}>認証コードを入力</h2>
+        <h2 className="text-lg font-bold mb-2" style={{ color: '#1C1C1E' }}>{t('Login.enterCode')}</h2>
         <p className="text-sm text-center leading-relaxed mb-4" style={{ color: '#8E8E93' }}>
-          {email} にコードを送信しました
+          {t('Login.codeSentTo', { email })}
         </p>
         <input
           type="text"
@@ -96,7 +96,7 @@ export default function LoginPage() {
             color: otp.length >= 6 ? '#FFFFFF' : '#8E8E93',
           }}
         >
-          {otpLoading ? '確認中...' : 'ログイン'}
+          {otpLoading ? t('Login.verifying') : t('Login.login')}
         </button>
         <button
           onClick={() => { setEmailSent(false); setOtp(''); setEmailError('') }}

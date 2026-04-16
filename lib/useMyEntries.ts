@@ -36,6 +36,7 @@ export type MyEntry = {
   notes?: string
   memo: string
   images: string[]
+  viewImages?: string[]
   createdAt: string
   sourceUrl?: string
 }
@@ -92,6 +93,7 @@ function toApp(row: DbMyEntry): MyEntry {
     notes: row.notes ?? undefined,
     memo: row.memo ?? '',
     images: parseImageField(row.image_url),
+    viewImages: parseImageField(row.view_image_url),
     createdAt: row.created_at,
     sourceUrl: row.source_url ?? undefined,
   }
@@ -144,6 +146,7 @@ export function useMyEntries() {
     if (updates.seatInfo !== undefined) dbUpdates.seat_info = updates.seatInfo || null
     if (updates.ticketImages !== undefined) dbUpdates.ticket_image_url = updates.ticketImages?.length ? JSON.stringify(updates.ticketImages) : null
     if (updates.images !== undefined) dbUpdates.image_url = updates.images?.length ? JSON.stringify(updates.images) : null
+    if (updates.viewImages !== undefined) dbUpdates.view_image_url = updates.viewImages?.length ? JSON.stringify(updates.viewImages) : null
     if (updates.date !== undefined) {
       const time = updates.time ?? updates.customTime ?? '00:00'
       dbUpdates.start_date = `${updates.date}T${time}:00`

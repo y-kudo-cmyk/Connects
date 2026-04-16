@@ -74,7 +74,7 @@ export default function CountryPage() {
           }}
         >
           {country
-            ? `${countryFlag(country)} ${COUNTRIES.find((c) => c.code === country)?.nameJa} で始める`
+            ? `${countryFlag(country)} ${COUNTRIES.find((c) => c.code === country)?.nameJa} ${t('Onboarding.onboardingCountryStart')}`
             : t('Onboarding.onboardingCountrySelect')}
         </button>
       </div>

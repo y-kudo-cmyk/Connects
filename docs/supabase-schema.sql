@@ -388,18 +388,18 @@ alter table edit_request_votes enable row level security;
 alter table favorite_spots enable row level security;
 alter table announcements enable row level security;
 
--- 公開読取
-create policy "Public read" on artists for select using (true);
-create policy "Public read" on schedule_tags for select using (true);
-create policy "Public read" on events for select using (true);
-create policy "Public read" on event_votes for select using (true);
-create policy "Public read" on spots for select using (true);
-create policy "Public read" on spot_photos for select using (true);
-create policy "Public read" on spot_photo_votes for select using (true);
-create policy "Public read" on edit_requests for select using (true);
-create policy "Public read" on edit_request_votes for select using (true);
-create policy "Public read" on url_submissions for select using (true);
-create policy "Public read" on announcements for select using (true);
+-- 認証済みユーザーのみ読取可能（スクレイピング防止）
+create policy "Authenticated read" on artists for select to authenticated using (true);
+create policy "Authenticated read" on schedule_tags for select to authenticated using (true);
+create policy "Authenticated read" on events for select to authenticated using (true);
+create policy "Authenticated read" on event_votes for select to authenticated using (true);
+create policy "Authenticated read" on spots for select to authenticated using (true);
+create policy "Authenticated read" on spot_photos for select to authenticated using (true);
+create policy "Authenticated read" on spot_photo_votes for select to authenticated using (true);
+create policy "Authenticated read" on edit_requests for select to authenticated using (true);
+create policy "Authenticated read" on edit_request_votes for select to authenticated using (true);
+create policy "Authenticated read" on url_submissions for select to authenticated using (true);
+create policy "Authenticated read" on announcements for select to authenticated using (true);
 
 -- 本人データ
 create policy "Own profile" on profiles for select using (auth.uid() = id);
@@ -472,11 +472,17 @@ $$ language plpgsql;
 -- tickets        (チケット画像) ※private
 -- memories       (思い出写真) ※private
 
--- Storage RLS ポリシー（TODO: Dashboard SQL Editor で実行）
--- 認証済みユーザーは event-images にアップロード可能、誰でも閲覧可能
-create policy "Anyone can view event images"
-  on storage.objects for select
+-- Storage RLS ポリシー
+-- 認証済みユーザーのみ閲覧・アップロード可能
+create policy "Authenticated can view event images"
+  on storage.objects for select to authenticated
   using (bucket_id = 'event-images');
+create policy "Authenticated can view avatars"
+  on storage.objects for select to authenticated
+  using (bucket_id = 'avatars');
+create policy "Authenticated can view banners"
+  on storage.objects for select to authenticated
+  using (bucket_id = 'banners');
 
 create policy "Authenticated users can upload event images"
   on storage.objects for insert

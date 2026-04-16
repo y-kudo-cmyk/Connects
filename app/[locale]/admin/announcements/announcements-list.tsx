@@ -23,6 +23,10 @@ type Announcement = {
   priority: number
   published: boolean
   created_at: string
+  title_en: string
+  body_en: string
+  title_ko: string
+  body_ko: string
 }
 
 function AnnouncementForm({
@@ -61,6 +65,39 @@ function AnnouncementForm({
           defaultValue={announcement?.body ?? ""}
         />
       </div>
+
+      <details className="border rounded-md p-3 space-y-3">
+        <summary className="text-sm font-medium cursor-pointer">🌐 英語 / English</summary>
+        <div>
+          <label className="text-sm font-medium">Title (EN)</label>
+          <Input name="title_en" defaultValue={announcement?.title_en ?? ""} />
+        </div>
+        <div>
+          <label className="text-sm font-medium">Body (EN)</label>
+          <textarea
+            name="body_en"
+            className="flex min-h-[60px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+            defaultValue={announcement?.body_en ?? ""}
+          />
+        </div>
+      </details>
+
+      <details className="border rounded-md p-3 space-y-3">
+        <summary className="text-sm font-medium cursor-pointer">🌐 韓国語 / 한국어</summary>
+        <div>
+          <label className="text-sm font-medium">Title (KO)</label>
+          <Input name="title_ko" defaultValue={announcement?.title_ko ?? ""} />
+        </div>
+        <div>
+          <label className="text-sm font-medium">Body (KO)</label>
+          <textarea
+            name="body_ko"
+            className="flex min-h-[60px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+            defaultValue={announcement?.body_ko ?? ""}
+          />
+        </div>
+      </details>
+
       <div>
         <label className="text-sm font-medium">リンクURL</label>
         <Input name="link_url" defaultValue={announcement?.link_url ?? ""} />

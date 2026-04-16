@@ -5,16 +5,20 @@ import { SeatField, SeatInfo } from '@/lib/useMyEntries'
 import { useTranslations } from 'next-intl'
 import { ArenaPositionPicker, detectSection } from '@/components/ArenaMap'
 
-// 会場タイプ別のプリセットラベル（キー名は翻訳で表示）
-const PRESET_LABELS: Record<string, string[]> = {
-  domestic: ['スタンド/エリア', 'ブロック', '列', '座席番号', 'ゲート'],
-  dome: ['エリア', 'ブロック', '列', '席番号', 'ゲート'],
-  overseas: ['Section/Zone', 'Block/Area', 'Row', 'Seat No.', 'Gate'],
+// 会場タイプ別のプリセットラベルキー
+const PRESET_LABEL_KEYS: Record<string, string[]> = {
+  domestic: ['Seat.presetStandArea', 'Seat.presetBlock', 'Seat.presetRow', 'Seat.presetSeatNumber', 'Seat.presetGate'],
+  dome: ['Seat.presetArea', 'Seat.presetBlock', 'Seat.presetRow', 'Seat.presetSeatNo', 'Seat.presetGate'],
+  overseas: ['Seat.presetStandArea', 'Seat.presetBlock', 'Seat.presetRow', 'Seat.presetSeatNumber', 'Seat.presetGate'],
 }
 const PRESET_KEYS = { domestic: 'Seat.seatPresetDomestic', dome: 'Seat.seatPresetDome', overseas: 'Seat.seatPresetOverseas' } as const
 
 function emptyFields(labels: string[]): SeatField[] {
   return labels.map((label) => ({ label, value: '' }))
+}
+
+function resolvePresetLabels(keys: string[], t: (key: string) => string): string[] {
+  return keys.map((key) => t(key))
 }
 
 async function callAnalyzeAPI(dataUrl: string): Promise<SeatField[]> {
@@ -163,10 +167,10 @@ export default function SeatInfoForm({
       <div>
         <p className="text-[11px] font-semibold mb-1.5" style={{ color: '#8E8E93' }}>{t('Seat.seatField')}</p>
         <div className="flex gap-2">
-          {Object.entries(PRESET_LABELS).map(([key, labels]) => (
+          {Object.entries(PRESET_LABEL_KEYS).map(([key, keys]) => (
             <button
               key={key}
-              onClick={() => applyPreset(labels)}
+              onClick={() => applyPreset(resolvePresetLabels(keys, t))}
               className="flex-1 py-2 rounded-xl text-xs font-bold"
               style={{ background: '#F0F0F5', color: '#636366', border: '1px solid #E5E5EA' }}
             >
@@ -186,7 +190,7 @@ export default function SeatInfoForm({
       {/* フィールドリスト */}
       {fields.length === 0 ? (
         <button
-          onClick={() => applyPreset(PRESET_LABELS['domestic'])}
+          onClick={() => applyPreset(resolvePresetLabels(PRESET_LABEL_KEYS['domestic'], t))}
           className="w-full py-4 rounded-xl text-xs flex flex-col items-center gap-1"
           style={{ border: '1.5px dashed #E5E5EA', color: '#8E8E93' }}
         >

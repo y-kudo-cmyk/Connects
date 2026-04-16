@@ -92,6 +92,10 @@ export async function createAnnouncement(formData: FormData) {
     link_url: formData.get("link_url") as string,
     priority: Number(formData.get("priority")) || 0,
     published: formData.get("published") === "true",
+    title_en: formData.get("title_en") as string || "",
+    body_en: formData.get("body_en") as string || "",
+    title_ko: formData.get("title_ko") as string || "",
+    body_ko: formData.get("body_ko") as string || "",
   })
 
   if (error) throw new Error(error.message)
@@ -108,6 +112,10 @@ export async function updateAnnouncement(id: string, formData: FormData) {
       link_url: formData.get("link_url") as string,
       priority: Number(formData.get("priority")) || 0,
       published: formData.get("published") === "true",
+      title_en: formData.get("title_en") as string || "",
+      body_en: formData.get("body_en") as string || "",
+      title_ko: formData.get("title_ko") as string || "",
+      body_ko: formData.get("body_ko") as string || "",
     })
     .eq("id", id)
 

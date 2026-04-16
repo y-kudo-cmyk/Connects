@@ -43,8 +43,8 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(url)
   }
 
-  // Role check (banned + admin)
-  if (user && (isProtected || isAdmin) && !isPublic) {
+  // Role check — adminページアクセス時のみDBクエリ（通常ページは高速化のためスキップ）
+  if (user && isAdmin) {
     const { data: profile } = await supabase
       .from('profiles')
       .select('role')
@@ -65,7 +65,7 @@ export async function updateSession(request: NextRequest) {
     }
 
     // Admin ページに admin 以外 → / にリダイレクト
-    if (isAdmin && role !== 'admin') {
+    if (role !== 'admin') {
       const url = request.nextUrl.clone()
       url.pathname = '/'
       const redirectResponse = NextResponse.redirect(url)

@@ -84,6 +84,7 @@ export default function EventDetailModal({
       console.error('Delete error:', error.message)
       return
     }
+    await onRefresh?.()
     onClose()
   }
 
@@ -269,12 +270,12 @@ export default function EventDetailModal({
                     <button onClick={() => imageFileRef.current?.click()}
                       className="flex-1 py-2.5 rounded-xl text-xs font-bold"
                       style={{ background: '#F0F0F5', color: '#636366' }}>
-                      📷 画像を変更
+                      {t('Schedule.changeImage')}
                     </button>
                     <button onClick={() => setEditImageUrl('')}
                       className="py-2.5 px-4 rounded-xl text-xs font-bold"
                       style={{ background: '#FEE2E2', color: '#EF4444' }}>
-                      削除
+                      {t('Common.delete')}
                     </button>
                   </div>
                 </div>
@@ -283,7 +284,7 @@ export default function EventDetailModal({
                   className="w-full h-32 rounded-2xl flex flex-col items-center justify-center gap-2"
                   style={{ border: '2px dashed #E5E5EA', color: '#8E8E93', opacity: imageUploading ? 0.5 : 1 }}>
                   <span className="text-3xl">{imageUploading ? '⏳' : '📷'}</span>
-                  <span className="text-xs">{imageUploading ? 'アップロード中...' : t('Schedule.uploadImage')}</span>
+                  <span className="text-xs">{imageUploading ? t('Schedule.imageUploading') : t('Schedule.uploadImage')}</span>
                 </button>
               )}
               <input ref={imageFileRef} type="file" accept="image/*" className="hidden"
@@ -312,7 +313,7 @@ export default function EventDetailModal({
                 className="w-full rounded-2xl flex flex-col items-center justify-center gap-2"
                 style={{ aspectRatio: '16/9', background: 'linear-gradient(135deg, #E8D5F5 0%, #D5E5F5 50%, #F5D5E8 100%)', cursor: 'pointer' }}>
                 <span className="text-3xl">📷</span>
-                <span className="text-xs font-bold" style={{ color: '#8E8E93' }}>画像を追加</span>
+                <span className="text-xs font-bold" style={{ color: '#8E8E93' }}>{t('Schedule.addImage')}</span>
               </button>
               <input ref={imageFileRef} type="file" accept="image/*" className="hidden"
                 onChange={(e) => handleImageUpload(e.target.files)} />
@@ -498,7 +499,7 @@ export default function EventDetailModal({
         {/* メンバータグ */}
         {editing && (
           <div className="px-4 mb-2">
-            <label className="text-xs font-bold mb-1.5 block" style={{ color: '#636366' }}>メンバー</label>
+            <label className="text-xs font-bold mb-1.5 block" style={{ color: '#636366' }}>{t('Schedule.memberLabel')}</label>
             <div className="flex flex-wrap gap-1.5">
               {seventeenMembers.map((m) => {
                 const selected = editMembers.includes(m.name)

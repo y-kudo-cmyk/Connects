@@ -9,8 +9,10 @@ import { useToday } from '@/lib/useToday'
 import type { AppEvent } from '@/lib/supabase/adapters'
 import EventDetailModal from '@/components/EventDetailModal'
 import { countryFlag, cityToCountryCode } from '@/lib/countryUtils'
+import { useTranslations } from 'next-intl'
 
 export default function NotificationPage() {
+  const t = useTranslations()
   const searchParams = useSearchParams()
   const router = useRouter()
   const TODAY = useToday()
@@ -42,17 +44,17 @@ export default function NotificationPage() {
   const displayEvents = type === 'evening' ? tomorrowEvents : type === 'reminder' ? [] : todayEvents
 
   const title = type === 'morning'
-    ? `📅 今日のスケジュール`
+    ? t('Notification.todaySchedule')
     : type === 'evening'
-      ? `🌙 明日のスケジュール`
+      ? t('Notification.tomorrowSchedule')
       : type === 'admin'
-        ? `📢 運営からのお知らせ`
-        : `⏰ まもなく開始`
+        ? t('Notification.adminNotice')
+        : t('Notification.startingSoon')
 
   const subtitle = type === 'morning'
-    ? `${date.replace(/-/g, '/')} · ${todayEvents.length}件`
+    ? `${date.replace(/-/g, '/')} · ${todayEvents.length}${t('Notification.itemsSuffix')}`
     : type === 'evening'
-      ? `${tomorrowStr.replace(/-/g, '/')} · ${tomorrowEvents.length}件`
+      ? `${tomorrowStr.replace(/-/g, '/')} · ${tomorrowEvents.length}${t('Notification.itemsSuffix')}`
       : type === 'admin'
         ? date.replace(/-/g, '/')
         : ''
@@ -88,7 +90,7 @@ export default function NotificationPage() {
         {type === 'evening' && endingToday.length > 0 && (
           <>
             <div className="flex items-center gap-2">
-              <span className="text-xs font-bold" style={{ color: '#EF4444' }}>⏰ 今日締切</span>
+              <span className="text-xs font-bold" style={{ color: '#EF4444' }}>{t('Notification.deadlineToday')}</span>
             </div>
             {endingToday.map(event => {
               const tag = event.tags?.[0] as ScheduleTag | undefined
@@ -103,13 +105,13 @@ export default function NotificationPage() {
                     <p className="text-sm font-bold mt-1" style={{ color: '#1C1C1E' }}>{event.title}</p>
                     {event.subTitle && <p className="text-xs" style={{ color: '#636366' }}>{event.subTitle}</p>}
                   </div>
-                  <span className="text-[10px] font-bold" style={{ color: '#EF4444' }}>締切</span>
+                  <span className="text-[10px] font-bold" style={{ color: '#EF4444' }}>{t('Notification.deadline')}</span>
                 </button>
               )
             })}
             {tomorrowEvents.length > 0 && (
               <div className="flex items-center gap-2 mt-2">
-                <span className="text-xs font-bold" style={{ color: '#636366' }}>📅 明日のスケジュール</span>
+                <span className="text-xs font-bold" style={{ color: '#636366' }}>{t('Notification.tomorrowScheduleLabel')}</span>
               </div>
             )}
           </>
@@ -118,13 +120,13 @@ export default function NotificationPage() {
         {/* イベント一覧 */}
         {loading && (
           <div className="flex flex-col items-center justify-center py-16">
-            <span className="text-sm font-bold" style={{ color: '#8E8E93' }}>読み込み中...</span>
+            <span className="text-sm font-bold" style={{ color: '#8E8E93' }}>{t('Notification.loadingText')}</span>
           </div>
         )}
         {!loading && displayEvents.length === 0 && type !== 'evening' && (
           <div className="flex flex-col items-center justify-center py-16">
             <span className="text-4xl mb-3">🎉</span>
-            <p className="text-sm font-bold" style={{ color: '#8E8E93' }}>スケジュールはありません</p>
+            <p className="text-sm font-bold" style={{ color: '#8E8E93' }}>{t('Notification.noSchedule')}</p>
           </div>
         )}
 
@@ -177,7 +179,7 @@ export default function NotificationPage() {
                     onClick={(e) => e.stopPropagation()}
                     className="inline-flex items-center gap-1 mt-2 text-[10px] font-bold px-2 py-1 rounded-full"
                     style={{ background: 'rgba(96,165,250,0.1)', color: '#60A5FA' }}>
-                    🔗 {event.sourceName || 'ソース'} ↗
+                    🔗 {event.sourceName || t('Notification.source')} ↗
                   </a>
                 )}
               </div>
@@ -191,7 +193,7 @@ export default function NotificationPage() {
         <button onClick={() => router.push('/')}
           className="w-full py-4 rounded-2xl text-sm font-bold"
           style={{ background: '#F3B4E3', color: '#FFFFFF' }}>
-          HOME に戻る
+          {t('Notification.backToHome')}
         </button>
       </div>
 

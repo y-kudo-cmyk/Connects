@@ -2,57 +2,24 @@
 
 import { useState } from 'react'
 import { useRouter } from '@/i18n/navigation'
+import { useTranslations } from 'next-intl'
 
-const slides = [
-  {
-    icon: '💎',
-    title: 'Connects+ へようこそ',
-    subtitle: 'ファンが作る、ファンのためのサービス',
-    description: 'スケジュール・聖地巡礼・グッズ情報を\nファン同士で共有・承認して作り上げる\nコミュニティ型アプリです',
-    color: '#F3B4E3',
-  },
-  {
-    icon: '📅',
-    title: 'スケジュールを逃さない',
-    subtitle: 'LIVE・チケット・リリース・TV出演…',
-    description: '公式情報をもとにファンが投稿・更新\n承認制だから情報の正確性も安心\nMYカレンダーに追加して自分だけの予定表に',
-    color: '#FCD34D',
-  },
-  {
-    icon: '🔔',
-    title: '大事な情報をプッシュ通知',
-    subtitle: '朝・夜の通知で今日と明日のスケジュールをお届け',
-    description: 'チケット申込締切も見逃さない\nMYカレンダーに登録したイベントの\nリマインダーも届きます',
-    color: '#60A5FA',
-  },
-  {
-    icon: '📍',
-    title: '聖地巡礼MAP',
-    subtitle: 'メンバーが訪れたスポットを写真付きで共有',
-    description: 'ファンが投稿した写真とソースURL付き\nメンバー別フィルター・ジャンル検索\n地図で近くのスポットを探せます',
-    color: '#34D399',
-  },
-  {
-    icon: '✅',
-    title: '承認制で情報の質を担保',
-    subtitle: '3人のファンが確認して初めて承認',
-    description: '誰でも投稿できるけど、みんなで確認するから安心\n正確な情報だけが残る仕組みです',
-    color: '#A78BFA',
-  },
-  {
-    icon: '🚀',
-    title: 'さっそく始めよう！',
-    subtitle: 'アカウント登録は無料・30秒で完了',
-    description: 'Google / メールで簡単ログイン\nスケジュールを確認して\nMYカレンダーに追加してみましょう\n\n📖 登録後は「使い方ガイド」もチェック',
-    color: '#F3B4E3',
-  },
+const slideConfig = [
+  { icon: '💎', titleKey: 'slide1Title', subtitleKey: 'slide1Subtitle', descKey: 'slide1Desc', color: '#F3B4E3' },
+  { icon: '📅', titleKey: 'slide2Title', subtitleKey: 'slide2Subtitle', descKey: 'slide2Desc', color: '#FCD34D' },
+  { icon: '🔔', titleKey: 'slide3Title', subtitleKey: 'slide3Subtitle', descKey: 'slide3Desc', color: '#60A5FA' },
+  { icon: '📍', titleKey: 'slide4Title', subtitleKey: 'slide4Subtitle', descKey: 'slide4Desc', color: '#34D399' },
+  { icon: '✅', titleKey: 'slide5Title', subtitleKey: 'slide5Subtitle', descKey: 'slide5Desc', color: '#A78BFA' },
+  { icon: '🚀', titleKey: 'slide6Title', subtitleKey: 'slide6Subtitle', descKey: 'slide6Desc', color: '#F3B4E3' },
 ]
 
 export default function GuidePage() {
   const [current, setCurrent] = useState(0)
   const router = useRouter()
-  const slide = slides[current]
-  const isLast = current === slides.length - 1
+  const t = useTranslations('Guide')
+  const cfg = slideConfig[current]
+  const slide = { icon: cfg.icon, title: t(cfg.titleKey), subtitle: t(cfg.subtitleKey), description: t(cfg.descKey), color: cfg.color }
+  const isLast = current === slideConfig.length - 1
 
   return (
     <div className="min-h-screen flex flex-col" style={{ background: '#FFFFFF' }}>
@@ -63,7 +30,7 @@ export default function GuidePage() {
           className="text-xs font-bold px-3 py-1.5 rounded-full"
           style={{ color: '#8E8E93' }}
         >
-          スキップ
+          {t('skip')}
         </button>
       </div>
 
@@ -100,7 +67,7 @@ export default function GuidePage() {
 
       {/* ドット */}
       <div className="flex justify-center gap-2 mb-6">
-        {slides.map((_, i) => (
+        {slideConfig.map((_, i) => (
           <button
             key={i}
             onClick={() => setCurrent(i)}
@@ -122,7 +89,7 @@ export default function GuidePage() {
             className="flex-1 py-4 rounded-2xl text-sm font-bold"
             style={{ background: '#F0F0F5', color: '#636366' }}
           >
-            戻る
+            {t('back')}
           </button>
         )}
         <button
@@ -136,7 +103,7 @@ export default function GuidePage() {
           className="flex-1 py-4 rounded-2xl text-sm font-bold"
           style={{ background: slide.color, color: '#FFFFFF' }}
         >
-          {isLast ? 'はじめる' : '次へ'}
+          {isLast ? t('start') : t('next')}
         </button>
       </div>
     </div>

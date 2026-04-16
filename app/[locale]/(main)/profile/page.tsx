@@ -392,10 +392,10 @@ export default function ProfilePage() {
         <div className="rounded-2xl p-4" style={{ background: '#FFFFFF', opacity: 0.5 }}>
           <div className="flex items-center justify-between">
             <span className="text-sm font-bold" style={{ color: '#8E8E93' }}>
-              紹介コード機能
+              {t('ProfilePage.referralFeature')}
             </span>
             <span className="px-3 py-1.5 rounded-full text-xs font-bold" style={{ background: '#F0F0F5', color: '#8E8E93' }}>
-              準備中
+              {t('ProfilePage.preparing')}
             </span>
           </div>
         </div>
@@ -501,7 +501,7 @@ export default function ProfilePage() {
                   }}
                   className="w-full py-2.5 rounded-xl text-sm font-bold"
                   style={{ background: 'linear-gradient(135deg, #F3B4E3, #C97AB8)', color: '#FFFFFF' }}>
-                  🔔 通知を許可する
+                  {t('ProfilePage.allowNotifications')}
                 </button>
               </div>
               {/* 朝の通知 */}
@@ -571,13 +571,13 @@ export default function ProfilePage() {
               <a href="https://line.me/R/ti/p/@529grkxp" target="_blank" rel="noopener noreferrer"
                 className="px-3 py-1.5 rounded-full text-xs font-bold"
                 style={{ background: '#06C755', color: '#FFFFFF' }}>
-                友だち追加
+                {t('ProfilePage.addFriend')}
               </a>
             )}
           </div>
           {!profile.lineLinked && (
             <p className="px-5 pb-2 text-[10px]" style={{ color: '#8E8E93' }}>
-              友だち追加後、LINEで登録メールアドレスを送信すると連携されます
+              {t('ProfilePage.addFriendHint')}
             </p>
           )}
 
@@ -592,7 +592,7 @@ export default function ProfilePage() {
             <span className="flex-1 text-sm font-medium" style={{ color: '#1C1C1E' }}>{t('Profile.linkX')}</span>
             <span className="px-3 py-1.5 rounded-full text-xs font-bold"
               style={{ background: '#F0F0F5', color: '#8E8E93' }}>
-              準備中
+              {t('ProfilePage.preparing')}
             </span>
           </div>
 

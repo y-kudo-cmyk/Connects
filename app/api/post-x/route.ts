@@ -5,17 +5,24 @@ import { createClient } from '@supabase/supabase-js'
 import crypto from 'crypto'
 
 // ── 設定 ──────────────────────────────────────────────────────
-const CONNECT_URL = 'https://connects-nu.vercel.app'
+const CONNECT_URL = 'https://app.connectsplus.net'
 const HASHTAGS = '#seventeen #carat #세븐틴'
 const FOOTER = `👇詳細をチェック✨\n${CONNECT_URL}\n\n${HASHTAGS}`
 
 const TAG_ORDER: Record<string, number> = {
   LIVE: 1, TICKET: 2, GOODS: 3, EVENT: 4,
 }
-const EXCLUDE_EVENING_TAGS = ['LIVE', 'POPUP']
+// 締切通知はTICKET/EVENTの応募期間終了のみ（それ以外は除外）
+const EVENING_DEADLINE_TAGS = ['TICKET', 'EVENT']
 const EVENING_TAG_PRIORITY: Record<string, number> = { TICKET: 1, EVENT: 2 }
 
 const DAY_NAMES = ['日', '月', '火', '水', '木', '金', '土']
+
+const COUNTRY_FLAG: Record<string, string> = {
+  JP: '🇯🇵', KR: '🇰🇷', CN: '🇨🇳', HK: '🇭🇰', TW: '🇹🇼',
+  TH: '🇹🇭', PH: '🇵🇭', SG: '🇸🇬', MO: '🇲🇴', US: '🇺🇸',
+  FR: '🇫🇷', GB: '🇬🇧', ID: '🇮🇩', MY: '🇲🇾', VN: '🇻🇳',
+}
 
 // ── Supabase (service role) ──────────────────────────────────
 function getSupabase() {
@@ -26,31 +33,43 @@ function getSupabase() {
 }
 
 // ── 日付ヘルパー ─────────────────────────────────────────────
-function toJSTDate(d: Date) {
-  return new Date(d.getTime() + 9 * 60 * 60 * 1000)
+
+// 「今日」をJST基準で取得（VercelはUTCで動くため）
+function todayJST(): string {
+  const now = new Date(Date.now() + 9 * 60 * 60 * 1000)
+  return now.toISOString().slice(0, 10)
 }
 
-function formatYMD(d: Date) {
-  const jst = toJSTDate(d)
-  return jst.toISOString().slice(0, 10)
+// DB日時文字列からUTC日付部分をそのまま抽出（アプリ側 extractDateParts と同じ方式）
+function extractDate(isoStr: string): string {
+  const m = isoStr.match(/^(\d{4}-\d{2}-\d{2})/)
+  return m ? m[1] : ''
 }
 
-function formatMD(d: Date) {
-  const jst = toJSTDate(d)
-  const m = jst.getUTCMonth() + 1
-  const day = jst.getUTCDate()
-  const dow = DAY_NAMES[jst.getUTCDay()]
-  return `${m}/${day}(${dow})`
+function extractTime(isoStr: string): string {
+  const m = isoStr.match(/T(\d{2}:\d{2})/)
+  return m ? m[1] : '00:00'
+}
+
+function formatMD(dateStr: string) {
+  // "2026-04-16" → "4/16(木)"
+  const [, mStr, dStr] = dateStr.match(/(\d{2})-(\d{2})$/) || []
+  if (!mStr) return dateStr
+  const m = parseInt(mStr, 10)
+  const d = parseInt(dStr, 10)
+  // 曜日は Date で計算（UTC日付を使うので十分）
+  const dow = DAY_NAMES[new Date(dateStr + 'T00:00:00Z').getUTCDay()]
+  return `${m}/${d}(${dow})`
 }
 
 function formatDisplayDate(start: string, end: string | null, time: string) {
-  const s = new Date(start)
-  let display = formatMD(s)
+  const startDate = extractDate(start)
+  let display = formatMD(startDate)
   if (time && time !== '00:00') display += ` ${time}`
   if (end) {
-    const e = new Date(end)
-    if (formatYMD(s) !== formatYMD(e)) {
-      display += ` 〜 ${formatMD(e)}`
+    const endDate = extractDate(end)
+    if (startDate !== endDate) {
+      display += ` 〜 ${formatMD(endDate)}`
     }
   }
   return display
@@ -60,48 +79,58 @@ function formatDisplayDate(start: string, end: string | null, time: string) {
 
 async function generateMorning(): Promise<{ text: string; imageUrl: string }> {
   const supabase = getSupabase()
-  const todayStr = formatYMD(new Date())
+  const today = todayJST()
 
-  const { data: events } = await supabase
-    .from('events')
-    .select('*')
-    .in('status', ['confirmed', 'pending'])
-    .lte('start_date', todayStr + 'T23:59:59')
-    .order('start_date')
+  // 2クエリ: (1) start_date が今日のイベント (2) 期間中(start<=today, end>=today)のイベント
+  const [{ data: startToday }, { data: periodEvents }] = await Promise.all([
+    supabase.from('events').select('*')
+      .in('status', ['confirmed', 'pending'])
+      .gte('start_date', today + 'T00:00:00')
+      .lte('start_date', today + 'T23:59:59'),
+    supabase.from('events').select('*')
+      .in('status', ['confirmed', 'pending'])
+      .lte('start_date', today + 'T23:59:59')
+      .gte('end_date', today + 'T00:00:00'),
+  ])
 
-  if (!events || events.length === 0) return { text: '', imageUrl: '' }
-
-  // 期間イベントも含めてフィルタ（end_date >= today または end_date が null で start_date が today）
-  const todayEvents = events.filter(e => {
-    const startDate = formatYMD(new Date(e.start_date))
-    const endDate = e.end_date ? formatYMD(new Date(e.end_date)) : startDate
-    return startDate <= todayStr && todayStr <= endDate
+  // 重複排除してマージ
+  const seen = new Set<string>()
+  const todayEvents = [...(startToday || []), ...(periodEvents || [])].filter(e => {
+    if (seen.has(e.id)) return false
+    seen.add(e.id)
+    return true
   })
 
   if (todayEvents.length === 0) return { text: '', imageUrl: '' }
 
-  // ソート: 今日だけ > 最終日 > 開始日(終了なし) > 開始日(終了あり) > 期間中、各カテゴリ内でTAGソート
+  // ソート: LIVE最優先 → 日本優先 → タグ順 → 日付優先度
   const sorted = todayEvents.map(e => {
-    const startDate = formatYMD(new Date(e.start_date))
-    const endDate = e.end_date ? formatYMD(new Date(e.end_date)) : startDate
-    let primary = 5
-    if (startDate === todayStr && endDate === todayStr) primary = 1
-    else if (endDate === todayStr) primary = 2
-    else if (startDate === todayStr && !e.end_date) primary = 3
-    else if (startDate === todayStr) primary = 4
-    const secondary = TAG_ORDER[e.tag] || 99
-    return { e, primary, secondary }
-  }).sort((a, b) => a.primary !== b.primary ? a.primary - b.primary : a.secondary - b.secondary)
-    .map(item => item.e)
+    const startDate = extractDate(e.start_date)
+    const endDate = e.end_date ? extractDate(e.end_date) : startDate
+    const isLive = e.tag === 'LIVE' ? 0 : 1
+    const isJP = e.country === 'JP' ? 0 : 1
+    let datePriority = 5
+    if (startDate === today && endDate === today) datePriority = 1
+    else if (endDate === today) datePriority = 2
+    else if (startDate === today && !e.end_date) datePriority = 3
+    else if (startDate === today) datePriority = 4
+    const tagOrder = TAG_ORDER[e.tag] || 99
+    return { e, isLive, isJP, tagOrder, datePriority }
+  }).sort((a, b) =>
+    a.isLive !== b.isLive ? a.isLive - b.isLive :
+    a.isJP !== b.isJP ? a.isJP - b.isJP :
+    a.tagOrder !== b.tagOrder ? a.tagOrder - b.tagOrder :
+    a.datePriority - b.datePriority
+  ).map(item => item.e)
 
-  const todayLabel = formatMD(new Date())
-  let header = `📅 SEVENTEEN｜今日のスケジュール｜${todayLabel}\n\n`
+  let header = `📅 SEVENTEEN｜今日のスケジュール｜${formatMD(today)}\n\n`
   let body = ''
 
   for (const e of sorted) {
-    const time = e.start_date ? new Date(e.start_date).toISOString().slice(11, 16) : '00:00'
+    const time = extractTime(e.start_date)
     const display = formatDisplayDate(e.start_date, e.end_date, time)
-    body += `└ ${e.event_title}\n`
+    const flag = COUNTRY_FLAG[e.country] || '🌍'
+    body += `${flag} └ ${e.event_title}\n`
     if (e.sub_event_title) body += `　 ${e.sub_event_title}\n`
     body += `　 ${display}\n\n`
   }
@@ -115,7 +144,7 @@ async function generateSpot(): Promise<{ text: string; imageUrl: string }> {
   const { data: spots } = await supabase
     .from('spots')
     .select('*')
-    .eq('status', 'confirmed')
+    .in('status', ['confirmed', 'pending'])
     .eq('x_posted', false)
     .neq('image_url', '')
 
@@ -128,40 +157,38 @@ async function generateSpot(): Promise<{ text: string; imageUrl: string }> {
 
   const text = `📍 SEVENTEEN｜今日の聖地\n\n✨ ${selected.spot_name}\n${selected.related_artists || ''}\n\n${FOOTER}`
 
-  // x_posted を true に更新
-  await supabase.from('spots').update({ x_posted: true }).eq('id', selected.id)
-
-  return { text, imageUrl: selected.image_url || '' }
+  return { text, imageUrl: selected.image_url || '', spotId: selected.id }
 }
 
 async function generateEvening(): Promise<{ text: string; imageUrl: string }> {
   const supabase = getSupabase()
-  const todayStr = formatYMD(new Date())
+  const today = todayJST()
 
-  // 今日締切のイベント
-  const { data: allEvents } = await supabase
+  // 今日締切のイベント（end_dateが今日のTICKET/EVENT）
+  const { data: endingRaw } = await supabase
     .from('events')
     .select('*')
     .in('status', ['confirmed', 'pending'])
+    .in('tag', EVENING_DEADLINE_TAGS)
+    .gte('end_date', today + 'T00:00:00')
+    .lte('end_date', today + 'T23:59:59')
 
-  if (!allEvents) return { text: '', imageUrl: '' }
-
-  const endingEvents = allEvents.filter(e => {
-    if (!e.end_date) return false
-    const tag = e.tag || ''
-    if (EXCLUDE_EVENING_TAGS.includes(tag)) return false
-    const endStr = e.end_date ? new Date(e.end_date).toISOString().slice(11, 16) : ''
-    if (!endStr || endStr === '00:00') return false
-    return formatYMD(new Date(e.end_date)) === todayStr
+  const endingEvents = (endingRaw || []).filter(e => {
+    const endTime = extractTime(e.end_date)
+    return endTime !== '00:00'
   }).sort((a, b) =>
     (EVENING_TAG_PRIORITY[a.tag] || 99) - (EVENING_TAG_PRIORITY[b.tag] || 99)
   )
 
   // 今日追加されたイベント
-  const newEvents = allEvents.filter(e => {
-    if (!e.created_at) return false
-    return formatYMD(new Date(e.created_at)) === todayStr
-  })
+  const { data: newRaw } = await supabase
+    .from('events')
+    .select('*')
+    .in('status', ['confirmed', 'pending'])
+    .gte('created_at', today + 'T00:00:00')
+    .lte('created_at', today + 'T23:59:59')
+
+  const newEvents = newRaw || []
 
   if (endingEvents.length === 0 && newEvents.length === 0) return { text: '', imageUrl: '' }
 
@@ -171,9 +198,10 @@ async function generateEvening(): Promise<{ text: string; imageUrl: string }> {
   if (endingEvents.length > 0) {
     body += '⏰ まもなく終了\n'
     for (const e of endingEvents) {
-      const time = e.start_date ? new Date(e.start_date).toISOString().slice(11, 16) : '00:00'
+      const time = extractTime(e.start_date)
       const display = formatDisplayDate(e.start_date, e.end_date, time)
-      body += `└ ${e.event_title}\n`
+      const flag = COUNTRY_FLAG[e.country] || '🌍'
+      body += `${flag} └ ${e.event_title}\n`
       if (e.sub_event_title) body += `　 ${e.sub_event_title}\n`
       body += `　 ${display}\n`
     }
@@ -183,9 +211,10 @@ async function generateEvening(): Promise<{ text: string; imageUrl: string }> {
   if (newEvents.length > 0) {
     body += '🆕 新着スケジュール\n'
     for (const e of newEvents) {
-      const time = e.start_date ? new Date(e.start_date).toISOString().slice(11, 16) : '00:00'
+      const time = extractTime(e.start_date)
       const display = formatDisplayDate(e.start_date, e.end_date, time)
-      body += `└ ${e.event_title}\n`
+      const flag = COUNTRY_FLAG[e.country] || '🌍'
+      body += `${flag} └ ${e.event_title}\n`
       if (e.sub_event_title) body += `　 ${e.sub_event_title}\n`
       body += `　 ${display}\n`
     }
@@ -320,7 +349,7 @@ async function handlePost(type: string, dryRun: boolean) {
   const types = type === 'all' ? ['morning', 'spot', 'evening'] : [type]
 
   for (const t of types) {
-    let generated: { text: string; imageUrl: string }
+    let generated: { text: string; imageUrl: string; spotId?: string }
 
     switch (t) {
       case 'morning': generated = await generateMorning(); break
@@ -344,6 +373,10 @@ async function handlePost(type: string, dryRun: boolean) {
         await postTweetWithImage(generated.text, generated.imageUrl)
       } else {
         await postTweet(generated.text)
+      }
+      // スポット投稿成功時のみ x_posted を更新
+      if (t === 'spot' && generated.spotId) {
+        await getSupabase().from('spots').update({ x_posted: true }).eq('id', generated.spotId)
       }
       results.push({ type: t, text: generated.text, imageUrl: generated.imageUrl, posted: true })
     } catch (e) {

@@ -1,61 +1,60 @@
 'use client'
 
 import { useAuth } from '@/lib/supabase/useAuth'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { createClient } from '@/lib/supabase/client'
+import { useTranslations } from 'next-intl'
 
 const supabase = createClient()
-const MAX_USERS = 999999
 
 export default function AuthGuard({ children }: { children: React.ReactNode }) {
   const { user, loading, signOut } = useAuth()
-  const [allowed, setAllowed] = useState<boolean | null>(null)
-  const [full, setFull] = useState(false)
+  const t = useTranslations()
+  const [banned, setBanned] = useState(false)
+  const checkedRef = useRef(false)
 
   useEffect(() => {
-    if (!user) { setAllowed(null); return }
+    if (!user || checkedRef.current) return
+    checkedRef.current = true
 
-    async function checkAccess() {
+    ;(async () => {
       try {
-        const email = user!.email || ''
-
-        // profileがあるか確認
         const { data: profile } = await supabase
           .from('profiles')
-          .select('id')
-          .eq('id', user!.id)
+          .select('id, role')
+          .eq('id', user.id)
           .maybeSingle()
 
         if (!profile) {
-          // profileを作成 + glide_my_entriesを移行
           await fetch('/api/create-profile', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
           })
+        } else if (profile.role === 'banned') {
+          setBanned(true)
+          return
         }
 
-        setAllowed(true)
-
-        // ログイン通知（セッションごとに1回）
+        // ログイン通知（30分に1回まで）
         const ADMIN_IDS = ['86c91b90-0060-4a3d-bf10-d5c846604882', '65ba4bc6-917d-4689-aeaf-8d4b5b01a004']
-        const notified = sessionStorage.getItem('login-notified')
-        if (!notified && !ADMIN_IDS.includes(user!.id)) {
-          sessionStorage.setItem('login-notified', '1')
+        const lastNotified = localStorage.getItem('login-notified-at')
+        const now = Date.now()
+        const throttle = 30 * 60 * 1000 // 30分
+        if ((!lastNotified || now - Number(lastNotified) > throttle) && !ADMIN_IDS.includes(user.id)) {
+          localStorage.setItem('login-notified-at', String(now))
           fetch('/api/notify-admin', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ type: 'login', message: `🔔 ログイン\n${email}` }),
+            body: JSON.stringify({ type: 'login', message: `🔔 ログイン\n${user.email || ''}` }),
           }).catch(() => {})
         }
       } catch {
-        setAllowed(true)
+        // プロフィール作成失敗してもアクセスは許可
       }
-    }
-
-    checkAccess()
+    })()
   }, [user])
 
-  if (loading || (user && allowed === null)) {
+  if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center" style={{ background: '#F8F9FA' }}>
         <div className="w-8 h-8 border-3 border-t-transparent rounded-full animate-spin" style={{ borderColor: '#F3B4E3', borderTopColor: 'transparent' }} />
@@ -65,25 +64,21 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
 
   if (!user) return null
 
-  if (allowed === false) {
+  if (banned) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center px-6" style={{ background: '#F8F9FA' }}>
         <div className="w-16 h-16 rounded-full flex items-center justify-center mb-4" style={{ background: 'rgba(239,68,68,0.1)' }}>
           <span className="text-3xl">🔒</span>
         </div>
-        <h2 className="text-lg font-bold mb-2" style={{ color: '#1C1C1E' }}>
-          {full ? '定員に達しました' : 'アクセスが制限されています'}
-        </h2>
+        <h2 className="text-lg font-bold mb-2" style={{ color: '#1C1C1E' }}>{t('AuthGuard.accessRestricted')}</h2>
         <p className="text-sm text-center leading-relaxed mb-6" style={{ color: '#8E8E93' }}>
-          {full
-            ? 'プロトタイプ版のテスター枠が定員に達しました。次回の募集をお待ちください。'
-            : '現在プロトタイプ版のため、テスターのみご利用いただけます。'}
+          {t('AuthGuard.accountSuspended')}
         </p>
         <button
           onClick={() => signOut()}
           className="px-6 py-3 rounded-2xl text-sm font-bold"
           style={{ background: '#F0F0F5', color: '#636366' }}>
-          ログアウト
+          {t('AuthGuard.logout')}
         </button>
       </div>
     )

@@ -3,6 +3,7 @@ import { scheduleTagConfig, type ScheduleTag } from '@/lib/config/tags'
 import type { AppEvent } from '@/lib/supabase/adapters'
 import { VOTE_THRESHOLD } from '@/lib/supabase/useVoting'
 import { countryFlag, cityToCountryCode } from '@/lib/countryUtils'
+import { seventeenMembers } from '@/lib/config/constants'
 import { useTranslations } from 'next-intl'
 
 interface EventCardProps {
@@ -75,6 +76,19 @@ export default function EventCard({ event, compact = false }: EventCardProps) {
           <p className="text-[11px] mt-0.5" style={{ color: '#8E8E93' }}>
             {dateTime}{event.venue ? ` · ${event.venue}` : ''}
           </p>
+          {event.relatedArtists && event.relatedArtists !== '#SEVENTEEN' && (
+            <div className="flex flex-wrap gap-0.5 mt-0.5">
+              {event.relatedArtists.split('#').map(s => s.trim()).filter(s => s && s !== 'SEVENTEEN').map(name => {
+                const m = seventeenMembers.find(x => x.name === name)
+                return (
+                  <span key={name} className="text-[9px] font-bold px-1 py-0.5 rounded"
+                    style={{ background: (m?.color ?? '#9A9A9F') + '18', color: m?.color ?? '#9A9A9F' }}>
+                    #{name}
+                  </span>
+                )
+              })}
+            </div>
+          )}
         </div>
         {event.city && (
           <span style={{ fontSize: 14 }}>
@@ -157,6 +171,19 @@ export default function EventCard({ event, compact = false }: EventCardProps) {
             <span className="text-[11px] truncate" style={{ color: '#8E8E93' }}>
               {event.venue}{event.venue && event.city ? ' · ' : ''}{event.city}
             </span>
+          </div>
+        )}
+        {event.relatedArtists && event.relatedArtists !== '#SEVENTEEN' && (
+          <div className="flex flex-wrap gap-0.5 mt-0.5">
+            {event.relatedArtists.split('#').map(s => s.trim()).filter(s => s && s !== 'SEVENTEEN').map(name => {
+              const m = seventeenMembers.find(x => x.name === name)
+              return (
+                <span key={name} className="text-[9px] font-bold px-1 py-0.5 rounded"
+                  style={{ background: (m?.color ?? '#9A9A9F') + '18', color: m?.color ?? '#9A9A9F' }}>
+                  #{name}
+                </span>
+              )
+            })}
           </div>
         )}
       </div>

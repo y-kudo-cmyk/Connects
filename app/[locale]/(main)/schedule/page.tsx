@@ -41,7 +41,7 @@ function matchRegion(e: AppEvent, region: Region, homeCountry: string): boolean 
 
 export default function SchedulePage() {
   const TODAY = useToday()
-  const { events, refreshEvents } = useSupabaseData()
+  const { events, refreshEvents, ensureMonth } = useSupabaseData()
   const now = new Date()
   const [selectedDate, setSelectedDate] = useState(TODAY)
   const [year, setYear] = useState(now.getFullYear())
@@ -100,8 +100,18 @@ export default function SchedulePage() {
     }, 50)
   }
 
-  const prevMonth = () => { if (month === 0) { setMonth(11); setYear(y => y - 1) } else setMonth(m => m - 1) }
-  const nextMonth = () => { if (month === 11) { setMonth(0); setYear(y => y + 1) } else setMonth(m => m + 1) }
+  const prevMonth = () => {
+    const newM = month === 0 ? 11 : month - 1
+    const newY = month === 0 ? year - 1 : year
+    setMonth(newM); if (month === 0) setYear(newY)
+    ensureMonth(newY, newM + 1)
+  }
+  const nextMonth = () => {
+    const newM = month === 11 ? 0 : month + 1
+    const newY = month === 11 ? year + 1 : year
+    setMonth(newM); if (month === 11) setYear(newY)
+    ensureMonth(newY, newM + 1)
+  }
 
   const daysCount = getDaysInMonth(year, month)
   const firstDay = getFirstDay(year, month)

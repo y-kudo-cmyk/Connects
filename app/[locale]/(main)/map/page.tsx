@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef, useCallback, useMemo } from 'react'
+import { useState, useRef, useCallback, useMemo, useEffect } from 'react'
 import dynamic from 'next/dynamic'
 import {
   seventeenMembers,
@@ -67,6 +67,15 @@ export default function MapPage() {
   const { profile } = useProfile()
   const { toggle, isFavorite } = useFavoriteSpots()
   const { photoMap, addPhoto, removePhoto, votePhoto, getPhotos, getConfirmedCount } = useSpotPhotos()
+
+  // refreshSpots後にdetailSpotを最新データに追従させる
+  useEffect(() => {
+    if (detailSpot) {
+      const updated = allSpots.find(s => s.id === detailSpot.id)
+      if (updated && updated !== detailSpot) setDetailSpot(updated)
+    }
+  }, [allSpots])
+
   const filtered = limitedFilter ? [] : allSpots.filter((spot) => {
     if (favOnly && !isFavorite(spot.id)) return false
     if (search) {
@@ -724,7 +733,7 @@ function SpotDetailScreen({
                 {spot.description && (
                   <span className="text-xs font-semibold text-center mb-1" style={{ color: '#636366' }}>{spot.description}</span>
                 )}
-                <span className="text-sm font-semibold" style={{ color: '#8E8E93' }}>画像を追加してください</span>
+                <span className="text-sm font-semibold" style={{ color: '#8E8E93' }}>{t('MapPage.addImage')}</span>
                 <span className="text-3xl">📷</span>
               </button>
             </div>
@@ -914,10 +923,10 @@ function PhotoCard({
           <div className="relative w-full max-w-sm rounded-2xl p-5 flex flex-col gap-3"
             style={{ background: '#F8F9FA' }}
             onClick={(e) => e.stopPropagation()}>
-            <p className="text-sm font-bold" style={{ color: '#1C1C1E' }}>写真を編集</p>
+            <p className="text-sm font-bold" style={{ color: '#1C1C1E' }}>{t('MapPage.editPhoto')}</p>
             {/* メンバータグ */}
             <div>
-              <label className="text-xs font-medium mb-1.5 block" style={{ color: '#636366' }}>メンバー</label>
+              <label className="text-xs font-medium mb-1.5 block" style={{ color: '#636366' }}>{t('MapPage.memberLabel')}</label>
               <div className="flex flex-wrap gap-1.5">
                 {seventeenMembers.map((m) => {
                   const selected = editMembers.includes(m.name)
@@ -936,7 +945,7 @@ function PhotoCard({
             </div>
             {/* ソースURL */}
             <div>
-              <label className="text-xs font-medium mb-1 block" style={{ color: '#636366' }}>ソースURL</label>
+              <label className="text-xs font-medium mb-1 block" style={{ color: '#636366' }}>{t('MapPage.sourceUrlLabel')}</label>
               <input type="url" value={editSourceUrl} onChange={(e) => setEditSourceUrl(e.target.value)}
                 placeholder="https://..."
                 className="w-full px-3 py-2.5 rounded-xl text-sm outline-none"
@@ -944,7 +953,7 @@ function PhotoCard({
             </div>
             {/* 訪問日 */}
             <div>
-              <label className="text-xs font-medium mb-1 block" style={{ color: '#636366' }}>訪問日/投稿日</label>
+              <label className="text-xs font-medium mb-1 block" style={{ color: '#636366' }}>{t('MapPage.visitDateLabel')}</label>
               <input type="date" value={editDate} onChange={(e) => setEditDate(e.target.value)}
                 className="w-full px-3 py-2.5 rounded-xl text-sm outline-none"
                 style={{ background: '#FFFFFF', border: '1px solid #E5E5EA', color: '#1C1C1E' }} />
@@ -954,7 +963,7 @@ function PhotoCard({
               <a href={effectiveSourceUrl} target="_blank" rel="noopener noreferrer"
                 className="w-full py-2.5 rounded-xl text-sm font-bold text-center block"
                 style={{ background: '#F0F0F5', color: '#636366' }}>
-                ソースを確認 ↗
+                {t('MapPage.checkSource')}
               </a>
             )}
             {/* 承認ボタン */}
@@ -966,7 +975,7 @@ function PhotoCard({
               if (isApproved) return (
                 <div className="w-full py-3 rounded-xl text-sm font-bold text-center"
                   style={{ background: 'rgba(52,211,153,0.15)', color: '#34D399' }}>
-                  ✓ 承認済み（{photo.votes}/3）
+                  ✓ {t('MapPage.approvedStatus')}（{photo.votes}/3）
                 </div>
               )
               return (
@@ -978,7 +987,7 @@ function PhotoCard({
                     ? { background: '#F0F0F5', color: '#8E8E93' }
                     : { background: 'rgba(52,211,153,0.15)', color: '#34D399' }
                   }>
-                  {!isComplete ? '⚠ メンバーとソースURLを入力してください' : `👍 承認する（${photo.votes ?? 0}/3）`}
+                  {!isComplete ? t('MapPage.memberSourceRequired') : `👍 ${t('MapPage.approveAction')}（${photo.votes ?? 0}/3）`}
                 </button>
               )
             })()}
@@ -1089,7 +1098,7 @@ function PhotoUploadModal({
           {/* 画像（最大3枚） */}
           <div>
             <label className="text-xs font-bold mb-2 block" style={{ color: '#636366' }}>
-              {t('Map.photoLabel')} <span style={{ color: '#8E8E93', fontWeight: 400 }}>（最大3枚）</span>
+              {t('Map.photoLabel')} <span style={{ color: '#8E8E93', fontWeight: 400 }}>{t('MapPage.maxPhotos')}</span>
             </label>
             <div className="flex gap-2">
               {images.map((img, i) => (
@@ -1110,7 +1119,7 @@ function PhotoUploadModal({
                   className="rounded-xl flex flex-col items-center justify-center gap-1 flex-1"
                   style={{ aspectRatio: '1', border: '2px dashed #E5E5EA', color: '#8E8E93', minHeight: 80 }}>
                   <span className="text-2xl">📷</span>
-                  <span className="text-[10px]">{images.length === 0 ? t('Map.photoAdd') : '追加'}</span>
+                  <span className="text-[10px]">{images.length === 0 ? t('Map.photoAdd') : t('MapPage.addMore')}</span>
                 </button>
               )}
             </div>
@@ -1393,7 +1402,7 @@ function NewSpotModal({
               <button onClick={handleAnalyze} disabled={analyzing}
                 className="w-full mt-2 py-3 rounded-xl text-sm font-bold flex items-center justify-center gap-2"
                 style={{ background: analyzing ? '#F0F0F5' : 'linear-gradient(135deg, #F3B4E3, #C97AB8)', color: analyzing ? '#8E8E93' : '#FFFFFF' }}>
-                {analyzing ? '🔍 AI解析中...' : '🔍 スクショからAI解析'}
+                {analyzing ? t('MapPage.aiAnalyzing') : t('MapPage.aiAnalyzeFromScreenshot')}
               </button>
             )}
           </div>

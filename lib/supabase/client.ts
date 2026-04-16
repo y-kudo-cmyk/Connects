@@ -7,6 +7,9 @@ export function createClient() {
     {
       auth: {
         flowType: 'implicit',
+        autoRefreshToken: true,
+        persistSession: true,
+        detectSessionInUrl: true,
       },
     },
   )

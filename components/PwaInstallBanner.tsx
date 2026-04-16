@@ -1,8 +1,10 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useTranslations } from 'next-intl'
 
 export default function PwaInstallBanner() {
+  const t = useTranslations()
   const [showInstall, setShowInstall] = useState(false)
   const [showNotif, setShowNotif] = useState(false)
   const [isStandalone, setIsStandalone] = useState(false)
@@ -65,12 +67,12 @@ export default function PwaInstallBanner() {
           <span className="text-2xl flex-shrink-0">📲</span>
           <div className="flex-1 min-w-0">
             <p className="text-sm font-bold mb-1" style={{ color: '#1C1C1E' }}>
-              ホーム画面に追加しよう
+              {t('Pwa.addToHomeTitle')}
             </p>
             <p className="text-xs leading-relaxed" style={{ color: '#636366' }}>
               {isIOS
-                ? 'ホーム画面から直接アクセスでき、フルスクリーンで快適に使えます。Safariの下の共有ボタン（□↑）→「ホーム画面に追加」'
-                : 'ホーム画面から直接アクセスでき、フルスクリーンで快適に使えます。ブラウザメニュー →「ホーム画面に追加」'}
+                ? t('Pwa.addToHomeDescIos')
+                : t('Pwa.addToHomeDescAndroid')}
             </p>
           </div>
           <button onClick={() => {
@@ -93,21 +95,21 @@ export default function PwaInstallBanner() {
           <span className="text-2xl flex-shrink-0">🔔</span>
           <div className="flex-1 min-w-0">
             <p className="text-sm font-bold mb-1" style={{ color: '#1C1C1E' }}>
-              通知をONにしよう
+              {t('Pwa.enableNotifTitle')}
             </p>
             <p className="text-xs leading-relaxed mb-2" style={{ color: '#636366' }}>
-              チケット申込締切や明日のスケジュールを見逃さない！毎朝・毎晩のお知らせで大事な情報をキャッチ
-              {!isStandalone && '\n※ 通知を受け取るにはホーム画面への追加が必要です'}
+              {t('Pwa.enableNotifDesc')}
+              {!isStandalone && t('Pwa.enableNotifNeedHome')}
             </p>
             {!isStandalone && (
               <p className="text-[10px] mb-2" style={{ color: '#F59E0B' }}>
-                ⚠ 先にホーム画面に追加してから通知を許可してください
+                {t('Pwa.enableNotifWarning')}
               </p>
             )}
             <button onClick={handleEnableNotif}
               className="px-4 py-2 rounded-xl text-xs font-bold"
               style={{ background: '#F3B4E3', color: '#FFFFFF' }}>
-              🔔 通知を許可する
+              {t('Pwa.enableNotifButton')}
             </button>
           </div>
           <button onClick={() => {

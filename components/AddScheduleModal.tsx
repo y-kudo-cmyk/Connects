@@ -6,6 +6,7 @@ import { createClient } from '@/lib/supabase/client'
 import { useAuth } from '@/lib/supabase/useAuth'
 import { useTranslations } from 'next-intl'
 import { uploadImage } from '@/lib/supabase/uploadImage'
+import { seventeenMembers } from '@/lib/config/constants'
 
 const supabase = createClient()
 
@@ -23,6 +24,7 @@ export default function AddScheduleModal({ onClose, onRefresh }: { onClose: () =
   const [notes, setNotes] = useState('')
   const [imagePreview, setImagePreview] = useState('')
   const [imageFile, setImageFile] = useState<File | null>(null)
+  const [members, setMembers] = useState<string[]>([])
   const [saving, setSaving] = useState(false)
   const [done, setDone] = useState(false)
   const [submitError, setSubmitError] = useState('')
@@ -55,7 +57,7 @@ export default function AddScheduleModal({ onClose, onRefresh }: { onClose: () =
     const { error } = await supabase.from('events').insert({
       tag,
       artist_id: 'A000000',
-      related_artists: '',
+      related_artists: members.length > 0 ? '#SEVENTEEN ' + members.map(n => `#${n}`).join(' ') : '',
       event_title: title.trim(),
       sub_event_title: '',
       start_date: startIso,
@@ -155,6 +157,26 @@ export default function AddScheduleModal({ onClose, onRefresh }: { onClose: () =
                   : { background: cfg.bg, color: cfg.color }
                 }>{cfg.icon} {cfg.label}</button>
             ))}
+          </div>
+
+          {/* メンバー */}
+          <div>
+            <label className="text-xs font-bold mb-1.5 block" style={{ color: '#636366' }}>{t('Schedule.memberLabel')}</label>
+            <div className="flex flex-wrap gap-1.5">
+              {seventeenMembers.map((m) => {
+                const selected = members.includes(m.name)
+                return (
+                  <button key={m.id} onClick={() => setMembers(prev => selected ? prev.filter(n => n !== m.name) : [...prev, m.name])}
+                    className="px-2.5 py-1 rounded-full text-[11px] font-bold"
+                    style={selected
+                      ? { background: m.color, color: '#FFFFFF' }
+                      : { background: m.color + '18', color: m.color }
+                    }>
+                    {m.name}
+                  </button>
+                )
+              })}
+            </div>
           </div>
 
           {/* 日時 */}
