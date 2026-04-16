@@ -1,11 +1,12 @@
 'use client'
 
-import { useTabNavigation, type TabId } from '@/lib/useTabNavigation'
+import { Link, usePathname } from '@/i18n/navigation'
 
-const tabs: { id: TabId; label: string; icon: (active: boolean) => React.ReactNode }[] = [
+const tabs = [
   {
     id: 'home',
     label: 'HOME',
+    href: '/',
     icon: (active: boolean) => (
       <svg width="22" height="22" viewBox="0 0 24 24" fill={active ? '#F3B4E3' : 'none'} stroke={active ? '#F3B4E3' : '#6B6B70'} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
         <path d="M3 9.5L12 3l9 6.5V20a1 1 0 01-1 1H4a1 1 0 01-1-1V9.5z" />
@@ -16,6 +17,7 @@ const tabs: { id: TabId; label: string; icon: (active: boolean) => React.ReactNo
   {
     id: 'my',
     label: 'MY',
+    href: '/my',
     icon: (active: boolean) => (
       <svg width="22" height="22" viewBox="0 0 24 24" fill={active ? '#F3B4E3' : 'none'} stroke={active ? '#F3B4E3' : '#6B6B70'} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
         <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78L12 21.23l8.84-8.84a5.5 5.5 0 000-7.78z" />
@@ -25,6 +27,7 @@ const tabs: { id: TabId; label: string; icon: (active: boolean) => React.ReactNo
   {
     id: 'schedule',
     label: 'SCHEDULE',
+    href: '/schedule',
     icon: (active: boolean) => (
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={active ? '#F3B4E3' : '#6B6B70'} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
         <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
@@ -40,6 +43,7 @@ const tabs: { id: TabId; label: string; icon: (active: boolean) => React.ReactNo
   {
     id: 'map',
     label: 'MAP',
+    href: '/map',
     icon: (active: boolean) => (
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={active ? '#F3B4E3' : '#6B6B70'} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
         <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z" fill={active ? 'rgba(243,180,227,0.15)' : 'none'} />
@@ -50,6 +54,7 @@ const tabs: { id: TabId; label: string; icon: (active: boolean) => React.ReactNo
   {
     id: 'goods',
     label: 'GOODS',
+    href: '/goods',
     icon: (active: boolean) => (
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={active ? '#F3B4E3' : '#6B6B70'} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
         <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z" fill={active ? 'rgba(243,180,227,0.1)' : 'none'} />
@@ -61,6 +66,7 @@ const tabs: { id: TabId; label: string; icon: (active: boolean) => React.ReactNo
   {
     id: 'profile',
     label: 'PROFILE',
+    href: '/profile',
     icon: (active: boolean) => (
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={active ? '#F3B4E3' : '#6B6B70'} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
         <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" />
@@ -71,7 +77,12 @@ const tabs: { id: TabId; label: string; icon: (active: boolean) => React.ReactNo
 ]
 
 export default function TabBar() {
-  const { activeTab, switchTab } = useTabNavigation()
+  const pathname = usePathname()
+
+  const isActive = (href: string) => {
+    if (href === '/') return pathname === '/'
+    return pathname.startsWith(href)
+  }
 
   return (
     <nav
@@ -84,13 +95,12 @@ export default function TabBar() {
       className="fixed bottom-0 left-0 right-0 z-50 flex justify-around items-center"
     >
       {tabs.map((tab) => {
-        const active = activeTab === tab.id
+        const active = isActive(tab.href)
         return (
-          <button
+          <Link
             key={tab.id}
-            type="button"
-            onClick={() => switchTab(tab.id)}
-            className="flex flex-col items-center gap-0.5 px-2 py-1 min-w-0 flex-1 bg-transparent border-none cursor-pointer"
+            href={tab.href}
+            className="flex flex-col items-center gap-0.5 px-2 py-1 min-w-0 flex-1"
           >
             {tab.icon(active)}
             <span
@@ -99,7 +109,7 @@ export default function TabBar() {
             >
               {tab.label}
             </span>
-          </button>
+          </Link>
         )
       })}
     </nav>
