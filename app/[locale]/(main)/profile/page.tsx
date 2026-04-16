@@ -392,64 +392,6 @@ export default function ProfilePage() {
         </div>
       </div>
 
-      {/* --- Concert History --- */}
-      <div className="px-4 mb-4">
-        <p className="text-xs font-semibold mb-2" style={{ color: '#8E8E93' }}>{t('ProfilePage.concertHistory')}</p>
-        {liveEntries.length === 0 ? (
-          <div className="rounded-xl py-8 flex flex-col items-center gap-2" style={{ background: '#FFFFFF' }}>
-            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#C7C7CC" strokeWidth="1.5">
-              <path d="M9 18V5l12-2v13" /><circle cx="6" cy="18" r="3" /><circle cx="18" cy="16" r="3" />
-            </svg>
-            <p className="text-xs text-center px-6" style={{ color: '#8E8E93' }}>
-              {t('ProfilePage.noConcertHistory')}
-            </p>
-          </div>
-        ) : (
-          <div className="flex flex-col gap-2">
-            {liveEntries.map((entry) => {
-              const mainImage = entry.ticketImages?.[0] ?? entry.images?.[0] ?? null
-              return (
-                <button
-                  key={entry.id}
-                  onClick={() => setEditHistoryEntry(entry)}
-                  className="flex items-center gap-3 px-3 py-3 rounded-xl text-left"
-                  style={{ background: '#FFFFFF' }}
-                >
-                  {/* Thumbnail */}
-                  <div className="flex-shrink-0 rounded-lg overflow-hidden" style={{ width: 56, height: 56 }}>
-                    {mainImage ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={mainImage} alt="" className="w-full h-full object-cover" />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center"
-                        style={{ background: 'linear-gradient(135deg, #E8D5F5 0%, #D5E5F5 50%, #F5D5E8 100%)' }}>
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#C7C7CC" strokeWidth="1.5">
-                          <path d="M9 18V5l12-2v13" /><circle cx="6" cy="18" r="3" /><circle cx="18" cy="16" r="3" />
-                        </svg>
-                      </div>
-                    )}
-                  </div>
-                  {/* Info */}
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-bold truncate" style={{ color: '#1C1C1E' }}>
-                      {entry.subTitle || entry.title}
-                    </p>
-                    <p className="text-xs" style={{ color: '#F3B4E3' }}>{md(entry.date)}</p>
-                    {entry.venue && (
-                      <p className="text-[11px] truncate" style={{ color: '#8E8E93' }}>{entry.venue}</p>
-                    )}
-                  </div>
-                  {/* Chevron */}
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#C7C7CC" strokeWidth="2">
-                    <polyline points="9 18 15 12 9 6" />
-                  </svg>
-                </button>
-              )
-            })}
-          </div>
-        )}
-      </div>
-
       {/* --- Favorite Artist --- */}
       <div className="px-4 mb-4">
         <p className="text-xs font-semibold mb-2" style={{ color: '#8E8E93' }}>{t('Common.favArtist')}</p>
@@ -548,17 +490,6 @@ export default function ProfilePage() {
         />
       )}
 
-      {/* --- Concert history photo modal --- */}
-      {editHistoryEntry && (
-        <ConcertHistoryModal
-          entry={editHistoryEntry}
-          onClose={() => setEditHistoryEntry(null)}
-          onSave={(updates) => {
-            updateEntry(editHistoryEntry.id, updates)
-            setEditHistoryEntry(null)
-          }}
-        />
-      )}
 
       {/* --- Settings modal --- */}
       {showSettings && (
