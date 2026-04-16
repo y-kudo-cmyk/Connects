@@ -458,7 +458,15 @@
     "preparing": "준비 중",
     "addFriend": "친구 추가",
     "addFriendHint": "친구 추가 후 LINE에서 등록 이메일 주소를 보내면 연동됩니다",
-    "allowNotifications": "🔔 알림 허용하기"
+    "allowNotifications": "🔔 알림 허용하기",
+    "settings": "설정",
+    "concertHistory": "참전 이력",
+    "noConcertHistory": "참전 이력이 없습니다. 과거의 LIVE를 MY에 추가하세요!",
+    "ticketPhoto": "티켓",
+    "seatViewPhoto": "좌석 전망",
+    "memoryPhoto1": "추억 사진 1",
+    "memoryPhoto2": "추억 사진 2",
+    "tapToUpload": "탭하여 사진 추가"
   },
   "NewSchedulePreview": {
     "hintText": "💡 참석 예정이면 \"+ MY\", 그 외에는 \"확인\"으로 처리하세요! 0건이 이상적입니다"

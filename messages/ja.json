@@ -458,7 +458,15 @@
     "preparing": "準備中",
     "addFriend": "友だち追加",
     "addFriendHint": "友だち追加後、LINEで登録メールアドレスを送信すると連携されます",
-    "allowNotifications": "🔔 通知を許可する"
+    "allowNotifications": "🔔 通知を許可する",
+    "settings": "設定",
+    "concertHistory": "参戦履歴",
+    "noConcertHistory": "参戦履歴がありません。過去のLIVEをMYに追加しましょう！",
+    "ticketPhoto": "チケット",
+    "seatViewPhoto": "座席からの視野",
+    "memoryPhoto1": "思い出写真 1",
+    "memoryPhoto2": "思い出写真 2",
+    "tapToUpload": "タップして写真を追加"
   },
   "NewSchedulePreview": {
     "hintText": "💡 参加予定は「+ MY」、それ以外は「確認」で消化しよう！0件が理想です"

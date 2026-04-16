@@ -458,7 +458,15 @@
     "preparing": "Coming Soon",
     "addFriend": "Add Friend",
     "addFriendHint": "After adding as friend, send your registered email on LINE to link",
-    "allowNotifications": "Enable Notifications"
+    "allowNotifications": "Enable Notifications",
+    "settings": "Settings",
+    "concertHistory": "Concert History",
+    "noConcertHistory": "No concert history yet. Add past LIVEs to MY!",
+    "ticketPhoto": "Ticket",
+    "seatViewPhoto": "Seat View",
+    "memoryPhoto1": "Memory 1",
+    "memoryPhoto2": "Memory 2",
+    "tapToUpload": "Tap to add photo"
   },
   "NewSchedulePreview": {
     "hintText": "Attending? Tap \"+ MY\". Otherwise tap \"Confirm\" to dismiss. Goal: 0 items!"

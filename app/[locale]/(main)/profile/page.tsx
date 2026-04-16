@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import { useState, useRef, useCallback, useEffect } from 'react'
 import { useRouter } from '@/i18n/navigation'
 import { useAuth } from '@/lib/supabase/useAuth'
 import { useTranslations } from 'next-intl'
@@ -10,17 +10,19 @@ import { uploadDataUrl } from '@/lib/supabase/uploadImage'
 import { useReferral } from '@/lib/useReferral'
 import { COUNTRIES, countryFlag } from '@/lib/countryUtils'
 import ImageCropModal from '@/components/ImageCropModal'
+import { useMyEntries, MyEntry } from '@/lib/useMyEntries'
+import { createClient } from '@/lib/supabase/client'
 
 const LANGUAGES = [
-  { code: 'ja' as const, flag: '🇯🇵', label: '日本語' },
-  { code: 'en' as const, flag: '🇺🇸', label: 'English' },
-  { code: 'ko' as const, flag: '🇰🇷', label: '한국어' },
+  { code: 'ja' as const, flag: '\u{1F1EF}\u{1F1F5}', label: '\u65E5\u672C\u8A9E' },
+  { code: 'en' as const, flag: '\u{1F1FA}\u{1F1F8}', label: 'English' },
+  { code: 'ko' as const, flag: '\u{1F1F0}\u{1F1F7}', label: '\uD55C\uAD6D\uC5B4' },
 ]
 
 // membership_number from profile (e.g. U000001)
 
 const RANKS = [
-  { key: 'none',     label: 'None',     color: '#8E8E93', bg: '#F0F0F5',   initial: '○', min: 0,   next: 1   },
+  { key: 'none',     label: 'None',     color: '#8E8E93', bg: '#F0F0F5',   initial: '\u25CB', min: 0,   next: 1   },
   { key: 'bronze',   label: 'Bronze',   color: '#CD7F32', bg: '#F5E6D3',   initial: 'B',  min: 1,   next: 10  },
   { key: 'silver',   label: 'Silver',   color: '#7D7D7D', bg: '#EBEBEB',   initial: 'S',  min: 10,  next: 30  },
   { key: 'gold',     label: 'Gold',     color: '#B8921A', bg: '#FBF0CC',   initial: 'G',  min: 30,  next: 75  },
@@ -48,10 +50,15 @@ async function loadImage(files: FileList | null): Promise<string | null> {
   })
 }
 
+function md(s: string) {
+  const d = new Date(s)
+  return `${String(d.getMonth() + 1).padStart(2, '0')}/${String(d.getDate()).padStart(2, '0')}`
+}
+
 export default function ProfilePage() {
   usePageView('profile')
   const { profile, update, addFanClub, updateFanClub, removeFanClub } = useProfile()
-  const { signOut } = useAuth()
+  const { signOut, user } = useAuth()
   const t = useTranslations()
 
   const bannerRef = useRef<HTMLInputElement>(null)
@@ -77,7 +84,13 @@ export default function ProfilePage() {
   const [showLangPicker, setShowLangPicker] = useState(false)
   const [showCountryPicker, setShowCountryPicker] = useState(false)
   const [notifExpanded, setNotifExpanded] = useState(false)
+  const [showSettings, setShowSettings] = useState(false)
   const router = useRouter()
+
+  // Concert history: LIVE entries from my_entries
+  const { entries, updateEntry } = useMyEntries()
+  const liveEntries = entries.filter((e) => e.tags?.includes('LIVE') || e.type === 'LIVE')
+  const [editHistoryEntry, setEditHistoryEntry] = useState<MyEntry | null>(null)
 
   const updateNotif = (patch: Partial<NotifSettings>) =>
     update({ notif: { ...profile.notif, ...patch } })
@@ -161,9 +174,9 @@ export default function ProfilePage() {
   return (
     <div className="flex flex-col" style={{ background: '#F8F9FA' }}>
 
-      {/* ─── 固定ヘッダー ─── */}
+      {/* --- Fixed header with gear button --- */}
       <div
-        className="sticky top-0 z-10 flex items-center justify-center"
+        className="sticky top-0 z-10 flex items-center justify-center relative"
         style={{
           background: '#FFFFFF',
           borderBottom: '1px solid #F0F0F5',
@@ -172,9 +185,19 @@ export default function ProfilePage() {
         }}
       >
         <span className="text-sm font-black tracking-wider" style={{ color: '#1C1C1E' }}>PROFILE</span>
+        <button
+          onClick={() => setShowSettings(true)}
+          className="absolute right-4 w-9 h-9 rounded-full flex items-center justify-center"
+          style={{ background: '#F0F0F5' }}
+        >
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#636366" strokeWidth="2">
+            <circle cx="12" cy="12" r="3" />
+            <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z" />
+          </svg>
+        </button>
       </div>
 
-      {/* ─── バナー＋アバター ─── */}
+      {/* --- Banner + Avatar --- */}
       <div className="relative">
         <div
           className="w-full h-48 relative overflow-hidden"
@@ -233,7 +256,7 @@ export default function ProfilePage() {
 
       <div style={{ height: 52 }} />
 
-      {/* ─── ユーザー情報 ─── */}
+      {/* --- User info --- */}
       <div className="px-4 pb-3">
         {editingNickname ? (
           <div className="flex items-center gap-2 mb-1">
@@ -292,7 +315,7 @@ export default function ProfilePage() {
         )}
       </div>
 
-      {/* ─── 統計（フラット） ─── */}
+      {/* --- Stats --- */}
       <div className="mx-4 mb-4">
         <div className="grid grid-cols-4 rounded-2xl overflow-hidden" style={{ background: '#EFEFEF' }}>
           {[
@@ -309,11 +332,10 @@ export default function ProfilePage() {
         </div>
       </div>
 
-      {/* ─── 会員ランク ─── */}
+      {/* --- Member rank --- */}
       <div className="px-4 mb-4">
         <p className="text-xs font-semibold mb-2" style={{ color: '#8E8E93' }}>{t('Common.memberRank')}</p>
         <div className="px-4 py-3 rounded-xl" style={{ background: '#FFFFFF' }}>
-          {/* ランク名とアイコン */}
           <div className="flex items-center gap-3 mb-3">
             <div
               className="w-10 h-10 rounded-xl flex items-center justify-center text-base font-black flex-shrink-0"
@@ -333,7 +355,6 @@ export default function ProfilePage() {
             </div>
             <span className="text-xs font-mono font-bold" style={{ color: '#C7C7CC' }}>{score} pt</span>
           </div>
-          {/* プログレスバー */}
           {nextRank && (
             <div className="h-1.5 rounded-full overflow-hidden" style={{ background: '#F0F0F5' }}>
               <div
@@ -346,7 +367,6 @@ export default function ProfilePage() {
               />
             </div>
           )}
-          {/* 全ランク一覧 */}
           <div className="flex justify-between mt-3">
             {RANKS.map((r) => (
               <div key={r.key} className="flex flex-col items-center gap-1">
@@ -372,7 +392,65 @@ export default function ProfilePage() {
         </div>
       </div>
 
-      {/* ─── 推しアーティスト ─── */}
+      {/* --- Concert History --- */}
+      <div className="px-4 mb-4">
+        <p className="text-xs font-semibold mb-2" style={{ color: '#8E8E93' }}>{t('ProfilePage.concertHistory')}</p>
+        {liveEntries.length === 0 ? (
+          <div className="rounded-xl py-8 flex flex-col items-center gap-2" style={{ background: '#FFFFFF' }}>
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#C7C7CC" strokeWidth="1.5">
+              <path d="M9 18V5l12-2v13" /><circle cx="6" cy="18" r="3" /><circle cx="18" cy="16" r="3" />
+            </svg>
+            <p className="text-xs text-center px-6" style={{ color: '#8E8E93' }}>
+              {t('ProfilePage.noConcertHistory')}
+            </p>
+          </div>
+        ) : (
+          <div className="flex flex-col gap-2">
+            {liveEntries.map((entry) => {
+              const mainImage = entry.ticketImages?.[0] ?? entry.images?.[0] ?? null
+              return (
+                <button
+                  key={entry.id}
+                  onClick={() => setEditHistoryEntry(entry)}
+                  className="flex items-center gap-3 px-3 py-3 rounded-xl text-left"
+                  style={{ background: '#FFFFFF' }}
+                >
+                  {/* Thumbnail */}
+                  <div className="flex-shrink-0 rounded-lg overflow-hidden" style={{ width: 56, height: 56 }}>
+                    {mainImage ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={mainImage} alt="" className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center"
+                        style={{ background: 'linear-gradient(135deg, #E8D5F5 0%, #D5E5F5 50%, #F5D5E8 100%)' }}>
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#C7C7CC" strokeWidth="1.5">
+                          <path d="M9 18V5l12-2v13" /><circle cx="6" cy="18" r="3" /><circle cx="18" cy="16" r="3" />
+                        </svg>
+                      </div>
+                    )}
+                  </div>
+                  {/* Info */}
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-bold truncate" style={{ color: '#1C1C1E' }}>
+                      {entry.subTitle || entry.title}
+                    </p>
+                    <p className="text-xs" style={{ color: '#F3B4E3' }}>{md(entry.date)}</p>
+                    {entry.venue && (
+                      <p className="text-[11px] truncate" style={{ color: '#8E8E93' }}>{entry.venue}</p>
+                    )}
+                  </div>
+                  {/* Chevron */}
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#C7C7CC" strokeWidth="2">
+                    <polyline points="9 18 15 12 9 6" />
+                  </svg>
+                </button>
+              )
+            })}
+          </div>
+        )}
+      </div>
+
+      {/* --- Favorite Artist --- */}
       <div className="px-4 mb-4">
         <p className="text-xs font-semibold mb-2" style={{ color: '#8E8E93' }}>{t('Common.favArtist')}</p>
         <div className="flex items-center gap-3 px-4 py-3 rounded-xl" style={{ background: '#FFFFFF' }}>
@@ -388,7 +466,7 @@ export default function ProfilePage() {
         </div>
       </div>
 
-      {/* ─── 紹介コード ─── */}
+      {/* --- Referral code --- */}
       <div className="px-4 mb-4">
         <p className="text-xs font-semibold mb-2" style={{ color: '#8E8E93' }}>{t('Common.yourRefCode')}</p>
         <div className="rounded-2xl p-4" style={{ background: '#FFFFFF', opacity: 0.5 }}>
@@ -403,7 +481,7 @@ export default function ProfilePage() {
         </div>
       </div>
 
-      {/* ─── ファンクラブ会員番号 ─── */}
+      {/* --- Fan club membership --- */}
       <div className="px-4 mb-4">
         <div className="flex items-center justify-between mb-2">
           <p className="text-xs font-semibold" style={{ color: '#8E8E93' }}>{t('Common.fanClub')}</p>
@@ -445,7 +523,7 @@ export default function ProfilePage() {
                   <p className="text-sm font-bold" style={{ color: '#1C1C1E' }}>{fc.clubName}</p>
                   <div className="flex items-center gap-2 mt-0.5 flex-wrap">
                     <span className="text-xs font-mono" style={{ color: '#F3B4E3' }}>{fc.memberNumber}</span>
-                    {fc.validUntil && <span className="text-[10px]" style={{ color: '#8E8E93' }}>〜{fc.validUntil}</span>}
+                    {fc.validUntil && <span className="text-[10px]" style={{ color: '#8E8E93' }}>{'\u301C'}{fc.validUntil}</span>}
                   </div>
                 </div>
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#636366" strokeWidth="2">
@@ -457,186 +535,9 @@ export default function ProfilePage() {
         )}
       </div>
 
-      {/* ─── アプリ設定 ─── */}
-      <div className="px-4 mb-4">
-        <p className="text-xs font-semibold mb-2" style={{ color: '#8E8E93' }}>{t('Common.appSettings')}</p>
-        <div className="rounded-xl overflow-hidden" style={{ background: '#FFFFFF' }}>
+      <div style={{ height: 'calc(80px + env(safe-area-inset-bottom, 0px))' }} />
 
-          {/* 通知 */}
-          <button
-            onClick={() => setNotifExpanded((v) => !v)}
-            className="w-full flex items-center gap-3 px-4 py-3.5"
-          >
-            <span className="text-base w-6 text-center">🔔</span>
-            <span className="flex-1 text-sm font-medium text-left" style={{ color: '#1C1C1E' }}>{t('Profile.notifSettings')}</span>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#636366" strokeWidth="2"
-              style={{ transform: notifExpanded ? 'rotate(90deg)' : 'none', transition: 'transform 0.2s' }}>
-              <polyline points="9 18 15 12 9 6" />
-            </svg>
-          </button>
-
-          {notifExpanded && (
-            <div style={{ borderTop: '1px solid #F0F0F5', background: '#FAFAFA' }}>
-              {/* 通知許可ボタン */}
-              <div className="px-5 py-3">
-                <button
-                  onClick={async () => {
-                    try {
-                      let result: string
-                      try {
-                        result = await new Promise<string>((resolve) => {
-                          const p = Notification.requestPermission((r: string) => resolve(r))
-                          if (p && typeof p.then === 'function') p.then(resolve)
-                        })
-                      } catch {
-                        result = Notification.permission
-                      }
-                      if (result === 'granted') {
-                        const { initOneSignal, loginOneSignal } = await import('@/lib/onesignal/client')
-                        await initOneSignal()
-                        const { createClient } = await import('@/lib/supabase/client')
-                        const sb = createClient()
-                        const { data: { user: u } } = await sb.auth.getUser()
-                        if (u) await loginOneSignal(u.id)
-                      }
-                    } catch { /* ignore */ }
-                  }}
-                  className="w-full py-2.5 rounded-xl text-sm font-bold"
-                  style={{ background: 'linear-gradient(135deg, #F3B4E3, #C97AB8)', color: '#FFFFFF' }}>
-                  {t('ProfilePage.allowNotifications')}
-                </button>
-              </div>
-              {/* 朝の通知 */}
-              <div className="px-5 py-3 flex items-center gap-3">
-                <span className="text-sm flex-1" style={{ color: '#1C1C1E' }}>{t('Profile.notifMorning')}</span>
-                <Toggle
-                  on={profile.notif.morningOn}
-                  onChange={(v) => updateNotif({ morningOn: v })}
-                />
-              </div>
-              {profile.notif.morningOn && (
-                <div className="px-5 pb-3 flex items-center gap-2">
-                  <span className="text-xs" style={{ color: '#8E8E93' }}>{t('Profile.notifTime')}</span>
-                  <input
-                    type="time"
-                    value={profile.notif.morningTime}
-                    onChange={(e) => updateNotif({ morningTime: e.target.value })}
-                    className="px-3 py-1.5 rounded-lg text-sm outline-none"
-                    style={{ background: '#F0F0F5', border: '1px solid #E5E5EA', color: '#1C1C1E' }}
-                  />
-                </div>
-              )}
-
-              {/* 夜の通知 */}
-              <div className="px-5 py-3 flex items-center gap-3" style={{ borderTop: '1px solid #F0F0F5' }}>
-                <span className="text-sm flex-1" style={{ color: '#1C1C1E' }}>{t('Profile.notifEvening')}</span>
-                <Toggle
-                  on={profile.notif.eveningOn}
-                  onChange={(v) => updateNotif({ eveningOn: v })}
-                />
-              </div>
-              {profile.notif.eveningOn && (
-                <div className="px-5 pb-3 flex items-center gap-2">
-                  <span className="text-xs" style={{ color: '#8E8E93' }}>{t('Profile.notifTime')}</span>
-                  <input
-                    type="time"
-                    value={profile.notif.eveningTime}
-                    onChange={(e) => updateNotif({ eveningTime: e.target.value })}
-                    className="px-3 py-1.5 rounded-lg text-sm outline-none"
-                    style={{ background: '#F0F0F5', border: '1px solid #E5E5EA', color: '#1C1C1E' }}
-                  />
-                </div>
-              )}
-
-              {/* MYイベント前 */}
-              <div className="px-5 py-3 flex items-center gap-3" style={{ borderTop: '1px solid #F0F0F5' }}>
-                <span className="text-sm flex-1" style={{ color: '#1C1C1E' }}>{t('Profile.notifReminder')}</span>
-                <Toggle
-                  on={profile.notif.myEventReminder}
-                  onChange={(v) => updateNotif({ myEventReminder: v })}
-                />
-              </div>
-            </div>
-          )}
-
-          {/* LINE連携 */}
-          <div className="flex items-center gap-3 px-4 py-3.5" style={{ borderTop: '1px solid #F0F0F5' }}>
-            <div className="w-6 h-6 rounded flex items-center justify-center text-[10px] font-black flex-shrink-0"
-              style={{ background: '#06C755', color: '#FFFFFF' }}>L</div>
-            <span className="flex-1 text-sm font-medium" style={{ color: '#1C1C1E' }}>{t('Profile.linkLine')}</span>
-            {profile.lineLinked ? (
-              <span className="px-3 py-1.5 rounded-full text-xs font-bold"
-                style={{ background: '#06C75520', color: '#06C755' }}>
-                {t('Profile.linked')}
-              </span>
-            ) : (
-              <a href="https://line.me/R/ti/p/@529grkxp" target="_blank" rel="noopener noreferrer"
-                className="px-3 py-1.5 rounded-full text-xs font-bold"
-                style={{ background: '#06C755', color: '#FFFFFF' }}>
-                {t('ProfilePage.addFriend')}
-              </a>
-            )}
-          </div>
-          {!profile.lineLinked && (
-            <p className="px-5 pb-2 text-[10px]" style={{ color: '#8E8E93' }}>
-              {t('ProfilePage.addFriendHint')}
-            </p>
-          )}
-
-          {/* X連携 */}
-          <div className="flex items-center gap-3 px-4 py-3.5" style={{ borderTop: '1px solid #F0F0F5' }}>
-            <div className="w-6 h-6 rounded flex items-center justify-center flex-shrink-0"
-              style={{ background: '#000000' }}>
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="#FFFFFF">
-                <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.744l7.73-8.835L1.254 2.25H8.08l4.253 5.622 5.912-5.622zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
-              </svg>
-            </div>
-            <span className="flex-1 text-sm font-medium" style={{ color: '#1C1C1E' }}>{t('Profile.linkX')}</span>
-            <span className="px-3 py-1.5 rounded-full text-xs font-bold"
-              style={{ background: '#F0F0F5', color: '#8E8E93' }}>
-              {t('ProfilePage.preparing')}
-            </span>
-          </div>
-
-          {/* 言語 */}
-          <button
-            onClick={() => setShowLangPicker(true)}
-            className="w-full flex items-center gap-3 px-4 py-3.5"
-            style={{ borderTop: '1px solid #F0F0F5' }}
-          >
-            <span className="text-base w-6 text-center">🌐</span>
-            <span className="flex-1 text-sm font-medium text-left" style={{ color: '#1C1C1E' }}>{t('Common.language')}</span>
-            <span className="text-xs mr-1" style={{ color: '#8E8E93' }}>
-              {LANGUAGES.find((l) => l.code === profile.language)?.flag}{' '}
-              {LANGUAGES.find((l) => l.code === profile.language)?.label}
-            </span>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#C7C7CC" strokeWidth="2">
-              <polyline points="9 18 15 12 9 6" />
-            </svg>
-          </button>
-
-          {/* 居住国 */}
-          <button
-            onClick={() => setShowCountryPicker(true)}
-            className="w-full flex items-center gap-3 px-4 py-3.5"
-            style={{ borderTop: '1px solid #F0F0F5' }}
-          >
-            <span className="text-base w-6 text-center">
-              {countryFlag(profile.country)}
-            </span>
-            <span className="flex-1 text-sm font-medium text-left" style={{ color: '#1C1C1E' }}>{t('Common.country')}</span>
-            <span className="text-xs mr-1" style={{ color: '#8E8E93' }}>
-              {COUNTRIES.find((c) => c.code === profile.country)?.nameJa ?? profile.country}
-            </span>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#C7C7CC" strokeWidth="2">
-              <polyline points="9 18 15 12 9 6" />
-            </svg>
-          </button>
-
-        </div>
-      </div>
-
-      {/* 画像クロップモーダル */}
+      {/* --- Image crop modal --- */}
       {cropSrc && (
         <ImageCropModal
           src={cropSrc}
@@ -647,7 +548,246 @@ export default function ProfilePage() {
         />
       )}
 
-      {/* 言語ピッカー */}
+      {/* --- Concert history photo modal --- */}
+      {editHistoryEntry && (
+        <ConcertHistoryModal
+          entry={editHistoryEntry}
+          onClose={() => setEditHistoryEntry(null)}
+          onSave={(updates) => {
+            updateEntry(editHistoryEntry.id, updates)
+            setEditHistoryEntry(null)
+          }}
+        />
+      )}
+
+      {/* --- Settings modal --- */}
+      {showSettings && (
+        <div className="fixed inset-0 flex items-end justify-center"
+          style={{ background: 'rgba(0,0,0,0.5)', zIndex: 60 }}
+          onClick={() => setShowSettings(false)}>
+          <div className="w-full max-w-lg rounded-t-2xl flex flex-col"
+            style={{ background: '#FFFFFF', maxHeight: '85vh' }}
+            onClick={(e) => e.stopPropagation()}>
+            <div className="flex-shrink-0 px-5 pt-4 pb-3">
+              <div className="flex justify-center mb-3">
+                <div className="w-10 h-1 rounded-full" style={{ background: '#C7C7CC' }} />
+              </div>
+              <div className="flex items-center justify-between">
+                <p className="text-base font-bold" style={{ color: '#1C1C1E' }}>{t('ProfilePage.settings')}</p>
+                <button onClick={() => setShowSettings(false)} className="w-10 h-10 flex items-center justify-center -mr-2">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#636366" strokeWidth="2">
+                    <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+
+            <div className="flex-1 overflow-y-auto" style={{ paddingBottom: 'calc(80px + env(safe-area-inset-bottom, 0px))' }}>
+              <div className="rounded-xl overflow-hidden mx-4" style={{ background: '#F8F9FA' }}>
+
+                {/* Notifications */}
+                <button
+                  onClick={() => setNotifExpanded((v) => !v)}
+                  className="w-full flex items-center gap-3 px-4 py-3.5"
+                >
+                  <span className="text-base w-6 text-center">{'\uD83D\uDD14'}</span>
+                  <span className="flex-1 text-sm font-medium text-left" style={{ color: '#1C1C1E' }}>{t('Profile.notifSettings')}</span>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#636366" strokeWidth="2"
+                    style={{ transform: notifExpanded ? 'rotate(90deg)' : 'none', transition: 'transform 0.2s' }}>
+                    <polyline points="9 18 15 12 9 6" />
+                  </svg>
+                </button>
+
+                {notifExpanded && (
+                  <div style={{ borderTop: '1px solid #F0F0F5', background: '#FAFAFA' }}>
+                    <div className="px-5 py-3">
+                      <button
+                        onClick={async () => {
+                          try {
+                            let result: string
+                            try {
+                              result = await new Promise<string>((resolve) => {
+                                const p = Notification.requestPermission((r: string) => resolve(r))
+                                if (p && typeof p.then === 'function') p.then(resolve)
+                              })
+                            } catch {
+                              result = Notification.permission
+                            }
+                            if (result === 'granted') {
+                              const { initOneSignal, loginOneSignal } = await import('@/lib/onesignal/client')
+                              await initOneSignal()
+                              const { createClient } = await import('@/lib/supabase/client')
+                              const sb = createClient()
+                              const { data: { user: u } } = await sb.auth.getUser()
+                              if (u) await loginOneSignal(u.id)
+                            }
+                          } catch { /* ignore */ }
+                        }}
+                        className="w-full py-2.5 rounded-xl text-sm font-bold"
+                        style={{ background: 'linear-gradient(135deg, #F3B4E3, #C97AB8)', color: '#FFFFFF' }}>
+                        {t('ProfilePage.allowNotifications')}
+                      </button>
+                    </div>
+                    <div className="px-5 py-3 flex items-center gap-3">
+                      <span className="text-sm flex-1" style={{ color: '#1C1C1E' }}>{t('Profile.notifMorning')}</span>
+                      <Toggle on={profile.notif.morningOn} onChange={(v) => updateNotif({ morningOn: v })} />
+                    </div>
+                    {profile.notif.morningOn && (
+                      <div className="px-5 pb-3 flex items-center gap-2">
+                        <span className="text-xs" style={{ color: '#8E8E93' }}>{t('Profile.notifTime')}</span>
+                        <input type="time" value={profile.notif.morningTime}
+                          onChange={(e) => updateNotif({ morningTime: e.target.value })}
+                          className="px-3 py-1.5 rounded-lg text-sm outline-none"
+                          style={{ background: '#F0F0F5', border: '1px solid #E5E5EA', color: '#1C1C1E' }} />
+                      </div>
+                    )}
+                    <div className="px-5 py-3 flex items-center gap-3" style={{ borderTop: '1px solid #F0F0F5' }}>
+                      <span className="text-sm flex-1" style={{ color: '#1C1C1E' }}>{t('Profile.notifEvening')}</span>
+                      <Toggle on={profile.notif.eveningOn} onChange={(v) => updateNotif({ eveningOn: v })} />
+                    </div>
+                    {profile.notif.eveningOn && (
+                      <div className="px-5 pb-3 flex items-center gap-2">
+                        <span className="text-xs" style={{ color: '#8E8E93' }}>{t('Profile.notifTime')}</span>
+                        <input type="time" value={profile.notif.eveningTime}
+                          onChange={(e) => updateNotif({ eveningTime: e.target.value })}
+                          className="px-3 py-1.5 rounded-lg text-sm outline-none"
+                          style={{ background: '#F0F0F5', border: '1px solid #E5E5EA', color: '#1C1C1E' }} />
+                      </div>
+                    )}
+                    <div className="px-5 py-3 flex items-center gap-3" style={{ borderTop: '1px solid #F0F0F5' }}>
+                      <span className="text-sm flex-1" style={{ color: '#1C1C1E' }}>{t('Profile.notifReminder')}</span>
+                      <Toggle on={profile.notif.myEventReminder} onChange={(v) => updateNotif({ myEventReminder: v })} />
+                    </div>
+                  </div>
+                )}
+
+                {/* LINE */}
+                <div className="flex items-center gap-3 px-4 py-3.5" style={{ borderTop: '1px solid #F0F0F5' }}>
+                  <div className="w-6 h-6 rounded flex items-center justify-center text-[10px] font-black flex-shrink-0"
+                    style={{ background: '#06C755', color: '#FFFFFF' }}>L</div>
+                  <span className="flex-1 text-sm font-medium" style={{ color: '#1C1C1E' }}>{t('Profile.linkLine')}</span>
+                  {profile.lineLinked ? (
+                    <span className="px-3 py-1.5 rounded-full text-xs font-bold"
+                      style={{ background: '#06C75520', color: '#06C755' }}>
+                      {t('Profile.linked')}
+                    </span>
+                  ) : (
+                    <a href="https://line.me/R/ti/p/@529grkxp" target="_blank" rel="noopener noreferrer"
+                      className="px-3 py-1.5 rounded-full text-xs font-bold"
+                      style={{ background: '#06C755', color: '#FFFFFF' }}>
+                      {t('ProfilePage.addFriend')}
+                    </a>
+                  )}
+                </div>
+                {!profile.lineLinked && (
+                  <p className="px-5 pb-2 text-[10px]" style={{ color: '#8E8E93' }}>
+                    {t('ProfilePage.addFriendHint')}
+                  </p>
+                )}
+
+                {/* X */}
+                <div className="flex items-center gap-3 px-4 py-3.5" style={{ borderTop: '1px solid #F0F0F5' }}>
+                  <div className="w-6 h-6 rounded flex items-center justify-center flex-shrink-0"
+                    style={{ background: '#000000' }}>
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="#FFFFFF">
+                      <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.744l7.73-8.835L1.254 2.25H8.08l4.253 5.622 5.912-5.622zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+                    </svg>
+                  </div>
+                  <span className="flex-1 text-sm font-medium" style={{ color: '#1C1C1E' }}>{t('Profile.linkX')}</span>
+                  <span className="px-3 py-1.5 rounded-full text-xs font-bold"
+                    style={{ background: '#F0F0F5', color: '#8E8E93' }}>
+                    {t('ProfilePage.preparing')}
+                  </span>
+                </div>
+
+                {/* Language */}
+                <button
+                  onClick={() => { setShowSettings(false); setTimeout(() => setShowLangPicker(true), 200) }}
+                  className="w-full flex items-center gap-3 px-4 py-3.5"
+                  style={{ borderTop: '1px solid #F0F0F5' }}
+                >
+                  <span className="text-base w-6 text-center">{'\uD83C\uDF10'}</span>
+                  <span className="flex-1 text-sm font-medium text-left" style={{ color: '#1C1C1E' }}>{t('Common.language')}</span>
+                  <span className="text-xs mr-1" style={{ color: '#8E8E93' }}>
+                    {LANGUAGES.find((l) => l.code === profile.language)?.flag}{' '}
+                    {LANGUAGES.find((l) => l.code === profile.language)?.label}
+                  </span>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#C7C7CC" strokeWidth="2">
+                    <polyline points="9 18 15 12 9 6" />
+                  </svg>
+                </button>
+
+                {/* Country */}
+                <button
+                  onClick={() => { setShowSettings(false); setTimeout(() => setShowCountryPicker(true), 200) }}
+                  className="w-full flex items-center gap-3 px-4 py-3.5"
+                  style={{ borderTop: '1px solid #F0F0F5' }}
+                >
+                  <span className="text-base w-6 text-center">
+                    {countryFlag(profile.country)}
+                  </span>
+                  <span className="flex-1 text-sm font-medium text-left" style={{ color: '#1C1C1E' }}>{t('Common.country')}</span>
+                  <span className="text-xs mr-1" style={{ color: '#8E8E93' }}>
+                    {COUNTRIES.find((c) => c.code === profile.country)?.nameJa ?? profile.country}
+                  </span>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#C7C7CC" strokeWidth="2">
+                    <polyline points="9 18 15 12 9 6" />
+                  </svg>
+                </button>
+              </div>
+
+              <div className="mx-4 my-4" style={{ height: 1, background: '#E5E5EA' }} />
+
+              {/* Feedback, sign out, delete */}
+              <div className="px-4 flex flex-col gap-3">
+                <button
+                  onClick={() => { setShowSettings(false); setFeedbackMsg(''); setFeedbackState('idle'); setShowFeedback(true) }}
+                  className="w-full py-3.5 rounded-xl text-sm font-semibold flex items-center justify-center gap-2"
+                  style={{ background: '#F8F9FA', color: '#636366' }}
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" />
+                  </svg>
+                  {t('Profile.feedbackHere')}
+                </button>
+
+                {showSignOutConfirm ? (
+                  <div className="flex gap-3">
+                    <button onClick={() => setShowSignOutConfirm(false)}
+                      className="flex-1 py-3.5 rounded-xl text-sm font-semibold"
+                      style={{ background: '#F8F9FA', color: '#636366' }}>
+                      {t('Common.cancel')}
+                    </button>
+                    <button onClick={handleSignOut}
+                      className="flex-1 py-3.5 rounded-xl text-sm font-semibold"
+                      style={{ background: 'rgba(239,68,68,0.1)', color: '#EF4444' }}>
+                      {t('Profile.signOutConfirm')}
+                    </button>
+                  </div>
+                ) : (
+                  <button onClick={() => setShowSignOutConfirm(true)}
+                    className="w-full py-3.5 rounded-xl text-sm font-semibold"
+                    style={{ background: '#F8F9FA', color: '#EF4444' }}>
+                    {t('Profile.signOut')}
+                  </button>
+                )}
+
+                <button
+                  onClick={() => { setDeleteAgreed(false); setShowDeleteConfirm(true) }}
+                  className="w-full py-3 rounded-xl text-sm font-medium"
+                  style={{ background: 'transparent', color: '#C7C7CC' }}
+                >
+                  {t('Profile.deleteAccount')}
+                </button>
+
+                <p className="text-center text-xs" style={{ color: '#C7C7CC' }}>Connects+ v1.0.0</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* --- Language picker --- */}
       {showLangPicker && (
         <div className="fixed inset-0 flex items-end justify-center"
           style={{ background: 'rgba(0,0,0,0.5)', zIndex: 60 }}
@@ -688,7 +828,7 @@ export default function ProfilePage() {
         </div>
       )}
 
-      {/* 居住国ピッカー */}
+      {/* --- Country picker --- */}
       {showCountryPicker && (
         <div className="fixed inset-0 flex items-end justify-center"
           style={{ background: 'rgba(0,0,0,0.5)', zIndex: 60 }}
@@ -727,57 +867,7 @@ export default function ProfilePage() {
         </div>
       )}
 
-      <div className="mx-4 mb-4" style={{ height: 1, background: '#E5E5EA' }} />
-
-      {/* ─── サインアウト＋退会 ─── */}
-      <div className="px-4 flex flex-col gap-3" style={{ paddingBottom: 'calc(100px + env(safe-area-inset-bottom, 0px))' }}>
-        {/* ご意見フォーム */}
-        <button
-          onClick={() => { setFeedbackMsg(''); setFeedbackState('idle'); setShowFeedback(true) }}
-          className="w-full py-3.5 rounded-xl text-sm font-semibold flex items-center justify-center gap-2"
-          style={{ background: '#FFFFFF', color: '#636366' }}
-        >
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" />
-          </svg>
-          {t('Profile.feedbackHere')}
-        </button>
-
-        {/* サインアウト */}
-        {showSignOutConfirm ? (
-          <div className="flex gap-3">
-            <button onClick={() => setShowSignOutConfirm(false)}
-              className="flex-1 py-3.5 rounded-xl text-sm font-semibold"
-              style={{ background: '#FFFFFF', color: '#636366' }}>
-              {t('Common.cancel')}
-            </button>
-            <button onClick={handleSignOut}
-              className="flex-1 py-3.5 rounded-xl text-sm font-semibold"
-              style={{ background: 'rgba(239,68,68,0.1)', color: '#EF4444' }}>
-              {t('Profile.signOutConfirm')}
-            </button>
-          </div>
-        ) : (
-          <button onClick={() => setShowSignOutConfirm(true)}
-            className="w-full py-3.5 rounded-xl text-sm font-semibold"
-            style={{ background: '#FFFFFF', color: '#EF4444' }}>
-            {t('Profile.signOut')}
-          </button>
-        )}
-
-        {/* 退会 */}
-        <button
-          onClick={() => { setDeleteAgreed(false); setShowDeleteConfirm(true) }}
-          className="w-full py-3 rounded-xl text-sm font-medium"
-          style={{ background: 'transparent', color: '#C7C7CC' }}
-        >
-          {t('Profile.deleteAccount')}
-        </button>
-
-        <p className="text-center text-xs" style={{ color: '#C7C7CC' }}>Connects+ v1.0.0</p>
-      </div>
-
-      {/* ─── 退会確認モーダル ─── */}
+      {/* --- Delete account confirm modal --- */}
       {showDeleteConfirm && (
         <div
           className="fixed inset-0 flex items-center justify-center px-6"
@@ -832,7 +922,7 @@ export default function ProfilePage() {
         </div>
       )}
 
-      {/* ─── ご意見フォームモーダル ─── */}
+      {/* --- Feedback modal --- */}
       {showFeedback && (
         <div
           className="fixed inset-0 flex items-center justify-center px-4"
@@ -903,7 +993,7 @@ export default function ProfilePage() {
         </div>
       )}
 
-      {/* ─── FC モーダル ─── */}
+      {/* --- FC modal --- */}
       {fcModal !== null && (
         <div
           className="fixed inset-0 flex items-end justify-center"
@@ -915,7 +1005,6 @@ export default function ProfilePage() {
             style={{ background: '#FFFFFF' }}
             onClick={(e) => e.stopPropagation()}
           >
-            {/* ハンドル＋タイトル */}
             <div className="px-5 pt-4 pb-3">
               <div className="flex justify-center mb-3">
                 <div className="w-10 h-1 rounded-full" style={{ background: '#C7C7CC' }} />
@@ -932,7 +1021,6 @@ export default function ProfilePage() {
               </div>
             </div>
 
-            {/* スクロールエリア — 明示的高さで確実にスクロール */}
             <div
               className="px-5"
               style={{
@@ -963,7 +1051,6 @@ export default function ProfilePage() {
               </div>
             </div>
 
-            {/* ボタン */}
             <div className="px-5 pt-4 flex-shrink-0" style={{ borderTop: '1px solid #F0F0F5', paddingBottom: 'calc(80px + env(safe-area-inset-bottom, 0px))' }}>
               <div className="flex gap-2">
                 {fcModal !== 'new' && (
@@ -987,6 +1074,196 @@ export default function ProfilePage() {
           </div>
         </div>
       )}
+    </div>
+  )
+}
+
+// --- Concert History Photo Modal ---
+function ConcertHistoryModal({ entry, onClose, onSave }: {
+  entry: MyEntry
+  onClose: () => void
+  onSave: (updates: Partial<MyEntry>) => void
+}) {
+  const t = useTranslations()
+  const ticketRef = useRef<HTMLInputElement>(null)
+  const viewRef = useRef<HTMLInputElement>(null)
+  const memory1Ref = useRef<HTMLInputElement>(null)
+  const memory2Ref = useRef<HTMLInputElement>(null)
+
+  const [ticketImages, setTicketImages] = useState<string[]>(entry.ticketImages ?? [])
+  const [viewImages, setViewImages] = useState<string[]>(entry.viewImages ?? [])
+  const [images, setImages] = useState<string[]>(entry.images ?? [])
+  const [uploading, setUploading] = useState(false)
+
+  const handleUpload = async (
+    files: FileList | null,
+    setter: (fn: (prev: string[]) => string[]) => void,
+    bucket: string,
+  ) => {
+    if (!files) return
+    setUploading(true)
+    const { uploadImage } = await import('@/lib/supabase/uploadImage')
+    for (const f of Array.from(files)) {
+      const url = await uploadImage(bucket, f, 1200, 0.8)
+      if (url) setter((prev) => [...prev, url])
+    }
+    setUploading(false)
+  }
+
+  const handleSave = () => {
+    onSave({ ticketImages, viewImages, images })
+  }
+
+  const slots: {
+    label: string
+    image: string | undefined
+    onUpload: () => void
+    onRemove: () => void
+  }[] = [
+    {
+      label: t('ProfilePage.ticketPhoto'),
+      image: ticketImages[0],
+      onUpload: () => ticketRef.current?.click(),
+      onRemove: () => setTicketImages([]),
+    },
+    {
+      label: t('ProfilePage.seatViewPhoto'),
+      image: viewImages[0],
+      onUpload: () => viewRef.current?.click(),
+      onRemove: () => setViewImages([]),
+    },
+    {
+      label: t('ProfilePage.memoryPhoto1'),
+      image: images[0],
+      onUpload: () => memory1Ref.current?.click(),
+      onRemove: () => setImages((prev) => prev.filter((_, i) => i !== 0)),
+    },
+    {
+      label: t('ProfilePage.memoryPhoto2'),
+      image: images[1],
+      onUpload: () => memory2Ref.current?.click(),
+      onRemove: () => setImages((prev) => prev.filter((_, i) => i !== 1)),
+    },
+  ]
+
+  return (
+    <div className="fixed inset-0 z-[60] flex flex-col justify-end">
+      <div className="absolute inset-0" style={{ background: 'rgba(0,0,0,0.55)' }} onClick={onClose} />
+      <div className="relative flex flex-col rounded-t-2xl overflow-hidden"
+        style={{ background: '#F8F9FA', maxHeight: '85vh' }}>
+        <div className="flex justify-center pt-3 pb-1 flex-shrink-0">
+          <div className="w-10 h-1 rounded-full" style={{ background: '#C7C7CC' }} />
+        </div>
+
+        {/* Header */}
+        <div className="flex items-center gap-3 px-4 py-2 flex-shrink-0"
+          style={{ borderBottom: '1px solid #E5E5EA' }}>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-1.5 mb-0.5">
+              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full"
+                style={{ background: '#EF4444', color: '#F8F9FA' }}>
+                {'\uD83C\uDFB5'} LIVE
+              </span>
+            </div>
+            <p className="text-sm font-bold truncate" style={{ color: '#1C1C1E' }}>
+              {entry.subTitle || entry.title}
+            </p>
+            <div className="flex items-center gap-2">
+              <p className="text-xs" style={{ color: '#F3B4E3' }}>{md(entry.date)}</p>
+              {entry.venue && (
+                <p className="text-xs truncate" style={{ color: '#8E8E93' }}>{entry.venue}</p>
+              )}
+            </div>
+          </div>
+          <div className="flex items-center gap-2 flex-shrink-0">
+            <button onClick={handleSave}
+              className="px-4 py-2 rounded-xl text-sm font-bold"
+              style={{ background: '#F3B4E3', color: '#FFFFFF' }}>
+              {t('Common.save')}
+            </button>
+            <button onClick={onClose} className="w-11 h-11 flex items-center justify-center">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#636366" strokeWidth="2">
+                <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        {/* Photo slots */}
+        <div className="flex-1 overflow-y-auto px-4 py-4">
+          {uploading && (
+            <div className="flex items-center justify-center gap-2 mb-3 py-2 rounded-xl"
+              style={{ background: 'rgba(243,180,227,0.1)' }}>
+              <div className="w-4 h-4 border-2 border-t-transparent rounded-full animate-spin" style={{ borderColor: '#F3B4E3', borderTopColor: 'transparent' }} />
+              <span className="text-xs font-bold" style={{ color: '#F3B4E3' }}>{t('Schedule.imageUploading')}</span>
+            </div>
+          )}
+
+          <div className="grid grid-cols-2 gap-3">
+            {slots.map((slot, idx) => (
+              <div key={idx}>
+                <p className="text-[11px] font-bold mb-1.5" style={{ color: '#636366' }}>{slot.label}</p>
+                {slot.image ? (
+                  <div className="relative rounded-xl overflow-hidden" style={{ aspectRatio: '3/4' }}>
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={slot.image} alt="" className="w-full h-full object-cover" />
+                    <button onClick={slot.onRemove}
+                      className="absolute top-2 right-2 w-7 h-7 rounded-full flex items-center justify-center"
+                      style={{ background: 'rgba(0,0,0,0.6)' }}>
+                      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" strokeWidth="3">
+                        <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+                      </svg>
+                    </button>
+                  </div>
+                ) : (
+                  <button onClick={slot.onUpload}
+                    className="w-full rounded-xl flex flex-col items-center justify-center gap-2"
+                    style={{ aspectRatio: '3/4', border: '2px dashed #E5E5EA', background: '#FFFFFF', color: '#8E8E93' }}>
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                      <rect x="3" y="3" width="18" height="18" rx="2" />
+                      <circle cx="8.5" cy="8.5" r="1.5" />
+                      <polyline points="21 15 16 10 5 21" />
+                    </svg>
+                    <span className="text-[10px]">{t('ProfilePage.tapToUpload')}</span>
+                  </button>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div style={{ height: 'calc(80px + env(safe-area-inset-bottom, 0px))' }} />
+
+        {/* Hidden file inputs */}
+        <input ref={ticketRef} type="file" accept="image/*" className="hidden"
+          onChange={(e) => { handleUpload(e.target.files, setTicketImages, 'tickets'); e.target.value = '' }} />
+        <input ref={viewRef} type="file" accept="image/*" className="hidden"
+          onChange={(e) => { handleUpload(e.target.files, setViewImages, 'memories'); e.target.value = '' }} />
+        <input ref={memory1Ref} type="file" accept="image/*" className="hidden"
+          onChange={(e) => {
+            if (!e.target.files?.[0]) return
+            setUploading(true)
+            import('@/lib/supabase/uploadImage').then(({ uploadImage }) => {
+              uploadImage('memories', e.target.files![0], 1200, 0.8).then((url) => {
+                if (url) setImages((prev) => { const next = [...prev]; next[0] = url; return next })
+                setUploading(false)
+              })
+            })
+            e.target.value = ''
+          }} />
+        <input ref={memory2Ref} type="file" accept="image/*" className="hidden"
+          onChange={(e) => {
+            if (!e.target.files?.[0]) return
+            setUploading(true)
+            import('@/lib/supabase/uploadImage').then(({ uploadImage }) => {
+              uploadImage('memories', e.target.files![0], 1200, 0.8).then((url) => {
+                if (url) setImages((prev) => { const next = [...prev]; if (next.length < 1) next.push(''); next[1] = url; return next })
+                setUploading(false)
+              })
+            })
+            e.target.value = ''
+          }} />
+      </div>
     </div>
   )
 }
