@@ -22,6 +22,13 @@ export function useSupabaseData() {
   return useContext(DataContext)
 }
 
+function getMonthRange(y: number, m: number) {
+  const start = `${y}-${String(m).padStart(2, '0')}-01T00:00:00`
+  const nm = m === 12 ? 1 : m + 1
+  const ny = m === 12 ? y + 1 : y
+  return { start, end: `${ny}-${String(nm).padStart(2, '0')}-01T00:00:00` }
+}
+
 export default function SupabaseDataProvider({ children }: { children: React.ReactNode }) {
   const [events, setEvents] = useState<AppEvent[]>([])
   const [spots, setSpots] = useState<AppSpot[]>([])
@@ -36,40 +43,31 @@ export default function SupabaseDataProvider({ children }: { children: React.Rea
     const nextM = m === 12 ? 1 : m + 1
     const nextY = m === 12 ? y + 1 : y
 
-    const ranges = [
-      { y: prevY, m: prevM },
-      { y, m },
-      { y: nextY, m: nextM },
-    ]
+    // 3ヶ月分の開始〜終了を1つのレンジにまとめて1回のクエリで取得
+    const { start } = getMonthRange(prevY, prevM)
+    const { end } = getMonthRange(nextY, nextM)
 
-    const all: SupabaseEvent[] = []
+    const [{ data: d1 }, { data: d2 }] = await Promise.all([
+      // start_date がレンジ内
+      supabase.from('events')
+        .select('*, submitter:profiles!submitted_by(nickname)')
+        .gte('start_date', start).lt('start_date', end)
+        .order('start_date'),
+      // 期間イベント: start_date < 先月1日 だが end_date >= 先月1日
+      supabase.from('events')
+        .select('*, submitter:profiles!submitted_by(nickname)')
+        .lt('start_date', start).gte('end_date', start)
+        .order('start_date'),
+    ])
+
     const seen = new Set<string>()
-
-    for (const { y: yr, m: mo } of ranges) {
-      const start = `${yr}-${String(mo).padStart(2, '0')}-01T00:00:00`
-      const nextMonth = mo === 12 ? 1 : mo + 1
-      const nextYear = mo === 12 ? yr + 1 : yr
-      const end = `${nextYear}-${String(nextMonth).padStart(2, '0')}-01T00:00:00`
-
-      const [{ data: d1 }, { data: d2 }] = await Promise.all([
-        supabase.from('events')
-          .select('*, submitter:profiles!submitted_by(nickname)')
-          .gte('start_date', start).lt('start_date', end)
-          .order('start_date'),
-        supabase.from('events')
-          .select('*, submitter:profiles!submitted_by(nickname)')
-          .gte('end_date', start).lt('start_date', start)
-          .order('start_date'),
-      ])
-
-      for (const e of [...(d1 || []), ...(d2 || [])]) {
-        if (!seen.has(e.id)) {
-          seen.add(e.id)
-          all.push(e as SupabaseEvent)
-        }
+    const all: SupabaseEvent[] = []
+    for (const e of [...(d1 || []), ...(d2 || [])]) {
+      if (!seen.has(e.id)) {
+        seen.add(e.id)
+        all.push(e as SupabaseEvent)
       }
     }
-
     setEvents(all.map(toAppEvent))
   }, [])
 
