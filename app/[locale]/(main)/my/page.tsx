@@ -7,6 +7,7 @@ import { eventTypeConfig } from '@/lib/config/constants'
 import { scheduleTagConfig, type ScheduleTag } from '@/lib/config/tags'
 import { countryFlag } from '@/lib/countryUtils'
 import { useTranslations } from 'next-intl'
+import { usePageView } from '@/lib/useActivityLog'
 import SeatInfoForm from '@/components/SeatInfoForm'
 import SeatViewPreview from '@/components/SeatViewPreview'
 import TodoSection from '@/components/TodoSection'
@@ -57,6 +58,7 @@ const DAY_NAMES = ['S','M','T','W','T','F','S']
 
 // ── メインページ ─────────────────────────────────────────────────
 export default function MyPage() {
+  usePageView('my')
   const TODAY = useToday()
   const now = new Date()
   const [tab, setTab] = useState<'entries' | 'todos'>('entries')

@@ -366,6 +366,18 @@ create table announcements (
   created_at  timestamptz default now()
 );
 
+-- ── ユーザーアクティビティログ ────────────────────────────────
+create table user_activity (
+  id          uuid primary key default gen_random_uuid(),
+  user_id     uuid not null references profiles(id) on delete cascade,
+  action      text not null,                       -- 'login','view_page','approve','add_my','post_event','post_spot_photo'
+  detail      text default '',                     -- ページ名やイベントIDなど
+  created_at  timestamptz default now()
+);
+
+create index idx_user_activity_created on user_activity (created_at desc);
+create index idx_user_activity_user on user_activity (user_id, created_at desc);
+
 -- ── GOODS（COMING SOON — テーブルは後日追加） ────────────────
 
 -- ============================================================

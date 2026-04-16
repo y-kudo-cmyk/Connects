@@ -1,3 +1,4 @@
+import Script from 'next/script'
 import type { Metadata, Viewport } from 'next'
 import './globals.css'
 import { Geist } from "next/font/google";
@@ -41,6 +42,15 @@ export default async function RootLayout({
 
   return (
     <html lang={locale} className={cn("h-full", "font-sans", geist.variable)} suppressHydrationWarning>
+      <head>
+        <Script src="https://www.googletagmanager.com/gtag/js?id=G-SVY3BY2WZD" strategy="afterInteractive" />
+        <Script id="gtag-init" strategy="afterInteractive">{`
+          window.dataLayer = window.dataLayer || [];
+          function gtag(){dataLayer.push(arguments);}
+          gtag('js', new Date());
+          gtag('config', 'G-SVY3BY2WZD');
+        `}</Script>
+      </head>
       <body className="h-full antialiased">
         {children}
       </body>

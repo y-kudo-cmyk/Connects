@@ -4,6 +4,7 @@ import { useState, useRef } from 'react'
 import { useRouter } from '@/i18n/navigation'
 import { useAuth } from '@/lib/supabase/useAuth'
 import { useTranslations } from 'next-intl'
+import { usePageView } from '@/lib/useActivityLog'
 import { useProfile, FanClubMembership, NotifSettings } from '@/lib/useProfile'
 import { uploadDataUrl } from '@/lib/supabase/uploadImage'
 import { useReferral } from '@/lib/useReferral'
@@ -48,6 +49,7 @@ async function loadImage(files: FileList | null): Promise<string | null> {
 }
 
 export default function ProfilePage() {
+  usePageView('profile')
   const { profile, update, addFanClub, updateFanClub, removeFanClub } = useProfile()
   const { signOut } = useAuth()
   const t = useTranslations()

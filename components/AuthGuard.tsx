@@ -35,18 +35,23 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
           return
         }
 
-        // ログイン通知（30分に1回まで）
+        // ログイン記録 + 通知（30分に1回まで）
         const ADMIN_IDS = ['86c91b90-0060-4a3d-bf10-d5c846604882', '65ba4bc6-917d-4689-aeaf-8d4b5b01a004']
         const lastNotified = localStorage.getItem('login-notified-at')
         const now = Date.now()
         const throttle = 30 * 60 * 1000 // 30分
-        if ((!lastNotified || now - Number(lastNotified) > throttle) && !ADMIN_IDS.includes(user.id)) {
+        if (!lastNotified || now - Number(lastNotified) > throttle) {
           localStorage.setItem('login-notified-at', String(now))
-          fetch('/api/notify-admin', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ type: 'login', message: `🔔 ログイン\n${user.email || ''}` }),
-          }).catch(() => {})
+          // アクティビティ記録
+          supabase.from('user_activity').insert({ user_id: user.id, action: 'login', detail: '' }).then(() => {})
+          // 管理者通知
+          if (!ADMIN_IDS.includes(user.id)) {
+            fetch('/api/notify-admin', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ type: 'login', message: `🔔 ログイン\n${user.email || ''}` }),
+            }).catch(() => {})
+          }
         }
       } catch {
         // プロフィール作成失敗してもアクセスは許可

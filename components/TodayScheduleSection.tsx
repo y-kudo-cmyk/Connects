@@ -8,6 +8,7 @@ import type { AppEvent } from '@/lib/supabase/adapters'
 import EventDetailModal from './EventDetailModal'
 import { useTranslations } from 'next-intl'
 import { useToday } from '@/lib/useToday'
+import { usePageView } from '@/lib/useActivityLog'
 import { useProfile } from '@/lib/useProfile'
 import { cityToCountryCode, countryFlag } from '@/lib/countryUtils'
 import { VOTE_THRESHOLD } from '@/lib/supabase/useVoting'
@@ -21,6 +22,7 @@ function md(s: string) {
 }
 
 export default function TodayScheduleSection() {
+  usePageView('home')
   const today = useToday()
   const { profile } = useProfile()
   const { events: allEvents, refreshEvents } = useSupabaseData()

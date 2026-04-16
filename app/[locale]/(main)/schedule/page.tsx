@@ -3,6 +3,7 @@
 import { useState, useRef } from 'react'
 import EventCard from '@/components/EventCard'
 import { useSupabaseData } from '@/components/SupabaseDataProvider'
+import { usePageView } from '@/lib/useActivityLog'
 import { scheduleTagConfig, type ScheduleTag } from '@/lib/config/tags'
 import type { AppEvent } from '@/lib/supabase/adapters'
 import { useMyEntries } from '@/lib/useMyEntries'
@@ -40,6 +41,7 @@ function matchRegion(e: AppEvent, region: Region, homeCountry: string): boolean 
 }
 
 export default function SchedulePage() {
+  usePageView('schedule')
   const TODAY = useToday()
   const { events, refreshEvents, ensureMonth } = useSupabaseData()
   const now = new Date()

@@ -117,6 +117,7 @@ export function useMyEntries() {
 
   const addEntry = useCallback(async (entry: MyEntry) => {
     if (!user) return
+    supabase.from('user_activity').insert({ user_id: user.id, action: 'add_my', detail: entry.title }).then(() => {})
     await supabase.from('my_entries').insert({
       user_id: user.id,
       event_id: entry.eventId || null,

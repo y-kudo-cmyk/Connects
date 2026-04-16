@@ -25,6 +25,7 @@ import { useAuth } from '@/lib/supabase/useAuth'
 import { createClient } from '@/lib/supabase/client'
 import { useToday } from '@/lib/useToday'
 import { useTranslations } from 'next-intl'
+import { usePageView } from '@/lib/useActivityLog'
 
 const SpotMap = dynamic(() => import('@/components/SpotMap'), {
   ssr: false,
@@ -51,6 +52,7 @@ const PLATFORM_CONFIG: Record<SpotPlatform, { label: string; color: string; icon
 const ALL_TAGS = ['SEVENTEEN', ...seventeenMembers.map((m) => m.name)]
 
 export default function MapPage() {
+  usePageView('map')
   const TODAY = useToday()
   const t = useTranslations()
   const { events, spots: allSpots, refreshSpots } = useSupabaseData()
