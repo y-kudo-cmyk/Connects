@@ -138,7 +138,7 @@ async function generateMorning(): Promise<{ text: string; imageUrl: string }> {
   return { text: header + body + '\n' + FOOTER, imageUrl: '' }
 }
 
-async function generateSpot(): Promise<{ text: string; imageUrl: string }> {
+async function generateSpot(): Promise<{ text: string; imageUrl: string; spotId?: string }> {
   const supabase = getSupabase()
 
   const { data: spots } = await supabase
