@@ -164,6 +164,10 @@ export default function EventDetailModal({
       })
       // 既存の承認投票を削除
       await supabase.from('event_votes').delete().eq('event_id', event.id)
+      // 編集アクティビティ記録
+      if (userId) {
+        supabase.from('user_activity').insert({ user_id: userId, action: 'edit', detail: event.title }).then(() => {})
+      }
     }
 
     await refetchVotes()

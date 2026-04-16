@@ -90,16 +90,18 @@ export function useProfile() {
 
     // 実際の投稿数・承認数・編集数をリアルタイムカウント
     const [
-      { count: spotCount }, { count: photoCount }, { count: eventCount },
+      { count: spotCount }, { count: photoCount }, { count: eventCount }, { count: urlCount },
       { count: eventVoteCount }, { count: photoVoteCount },
-      { count: editCount },
+      { count: editReqCount }, { count: activityEditCount },
     ] = await Promise.all([
       supabase.from('spots').select('*', { count: 'exact', head: true }).eq('submitted_by', user.id),
       supabase.from('spot_photos').select('*', { count: 'exact', head: true }).eq('submitted_by', user.id),
       supabase.from('events').select('*', { count: 'exact', head: true }).eq('submitted_by', user.id),
+      supabase.from('url_submissions').select('*', { count: 'exact', head: true }).eq('submitted_by', user.id),
       supabase.from('event_votes').select('*', { count: 'exact', head: true }).eq('user_id', user.id),
       supabase.from('spot_photo_votes').select('*', { count: 'exact', head: true }).eq('user_id', user.id),
       supabase.from('edit_requests').select('*', { count: 'exact', head: true }).eq('submitted_by', user.id),
+      supabase.from('user_activity').select('*', { count: 'exact', head: true }).eq('user_id', user.id).eq('action', 'edit'),
     ])
 
     setProfile({
@@ -132,9 +134,9 @@ export function useProfile() {
         note: fc.note ?? undefined,
       })),
       stats: {
-        posts: (spotCount ?? 0) + (photoCount ?? 0) + (eventCount ?? 0),
+        posts: (spotCount ?? 0) + (photoCount ?? 0) + (eventCount ?? 0) + (urlCount ?? 0),
         approvals: (eventVoteCount ?? 0) + (photoVoteCount ?? 0),
-        edits: editCount ?? 0,
+        edits: (editReqCount ?? 0) + (activityEditCount ?? 0),
         referrals: 0,
       },
     })
