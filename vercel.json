@@ -6,10 +6,6 @@
     },
     {
       "path": "/api/post-x?type=spot",
-      "schedule": "0 4 16 4 *"
-    },
-    {
-      "path": "/api/post-x?type=spot",
       "schedule": "0 9 * * *"
     },
     {

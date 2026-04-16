@@ -318,10 +318,12 @@ async function postTweetWithImage(text: string, imageUrl: string): Promise<strin
 
 // Vercel Cron は GET で呼ばれる
 export async function GET(request: NextRequest) {
-  // Vercel Cron の認証ヘッダー
-  const cronSecret = request.headers.get('authorization')
-  if (cronSecret !== `Bearer ${process.env.CRON_SECRET}`) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  // Vercel Cron の認証ヘッダー（CRON_SECRET未設定時はスキップ）
+  if (process.env.CRON_SECRET) {
+    const cronSecret = request.headers.get('authorization')
+    if (cronSecret !== `Bearer ${process.env.CRON_SECRET}`) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
   }
 
   const type = request.nextUrl.searchParams.get('type') as 'morning' | 'spot' | 'evening' | 'all' || 'all'
