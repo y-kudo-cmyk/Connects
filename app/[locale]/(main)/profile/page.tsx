@@ -664,7 +664,7 @@ export default function ProfilePage() {
                 {LANGUAGES.map((l) => (
                   <button
                     key={l.code}
-                    onClick={() => { update({ language: l.code }); document.cookie = `NEXT_LOCALE=${l.code};path=/;max-age=31536000`; setShowLangPicker(false); window.location.reload() }}
+                    onClick={() => { update({ language: l.code }); document.cookie = `NEXT_LOCALE=${l.code};path=/;max-age=31536000`; setShowLangPicker(false); router.replace('/profile', { locale: l.code as 'ja' | 'en' | 'ko' }) }}
                     className="flex items-center gap-3 px-4 py-3.5 rounded-xl"
                     style={{
                       background: profile.language === l.code ? 'rgba(243,180,227,0.1)' : '#F8F9FA',
