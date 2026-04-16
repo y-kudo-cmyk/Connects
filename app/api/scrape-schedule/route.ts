@@ -134,8 +134,8 @@ export async function GET(request: NextRequest) {
       country: (item.title.includes('韓国') || item.title.match(/KOREA|SEOUL|INCHEON|BUSAN/i)) ? 'KR' : 'JP',
       image_url: '',
       source_url: item.url ? `${BASE_URL}${item.url}` : `${BASE_URL}/posts/information`,
-      status: 'confirmed',
-      verified_count: 3,
+      status: 'pending',
+      verified_count: 0,
       related_artists: '',
       submitted_by: null,
     })
