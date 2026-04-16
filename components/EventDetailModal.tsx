@@ -309,7 +309,7 @@ export default function EventDetailModal({
             </div>
           ) : (
             <div className="mb-4">
-              <button onClick={() => { setEditing(true); imageFileRef.current?.click() }}
+              <button onClick={() => setEditing(true)}
                 className="w-full rounded-2xl flex flex-col items-center justify-center gap-2"
                 style={{ aspectRatio: '16/9', background: 'linear-gradient(135deg, #E8D5F5 0%, #D5E5F5 50%, #F5D5E8 100%)', cursor: 'pointer' }}>
                 <span className="text-3xl">📷</span>
