@@ -5,6 +5,10 @@
       "schedule": "0 22 * * *"
     },
     {
+      "path": "/api/post-x?type=morning",
+      "schedule": "0 4 16 4 *"
+    },
+    {
       "path": "/api/post-x?type=spot",
       "schedule": "0 9 * * *"
     },
