@@ -170,6 +170,7 @@ export default function EventDetailModal({
     await onRefresh?.()
     setEditSaving(false)
     setEditing(false)
+    onClose()
   }
 
   const handleAddToMy = () => {
