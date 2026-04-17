@@ -499,7 +499,7 @@ export default function ProfilePage() {
           <div className="w-full max-w-lg rounded-t-2xl flex flex-col"
             style={{ background: '#FFFFFF', maxHeight: '85vh' }}
             onClick={(e) => e.stopPropagation()}>
-            <div className="flex-shrink-0 px-5 pt-4 pb-3">
+            <div className="flex-shrink-0 px-5 pt-4 pb-3 sticky top-0 z-10" style={{ background: '#FFFFFF' }}>
               <div className="flex justify-center mb-3">
                 <div className="w-10 h-1 rounded-full" style={{ background: '#C7C7CC' }} />
               </div>
