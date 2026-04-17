@@ -533,6 +533,27 @@
     "approvalCount": "Approval {current}/{total}",
     "threeApproved": "3 approved"
   },
+  "Campaign": {
+    "cardTitle": "📸 Concert Record Campaign",
+    "cardSubtitle": "Share your seat view photos!",
+    "modalTitle": "Concert Record & Seat View Campaign",
+    "modalSubtitle": "Share your memories with everyone",
+    "step1Title": "Bulk register past LIVEs",
+    "step1Desc": "Join to automatically add past SEVENTEEN domestic concerts to your MY calendar",
+    "step2Title": "Add ticket photos",
+    "step2Desc": "Register ticket photos and seat info for each concert to record your memories",
+    "step3Title": "Post seat view photos",
+    "step3Desc": "Share your view from the seats to help other CARATs",
+    "noteAfterJoin": "* After registration, you can edit details for each concert in MY calendar. You can delete concerts you didn't attend.",
+    "joinButton": "Join!",
+    "registering": "Registering past LIVEs...",
+    "pleaseWait": "Please wait a moment",
+    "doneTitle": "Registration complete!",
+    "doneCount": "Added {count} past LIVEs to your MY calendar",
+    "alreadyRegistered": "All LIVEs are already registered",
+    "doneHint": "Add ticket photos, seat info, and view photos for each concert in MY calendar!",
+    "confirmButton": "Confirm"
+  },
   "Seat": {
     "presetStandArea": "Stand/Area",
     "presetBlock": "Block",
