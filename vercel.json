@@ -14,7 +14,7 @@
     },
     {
       "path": "/api/notify-schedule",
-      "schedule": "0 * * * *"
+      "schedule": "0,30 * * * *"
     },
     {
       "path": "/api/scrape-schedule",

@@ -566,10 +566,16 @@ export default function ProfilePage() {
                     {profile.notif.morningOn && (
                       <div className="px-5 pb-3 flex items-center gap-2">
                         <span className="text-xs" style={{ color: '#8E8E93' }}>{t('Profile.notifTime')}</span>
-                        <input type="time" value={profile.notif.morningTime}
+                        <select value={profile.notif.morningTime}
                           onChange={(e) => updateNotif({ morningTime: e.target.value })}
                           className="px-3 py-1.5 rounded-lg text-sm outline-none"
-                          style={{ background: '#F0F0F5', border: '1px solid #E5E5EA', color: '#1C1C1E' }} />
+                          style={{ background: '#F0F0F5', border: '1px solid #E5E5EA', color: '#1C1C1E' }}>
+                          {Array.from({ length: 48 }, (_, i) => {
+                            const h = String(Math.floor(i / 2)).padStart(2, '0')
+                            const m = i % 2 === 0 ? '00' : '30'
+                            return <option key={`${h}:${m}`} value={`${h}:${m}`}>{`${h}:${m}`}</option>
+                          })}
+                        </select>
                       </div>
                     )}
                     <div className="px-5 py-3 flex items-center gap-3" style={{ borderTop: '1px solid #F0F0F5' }}>
@@ -579,10 +585,16 @@ export default function ProfilePage() {
                     {profile.notif.eveningOn && (
                       <div className="px-5 pb-3 flex items-center gap-2">
                         <span className="text-xs" style={{ color: '#8E8E93' }}>{t('Profile.notifTime')}</span>
-                        <input type="time" value={profile.notif.eveningTime}
+                        <select value={profile.notif.eveningTime}
                           onChange={(e) => updateNotif({ eveningTime: e.target.value })}
                           className="px-3 py-1.5 rounded-lg text-sm outline-none"
-                          style={{ background: '#F0F0F5', border: '1px solid #E5E5EA', color: '#1C1C1E' }} />
+                          style={{ background: '#F0F0F5', border: '1px solid #E5E5EA', color: '#1C1C1E' }}>
+                          {Array.from({ length: 48 }, (_, i) => {
+                            const h = String(Math.floor(i / 2)).padStart(2, '0')
+                            const m = i % 2 === 0 ? '00' : '30'
+                            return <option key={`${h}:${m}`} value={`${h}:${m}`}>{`${h}:${m}`}</option>
+                          })}
+                        </select>
                       </div>
                     )}
                     <div className="px-5 py-3 flex items-center gap-3" style={{ borderTop: '1px solid #F0F0F5' }}>
