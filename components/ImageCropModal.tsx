@@ -1,6 +1,7 @@
 'use client'
 
 import { useRef, useState, useEffect } from 'react'
+import { createPortal } from 'react-dom'
 import { useTranslations } from 'next-intl'
 
 type Props = {
@@ -192,7 +193,12 @@ export default function ImageCropModal({ src, aspectRatio = 4, circle = false, o
     onConfirm(canvas.toDataURL('image/jpeg', 0.88))
   }
 
-  return (
+  const [portalMounted, setPortalMounted] = useState(false)
+  useEffect(() => { setPortalMounted(true) }, [])
+
+  if (!portalMounted) return null
+
+  return createPortal(
     <div className="fixed inset-0 flex flex-col" style={{ background: '#111', zIndex: 200 }}>
       {/* ヘッダー */}
       <div
@@ -252,7 +258,8 @@ export default function ImageCropModal({ src, aspectRatio = 4, circle = false, o
       >
         <p className="text-xs" style={{ color: '#636366' }}>{t('Seat.cropHint')}</p>
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }
 

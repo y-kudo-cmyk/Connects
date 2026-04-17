@@ -1,6 +1,7 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
+import { createPortal } from 'react-dom'
 import EventCard from '@/components/EventCard'
 import { useSupabaseData } from '@/components/SupabaseDataProvider'
 import { usePageView } from '@/lib/useActivityLog'
@@ -63,6 +64,8 @@ export default function SchedulePage() {
   const [detailEvent, setDetailEvent] = useState<AppEvent | null>(null)
   const t = useTranslations()
   const eventsRef = useRef<HTMLDivElement>(null)
+  const [portalMounted, setPortalMounted] = useState(false)
+  useEffect(() => { setPortalMounted(true) }, [])
 
   const addToMy = (event: AppEvent) => {
     addEntry({
@@ -389,7 +392,7 @@ export default function SchedulePage() {
       </div>
 
       {/* MY再追加確認モーダル */}
-      {reAddEvent && (
+      {reAddEvent && portalMounted && createPortal(
         <div className="fixed inset-0 flex items-center justify-center px-6"
           style={{ background: 'rgba(0,0,0,0.55)', zIndex: 60 }}
           onClick={() => setReAddEvent(null)}>
@@ -420,14 +423,15 @@ export default function SchedulePage() {
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* TODO確認モーダル */}
-      {todoEvent && (() => {
+      {todoEvent && portalMounted && (() => {
         const alreadyInMy = hasEntry(todoEvent.id)
         const alreadyTodo = hasTodo(todoEvent.id)
-        return (
+        return createPortal(
           <div className="fixed inset-0 flex items-center justify-center px-6"
             style={{ background: 'rgba(0,0,0,0.55)', zIndex: 60 }}
             onClick={() => setTodoEvent(null)}>
@@ -479,7 +483,8 @@ export default function SchedulePage() {
                 className="w-full py-2.5 rounded-xl text-sm font-semibold"
                 style={{ background: '#F0F0F5', color: '#636366' }}>{t('Common.cancel')}</button>
             </div>
-          </div>
+          </div>,
+          document.body
         )
       })()}
 

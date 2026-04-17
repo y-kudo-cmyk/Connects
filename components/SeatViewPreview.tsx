@@ -1,6 +1,7 @@
 'use client'
 
-import { useRef, useState } from 'react'
+import { useRef, useState, useEffect } from 'react'
+import { createPortal } from 'react-dom'
 import { SeatInfo } from '@/lib/useMyEntries'
 import {
   SeatView, useSeatViews, matchSeatViews, formatSeatInfo, formatSeatFields,
@@ -75,7 +76,11 @@ function UploadModal({
   const DISTANCE_LABELS = ['', ...distLabels]
   const VISIBILITY_LABELS = ['', ...visLabels]
 
-  return (
+  const [portalMounted, setPortalMounted] = useState(false)
+  useEffect(() => { setPortalMounted(true) }, [])
+  if (!portalMounted) return null
+
+  return createPortal(
     <div className="fixed inset-0 z-[60] flex flex-col justify-end">
       <div className="absolute inset-0" style={{ background: 'rgba(0,0,0,0.7)' }} onClick={onClose} />
       <div className="relative flex flex-col rounded-t-2xl overflow-hidden" style={{ background: '#FFFFFF', maxHeight: '92vh' }}>
@@ -188,7 +193,8 @@ function UploadModal({
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }
 

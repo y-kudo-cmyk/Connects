@@ -1,6 +1,7 @@
 'use client'
 
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useMemo } from 'react'
+import { createPortal } from 'react-dom'
 import { scheduleTagConfig, type ScheduleTag } from '@/lib/config/tags'
 import type { AppEvent } from '@/lib/supabase/adapters'
 import { useRouter } from '@/i18n/navigation'
@@ -106,6 +107,8 @@ export default function EventDetailModal({
   const startD = new Date(event.date)
   const dayJa = dayNames[startD.getDay()]
   const imported = hasEntry(event.id)
+  const [portalMounted, setPortalMounted] = useState(false)
+  useEffect(() => { setPortalMounted(true) }, [])
 
   const handleEditSave = async () => {
     setEditSaving(true)
@@ -202,7 +205,9 @@ export default function EventDetailModal({
     }
   }
 
-  return (
+  if (!portalMounted) return null
+
+  return createPortal(
     <div className="fixed inset-0 z-[60] flex flex-col justify-end"
       onClick={onClose}>
       <div className="absolute inset-0" style={{ background: 'rgba(0,0,0,0.55)' }} />
@@ -661,6 +666,7 @@ export default function EventDetailModal({
           )}
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }

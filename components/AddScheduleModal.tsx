@@ -1,6 +1,7 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { createPortal } from 'react-dom'
 import { scheduleTagConfig, type ScheduleTag } from '@/lib/config/tags'
 import { createClient } from '@/lib/supabase/client'
 import { useAuth } from '@/lib/supabase/useAuth'
@@ -28,6 +29,8 @@ export default function AddScheduleModal({ onClose, onRefresh }: { onClose: () =
   const [saving, setSaving] = useState(false)
   const [done, setDone] = useState(false)
   const [submitError, setSubmitError] = useState('')
+  const [mounted, setMounted] = useState(false)
+  useEffect(() => { setMounted(true) }, [])
 
   const handleImage = (files: FileList | null) => {
     if (!files?.[0]) return
@@ -87,8 +90,10 @@ export default function AddScheduleModal({ onClose, onRefresh }: { onClose: () =
     setDone(true)
   }
 
+  if (!mounted) return null
+
   if (done) {
-    return (
+    return createPortal(
       <div className="fixed inset-0 z-[60] flex flex-col justify-end">
         <div className="absolute inset-0" style={{ background: 'rgba(0,0,0,0.55)' }} onClick={onClose} />
         <div className="relative rounded-t-2xl px-6 py-10 flex flex-col items-center gap-3"
@@ -105,11 +110,12 @@ export default function AddScheduleModal({ onClose, onRefresh }: { onClose: () =
             {t('Common.close')}
           </button>
         </div>
-      </div>
+      </div>,
+      document.body
     )
   }
 
-  return (
+  return createPortal(
     <div className="fixed inset-0 z-[60] flex flex-col justify-end">
       <div className="absolute inset-0" style={{ background: 'rgba(0,0,0,0.55)' }} onClick={onClose} />
       <div className="relative flex flex-col rounded-t-2xl overflow-hidden"
@@ -245,6 +251,7 @@ export default function AddScheduleModal({ onClose, onRefresh }: { onClose: () =
 
         <div style={{ height: 'calc(80px + env(safe-area-inset-bottom, 0px))' }} />
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }

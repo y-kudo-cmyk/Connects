@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useRef, useEffect, type ReactNode } from 'react'
+import { createPortal } from 'react-dom'
 import { useSearchParams } from 'next/navigation'
 import { useMyEntries, MyEntry, compressImage, SeatInfo } from '@/lib/useMyEntries'
 import { eventTypeConfig } from '@/lib/config/constants'
@@ -628,7 +629,7 @@ export default function MyPage() {
 
 // ── ImageViewer ───────────────────────────────────────────────
 function ImageViewer({ src, onClose }: { src: string; onClose: () => void }) {
-  return (
+  return createPortal(
     <div className="fixed inset-0 z-[70] flex items-center justify-center"
       style={{ background: 'rgba(0,0,0,0.92)' }}
       onClick={onClose}>
@@ -644,7 +645,8 @@ function ImageViewer({ src, onClose }: { src: string; onClose: () => void }) {
           <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
         </svg>
       </button>
-    </div>
+    </div>,
+    document.body
   )
 }
 
@@ -756,6 +758,9 @@ function AddModal({ defaultDate, onClose, onAdd }: {
   const [memo, setMemo] = useState('')
   const [selectedTag, setSelectedTag] = useState<string>('')
 
+  const [portalMounted, setPortalMounted] = useState(false)
+  useEffect(() => { setPortalMounted(true) }, [])
+
   const handleAdd = () => {
     if (!title.trim()) return
     onAdd({
@@ -777,7 +782,9 @@ function AddModal({ defaultDate, onClose, onAdd }: {
     })
   }
 
-  return (
+  if (!portalMounted) return null
+
+  return createPortal(
     <div className="fixed inset-0 z-[60] flex flex-col justify-end">
       <div className="absolute inset-0" style={{ background: 'rgba(0,0,0,0.55)' }} onClick={onClose} />
       <div className="relative flex flex-col rounded-t-2xl overflow-hidden"
@@ -862,7 +869,8 @@ function AddModal({ defaultDate, onClose, onAdd }: {
 
         <div style={{ height: 'calc(80px + env(safe-area-inset-bottom, 0px))' }} />
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }
 
@@ -887,6 +895,9 @@ function EditModal({ entry, onClose, onSave, onRemove }: {
   const viewFileRef = useRef<HTMLInputElement>(null)
   const photoFileRef = useRef<HTMLInputElement>(null)
   const t = useTranslations()
+
+  const [portalMounted2, setPortalMounted2] = useState(false)
+  useEffect(() => { setPortalMounted2(true) }, [])
 
   const isPeriod = !!entry.dateEnd
   const editTag = (entry.tags?.[0] || entry.type) as ScheduleTag
@@ -946,7 +957,9 @@ function EditModal({ entry, onClose, onSave, onRemove }: {
     })
   }
 
-  return (
+  if (!portalMounted2) return null
+
+  return createPortal(
     <div className="fixed inset-0 z-[60] flex flex-col justify-end">
       <div className="absolute inset-0" style={{ background: 'rgba(0,0,0,0.55)' }} onClick={onClose} />
       <div className="relative flex flex-col rounded-t-2xl overflow-hidden"
@@ -1140,7 +1153,8 @@ function EditModal({ entry, onClose, onSave, onRemove }: {
         {/* 下部余白（タブバーに被らないように） */}
         <div style={{ height: 'calc(80px + env(safe-area-inset-bottom, 0px))' }} />
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }
 

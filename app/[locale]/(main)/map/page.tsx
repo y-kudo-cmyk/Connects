@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useRef, useCallback, useMemo, useEffect } from 'react'
+import { createPortal } from 'react-dom'
 import dynamic from 'next/dynamic'
 import {
   seventeenMembers,
@@ -968,7 +969,7 @@ function PhotoCard({
         })()}
       </div>
       {/* 写真編集モーダル */}
-      {showEdit && (
+      {showEdit && createPortal(
         <div className="fixed inset-0 z-[70] flex items-center justify-center px-6" onClick={() => setShowEdit(false)}>
           <div className="absolute inset-0" style={{ background: 'rgba(0,0,0,0.5)' }} />
           <div className="relative w-full max-w-sm rounded-2xl p-5 flex flex-col gap-3"
@@ -1056,7 +1057,8 @@ function PhotoCard({
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   )
@@ -1122,7 +1124,7 @@ function PhotoUploadModal({
     seventeenMembers.map((m) => [m.name, m.color])
   )
 
-  return (
+  return createPortal(
     <div className="fixed inset-0 z-[60] flex flex-col justify-end">
       <div className="absolute inset-0" style={{ background: 'rgba(0,0,0,0.65)' }} onClick={onClose} />
       <div className="relative flex flex-col rounded-t-2xl" style={{ background: '#FFFFFF', maxHeight: '92vh' }}>
@@ -1254,7 +1256,8 @@ function PhotoUploadModal({
         </div>
 
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }
 
@@ -1378,7 +1381,7 @@ function NewSpotModal({
   }
 
   if (submitted) {
-    return (
+    return createPortal(
       <div className="fixed inset-0 z-[60] flex flex-col items-center justify-center px-6" style={{ background: '#F8F9FA' }}>
         <div className="w-14 h-14 rounded-full flex items-center justify-center mb-3" style={{ background: 'rgba(52,211,153,0.15)' }}>
           <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#34D399" strokeWidth="2.5">
@@ -1394,11 +1397,12 @@ function NewSpotModal({
           style={{ background: '#F3B4E3', color: '#FFFFFF' }}>
           {t('Common.close')}
         </button>
-      </div>
+      </div>,
+      document.body
     )
   }
 
-  return (
+  return createPortal(
     <div className="fixed inset-0 z-[9999] flex flex-col overflow-hidden" style={{ background: '#F8F9FA' }}>
       <div
         className="flex-shrink-0 flex items-center justify-between px-4"
@@ -1606,6 +1610,7 @@ function NewSpotModal({
 
           <div className="flex-shrink-0" style={{ height: 200 }} />
         </div>
-    </div>
+    </div>,
+    document.body
   )
 }

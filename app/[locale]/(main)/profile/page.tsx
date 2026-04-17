@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useRef, useCallback, useEffect } from 'react'
+import { createPortal } from 'react-dom'
 import { useRouter } from '@/i18n/navigation'
 import { useAuth } from '@/lib/supabase/useAuth'
 import { useTranslations } from 'next-intl'
@@ -86,6 +87,8 @@ export default function ProfilePage() {
   const [notifExpanded, setNotifExpanded] = useState(false)
   const [showSettings, setShowSettings] = useState(false)
   const router = useRouter()
+  const [portalMounted, setPortalMounted] = useState(false)
+  useEffect(() => { setPortalMounted(true) }, [])
 
   // Concert history: LIVE entries from my_entries
   const { entries, updateEntry } = useMyEntries()
@@ -492,7 +495,7 @@ export default function ProfilePage() {
 
 
       {/* --- Settings modal --- */}
-      {showSettings && (
+      {showSettings && portalMounted && createPortal(
         <div className="fixed inset-0 flex items-end justify-center"
           style={{ background: 'rgba(0,0,0,0.5)', zIndex: 60 }}
           onClick={() => setShowSettings(false)}>
@@ -727,11 +730,12 @@ export default function ProfilePage() {
               </div>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* --- Language picker --- */}
-      {showLangPicker && (
+      {showLangPicker && portalMounted && createPortal(
         <div className="fixed inset-0 flex items-end justify-center"
           style={{ background: 'rgba(0,0,0,0.5)', zIndex: 60 }}
           onClick={() => setShowLangPicker(false)}>
@@ -768,11 +772,12 @@ export default function ProfilePage() {
               </div>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* --- Country picker --- */}
-      {showCountryPicker && (
+      {showCountryPicker && portalMounted && createPortal(
         <div className="fixed inset-0 flex items-end justify-center"
           style={{ background: 'rgba(0,0,0,0.5)', zIndex: 60 }}
           onClick={() => setShowCountryPicker(false)}>
@@ -807,11 +812,12 @@ export default function ProfilePage() {
               </div>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* --- Delete account confirm modal --- */}
-      {showDeleteConfirm && (
+      {showDeleteConfirm && portalMounted && createPortal(
         <div
           className="fixed inset-0 flex items-center justify-center px-6"
           style={{ background: 'rgba(0,0,0,0.6)', zIndex: 200 }}
@@ -862,11 +868,12 @@ export default function ProfilePage() {
               >{t('Profile.deleteAccountButton')}</button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* --- Feedback modal --- */}
-      {showFeedback && (
+      {showFeedback && portalMounted && createPortal(
         <div
           className="fixed inset-0 flex items-center justify-center px-4"
           style={{ background: 'rgba(0,0,0,0.5)', zIndex: 200 }}
@@ -933,11 +940,12 @@ export default function ProfilePage() {
               </>
             )}
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* --- FC modal --- */}
-      {fcModal !== null && (
+      {fcModal !== null && portalMounted && createPortal(
         <div
           className="fixed inset-0 flex items-end justify-center"
           style={{ background: 'rgba(0,0,0,0.5)', zIndex: 100 }}
@@ -1015,7 +1023,8 @@ export default function ProfilePage() {
               </div>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   )
@@ -1089,7 +1098,7 @@ function ConcertHistoryModal({ entry, onClose, onSave }: {
     },
   ]
 
-  return (
+  return createPortal(
     <div className="fixed inset-0 z-[60] flex flex-col justify-end">
       <div className="absolute inset-0" style={{ background: 'rgba(0,0,0,0.55)' }} onClick={onClose} />
       <div className="relative flex flex-col rounded-t-2xl overflow-hidden"
@@ -1207,7 +1216,8 @@ function ConcertHistoryModal({ entry, onClose, onSave }: {
             e.target.value = ''
           }} />
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }
 
