@@ -52,8 +52,9 @@ function formatMD(dateStr: string) {
 
 // ── 1. 朝の通知 ─────────────────────────────────────────────
 async function morningNotification(currentTime: string, today: string, testMode = false) {
+  const currentHour = currentTime.split(':')[0]
   let query = supabase.from('profiles').select('id').eq('notif_morning_on', true)
-  if (!testMode) query = query.eq('notif_morning_time', currentTime)
+  if (!testMode) query = query.like('notif_morning_time', `${currentHour}:%`)
   const { data: users } = await query
 
   if (!users || users.length === 0) return { type: 'morning', skipped: true }
@@ -104,8 +105,9 @@ async function morningNotification(currentTime: string, today: string, testMode 
 
 // ── 2. 夜の通知 ─────────────────────────────────────────────
 async function eveningNotification(currentTime: string, today: string, testMode = false) {
+  const currentHour = currentTime.split(':')[0]
   let query = supabase.from('profiles').select('id').eq('notif_evening_on', true)
-  if (!testMode) query = query.eq('notif_evening_time', currentTime)
+  if (!testMode) query = query.like('notif_evening_time', `${currentHour}:%`)
   const { data: users } = await query
 
   if (!users || users.length === 0) return { type: 'evening', skipped: true }
