@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { createPortal } from 'react-dom'
 import { useTranslations } from 'next-intl'
 import { createClient } from '@/lib/supabase/client'
 import { useAuth } from '@/lib/supabase/useAuth'
@@ -91,7 +92,7 @@ export default function ConcertCampaignModal({ open, onClose, onComplete }: Prop
     setStep('intro')
   }
 
-  return (
+  return createPortal(
     <div
       className="fixed inset-0 z-[9999] flex items-end justify-center"
       style={{ background: 'rgba(0,0,0,0.5)' }}
@@ -220,7 +221,8 @@ export default function ConcertCampaignModal({ open, onClose, onComplete }: Prop
           )}
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }
 
