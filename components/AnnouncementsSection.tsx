@@ -3,7 +3,11 @@
 import { useState, useEffect } from 'react'
 import { Announcement, useAnnouncements } from '@/lib/useAnnouncements'
 import { useTranslations, useLocale } from 'next-intl'
+import { useAuth } from '@/lib/supabase/useAuth'
 import ConcertCampaignModal from '@/components/ConcertCampaignModal'
+
+// キャンペーンを表示する管理者ID（非公開テスト用）
+const CAMPAIGN_ADMIN_IDS = ['86c91b90-0060-4a3d-bf10-d5c846604882', '65ba4bc6-917d-4689-aeaf-8d4b5b01a004', 'a68ad766-e229-40b6-8d3b-5a45216b491d']
 
 const TYPE_CONFIG = {
   important: { bg: '#FFF0F8', border: '#F3B4E3', color: '#C97AB8' },
@@ -16,6 +20,7 @@ const MONTH_SHORT = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct'
 export default function AnnouncementsSection({ announcements }: { announcements: Announcement[] }) {
   const t = useTranslations()
   const { visible, dismiss } = useAnnouncements(announcements)
+  const { user } = useAuth()
   const [campaignDone, setCampaignDone] = useState(true) // default hidden until checked
   const [campaignModalOpen, setCampaignModalOpen] = useState(false)
 
@@ -28,7 +33,9 @@ export default function AnnouncementsSection({ announcements }: { announcements:
     setCampaignDone(true)
   }
 
-  const showCampaign = !campaignDone
+  // 管理者のみキャンペーン表示（公開時にこのチェックを外す）
+  const isAdmin = user && CAMPAIGN_ADMIN_IDS.includes(user.id)
+  const showCampaign = !campaignDone && isAdmin
   const totalCount = visible.length + (showCampaign ? 1 : 0)
 
   if (totalCount === 0) return null
