@@ -1395,17 +1395,27 @@ function ConcertHistoryModal({ entry, onClose, onSave }: {
     },
     {
       label: t('ProfilePage.memoryPhoto1'),
-      image: images[0],
+      image: images[1],
       onUpload: () => memory1Ref.current?.click(),
-      onRemove: () => setImages((prev) => prev.filter((_, i) => i !== 0)),
+      onRemove: () => setImages((prev) => {
+        const next = [...prev]
+        next[1] = ''
+        return next
+      }),
     },
     {
       label: t('ProfilePage.memoryPhoto2'),
-      image: images[1],
+      image: images[2],
       onUpload: () => memory2Ref.current?.click(),
-      onRemove: () => setImages((prev) => prev.filter((_, i) => i !== 1)),
+      onRemove: () => setImages((prev) => {
+        const next = [...prev]
+        next[2] = ''
+        return next
+      }),
     },
   ]
+
+  const posterImage = images[0]
 
   return createPortal(
     <div className="fixed inset-0 flex flex-col justify-end" style={{ zIndex: 100000 }}>
@@ -1460,6 +1470,16 @@ function ConcertHistoryModal({ entry, onClose, onSave }: {
             </div>
           )}
 
+          {posterImage && (
+            <div className="mb-4">
+              <p className="text-[11px] font-bold mb-1.5" style={{ color: '#636366' }}>公演ポスター</p>
+              <div className="relative rounded-xl overflow-hidden" style={{ aspectRatio: '16/9', background: '#E5E5EA' }}>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={posterImage} alt="" className="w-full h-full object-cover" />
+              </div>
+            </div>
+          )}
+
           <div className="grid grid-cols-2 gap-3">
             {slots.map((slot, idx) => (
               <div key={idx}>
@@ -1506,7 +1526,12 @@ function ConcertHistoryModal({ entry, onClose, onSave }: {
             setUploading(true)
             import('@/lib/supabase/uploadImage').then(({ uploadImage }) => {
               uploadImage('memories', e.target.files![0], 1200, 0.8).then((url) => {
-                if (url) setImages((prev) => { const next = [...prev]; next[0] = url; return next })
+                if (url) setImages((prev) => {
+                  const next = [...prev]
+                  while (next.length < 2) next.push('')
+                  next[1] = url
+                  return next
+                })
                 setUploading(false)
               })
             })
@@ -1518,7 +1543,12 @@ function ConcertHistoryModal({ entry, onClose, onSave }: {
             setUploading(true)
             import('@/lib/supabase/uploadImage').then(({ uploadImage }) => {
               uploadImage('memories', e.target.files![0], 1200, 0.8).then((url) => {
-                if (url) setImages((prev) => { const next = [...prev]; if (next.length < 1) next.push(''); next[1] = url; return next })
+                if (url) setImages((prev) => {
+                  const next = [...prev]
+                  while (next.length < 3) next.push('')
+                  next[2] = url
+                  return next
+                })
                 setUploading(false)
               })
             })
