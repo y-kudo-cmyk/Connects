@@ -1,6 +1,7 @@
 'use client'
 
-import { useState, useRef, useCallback } from 'react'
+import { useState, useRef, useCallback, useEffect } from 'react'
+import { createPortal } from 'react-dom'
 import { useTranslations } from 'next-intl'
 import { createClient } from '@/lib/supabase/client'
 import type { CardMaster, UserCard } from '@/lib/useCardData'
@@ -48,8 +49,11 @@ export default function CardDetailModal({ card, owned, userId, onClose, onSave, 
   const [frontFile, setFrontFile] = useState<File | null>(null)
   const [backFile, setBackFile] = useState<File | null>(null)
   const [saving, setSaving] = useState(false)
+  const [mounted, setMounted] = useState(false)
   const frontRef = useRef<HTMLInputElement>(null)
   const backRef = useRef<HTMLInputElement>(null)
+
+  useEffect(() => { setMounted(true) }, [])
 
   const handleImageSelect = useCallback((side: 'front' | 'back') => (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -115,7 +119,9 @@ export default function CardDetailModal({ card, owned, userId, onClose, onSave, 
     }
   }, [owned, card, userId, quantity, notes, frontFile, backFile, onSave, onClose])
 
-  return (
+  if (!mounted) return null
+
+  return createPortal(
     <div
       className="fixed inset-0 flex items-end justify-center"
       style={{ background: 'rgba(0,0,0,0.55)', zIndex: 60 }}
@@ -264,6 +270,7 @@ export default function CardDetailModal({ card, owned, userId, onClose, onSave, 
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }
