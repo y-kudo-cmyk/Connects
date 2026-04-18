@@ -71,7 +71,7 @@ export default function MapPage() {
   const [favOnly, setFavOnly] = useState(false)
   const { profile } = useProfile()
   const { toggle, isFavorite } = useFavoriteSpots()
-  const { photoMap, addPhoto, removePhoto, votePhoto, getPhotos, getConfirmedCount } = useSpotPhotos()
+  const { photoMap, addPhoto, removePhoto, votePhoto, getPhotos, getConfirmedCount, refreshPhotos } = useSpotPhotos()
 
   // refreshSpots後にdetailSpotを最新データに追従させる
   useEffect(() => {
@@ -152,7 +152,7 @@ export default function MapPage() {
             if (!res.ok) {
               await removePhoto(detailSpot.id, photoId)
             }
-            await refreshSpots()
+            await Promise.all([refreshSpots(), refreshPhotos()])
           }}
           onConfirmPhoto={(photoId) => votePhoto(detailSpot.id, photoId)}
           onOpenUpload={() => setUploadSpot(detailSpot)}

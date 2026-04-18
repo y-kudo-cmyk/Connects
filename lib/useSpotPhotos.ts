@@ -108,5 +108,5 @@ export function useSpotPhotos() {
     [photoMap],
   )
 
-  return { photoMap, addPhoto, removePhoto, votePhoto, getPhotos, getConfirmedCount }
+  return { photoMap, addPhoto, removePhoto, votePhoto, getPhotos, getConfirmedCount, refreshPhotos: fetchPhotos }
 }
