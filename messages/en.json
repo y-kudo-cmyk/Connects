@@ -152,6 +152,7 @@
     "overseas": "🌍 Overseas",
     "noEventsThisDay": "No events this day",
     "source": "Source",
+    "requiredFieldsMissing": "Please fill all required fields (title / start date / source URL / members)",
     "addedToMy": "Added to MY",
     "reAddConfirm": "Add again? (e.g. attending multiple times)",
     "reAdd": "Add again",

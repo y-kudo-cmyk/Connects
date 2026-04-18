@@ -42,8 +42,12 @@ export default function AddScheduleModal({ onClose, onRefresh }: { onClose: () =
   }
 
   const handleSubmit = async () => {
-    if (!title.trim() || !startDate) return
+    if (!title.trim() || !startDate || !sourceUrl.trim() || members.length === 0) {
+      setSubmitError(t('Schedule.requiredFieldsMissing'))
+      return
+    }
     setSaving(true)
+    setSubmitError('')
 
     // 画像があればSupabase Storageにアップロード
     let finalImageUrl = ''
@@ -129,11 +133,11 @@ export default function AddScheduleModal({ onClose, onRefresh }: { onClose: () =
           style={{ borderBottom: '1px solid #E5E5EA' }}>
           <p className="text-sm font-bold" style={{ color: '#1C1C1E' }}>{t('Schedule.addSchedule')}</p>
           <div className="flex items-center gap-2">
-            <button onClick={handleSubmit} disabled={!title.trim() || !startDate || saving}
+            <button onClick={handleSubmit} disabled={!title.trim() || !startDate || !sourceUrl.trim() || members.length === 0 || saving}
               className="px-4 py-2 rounded-xl text-sm font-bold"
               style={{
-                background: title.trim() && startDate ? '#F3B4E3' : '#E5E5EA',
-                color: title.trim() && startDate ? '#FFFFFF' : '#8E8E93',
+                background: (title.trim() && startDate && sourceUrl.trim() && members.length > 0) ? '#F3B4E3' : '#E5E5EA',
+                color: (title.trim() && startDate && sourceUrl.trim() && members.length > 0) ? '#FFFFFF' : '#8E8E93',
               }}>
               {saving ? t('Common.saving') : t('Schedule.addScheduleShort')}
             </button>
@@ -167,8 +171,25 @@ export default function AddScheduleModal({ onClose, onRefresh }: { onClose: () =
 
           {/* メンバー */}
           <div>
-            <label className="text-xs font-bold mb-1.5 block" style={{ color: '#636366' }}>{t('Schedule.memberLabel')}</label>
+            <label className="text-xs font-bold mb-1.5 block" style={{ color: '#636366' }}>
+              {t('Schedule.memberLabel')} <span style={{ color: '#EF4444' }}>*</span>
+            </label>
             <div className="flex flex-wrap gap-1.5">
+              {/* 全員=SEVENTEEN chip */}
+              {(() => {
+                const allSelected = members.length === seventeenMembers.length
+                return (
+                  <button
+                    onClick={() => setMembers(allSelected ? [] : seventeenMembers.map(m => m.name))}
+                    className="px-2.5 py-1 rounded-full text-[11px] font-bold"
+                    style={allSelected
+                      ? { background: '#1C1C1E', color: '#FFFFFF' }
+                      : { background: 'rgba(28,28,30,0.08)', color: '#1C1C1E' }
+                    }>
+                    SEVENTEEN {allSelected ? '✓' : ''}
+                  </button>
+                )
+              })()}
               {seventeenMembers.map((m) => {
                 const selected = members.includes(m.name)
                 return (
@@ -231,11 +252,11 @@ export default function AddScheduleModal({ onClose, onRefresh }: { onClose: () =
             </label>
           )}
 
-          {/* ソースURL */}
+          {/* ソースURL（必須） */}
           <input type="url" value={sourceUrl} onChange={(e) => setSourceUrl(e.target.value)}
-            placeholder={`${t('Schedule.source')} URL`}
+            placeholder={`${t('Schedule.source')} URL *`}
             className="w-full px-3 py-2.5 rounded-xl text-sm outline-none"
-            style={{ background: '#FFFFFF', border: '1px solid #E5E5EA', color: '#1C1C1E' }} />
+            style={{ background: '#FFFFFF', border: sourceUrl.trim() ? '1px solid #E5E5EA' : '1px solid #FCA5A5', color: '#1C1C1E' }} />
 
           {/* 備考 */}
           <textarea value={notes} onChange={(e) => setNotes(e.target.value)}

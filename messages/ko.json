@@ -152,6 +152,7 @@
     "overseas": "🌍 해외",
     "noEventsThisDay": "이 날 일정이 없습니다",
     "source": "소스",
+    "requiredFieldsMissing": "필수 항목을 입력해 주세요 (제목 / 시작일 / 소스 URL / 멤버)",
     "addedToMy": "MY에 추가됨",
     "reAddConfirm": "다시 추가하시겠습니까? (여러 번 참석하는 경우 등)",
     "reAdd": "다시 추가",

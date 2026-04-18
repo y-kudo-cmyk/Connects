@@ -152,6 +152,7 @@
     "overseas": "🌍 海外",
     "noEventsThisDay": "この日の予定はありません",
     "source": "ソース",
+    "requiredFieldsMissing": "必須項目を入力してください（タイトル / 開始日 / ソースURL / メンバー）",
     "addedToMy": "MYに追加済みです",
     "reAddConfirm": "再度追加しますか？（同じイベントに複数回参戦する場合など）",
     "reAdd": "再度追加",
