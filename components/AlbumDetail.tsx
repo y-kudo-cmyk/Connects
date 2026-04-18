@@ -245,18 +245,18 @@ export default function AlbumDetail({ product, userCards, onBack, onCardTap }: A
                           }}
                         >
                           {!hasImage && (
-                            <div className="absolute inset-0 flex flex-col items-center justify-center p-1">
+                            <div className="absolute inset-0 flex flex-col items-center justify-center p-1.5">
                               <svg
-                                width="16" height="16" viewBox="0 0 24 24" fill="none"
-                                stroke={owned ? accent : '#C7C7CC'} strokeWidth="1.5"
+                                width="20" height="20" viewBox="0 0 24 24" fill="none"
+                                stroke={owned ? accent : '#8E8E93'} strokeWidth="1.5"
                               >
                                 <rect x="3" y="3" width="18" height="18" rx="2" />
                                 <circle cx="8.5" cy="8.5" r="1.5" />
                                 <path d="M21 15l-5-5L5 21" />
                               </svg>
                               <span
-                                className="text-[8px] mt-1 font-semibold text-center leading-tight"
-                                style={{ color: owned ? '#636366' : '#C7C7CC' }}
+                                className="text-[11px] mt-1.5 font-bold text-center leading-tight"
+                                style={{ color: owned ? '#1C1C1E' : '#636366' }}
                               >
                                 {card.card_detail || card.card_type}
                               </span>
