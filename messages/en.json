@@ -464,6 +464,8 @@
     "approvedStatus": "Approved",
     "approveAction": "Approve",
     "memberSourceRequired": "Please enter members and source URL",
+    "memberRequired": "Please select members",
+    "sourceRequired": "Please enter source URL",
     "maxPhotos": "(max 3)",
     "aiAnalyzing": "AI analyzing...",
     "aiAnalyzeFromScreenshot": "AI analyze from screenshot",

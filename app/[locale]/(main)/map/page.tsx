@@ -1042,6 +1042,13 @@ function PhotoCard({
                   ✓ {t('MapPage.approvedStatus')}（{photo.votes}/3）
                 </div>
               )
+              const missingLabel = !hasMembers && !hasSource
+                ? t('MapPage.memberSourceRequired')
+                : !hasMembers
+                  ? t('MapPage.memberRequired')
+                  : !hasSource
+                    ? t('MapPage.sourceRequired')
+                    : ''
               return (
                 <button
                   onClick={() => { if (isComplete) { onVotePhoto(photo.id); setShowEdit(false) } }}
@@ -1051,7 +1058,7 @@ function PhotoCard({
                     ? { background: '#F0F0F5', color: '#8E8E93' }
                     : { background: 'rgba(52,211,153,0.15)', color: '#34D399' }
                   }>
-                  {!isComplete ? t('MapPage.memberSourceRequired') : `👍 ${t('MapPage.approveAction')}（${photo.votes ?? 0}/3）`}
+                  {!isComplete ? missingLabel : `👍 ${t('MapPage.approveAction')}（${photo.votes ?? 0}/3）`}
                 </button>
               )
             })()}

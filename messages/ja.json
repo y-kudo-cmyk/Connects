@@ -464,6 +464,8 @@
     "approvedStatus": "承認済み",
     "approveAction": "承認する",
     "memberSourceRequired": "⚠ メンバーとソースURLを入力してください",
+    "memberRequired": "⚠ メンバーを選択してください",
+    "sourceRequired": "⚠ ソースURLを入力してください",
     "maxPhotos": "（最大3枚）",
     "aiAnalyzing": "🔍 AI解析中...",
     "aiAnalyzeFromScreenshot": "🔍 スクショからAI解析",

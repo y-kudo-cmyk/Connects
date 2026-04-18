@@ -464,6 +464,8 @@
     "approvedStatus": "승인됨",
     "approveAction": "승인하기",
     "memberSourceRequired": "⚠ 멤버와 소스 URL을 입력해 주세요",
+    "memberRequired": "⚠ 멤버를 선택해 주세요",
+    "sourceRequired": "⚠ 소스 URL을 입력해 주세요",
     "maxPhotos": "(최대 3장)",
     "aiAnalyzing": "🔍 AI 분석 중...",
     "aiAnalyzeFromScreenshot": "🔍 스크린샷에서 AI 분석",
