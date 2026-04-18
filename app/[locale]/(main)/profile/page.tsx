@@ -69,28 +69,50 @@ function SwipeableConcertRow({
   const [offset, setOffset] = useState(0)
   const [confirming, setConfirming] = useState(false)
   const startX = useRef<number | null>(null)
+  const startOffset = useRef(0)
+  const currentOffset = useRef(0)
   const moved = useRef(false)
   const DELETE_WIDTH = 72
+  const SWIPE_THRESHOLD = 12
 
-  const onStart = (x: number) => { startX.current = x; moved.current = false }
+  const onStart = (x: number) => {
+    startX.current = x
+    startOffset.current = offset
+    currentOffset.current = offset
+    moved.current = false
+  }
   const onMove = (x: number) => {
     if (startX.current === null) return
     const dx = x - startX.current
-    if (Math.abs(dx) > 5) moved.current = true
-    // 左スワイプのみ（負方向）
-    if (dx < 0) setOffset(Math.max(dx, -DELETE_WIDTH))
-    else if (offset < 0) setOffset(Math.min(0, offset + dx))
+    if (Math.abs(dx) > SWIPE_THRESHOLD) moved.current = true
+    const next = Math.max(-DELETE_WIDTH, Math.min(0, startOffset.current + dx))
+    currentOffset.current = next
+    setOffset(next)
   }
   const onEnd = () => {
-    if (offset < -DELETE_WIDTH / 2) setOffset(-DELETE_WIDTH)
-    else setOffset(0)
+    if (startX.current === null) return
     startX.current = null
+    const settled = currentOffset.current < -DELETE_WIDTH / 2 ? -DELETE_WIDTH : 0
+    currentOffset.current = settled
+    setOffset(settled)
+  }
+  const onTap = () => {
+    if (moved.current) { moved.current = false; return }
+    if (offset === 0) onOpen()
   }
 
   const d = entry.date ? new Date(entry.date) : null
   const dateStr = d ? `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, '0')}.${String(d.getDate()).padStart(2, '0')}` : ''
   return (
-    <div style={{ position: 'relative', overflow: 'hidden', borderRadius: 12, marginBottom: 8, background: '#EF4444' }}>
+    <div
+      style={{ position: 'relative', overflow: 'hidden', borderRadius: 12, marginBottom: 8, background: '#EF4444', touchAction: 'pan-y' }}
+      onTouchStart={(e) => onStart(e.touches[0].clientX)}
+      onTouchMove={(e) => onMove(e.touches[0].clientX)}
+      onTouchEnd={onEnd}
+      onPointerDown={(e) => { if (e.pointerType !== 'touch') onStart(e.clientX) }}
+      onPointerMove={(e) => { if (e.pointerType !== 'touch' && startX.current !== null) onMove(e.clientX) }}
+      onPointerUp={(e) => { if (e.pointerType !== 'touch') onEnd() }}
+    >
       {/* 削除ボタン（右側に露出） */}
       <div style={{ position: 'absolute', top: 0, right: 0, bottom: 0, width: DELETE_WIDTH, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#EF4444' }}>
         {!confirming ? (
@@ -114,14 +136,9 @@ function SwipeableConcertRow({
       </div>
 
       {/* コンテンツ */}
-      <button
-        onClick={() => { if (!moved.current && offset === 0) onOpen() }}
-        onTouchStart={(e) => onStart(e.touches[0].clientX)}
-        onTouchMove={(e) => onMove(e.touches[0].clientX)}
-        onTouchEnd={onEnd}
-        onPointerDown={(e) => { if (e.pointerType !== 'touch') onStart(e.clientX) }}
-        onPointerMove={(e) => { if (e.pointerType !== 'touch' && startX.current !== null) onMove(e.clientX) }}
-        onPointerUp={(e) => { if (e.pointerType !== 'touch') onEnd() }}
+      <div
+        onClick={onTap}
+        role="button"
         style={{
           position: 'relative',
           display: 'flex',
@@ -135,6 +152,7 @@ function SwipeableConcertRow({
           background: '#FFFFFF',
           transform: `translateX(${offset}px)`,
           transition: startX.current === null ? 'transform 0.15s' : 'none',
+          cursor: 'pointer',
         }}
       >
         <div
@@ -160,7 +178,7 @@ function SwipeableConcertRow({
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#C7C7CC" strokeWidth="2">
           <path d="M9 18l6-6-6-6" />
         </svg>
-      </button>
+      </div>
     </div>
   )
 }
