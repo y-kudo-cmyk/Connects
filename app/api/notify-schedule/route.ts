@@ -212,9 +212,10 @@ async function myEventReminder(currentTime: string, today: string) {
 
     if (!entries || entries.length === 0) continue
 
-    // 今日の、1時間後に開始するイベントを抽出
+    // 今日の、1時間後に開始するイベントを抽出（LIVE は除外）
     const upcoming = entries.filter(e => {
       if (!e.start_date) return false
+      if (e.tag === 'LIVE') return false
       const date = e.start_date.slice(0, 10)
       const time = e.start_date.slice(11, 16)
       return date === today && time === targetTime
