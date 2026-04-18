@@ -662,20 +662,19 @@ export default function ProfilePage() {
             </button>
           </div>
 
-          <div style={{ flex: 1, overflowY: 'auto', padding: '16px', display: 'flex', flexDirection: 'column', gap: 8, paddingBottom: 'calc(80px + env(safe-area-inset-bottom, 0px))' }}>
-            <p style={{ fontSize: 10, color: '#8E8E93', margin: 0, marginBottom: 4 }}>
-              左にスワイプで削除
+          <div style={{ flex: 1, overflowY: 'auto', padding: '16px', paddingBottom: 'calc(80px + env(safe-area-inset-bottom, 0px))', background: '#FFFF00' }}>
+            <p style={{ fontSize: 14, color: '#000', margin: 0, marginBottom: 8, fontWeight: 'bold' }}>
+              DEBUG: 参戦記録 {liveEntries.length}件
             </p>
             {liveEntries
               .slice()
               .sort((a, b) => (b.date || '').localeCompare(a.date || ''))
+              .slice(0, 5)
               .map((e) => (
-                <SwipeableConcertRow
-                  key={e.id}
-                  entry={e}
-                  onOpen={() => { setShowConcerts(false); router.push(`/my?entry=${e.id}`) }}
-                  onDelete={() => removeEntry(e.id)}
-                />
+                <div key={e.id} style={{ padding: '10px', marginBottom: '8px', background: '#FFFFFF', borderRadius: 8 }}>
+                  <p style={{ fontSize: 12, fontWeight: 700, color: '#000', margin: 0 }}>{e.title}</p>
+                  <p style={{ fontSize: 10, color: '#666', margin: 0 }}>{e.date} | {e.venue || '-'}</p>
+                </div>
               ))}
           </div>
         </div>,
