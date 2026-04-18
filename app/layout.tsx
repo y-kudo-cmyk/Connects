@@ -9,7 +9,7 @@ const geist = Geist({subsets:['latin'],variable:'--font-sans'});
 
 export const metadata: Metadata = {
   title: 'Connects+',
-  description: 'K-POP Fan Community',
+  description: 'FOR CARAT',
   manifest: '/manifest.json',
   appleWebApp: {
     capable: true,
