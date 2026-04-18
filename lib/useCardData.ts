@@ -16,10 +16,13 @@ export interface CardProduct {
   image_url: string
 }
 
+export type VersionTier = 'INCLUDED' | 'STORE_JP' | 'STORE_KR' | 'LUCKY_DRAW' | 'EVENT' | 'VENUE' | 'MERCH_BONUS'
+
 export interface CardVersion {
   version_id: string
   product_id: string
   version_name: string
+  tier?: VersionTier
 }
 
 export interface CardMaster {

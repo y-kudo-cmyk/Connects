@@ -134,20 +134,40 @@ export default function AlbumDetail({ product, userCards, onBack, onCardTap }: A
     return ordered
   }, [memberCards, versions])
 
-  // Further group versions by their base name (before " - " separator)
-  // e.g. "BLUE/ECHO - Weverse Shop" → base "BLUE/ECHO", store "Weverse Shop"
-  const groupedByBase = useMemo(() => {
-    const groups = new Map<string, { store: string; versionId: string; cards: CardMaster[] }[]>()
+  // Further group versions by tier → base name (before " - " separator)
+  // e.g. tier=STORE_JP, "BLUE/ECHO - Weverse Shop" → base "BLUE/ECHO", store "Weverse Shop"
+  const versionTierMap = useMemo(() => {
+    const m = new Map<string, string>()
+    for (const v of versions) m.set(v.version_id, v.tier || 'INCLUDED')
+    return m
+  }, [versions])
+
+  const groupedByTierAndBase = useMemo(() => {
+    const tiers = new Map<string, Map<string, { store: string; versionId: string; cards: CardMaster[] }[]>>()
     for (const [versionId, cards] of groupedByVersion.entries()) {
+      const tier = versionTierMap.get(versionId) || 'INCLUDED'
       const fullName = versionNameMap.get(versionId) || versionId
       const sepIdx = fullName.indexOf(' - ')
       const base = sepIdx >= 0 ? fullName.slice(0, sepIdx) : fullName
       const store = sepIdx >= 0 ? fullName.slice(sepIdx + 3) : ''
-      if (!groups.has(base)) groups.set(base, [])
-      groups.get(base)!.push({ store, versionId, cards })
+      if (!tiers.has(tier)) tiers.set(tier, new Map())
+      const tierMap = tiers.get(tier)!
+      if (!tierMap.has(base)) tierMap.set(base, [])
+      tierMap.get(base)!.push({ store, versionId, cards })
     }
-    return groups
-  }, [groupedByVersion, versionNameMap])
+    return tiers
+  }, [groupedByVersion, versionNameMap, versionTierMap])
+
+  const TIER_ORDER = ['INCLUDED', 'STORE_JP', 'STORE_KR', 'LUCKY_DRAW', 'EVENT', 'VENUE', 'MERCH_BONUS']
+  const TIER_META: Record<string, { icon: string; label: string; bg: string }> = {
+    INCLUDED:    { icon: '📀', label: '封入トレカ',       bg: 'rgba(59,130,246,0.06)' },
+    STORE_JP:    { icon: '🇯🇵', label: '店舗特典(日本)',  bg: 'rgba(248,113,113,0.06)' },
+    STORE_KR:    { icon: '🇰🇷', label: '店舗特典(韓国)',  bg: 'rgba(236,72,153,0.06)' },
+    LUCKY_DRAW:  { icon: '🎲', label: 'ラッキードロー',    bg: 'rgba(251,146,60,0.06)' },
+    EVENT:       { icon: '🎫', label: 'イベント当選',      bg: 'rgba(167,139,250,0.06)' },
+    VENUE:       { icon: '🏟',  label: '会場限定',          bg: 'rgba(52,211,153,0.06)' },
+    MERCH_BONUS: { icon: '🛒', label: 'MERCH付属',         bg: 'rgba(139,92,246,0.06)' },
+  }
 
   const totalInMember = memberCards.length
   const ownedInMember = memberCards.filter(c => ownedMap.has(c.id)).length
@@ -263,18 +283,36 @@ export default function AlbumDetail({ product, userCards, onBack, onCardTap }: A
             </div>
           )}
 
-          <div className="px-4 space-y-5 pb-6">
-            {Array.from(groupedByBase.entries()).map(([base, subs]) => {
-              const totalOwned = subs.reduce((acc, s) => acc + s.cards.filter(c => ownedMap.has(c.id)).length, 0)
-              const totalCards = subs.reduce((acc, s) => acc + s.cards.length, 0)
+          <div className="px-4 space-y-6 pb-6">
+            {TIER_ORDER.filter(t => groupedByTierAndBase.has(t)).map(tier => {
+              const tierMap = groupedByTierAndBase.get(tier)!
+              const meta = TIER_META[tier] || { icon: '📌', label: tier, bg: '#F0F0F5' }
+              // Tier total
+              let tierOwned = 0, tierTotal = 0
+              for (const subs of tierMap.values()) for (const s of subs) { tierOwned += s.cards.filter(c => ownedMap.has(c.id)).length; tierTotal += s.cards.length }
+
               return (
-                <div key={base || 'no-base'}>
+                <section key={tier} className="rounded-xl px-3 py-3" style={{ background: meta.bg }}>
                   <div className="flex items-center gap-2 mb-3">
+                    <span className="text-base">{meta.icon}</span>
+                    <h2 className="text-sm font-black" style={{ color: '#1C1C1E' }}>{meta.label}</h2>
+                    <span className="text-[10px] font-bold ml-auto" style={{ color: '#636366' }}>
+                      {tierOwned}/{tierTotal}
+                    </span>
+                  </div>
+
+                  <div className="space-y-4">
+                    {Array.from(tierMap.entries()).map(([base, subs]) => {
+                      const totalOwned = subs.reduce((acc, s) => acc + s.cards.filter(c => ownedMap.has(c.id)).length, 0)
+                      const totalCards = subs.reduce((acc, s) => acc + s.cards.length, 0)
+                      return (
+                <div key={base || 'no-base'}>
+                  <div className="flex items-center gap-2 mb-2">
                     <div
-                      className="w-1.5 h-4 rounded-full"
+                      className="w-1 h-3.5 rounded-full"
                       style={{ background: memberColor }}
                     />
-                    <h3 className="text-sm font-black" style={{ color: '#1C1C1E' }}>{base || '—'}</h3>
+                    <h3 className="text-xs font-bold" style={{ color: '#1C1C1E' }}>{base || '—'}</h3>
                     <span className="text-[10px]" style={{ color: '#8E8E93' }}>
                       {totalOwned}/{totalCards}
                     </span>
@@ -352,6 +390,10 @@ export default function AlbumDetail({ product, userCards, onBack, onCardTap }: A
                     )
                   })}
                 </div>
+              )
+            })}
+                  </div>
+                </section>
               )
             })}
           </div>
