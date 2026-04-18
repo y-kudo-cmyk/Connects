@@ -422,68 +422,70 @@ export default function ProfilePage() {
         </div>
       </div>
 
-      {/* --- Favorite Artist --- */}
-      <div className="px-4 mb-4">
-        <p className="text-xs font-semibold mb-2" style={{ color: '#8E8E93' }}>{t('Common.favArtist')}</p>
-        <div className="flex items-center gap-3 px-4 py-3 rounded-xl" style={{ background: '#FFFFFF' }}>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/seventeen.png" alt="SEVENTEEN" className="w-10 h-10 rounded-xl object-cover flex-shrink-0" />
-          <div className="flex-1">
-            <p className="text-sm font-bold" style={{ color: '#1C1C1E' }}>SEVENTEEN</p>
-            <p className="text-xs" style={{ color: '#8E8E93' }}>13 members</p>
-          </div>
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="#3B82F6">
-            <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78L12 21.23l8.84-8.84a5.5 5.5 0 000-7.78z" />
-          </svg>
-        </div>
-      </div>
-
-      {/* --- Favorite Members (推しメンバー) --- */}
+      {/* --- Favorite Artist + Oshi Members (統合) --- */}
       <div className="px-4 mb-4">
         <div className="flex items-center justify-between mb-2">
-          <p className="text-xs font-semibold" style={{ color: '#8E8E93' }}>推しメンバー</p>
+          <p className="text-xs font-semibold" style={{ color: '#8E8E93' }}>{t('Common.favArtist')}</p>
           <button
             onClick={() => setEditingOshi(v => !v)}
             className="text-xs font-bold px-3 py-1 rounded-full"
             style={{ background: 'rgba(243,180,227,0.12)', color: '#F3B4E3' }}
           >
-            {editingOshi ? '完了' : '変更'}
+            {editingOshi ? '完了' : '推し変更'}
           </button>
         </div>
 
-        {!editingOshi ? (
-          // Summary view: selected oshi chips only
-          <div className="flex items-center gap-2 px-3 py-3 rounded-xl" style={{ background: '#FFFFFF' }}>
-            {favMemberIds.length === 0 ? (
-              <p className="text-xs" style={{ color: '#8E8E93' }}>未設定（「変更」から選択）</p>
-            ) : (
-              <div className="flex flex-wrap gap-2">
-                {seventeenMembers.map((m, i) => {
-                  const memberId = `A${String(i + 1).padStart(6, '0')}`
-                  if (!favMemberIds.includes(memberId)) return null
-                  return (
-                    <div
-                      key={memberId}
-                      className="flex items-center gap-1.5 pl-0.5 pr-2 py-0.5 rounded-full"
-                      style={{ background: `${m.color}1A`, border: `1.5px solid ${m.color}` }}
-                    >
-                      <div
-                        className="w-5 h-5 rounded-full flex-shrink-0"
-                        style={{
-                          background: m.photo ? `url(${m.photo}) center/cover` : m.color,
-                        }}
-                      />
-                      <span className="text-[11px] font-bold" style={{ color: m.color }}>{m.name}</span>
-                    </div>
-                  )
-                })}
-              </div>
-            )}
+        <div className="px-4 py-3 rounded-xl" style={{ background: '#FFFFFF' }}>
+          {/* SEVENTEEN row */}
+          <div className="flex items-center gap-3">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/seventeen.png" alt="SEVENTEEN" className="w-10 h-10 rounded-xl object-cover flex-shrink-0" />
+            <div className="flex-1">
+              <p className="text-sm font-bold" style={{ color: '#1C1C1E' }}>SEVENTEEN</p>
+              <p className="text-xs" style={{ color: '#8E8E93' }}>13 members</p>
+            </div>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="#3B82F6">
+              <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78L12 21.23l8.84-8.84a5.5 5.5 0 000-7.78z" />
+            </svg>
           </div>
-        ) : (
+
+          {/* Oshi members row (summary) */}
+          {!editingOshi && (
+            <div className="mt-3 pt-3" style={{ borderTop: '1px solid #F0F0F5' }}>
+              <p className="text-[10px] mb-2" style={{ color: '#8E8E93' }}>推しメンバー</p>
+              {favMemberIds.length === 0 ? (
+                <p className="text-xs" style={{ color: '#8E8E93' }}>未設定（「推し変更」から選択）</p>
+              ) : (
+                <div className="flex flex-wrap gap-1.5">
+                  {seventeenMembers.map((m, i) => {
+                    const memberId = `A${String(i + 1).padStart(6, '0')}`
+                    if (!favMemberIds.includes(memberId)) return null
+                    return (
+                      <div
+                        key={memberId}
+                        className="flex items-center gap-1.5 pl-0.5 pr-2 py-0.5 rounded-full"
+                        style={{ background: `${m.color}1A`, border: `1.5px solid ${m.color}` }}
+                      >
+                        <div
+                          className="w-5 h-5 rounded-full flex-shrink-0"
+                          style={{
+                            background: m.photo ? `url(${m.photo}) center/cover` : m.color,
+                          }}
+                        />
+                        <span className="text-[11px] font-bold" style={{ color: m.color }}>{m.name}</span>
+                      </div>
+                    )
+                  })}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+
+        {editingOshi && (
           // Edit view: full 13-member grid
-          <>
-            <p className="text-[10px] mb-2" style={{ color: '#8E8E93' }}>複数選択できます</p>
+          <div className="mt-3">
+            <p className="text-[10px] mb-2" style={{ color: '#8E8E93' }}>推しメンバー（複数選択できます）</p>
             <div className="flex flex-wrap gap-2">
               {seventeenMembers.map((m, i) => {
                 const memberId = `A${String(i + 1).padStart(6, '0')}`
@@ -523,7 +525,7 @@ export default function ProfilePage() {
                 )
               })}
             </div>
-          </>
+          </div>
         )}
       </div>
 
