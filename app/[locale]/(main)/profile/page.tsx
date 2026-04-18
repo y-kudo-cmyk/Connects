@@ -83,6 +83,7 @@ export default function ProfilePage() {
   const [feedbackState, setFeedbackState] = useState<'idle' | 'sending' | 'done' | 'error'>('idle')
   const [cropSrc, setCropSrc] = useState<string | null>(null)
   const [favMemberIds, setFavMemberIds] = useState<string[]>([])
+  const [editingOshi, setEditingOshi] = useState(false)
 
   useEffect(() => {
     if (!user) return
@@ -439,47 +440,91 @@ export default function ProfilePage() {
 
       {/* --- Favorite Members (推しメンバー) --- */}
       <div className="px-4 mb-4">
-        <p className="text-xs font-semibold mb-1" style={{ color: '#8E8E93' }}>推しメンバー</p>
-        <p className="text-[10px] mb-2" style={{ color: '#8E8E93' }}>複数選択できます</p>
-        <div className="flex flex-wrap gap-2">
-          {seventeenMembers.map((m, i) => {
-            const memberId = `A${String(i + 1).padStart(6, '0')}`
-            const selected = favMemberIds.includes(memberId)
-            return (
-              <button
-                key={memberId}
-                onClick={() => toggleFavMember(memberId)}
-                className="relative rounded-xl overflow-hidden transition-all"
-                style={{
-                  width: 64,
-                  height: 64,
-                  background: m.photo ? `url(${m.photo}) center/cover` : m.color,
-                  border: selected ? `3px solid ${m.color}` : '3px solid transparent',
-                  opacity: selected ? 1 : 0.85,
-                }}
-              >
-                {selected && (
-                  <div
-                    className="absolute top-0.5 right-0.5 w-5 h-5 rounded-full flex items-center justify-center"
-                    style={{ background: m.color, border: '2px solid #FFFFFF' }}
-                  >
-                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-                      <polyline points="20 6 9 17 4 12" />
-                    </svg>
-                  </div>
-                )}
-                <div
-                  className="absolute bottom-0 left-0 right-0 text-center py-1"
-                  style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.75), rgba(0,0,0,0))' }}
-                >
-                  <span className="text-[9px] font-bold" style={{ color: '#FFFFFF' }}>
-                    {m.name}
-                  </span>
-                </div>
-              </button>
-            )
-          })}
+        <div className="flex items-center justify-between mb-2">
+          <p className="text-xs font-semibold" style={{ color: '#8E8E93' }}>推しメンバー</p>
+          <button
+            onClick={() => setEditingOshi(v => !v)}
+            className="text-xs font-bold px-3 py-1 rounded-full"
+            style={{ background: 'rgba(243,180,227,0.12)', color: '#F3B4E3' }}
+          >
+            {editingOshi ? '完了' : '変更'}
+          </button>
         </div>
+
+        {!editingOshi ? (
+          // Summary view: selected oshi chips only
+          <div className="flex items-center gap-2 px-3 py-3 rounded-xl" style={{ background: '#FFFFFF' }}>
+            {favMemberIds.length === 0 ? (
+              <p className="text-xs" style={{ color: '#8E8E93' }}>未設定（「変更」から選択）</p>
+            ) : (
+              <div className="flex flex-wrap gap-2">
+                {seventeenMembers.map((m, i) => {
+                  const memberId = `A${String(i + 1).padStart(6, '0')}`
+                  if (!favMemberIds.includes(memberId)) return null
+                  return (
+                    <div
+                      key={memberId}
+                      className="flex items-center gap-1.5 pl-0.5 pr-2 py-0.5 rounded-full"
+                      style={{ background: `${m.color}1A`, border: `1.5px solid ${m.color}` }}
+                    >
+                      <div
+                        className="w-5 h-5 rounded-full flex-shrink-0"
+                        style={{
+                          background: m.photo ? `url(${m.photo}) center/cover` : m.color,
+                        }}
+                      />
+                      <span className="text-[11px] font-bold" style={{ color: m.color }}>{m.name}</span>
+                    </div>
+                  )
+                })}
+              </div>
+            )}
+          </div>
+        ) : (
+          // Edit view: full 13-member grid
+          <>
+            <p className="text-[10px] mb-2" style={{ color: '#8E8E93' }}>複数選択できます</p>
+            <div className="flex flex-wrap gap-2">
+              {seventeenMembers.map((m, i) => {
+                const memberId = `A${String(i + 1).padStart(6, '0')}`
+                const selected = favMemberIds.includes(memberId)
+                return (
+                  <button
+                    key={memberId}
+                    onClick={() => toggleFavMember(memberId)}
+                    className="relative rounded-xl overflow-hidden transition-all"
+                    style={{
+                      width: 64,
+                      height: 64,
+                      background: m.photo ? `url(${m.photo}) center/cover` : m.color,
+                      border: selected ? `3px solid ${m.color}` : '3px solid transparent',
+                      opacity: selected ? 1 : 0.85,
+                    }}
+                  >
+                    {selected && (
+                      <div
+                        className="absolute top-0.5 right-0.5 w-5 h-5 rounded-full flex items-center justify-center"
+                        style={{ background: m.color, border: '2px solid #FFFFFF' }}
+                      >
+                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                          <polyline points="20 6 9 17 4 12" />
+                        </svg>
+                      </div>
+                    )}
+                    <div
+                      className="absolute bottom-0 left-0 right-0 text-center py-1"
+                      style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.75), rgba(0,0,0,0))' }}
+                    >
+                      <span className="text-[9px] font-bold" style={{ color: '#FFFFFF' }}>
+                        {m.name}
+                      </span>
+                    </div>
+                  </button>
+                )
+              })}
+            </div>
+          </>
+        )}
       </div>
 
       {/* --- Referral code --- */}
