@@ -953,18 +953,29 @@ function PhotoCard({
         {(photo.caption || spotMemo) && (
           <p className="text-[9px] leading-tight mt-0.5" style={{ color: '#8E8E93' }}>{photo.caption || spotMemo}</p>
         )}
-        {/* 承認状態バッジ */}
-        {(() => {
+        {/* 承認ボタン / 承認状態 */}
+        {onVotePhoto && (() => {
           const isApproved = photo.status === 'confirmed' && (photo.votes ?? 0) >= 3
           if (isApproved) return (
-            <span className="inline-flex items-center gap-0.5 mt-1 text-[9px] font-bold px-1.5 py-0.5 rounded-full"
-              style={{ background: 'rgba(52,211,153,0.15)', color: '#34D399' }}>✓ {photo.votes}/3</span>
+            <div className="mt-1.5 py-1.5 rounded-md text-center text-[10px] font-bold"
+              style={{ background: 'rgba(52,211,153,0.15)', color: '#34D399' }}>
+              ✓ {t('MapPage.approvedStatus')}（{photo.votes}/3）
+            </div>
           )
+          const hasMembers = savedTags.filter(tg => tg !== 'SEVENTEEN').length > 0 || photo.tags?.some(tg => tg !== 'SEVENTEEN')
+          const hasSource = !!effectiveSourceUrl
+          const isComplete = hasMembers && hasSource
           return (
-            <span className="inline-flex items-center gap-0.5 mt-1 text-[9px] font-bold px-1.5 py-0.5 rounded-full"
-              style={{ background: 'rgba(245,158,11,0.12)', color: '#F59E0B' }}>
-              {photo.votes ?? 0}/3
-            </span>
+            <button
+              onClick={(e) => { e.preventDefault(); e.stopPropagation(); if (isComplete) onVotePhoto(photo.id) }}
+              disabled={!isComplete}
+              className="mt-1.5 py-1.5 rounded-md text-[10px] font-bold"
+              style={!isComplete
+                ? { background: '#F0F0F5', color: '#8E8E93' }
+                : { background: 'rgba(52,211,153,0.15)', color: '#34D399' }
+              }>
+              {!isComplete ? t('MapPage.memberSourceRequired') : `👍 ${t('MapPage.approveAction')}（${photo.votes ?? 0}/3）`}
+            </button>
           )
         })()}
       </div>
