@@ -28,8 +28,8 @@ const RANKS = [
   { key: 'bronze',   label: 'Bronze',   color: '#CD7F32', bg: '#F5E6D3',   initial: 'B',  min: 100,  next: 500  },
   { key: 'silver',   label: 'Silver',   color: '#7D7D7D', bg: '#EBEBEB',   initial: 'S',  min: 500,  next: 1000 },
   { key: 'gold',     label: 'Gold',     color: '#B8921A', bg: '#FBF0CC',   initial: 'G',  min: 1000, next: 2000 },
-  { key: 'platinum', label: 'Platinum', color: '#6B5EA8', bg: '#EAE6F8',   initial: 'P',  min: 2000, next: 3000 },
-  { key: 'diamond',  label: 'Diamond',  color: '#0EA5C9', bg: '#DCEFFE',   initial: 'D',  min: 3000, next: null},
+  { key: 'legend',   label: 'Legend',   color: '#6B5EA8', bg: '#EAE6F8',   initial: 'L',  min: 2000, next: 3000 },
+  { key: 'master',   label: 'Master',   color: '#0EA5C9', bg: '#DCEFFE',   initial: 'M',  min: 3000, next: null},
 ] as const
 
 // スコア重み: 投稿5 / 承認1 / 編集2 / 紹介5 / ソースURL追加3（ソースURLは編集と同じカラムに集計、重みは暫定2=編集と同じ。将来分離する場合は別途実装）
