@@ -388,11 +388,11 @@ export default function AlbumDetail({ product, userCards, onBack, onCardTap }: A
 
   function renderBaseBlock(base: string, subs: { store: string; versionId: string; cards: CardMaster[] }[], tier: string, compact = false) {
     const isStore = STORE_TIERS.has(tier)
-    // STORE tier: サブ列幅でカード1枚
+    // STORE tier: サブ列幅でカード1枚（店舗内3列のうち1つ分）
     // compact (半幅ペアで横並び): カード1枚が半幅セルを満たす
-    // INCLUDED 通常: sub の枚数が2以下なら grid-cols-2、3枚以上は grid-cols-4
+    // INCLUDED 通常: sub内の枚数で列数を決定。3枚以下は3列（店舗幅と統一）、4枚以上は4列
     const maxSubCount = subs.reduce((acc, s) => Math.max(acc, s.cards.length), 0)
-    const gridCols = isStore || compact ? 'grid-cols-1' : maxSubCount <= 2 ? 'grid-cols-2' : 'grid-cols-4'
+    const gridCols = isStore || compact ? 'grid-cols-1' : maxSubCount <= 3 ? 'grid-cols-3' : 'grid-cols-4'
     const totalOwned = subs.reduce((acc, s) => acc + s.cards.filter(c => ownedMap.has(c.id)).length, 0)
     const totalCards = subs.reduce((acc, s) => acc + s.cards.length, 0)
     const displayBase = isStore ? shortStoreName(base) : base
@@ -413,18 +413,22 @@ export default function AlbumDetail({ product, userCards, onBack, onCardTap }: A
                     const ownedInVersion = versionCards.filter(c => ownedMap.has(c.id)).length
                     return (
                       <div key={versionId} className="mb-3">
-                        {store && store !== '通常' && (
+                        {store ? (
                           <div className="flex items-center gap-2 mb-1.5 pl-2.5" style={{ minHeight: 22 }}>
-                            <span
-                              className="text-[10px] font-bold px-2 py-0.5 rounded-full whitespace-nowrap overflow-hidden text-ellipsis max-w-full"
-                              style={{ background: 'rgba(28,28,30,0.06)', color: '#636366' }}
-                            >
-                              {store}
-                            </span>
+                            {store !== '通常' && (
+                              <span
+                                className="text-[10px] font-bold px-2 py-0.5 rounded-full whitespace-nowrap overflow-hidden text-ellipsis max-w-full"
+                                style={{ background: 'rgba(28,28,30,0.06)', color: '#636366' }}
+                              >
+                                {store}
+                              </span>
+                            )}
                             <span className="text-[9px] whitespace-nowrap" style={{ color: '#8E8E93' }}>
                               {ownedInVersion}/{versionCards.length}
                             </span>
                           </div>
+                        ) : (
+                          <div className="mb-1.5" style={{ minHeight: 22 }} />
                         )}
                         <div className={`grid ${gridCols} gap-2`}>
                           {versionCards.map(card => {
