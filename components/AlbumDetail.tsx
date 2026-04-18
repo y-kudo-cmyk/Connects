@@ -341,23 +341,7 @@ export default function AlbumDetail({ product, userCards, onBack, onCardTap }: A
                   </div>
 
                   <div className={STORE_TIERS.has(tier) ? 'grid grid-cols-2 gap-3' : 'space-y-4'}>
-                    {(() => {
-                      const allEntries = Array.from(tierMap.entries())
-                      const isCompact = (base: string, subs: typeof tierMap extends Map<string, infer V> ? V : never) =>
-                        /^KiT\b/i.test(base) && subs.reduce((acc, s) => acc + s.cards.length, 0) <= 2
-                      const regular = allEntries.filter(([b, s]) => !isCompact(b, s))
-                      const compact = allEntries.filter(([b, s]) => isCompact(b, s))
-                      return (
-                        <>
-                          {regular.map(([base, subs]) => renderBaseBlock(base, subs, tier, false))}
-                          {compact.length > 0 && (
-                            <div className="grid grid-cols-2 gap-3">
-                              {compact.map(([base, subs]) => renderBaseBlock(base, subs, tier, true))}
-                            </div>
-                          )}
-                        </>
-                      )
-                    })()}
+                    {Array.from(tierMap.entries()).map(([base, subs]) => renderBaseBlock(base, subs, tier, false))}
                   </div>
                 </section>
               )
@@ -376,8 +360,10 @@ export default function AlbumDetail({ product, userCards, onBack, onCardTap }: A
 
   function renderBaseBlock(base: string, subs: { store: string; versionId: string; cards: CardMaster[] }[], tier: string, compact = false) {
     const isStore = STORE_TIERS.has(tier)
-    // STORE tier / compact (KiT 半幅で横並び) は 1列で枠を大きく。通常は4列
-    const gridCols = isStore || compact ? 'grid-cols-1' : 'grid-cols-4'
+    // STORE tier は1列で大きく。それ以外は sub の枚数が2以下なら2列、通常は4列
+    const maxSubCount = subs.reduce((acc, s) => Math.max(acc, s.cards.length), 0)
+    const gridCols = isStore ? 'grid-cols-1' : maxSubCount <= 2 ? 'grid-cols-2' : 'grid-cols-4'
+    void compact
     const totalOwned = subs.reduce((acc, s) => acc + s.cards.filter(c => ownedMap.has(c.id)).length, 0)
     const totalCards = subs.reduce((acc, s) => acc + s.cards.length, 0)
     return (
