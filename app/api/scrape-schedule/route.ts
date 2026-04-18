@@ -11,6 +11,7 @@ const supabase = createClient(
 )
 
 const BASE_URL = 'https://www.seventeen-17.jp'
+const SCRAPE_SUBMITTER = '86c91b90-0060-4a3d-bf10-d5c846604882' // 管理者アカウント（YUTA）— スクレイピング投稿はこの人の投稿として扱う
 
 // ── NEWSページから記事を抽出 ────────────────────────────────
 type NewsItem = { title: string; date: string; category: string; url: string }
@@ -137,7 +138,7 @@ export async function GET(request: NextRequest) {
       status: 'pending',
       verified_count: 0,
       related_artists: '',
-      submitted_by: null,
+      submitted_by: SCRAPE_SUBMITTER,
     })
   }
 
@@ -185,7 +186,7 @@ export async function GET(request: NextRequest) {
         status: 'confirmed',
         verified_count: 3,
         related_artists: '',
-        submitted_by: null,
+        submitted_by: SCRAPE_SUBMITTER,
       })
       log.push(`KR: ${krDate} ${krTitle.slice(0, 50)}`)
     } catch { /* skip */ }
