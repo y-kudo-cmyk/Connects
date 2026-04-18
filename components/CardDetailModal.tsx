@@ -49,6 +49,7 @@ export default function CardDetailModal({ card, owned, userId, onClose, onSave, 
   const [frontFile, setFrontFile] = useState<File | null>(null)
   const [backFile, setBackFile] = useState<File | null>(null)
   const [saving, setSaving] = useState(false)
+  const [saved, setSaved] = useState(false)
   const [mounted, setMounted] = useState(false)
   const frontRef = useRef<HTMLInputElement>(null)
   const backRef = useRef<HTMLInputElement>(null)
@@ -111,7 +112,10 @@ export default function CardDetailModal({ card, owned, userId, onClose, onSave, 
       }
 
       onSave()
-      onClose()
+      setSaved(true)
+      setTimeout(() => {
+        onClose()
+      }, 1200)
     } catch (err) {
       console.error('Save card error:', err)
     } finally {
@@ -128,10 +132,30 @@ export default function CardDetailModal({ card, owned, userId, onClose, onSave, 
       onClick={onClose}
     >
       <div
-        className="w-full max-w-lg rounded-t-2xl overflow-hidden flex flex-col"
+        className="w-full max-w-lg rounded-t-2xl overflow-hidden flex flex-col relative"
         style={{ background: '#F8F9FA', maxHeight: '90vh' }}
         onClick={e => e.stopPropagation()}
       >
+        {/* Success overlay */}
+        {saved && (
+          <div
+            className="absolute inset-0 flex flex-col items-center justify-center gap-3 pointer-events-none"
+            style={{ background: 'rgba(255,255,255,0.95)', zIndex: 10 }}
+          >
+            <div
+              className="w-16 h-16 rounded-full flex items-center justify-center"
+              style={{ background: '#F3B4E3' }}
+            >
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="20 6 9 17 4 12" />
+              </svg>
+            </div>
+            <p className="text-base font-black" style={{ color: '#1C1C1E' }}>
+              {owned ? '更新しました' : '登録しました'}
+            </p>
+          </div>
+        )}
+
         {/* Drag handle */}
         <div className="flex justify-center pt-3 pb-2 flex-shrink-0">
           <div className="w-10 h-1 rounded-full" style={{ background: '#C7C7CC' }} />
