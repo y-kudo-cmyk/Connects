@@ -27,13 +27,12 @@ export default function ConcertCampaignModal({ open, onClose, onComplete }: Prop
     setStep('loading')
 
     try {
-      // 1. Get past domestic LIVE events
+      // 1. Get past LIVE events (all regions)
       const today = new Date().toISOString().slice(0, 10)
       const { data: events } = await supabase
         .from('events')
         .select('id, event_title, sub_event_title, tag, start_date, end_date, spot_name, spot_address, image_url, source_url')
         .eq('tag', 'LIVE')
-        .eq('country', 'JP')
         .lt('start_date', today)
 
       if (!events || events.length === 0) {
