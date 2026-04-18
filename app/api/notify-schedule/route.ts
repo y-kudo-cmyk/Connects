@@ -154,7 +154,7 @@ async function eveningNotification(currentTime: string, today: string, testMode 
     heading = `⏰ 今日締切: ${ending[0].event_title.slice(0, 20)}`
     if (ending.length > 1) heading += ` 他${ending.length - 1}件`
   } else if (tomorrowEvents.length > 0) {
-    heading = `🌙 明日${tomorrowEvents.length}件`
+    heading = `🌙 明日のスケジュール ${tomorrowEvents.length}件`
   }
 
   const tagIcon: Record<string, string> = { LIVE: '🎤', TICKET: '🎫', CD: '💿', TV: '📺', POPUP: '🏪', MERCH: '🛒', MAGAZINE: '📖', EVENT: '❤️', LIVEVIEWING: '🎬', INFO: '📢', RADIO: '📻', YOUTUBE: '▶️' }

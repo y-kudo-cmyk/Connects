@@ -122,6 +122,7 @@ export default function ProfilePage() {
   const { entries, updateEntry } = useMyEntries()
   const liveEntries = entries.filter((e) => e.tags?.includes('LIVE') || e.type === 'LIVE')
   const [editHistoryEntry, setEditHistoryEntry] = useState<MyEntry | null>(null)
+  const [showConcerts, setShowConcerts] = useState(false)
 
   const updateNotif = (patch: Partial<NotifSettings>) =>
     update({ notif: { ...profile.notif, ...patch } })
@@ -548,50 +549,66 @@ export default function ProfilePage() {
       {/* --- 参戦記録 (LIVE entries) --- */}
       {liveEntries.length > 0 && (
         <div className="px-4 mb-4">
-          <div className="flex items-center justify-between mb-2">
-            <p className="text-xs font-semibold" style={{ color: '#8E8E93' }}>参戦記録</p>
-            <span className="text-[10px]" style={{ color: '#8E8E93' }}>{liveEntries.length}件</span>
-          </div>
-          <div className="flex flex-col gap-2">
-            {liveEntries
-              .slice()
-              .sort((a, b) => (b.date || '').localeCompare(a.date || ''))
-              .map((e) => {
-                const d = e.date ? new Date(e.date) : null
-                return (
-                  <button
-                    key={e.id}
-                    onClick={() => router.push(`/my?entry=${e.id}`)}
-                    className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-left"
-                    style={{ background: '#FFFFFF' }}
-                  >
-                    <div
-                      className="w-12 h-12 rounded-lg flex-shrink-0"
-                      style={{
-                        background: e.images?.[0]
-                          ? `url(${e.images[0]}) center/cover`
-                          : 'linear-gradient(135deg, rgba(243,180,227,0.2) 0%, rgba(167,139,250,0.15) 100%)',
-                      }}
-                    />
-                    <div className="flex-1 min-w-0">
-                      <p className="text-xs font-bold truncate" style={{ color: '#1C1C1E' }}>
-                        {e.title}
-                      </p>
-                      {e.subTitle && (
-                        <p className="text-[10px] truncate" style={{ color: '#636366' }}>{e.subTitle}</p>
-                      )}
-                      <p className="text-[10px] mt-0.5" style={{ color: '#8E8E93' }}>
-                        {d ? `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, '0')}.${String(d.getDate()).padStart(2, '0')}` : ''}
-                        {e.venue ? ` · ${e.venue}` : ''}
-                      </p>
-                    </div>
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#C7C7CC" strokeWidth="2">
-                      <path d="M9 18l6-6-6-6" />
-                    </svg>
-                  </button>
-                )
-              })}
-          </div>
+          <button
+            onClick={() => setShowConcerts(v => !v)}
+            className="w-full flex items-center justify-between px-4 py-3 rounded-xl"
+            style={{ background: '#FFFFFF' }}
+          >
+            <div className="flex items-center gap-2">
+              <span className="text-base">🎤</span>
+              <span className="text-sm font-bold" style={{ color: '#1C1C1E' }}>参戦記録</span>
+              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full" style={{ background: 'rgba(243,180,227,0.12)', color: '#F3B4E3' }}>
+                {liveEntries.length}件
+              </span>
+            </div>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#C7C7CC" strokeWidth="2"
+              style={{ transform: showConcerts ? 'rotate(90deg)' : 'rotate(0deg)', transition: 'transform 0.15s' }}>
+              <path d="M9 18l6-6-6-6" />
+            </svg>
+          </button>
+
+          {showConcerts && (
+            <div className="flex flex-col gap-2 mt-2">
+              {liveEntries
+                .slice()
+                .sort((a, b) => (b.date || '').localeCompare(a.date || ''))
+                .map((e) => {
+                  const d = e.date ? new Date(e.date) : null
+                  return (
+                    <button
+                      key={e.id}
+                      onClick={() => router.push(`/my?entry=${e.id}`)}
+                      className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-left"
+                      style={{ background: '#FFFFFF' }}
+                    >
+                      <div
+                        className="w-12 h-12 rounded-lg flex-shrink-0"
+                        style={{
+                          background: e.images?.[0]
+                            ? `url(${e.images[0]}) center/cover`
+                            : 'linear-gradient(135deg, rgba(243,180,227,0.2) 0%, rgba(167,139,250,0.15) 100%)',
+                        }}
+                      />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs font-bold truncate" style={{ color: '#1C1C1E' }}>
+                          {e.title}
+                        </p>
+                        {e.subTitle && (
+                          <p className="text-[10px] truncate" style={{ color: '#636366' }}>{e.subTitle}</p>
+                        )}
+                        <p className="text-[10px] mt-0.5" style={{ color: '#8E8E93' }}>
+                          {d ? `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, '0')}.${String(d.getDate()).padStart(2, '0')}` : ''}
+                          {e.venue ? ` · ${e.venue}` : ''}
+                        </p>
+                      </div>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#C7C7CC" strokeWidth="2">
+                        <path d="M9 18l6-6-6-6" />
+                      </svg>
+                    </button>
+                  )
+                })}
+            </div>
+          )}
         </div>
       )}
 
