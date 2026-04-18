@@ -58,6 +58,103 @@ function md(s: string) {
   return `${String(d.getMonth() + 1).padStart(2, '0')}/${String(d.getDate()).padStart(2, '0')}`
 }
 
+// ─── スワイプ削除可能な参戦記録行 ─────────────────────────
+function SwipeableConcertRow({
+  entry, onOpen, onDelete,
+}: {
+  entry: MyEntry
+  onOpen: () => void
+  onDelete: () => void
+}) {
+  const [offset, setOffset] = useState(0)
+  const [confirming, setConfirming] = useState(false)
+  const startX = useRef<number | null>(null)
+  const moved = useRef(false)
+  const DELETE_WIDTH = 72
+
+  const onStart = (x: number) => { startX.current = x; moved.current = false }
+  const onMove = (x: number) => {
+    if (startX.current === null) return
+    const dx = x - startX.current
+    if (Math.abs(dx) > 5) moved.current = true
+    // 左スワイプのみ（負方向）
+    if (dx < 0) setOffset(Math.max(dx, -DELETE_WIDTH))
+    else if (offset < 0) setOffset(Math.min(0, offset + dx))
+  }
+  const onEnd = () => {
+    if (offset < -DELETE_WIDTH / 2) setOffset(-DELETE_WIDTH)
+    else setOffset(0)
+    startX.current = null
+  }
+
+  const d = entry.date ? new Date(entry.date) : null
+  return (
+    <div className="relative overflow-hidden rounded-xl">
+      {/* 削除ボタン（右側に露出） */}
+      <div className="absolute inset-y-0 right-0 flex items-center justify-center"
+        style={{ width: DELETE_WIDTH, background: '#EF4444' }}>
+        {!confirming ? (
+          <button onClick={() => setConfirming(true)}
+            className="w-full h-full flex items-center justify-center">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" strokeWidth="2">
+              <polyline points="3 6 5 6 21 6" />
+              <path d="M19 6l-2 14a2 2 0 01-2 2H9a2 2 0 01-2-2L5 6" />
+              <line x1="10" y1="11" x2="10" y2="17" />
+              <line x1="14" y1="11" x2="14" y2="17" />
+            </svg>
+          </button>
+        ) : (
+          <div className="flex flex-col items-center gap-1">
+            <button onClick={() => { onDelete(); setConfirming(false); setOffset(0) }}
+              className="text-[10px] font-bold text-white">削除</button>
+            <button onClick={() => { setConfirming(false); setOffset(0) }}
+              className="text-[9px] text-white opacity-70">取消</button>
+          </div>
+        )}
+      </div>
+
+      {/* コンテンツ */}
+      <button
+        onClick={() => { if (!moved.current && offset === 0) onOpen() }}
+        onTouchStart={(e) => onStart(e.touches[0].clientX)}
+        onTouchMove={(e) => onMove(e.touches[0].clientX)}
+        onTouchEnd={onEnd}
+        onPointerDown={(e) => { if (e.pointerType !== 'touch') onStart(e.clientX) }}
+        onPointerMove={(e) => { if (e.pointerType !== 'touch' && startX.current !== null) onMove(e.clientX) }}
+        onPointerUp={(e) => { if (e.pointerType !== 'touch') onEnd() }}
+        className="relative flex items-center gap-3 px-3 py-2.5 rounded-xl text-left w-full"
+        style={{
+          background: '#FFFFFF',
+          transform: `translateX(${offset}px)`,
+          transition: startX.current === null ? 'transform 0.15s' : 'none',
+        }}
+      >
+        <div
+          className="w-14 h-14 rounded-lg flex-shrink-0"
+          style={{
+            background: entry.images?.[0]
+              ? `url(${entry.images[0]}) center/cover`
+              : 'linear-gradient(135deg, rgba(243,180,227,0.2) 0%, rgba(167,139,250,0.15) 100%)',
+          }}
+        />
+        <div className="flex-1 min-w-0">
+          <p className="text-xs font-bold truncate" style={{ color: '#1C1C1E' }}>{entry.title}</p>
+          {entry.subTitle && (
+            <p className="text-[10px] truncate" style={{ color: '#636366' }}>{entry.subTitle}</p>
+          )}
+          <p className="text-[10px] mt-0.5" style={{ color: '#8E8E93' }}>
+            {d ? `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, '0')}.${String(d.getDate()).padStart(2, '0')}` : ''}
+            {entry.venue ? ` · ${entry.venue}` : ''}
+          </p>
+        </div>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#C7C7CC" strokeWidth="2">
+          <path d="M9 18l6-6-6-6" />
+        </svg>
+      </button>
+    </div>
+  )
+}
+
 export default function ProfilePage() {
   usePageView('profile')
   const { profile, update, addFanClub, updateFanClub, removeFanClub } = useProfile()
@@ -119,7 +216,7 @@ export default function ProfilePage() {
   useEffect(() => { setPortalMounted(true) }, [])
 
   // Concert history: LIVE entries from my_entries
-  const { entries, updateEntry } = useMyEntries()
+  const { entries, updateEntry, removeEntry } = useMyEntries()
   const liveEntries = entries.filter((e) => e.tags?.includes('LIVE') || e.type === 'LIVE')
   const [editHistoryEntry, setEditHistoryEntry] = useState<MyEntry | null>(null)
   const [showConcerts, setShowConcerts] = useState(false)
@@ -546,28 +643,6 @@ export default function ProfilePage() {
         </div>
       </div>
 
-      {/* --- 参戦記録 (LIVE entries) — ボタンのみ、一覧は詳細モーダル --- */}
-      {liveEntries.length > 0 && (
-        <div className="px-4 mb-4">
-          <button
-            onClick={() => setShowConcerts(true)}
-            className="w-full flex items-center justify-between px-4 py-3 rounded-xl"
-            style={{ background: '#FFFFFF' }}
-          >
-            <div className="flex items-center gap-2">
-              <span className="text-base">🎤</span>
-              <span className="text-sm font-bold" style={{ color: '#1C1C1E' }}>参戦記録</span>
-              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full" style={{ background: 'rgba(243,180,227,0.12)', color: '#F3B4E3' }}>
-                {liveEntries.length}件
-              </span>
-            </div>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#C7C7CC" strokeWidth="2">
-              <path d="M9 18l6-6-6-6" />
-            </svg>
-          </button>
-        </div>
-      )}
-
       {/* 参戦記録 詳細モーダル */}
       {showConcerts && createPortal(
         <div className="fixed inset-0 flex flex-col" style={{ background: '#F8F9FA', zIndex: 60 }}>
@@ -589,44 +664,20 @@ export default function ProfilePage() {
 
           <div className="flex-1 overflow-y-auto px-4 py-4 flex flex-col gap-2"
             style={{ paddingBottom: 'calc(80px + env(safe-area-inset-bottom, 0px))' }}>
+            <p className="text-[10px] mb-1" style={{ color: '#8E8E93' }}>
+              左にスワイプで削除
+            </p>
             {liveEntries
               .slice()
               .sort((a, b) => (b.date || '').localeCompare(a.date || ''))
-              .map((e) => {
-                const d = e.date ? new Date(e.date) : null
-                return (
-                  <button
-                    key={e.id}
-                    onClick={() => { setShowConcerts(false); router.push(`/my?entry=${e.id}`) }}
-                    className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-left"
-                    style={{ background: '#FFFFFF' }}
-                  >
-                    <div
-                      className="w-14 h-14 rounded-lg flex-shrink-0"
-                      style={{
-                        background: e.images?.[0]
-                          ? `url(${e.images[0]}) center/cover`
-                          : 'linear-gradient(135deg, rgba(243,180,227,0.2) 0%, rgba(167,139,250,0.15) 100%)',
-                      }}
-                    />
-                    <div className="flex-1 min-w-0">
-                      <p className="text-xs font-bold truncate" style={{ color: '#1C1C1E' }}>
-                        {e.title}
-                      </p>
-                      {e.subTitle && (
-                        <p className="text-[10px] truncate" style={{ color: '#636366' }}>{e.subTitle}</p>
-                      )}
-                      <p className="text-[10px] mt-0.5" style={{ color: '#8E8E93' }}>
-                        {d ? `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, '0')}.${String(d.getDate()).padStart(2, '0')}` : ''}
-                        {e.venue ? ` · ${e.venue}` : ''}
-                      </p>
-                    </div>
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#C7C7CC" strokeWidth="2">
-                      <path d="M9 18l6-6-6-6" />
-                    </svg>
-                  </button>
-                )
-              })}
+              .map((e) => (
+                <SwipeableConcertRow
+                  key={e.id}
+                  entry={e}
+                  onOpen={() => { setShowConcerts(false); router.push(`/my?entry=${e.id}`) }}
+                  onDelete={() => removeEntry(e.id)}
+                />
+              ))}
           </div>
         </div>,
         document.body
@@ -685,6 +736,28 @@ export default function ProfilePage() {
           </div>
         )}
       </div>
+
+      {/* --- 参戦記録 (LIVE entries) — ボタンのみ、一覧は詳細モーダル --- */}
+      {liveEntries.length > 0 && (
+        <div className="px-4 mb-4">
+          <button
+            onClick={() => setShowConcerts(true)}
+            className="w-full flex items-center justify-between px-4 py-3 rounded-xl"
+            style={{ background: '#FFFFFF' }}
+          >
+            <div className="flex items-center gap-2">
+              <span className="text-base">🎤</span>
+              <span className="text-sm font-bold" style={{ color: '#1C1C1E' }}>参戦記録</span>
+              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full" style={{ background: 'rgba(243,180,227,0.12)', color: '#F3B4E3' }}>
+                {liveEntries.length}件
+              </span>
+            </div>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#C7C7CC" strokeWidth="2">
+              <path d="M9 18l6-6-6-6" />
+            </svg>
+          </button>
+        </div>
+      )}
 
       <div style={{ height: 'calc(80px + env(safe-area-inset-bottom, 0px))' }} />
 
