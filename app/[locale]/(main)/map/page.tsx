@@ -1491,7 +1491,7 @@ function NewSpotModal({
             </label>
             <p className="text-[10px] mb-1.5" style={{ color: '#F59E0B' }}>{t('Map.newSpotNameHint')}</p>
             <input type="text" value={address} onChange={(e) => setAddress(e.target.value)}
-              placeholder="例: ソウル特別市龍山区漢南大路42キル 35"
+              placeholder="例: 서울특별시 용산구 한남대로42길 35"
               className="w-full px-3 py-3 rounded-xl text-sm outline-none"
               style={{ background: '#F0F0F5', color: '#1C1C1E', border: '1px solid #E5E5EA' }} />
           </div>
