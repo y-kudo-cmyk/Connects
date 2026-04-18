@@ -142,7 +142,18 @@ export default function MapPage() {
           isFavorite={isFavorite(detailSpot.id)}
           onToggleFav={() => toggle(detailSpot.id)}
           userPhotos={getPhotos(detailSpot.id)}
-          onRemovePhoto={(photoId) => removePhoto(detailSpot.id, photoId)}
+          onRemovePhoto={async (photoId) => {
+            // admin route bypasses RLS; falls back to user-side remove if 403
+            const res = await fetch('/api/delete-spot', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ photoId }),
+            })
+            if (!res.ok) {
+              await removePhoto(detailSpot.id, photoId)
+            }
+            await refreshSpots()
+          }}
           onConfirmPhoto={(photoId) => votePhoto(detailSpot.id, photoId)}
           onOpenUpload={() => setUploadSpot(detailSpot)}
           isIncomplete={incompleteIds.has(detailSpot.id)}
@@ -531,15 +542,14 @@ function SpotDetailScreen({
   const ALL_GENRE_KEYS: SpotGenreType[] = ['CAFE', 'RESTAURANT', 'FASHION', 'ENTERTAINMENT', 'MUSIC', 'OTHER']
 
   const handleDeleteSpot = async () => {
-    const supabase = createClient()
-    // Cleanup related records first
-    await supabase.from('spot_photos').delete().eq('spot_id', spot.id)
-    await supabase.from('favorite_spots').delete().eq('spot_id', spot.id)
-    // spot_photo_votes may not have spot_id; ignore failure
-    try { await supabase.from('spot_photo_votes').delete().eq('spot_id', spot.id) } catch { /* optional */ }
-    const { error } = await supabase.from('spots').delete().eq('id', spot.id)
-    if (error) {
-      alert(`削除失敗: ${error.message}`)
+    const res = await fetch('/api/delete-spot', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ spotId: spot.id }),
+    })
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}))
+      alert(`削除失敗: ${err.error || res.statusText}`)
       return
     }
     if (onRefresh) await onRefresh()
