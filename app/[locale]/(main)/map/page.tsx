@@ -967,12 +967,7 @@ function PhotoCard({
           const isComplete = hasMembers && hasSource
           return (
             <button
-              onClick={(e) => {
-                e.preventDefault()
-                e.stopPropagation()
-                if (isComplete) onVotePhoto(photo.id)
-                else setShowEdit(true)  // 未入力なら編集モーダルを開く
-              }}
+              onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShowEdit(true) }}
               className="mt-1.5 py-1.5 rounded-md text-[10px] font-bold"
               style={!isComplete
                 ? { background: 'rgba(245,158,11,0.12)', color: '#F59E0B' }
