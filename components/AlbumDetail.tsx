@@ -351,7 +351,7 @@ export default function AlbumDetail({ product, userCards, onBack, onCardTap }: A
                     </span>
                   </div>
 
-                  <div className={STORE_TIERS.has(tier) ? 'grid grid-cols-2 gap-3' : 'space-y-4'}>
+                  <div className="space-y-4">
                     {Array.from(tierMap.entries()).map(([base, subs]) => renderBaseBlock(base, subs, tier, false))}
                   </div>
                 </section>
@@ -371,7 +371,8 @@ export default function AlbumDetail({ product, userCards, onBack, onCardTap }: A
 
   function renderBaseBlock(base: string, subs: { store: string; versionId: string; cards: CardMaster[] }[], tier: string, compact = false) {
     const isStore = STORE_TIERS.has(tier)
-    // STORE tier は1列で大きく。それ以外は sub の枚数が2以下なら2列、通常は4列
+    // STORE tier内のサブは grid-cols-1（サブの列幅でカードが1枚入る大きさ）
+    // INCLUDED 側は sub の枚数が2以下なら grid-cols-2、3枚以上は grid-cols-4
     const maxSubCount = subs.reduce((acc, s) => Math.max(acc, s.cards.length), 0)
     const gridCols = isStore ? 'grid-cols-1' : maxSubCount <= 2 ? 'grid-cols-2' : 'grid-cols-4'
     void compact
@@ -390,7 +391,7 @@ export default function AlbumDetail({ product, userCards, onBack, onCardTap }: A
                       {totalOwned}/{totalCards}
                     </span>
                   </div>
-                  <div className={isStore && subs.length > 1 ? 'grid grid-cols-2 gap-3' : ''}>
+                  <div className={isStore ? 'grid grid-cols-2 gap-3' : ''}>
                   {subs.map(({ store, versionId, cards: versionCards }) => {
                     const ownedInVersion = versionCards.filter(c => ownedMap.has(c.id)).length
                     return (
