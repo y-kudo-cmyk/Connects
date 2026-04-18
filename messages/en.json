@@ -391,7 +391,26 @@
   },
   "Goods": {
     "goodsTitle": "GOODS",
-    "goodsComingSoon": "Trading card features coming soon"
+    "goodsComingSoon": "Trading card features coming soon",
+    "digitalAlbumDesc": "Digital Photocard Album",
+    "regionKR": "Korea",
+    "regionJP": "Japan",
+    "regionUnit": "Unit",
+    "noAlbums": "No albums found",
+    "noCards": "No cards found",
+    "backToList": "Album List",
+    "versionProgress": "Version progress",
+    "collectionCount": "Collection: {count} cards",
+    "frontImage": "Front",
+    "backImage": "Back",
+    "uploadPhoto": "Add photo",
+    "quantity": "Quantity",
+    "notes": "Notes",
+    "notesPlaceholder": "Trade preference, condition notes, etc.",
+    "addCard": "Register",
+    "updateCard": "Update",
+    "removeCard": "Remove",
+    "saving": "Saving..."
   },
   "Pwa": {
     "addToHomeTitle": "Add to Home Screen",

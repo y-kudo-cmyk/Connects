@@ -517,3 +517,74 @@ insert into schedule_tags (id, label, icon, color, bg, sort_order) values
   ('TV',         'TV',         '📺', '#60A5FA', 'rgba(96,165,250,0.15)',  11),
   ('YOUTUBE',    'YOUTUBE',    '▶️', '#EF4444', 'rgba(239,68,68,0.15)',   12),
   ('RADIO',      'RADIO',     '📻', '#4ADE80', 'rgba(74,222,128,0.15)',  13);
+
+-- ============================================================
+-- トレカデジタルアルバム
+-- ============================================================
+
+-- ── アルバム/商品マスタ ─────────────────────────────────────────
+create table card_products (
+  product_id    text primary key,              -- 'P_KR001'
+  product_name  text not null,                 -- 'BOYS BE'
+  product_type  text default 'mini_album',     -- mini_album/full_album/repackage/special_album/single/solo_album/unit_album/compilation
+  region        text default 'KR',             -- KR/JP
+  release_date  date,
+  artist_id     text default 'A000000',
+  image_url     text default '',
+  created_at    timestamptz default now()
+);
+
+-- ── バージョンマスタ ────────────────────────────────────────────
+create table card_versions (
+  version_id    text primary key,              -- 'V_KR001_01'
+  product_id    text not null references card_products(product_id),
+  version_name  text not null,                 -- 'SEEK', 'HIDE'
+  created_at    timestamptz default now()
+);
+
+-- ── トレカマスタ（メンバー x バージョン x タイプ） ───────────────
+create table card_master (
+  id              text primary key,            -- 'PM00001'
+  product_id      text not null references card_products(product_id),
+  version_id      text references card_versions(version_id),
+  member_id       text default '',
+  member_name     text default '',
+  card_type       text default 'photocard',
+  card_detail     text default '',
+  front_image_url text default '',
+  back_image_url  text default '',
+  created_at      timestamptz default now()
+);
+
+-- ── ユーザーのカード台帳 ────────────────────────────────────────
+create table user_cards (
+  id              text primary key,            -- 'CARD-xxxx'
+  user_id         uuid not null references profiles(id) on delete cascade,
+  card_master_id  text references card_master(id),
+  product_id      text not null,
+  version_id      text default '',
+  member_id       text default '',
+  member_name     text default '',
+  front_image_url text default '',
+  back_image_url  text default '',
+  quantity        int default 1,
+  notes           text default '',
+  status          text default 'ACTIVE',
+  created_at      timestamptz default now()
+);
+
+-- RLS
+alter table card_products enable row level security;
+alter table card_versions enable row level security;
+alter table card_master enable row level security;
+alter table user_cards enable row level security;
+
+create policy "Authenticated can read card_products"
+  on card_products for select to authenticated using (true);
+create policy "Authenticated can read card_versions"
+  on card_versions for select to authenticated using (true);
+create policy "Authenticated can read card_master"
+  on card_master for select to authenticated using (true);
+create policy "Users can CRUD own cards"
+  on user_cards for all to authenticated
+  using (auth.uid() = user_id) with check (auth.uid() = user_id);

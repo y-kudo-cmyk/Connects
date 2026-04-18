@@ -391,7 +391,26 @@
   },
   "Goods": {
     "goodsTitle": "GOODS",
-    "goodsComingSoon": "トレカ管理・交換機能を準備中です"
+    "goodsComingSoon": "トレカ管理・交換機能を準備中です",
+    "digitalAlbumDesc": "トレカデジタルアルバム",
+    "regionKR": "韓国",
+    "regionJP": "日本",
+    "regionUnit": "ユニット",
+    "noAlbums": "アルバムがありません",
+    "noCards": "カードがありません",
+    "backToList": "アルバム一覧",
+    "versionProgress": "バージョン進捗",
+    "collectionCount": "コレクション: {count}枚",
+    "frontImage": "表面",
+    "backImage": "裏面",
+    "uploadPhoto": "写真を追加",
+    "quantity": "所持枚数",
+    "notes": "メモ",
+    "notesPlaceholder": "交換希望、状態メモなど",
+    "addCard": "登録する",
+    "updateCard": "更新する",
+    "removeCard": "削除",
+    "saving": "保存中..."
   },
   "Pwa": {
     "addToHomeTitle": "ホーム画面に追加しよう",
