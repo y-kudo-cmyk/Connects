@@ -974,7 +974,7 @@ function PhotoCard({
                 : { background: 'rgba(52,211,153,0.15)', color: '#34D399' }
               }>
               {!isComplete
-                ? `✏️ ${t('MapPage.memberSourceRequired')}`
+                ? `✏️ ${t('Common.edit')}`
                 : `👍 ${t('MapPage.approveAction')}（${photo.votes ?? 0}/3）`}
             </button>
           )
