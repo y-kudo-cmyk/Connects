@@ -27,6 +27,8 @@ export async function POST(req: NextRequest) {
     process.env.SUPABASE_SERVICE_ROLE_KEY!,
   )
 
+  let editDetail = ''
+
   if (photoId) {
     // 写真の更新
     const { error } = await sb.from('spot_photos').update(updates).eq('id', photoId)
@@ -44,15 +46,25 @@ export async function POST(req: NextRequest) {
       const relatedArtists = [...allTags].map(t => `#${t}`).join(' ')
       await sb.from('spots').update({ related_artists: relatedArtists }).eq('id', spotId)
     }
+    editDetail = `photo:${photoId}:${Object.keys(updates).join(',')}`
   } else if (_table === 'events') {
     // イベントの更新
     const { error } = await sb.from('events').update(updates).eq('id', spotId)
     if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+    editDetail = `event:${spotId}:${Object.keys(updates).join(',')}`
   } else {
     // スポットの更新
     const { error } = await sb.from('spots').update(updates).eq('id', spotId)
     if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+    editDetail = `spot:${spotId}:${Object.keys(updates).join(',')}`
   }
+
+  // 編集ログを記録 (統計用)
+  await sb.from('user_activity').insert({
+    user_id: user.id,
+    action: 'edit',
+    detail: editDetail,
+  })
 
   return NextResponse.json({ ok: true })
 }
