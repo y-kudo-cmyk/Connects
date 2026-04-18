@@ -90,6 +90,23 @@ export default function CardDetailModal({ card, owned, userId, onClose, onSave, 
     setCropSide(side)
   }, [])
 
+  const handleRetrim = useCallback(async (side: 'front' | 'back') => {
+    const url = side === 'front' ? frontPreview : backPreview
+    if (!url) return
+    let dataUrl = url
+    if (!url.startsWith('data:')) {
+      const res = await fetch(url)
+      const blob = await res.blob()
+      dataUrl = await new Promise<string>((resolve) => {
+        const r = new FileReader()
+        r.onload = () => resolve(r.result as string)
+        r.readAsDataURL(blob)
+      })
+    }
+    setCropSrc(dataUrl)
+    setCropSide(side)
+  }, [frontPreview, backPreview])
+
   const handleCropConfirm = useCallback((dataUrl: string) => {
     if (!cropSide) return
     const file = dataUrlToFile(dataUrl, `${cropSide}-${Date.now()}.webp`)
@@ -228,51 +245,73 @@ export default function CardDetailModal({ card, owned, userId, onClose, onSave, 
             {/* Front */}
             <div>
               <label className="text-[10px] font-bold mb-1 block" style={{ color: '#636366' }}>{t('frontImage')}</label>
-              <button
-                onClick={() => frontRef.current?.click()}
-                className="w-full aspect-[2/3] rounded-xl overflow-hidden flex items-center justify-center"
+              <div className="relative w-full aspect-[2/3] rounded-xl overflow-hidden"
                 style={{
                   background: frontPreview ? `url(${frontPreview}) center/cover` : 'rgba(243,180,227,0.1)',
                   border: '2px dashed #E5E5EA',
-                }}
-              >
-                {!frontPreview && (
-                  <div className="flex flex-col items-center gap-1">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#C7C7CC" strokeWidth="1.5">
-                      <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
-                      <polyline points="17 8 12 3 7 8" />
-                      <line x1="12" y1="3" x2="12" y2="15" />
-                    </svg>
-                    <span className="text-[9px]" style={{ color: '#C7C7CC' }}>{t('uploadPhoto')}</span>
-                  </div>
+                }}>
+                <button
+                  onClick={() => frontRef.current?.click()}
+                  className="absolute inset-0 flex items-center justify-center"
+                >
+                  {!frontPreview && (
+                    <div className="flex flex-col items-center gap-1">
+                      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#C7C7CC" strokeWidth="1.5">
+                        <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
+                        <polyline points="17 8 12 3 7 8" />
+                        <line x1="12" y1="3" x2="12" y2="15" />
+                      </svg>
+                      <span className="text-[9px]" style={{ color: '#C7C7CC' }}>{t('uploadPhoto')}</span>
+                    </div>
+                  )}
+                </button>
+                {frontPreview && (
+                  <button
+                    onClick={(e) => { e.stopPropagation(); handleRetrim('front') }}
+                    className="absolute top-1.5 right-1.5 text-[10px] font-bold px-2 py-1 rounded-full"
+                    style={{ background: 'rgba(0,0,0,0.6)', color: '#FFF' }}
+                  >
+                    ✂️ {t('retrim')}
+                  </button>
                 )}
-              </button>
+              </div>
               <input ref={frontRef} type="file" accept="image/*" className="hidden" onChange={handleImageSelect('front')} />
             </div>
             {/* Back */}
             <div>
               <label className="text-[10px] font-bold mb-1 block" style={{ color: '#636366' }}>{t('backImage')}</label>
-              <button
-                onClick={() => backRef.current?.click()}
-                className="w-full aspect-[2/3] rounded-xl overflow-hidden flex items-center justify-center"
+              <div className="relative w-full aspect-[2/3] rounded-xl overflow-hidden"
                 style={{
                   background: backPreview ? `url(${backPreview}) center/cover` : 'rgba(243,180,227,0.1)',
                   border: '2px dashed #E5E5EA',
-                }}
-              >
-                {!backPreview && (
-                  <div className="flex flex-col items-center gap-1 px-1 text-center">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#F3B4E3" strokeWidth="1.5">
-                      <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
-                      <polyline points="17 8 12 3 7 8" />
-                      <line x1="12" y1="3" x2="12" y2="15" />
-                    </svg>
-                    <span className="text-[9px] font-semibold leading-tight" style={{ color: '#636366' }}>
-                      裏面画像の投稿に<br/>ご協力ください
-                    </span>
-                  </div>
+                }}>
+                <button
+                  onClick={() => backRef.current?.click()}
+                  className="absolute inset-0 flex items-center justify-center"
+                >
+                  {!backPreview && (
+                    <div className="flex flex-col items-center gap-1 px-1 text-center">
+                      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#F3B4E3" strokeWidth="1.5">
+                        <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
+                        <polyline points="17 8 12 3 7 8" />
+                        <line x1="12" y1="3" x2="12" y2="15" />
+                      </svg>
+                      <span className="text-[9px] font-semibold leading-tight" style={{ color: '#636366' }}>
+                        裏面画像の投稿に<br/>ご協力ください
+                      </span>
+                    </div>
+                  )}
+                </button>
+                {backPreview && (
+                  <button
+                    onClick={(e) => { e.stopPropagation(); handleRetrim('back') }}
+                    className="absolute top-1.5 right-1.5 text-[10px] font-bold px-2 py-1 rounded-full"
+                    style={{ background: 'rgba(0,0,0,0.6)', color: '#FFF' }}
+                  >
+                    ✂️ {t('retrim')}
+                  </button>
                 )}
-              </button>
+              </div>
               <input ref={backRef} type="file" accept="image/*" className="hidden" onChange={handleImageSelect('back')} />
             </div>
           </div>

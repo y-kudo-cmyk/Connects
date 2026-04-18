@@ -405,6 +405,7 @@
     "frontImage": "Front",
     "backImage": "Back",
     "uploadPhoto": "Add photo",
+    "retrim": "Crop",
     "quantity": "Quantity",
     "notes": "Notes",
     "notesPlaceholder": "Trade preference, condition notes, etc.",
