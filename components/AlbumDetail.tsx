@@ -164,13 +164,13 @@ export default function AlbumDetail({ product, userCards, onBack, onCardTap }: A
     return 99
   }
 
-  // 店舗名をセクションヘッダ用に短縮（横並びで高さを揃えるため 1 行固定）
+  // 店舗名をセクションヘッダ用に短縮（長い表記だけ短く）
   const shortStoreName = (name: string): string => {
     const n = name.toLowerCase()
     if (n.includes('universal')) return 'UMS'
     if (n.includes('weverse')) return 'Weverse'
     if (n.includes('hmv')) return 'HMV'
-    if (n.includes('tower')) return 'TOWER'
+    if (n.includes('tower')) return 'TOWER RECORDS'
     if (n.includes('tsutaya')) return 'TSUTAYA'
     return name
   }
@@ -391,7 +391,7 @@ export default function AlbumDetail({ product, userCards, onBack, onCardTap }: A
                       {totalOwned}/{totalCards}
                     </span>
                   </div>
-                  <div className={isStore ? 'grid grid-cols-2 gap-3' : ''}>
+                  <div className={isStore ? 'grid grid-cols-3 gap-2' : ''}>
                   {subs.map(({ store, versionId, cards: versionCards }) => {
                     const ownedInVersion = versionCards.filter(c => ownedMap.has(c.id)).length
                     return (
