@@ -1,0 +1,40 @@
+product_id,product_name,product_type,region,release_date,versions
+P_KR001,17 CARAT,mini_album,KR,2015-05-29,SCENE;STILL
+P_KR002,BOYS BE,mini_album,KR,2015-09-10,SEEK;HIDE
+P_KR003,LOVE&LETTER,full_album,KR,2016-04-25,LOVE ver.;LETTER ver.
+P_KR004,LOVE&LETTER Repackage,repackage,KR,2016-07-04,SPECIAL EDITION;NORMAL EDITION
+P_KR005,Going Seventeen,mini_album,KR,2016-12-05,MAKE A WISH;MAKE IT HAPPEN
+P_KR006,Al1,mini_album,KR,2017-05-22,Alone 1;Alone 2;Alone 3
+P_KR007,"Teen, Age",full_album,KR,2017-11-06,WHITE;GREEN;ORANGE;RS13
+P_KR008,Director's Cut,repackage,KR,2018-02-05,PLOT;SUNSET
+P_KR009,You Make My Day,mini_album,KR,2018-07-16,MEET;FOLLOW;SET
+P_KR010,You Made My Dawn,mini_album,KR,2019-01-21,ETERNAL SUNSHINE;BEFORE DAWN;DAWN
+P_KR011,An Ode,full_album,KR,2019-09-16,Begin;Hope;Truth;Fear;Journey
+P_KR012,Heng:garae,mini_album,KR,2020-06-22,DUL;SET;NET;HANA
+P_KR013,; [Semicolon],special_album,KR,2020-10-19,standard
+P_KR014,Your Choice,mini_album,KR,2021-06-18,ONE SIDE;OTHER SIDE;BESIDE
+P_KR015,Attacca,mini_album,KR,2021-10-22,Op.1;Op.2;Op.3
+P_KR016,Face the Sun,full_album,KR,2022-05-27,ep.1 Control;ep.2 Shadow;ep.3 Ray;ep.4 Path;ep.5 Pioneer (CARAT ver.)
+P_KR017,Sector 17,repackage,KR,2022-07-18,NEW HEIGHTS;NEW BEGINNING;COMPACT
+P_KR018,FML,mini_album,KR,2023-04-24,FULL OF LOVE;FIGHT OR LOVE;FADED MONO LOVE;CARAT ver.
+P_KR019,SEVENTEENTH HEAVEN,mini_album,KR,2023-10-23,AM 5:26;PM 2:14;PM 10:23;CARAT ver.
+P_KR020,Always Yours,compilation,KR,2023-08-23,standard
+P_KR021,17 IS RIGHT HERE,compilation,KR,2024-04-29,HERE;DEAR
+P_KR022,SPILL THE FEELS,mini_album,KR,2024-10-14,CARAT;FEELING;SPILL
+P_KR023,Happy Burstday,full_album,KR,2025-05-26,BURST;PARTY;DAY;CARAT ver.
+P_JP001,Call Call Call!,single,JP,2018-05-30,A;B;C;Regular
+P_JP002,We Make You,mini_album,JP,2018-05-30,A;B;C
+P_JP003,HAPPY ENDING,single,JP,2019-04-24,A;B;C;Regular
+P_JP004,舞い落ちる花びら (Fallin' Flower),single,JP,2020-04-01,A;B;C;Regular
+P_JP005,24H,mini_album,JP,2020-09-09,A;B;C
+P_JP006,ひとりじゃない (Not Alone),single,JP,2021-04-21,A;B;C;Regular
+P_JP007,Power of Love,single,JP,2021-12-08,A;B;C;Regular
+P_JP008,Dream,mini_album,JP,2022-11-09,A;B;C
+P_JP009,Sara Sara,single,JP,2023-06-21,A;B;C;Regular
+P_JP010,消費期限 (Shohikigen),single,JP,2024-09-25,A;B;C;Regular
+P_UN001,SECOND WIND,single_album,KR,2023-02-06,standard
+P_UN002,Teleparty,single_album,KR,2025-01-08,standard
+P_UN003,This Man,single_album,KR,2024-06-17,standard
+P_UN004,Beam,single_album,KR,2025-03-10,standard
+P_UN005,Hype Vibes,mini_album,KR,2025-09-29,standard
+P_UN006,Serenade,mini_album,KR,2026-01-12,standard
