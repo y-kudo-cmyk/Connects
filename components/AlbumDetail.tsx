@@ -376,7 +376,8 @@ export default function AlbumDetail({ product, userCards, onBack, onCardTap }: A
 
   function renderBaseBlock(base: string, subs: { store: string; versionId: string; cards: CardMaster[] }[], tier: string) {
     const isStore = STORE_TIERS.has(tier)
-    const gridCols = 'grid-cols-4'
+    // STORE tier は各subが1枚なので grid-cols-1（枠を大きく）、他は4列
+    const gridCols = isStore ? 'grid-cols-1' : 'grid-cols-4'
     const totalOwned = subs.reduce((acc, s) => acc + s.cards.filter(c => ownedMap.has(c.id)).length, 0)
     const totalCards = subs.reduce((acc, s) => acc + s.cards.length, 0)
     return (
