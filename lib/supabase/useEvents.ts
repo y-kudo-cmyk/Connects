@@ -24,6 +24,7 @@ export type SupabaseEvent = {
   notes: string
   submitted_by: string | null
   status: string
+  cancelled?: boolean
   verified_count: number
   submitter?: { nickname: string } | null
   created_at?: string

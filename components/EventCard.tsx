@@ -57,6 +57,12 @@ export default function EventCard({ event, compact = false }: EventCardProps) {
                 </span>
               )
             })}
+            {event.cancelled && (
+              <span className="text-[10px] font-bold px-1.5 py-0.5 rounded"
+                style={{ background: 'rgba(239,68,68,0.12)', color: '#EF4444' }}>
+                中止
+              </span>
+            )}
             <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full"
               style={event.verifiedCount >= VOTE_THRESHOLD
                 ? { background: 'rgba(52,211,153,0.15)', color: '#34D399' }
@@ -142,6 +148,12 @@ export default function EventCard({ event, compact = false }: EventCardProps) {
               style={{ background: 'rgba(0,0,0,0.06)', color: '#8E8E93' }}
             >
               {t('Common.period')}
+            </span>
+          )}
+          {event.cancelled && (
+            <span className="text-[10px] font-bold px-1.5 py-0.5 rounded"
+              style={{ background: 'rgba(239,68,68,0.12)', color: '#EF4444' }}>
+              中止
             </span>
           )}
           <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full"

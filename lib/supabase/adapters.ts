@@ -27,6 +27,7 @@ export type AppEvent = {
   notes?: string
   submittedBy?: string
   status: string
+  cancelled?: boolean
   verifiedCount: number
   relatedArtists: string
   subTitle?: string
@@ -77,6 +78,7 @@ export function toAppEvent(e: SupabaseEvent): AppEvent {
     notes: e.notes || undefined,
     submittedBy: e.submitted_by || undefined,
     status: e.status,
+    cancelled: e.cancelled ?? false,
     verifiedCount: e.verified_count,
     relatedArtists: e.related_artists,
     subTitle: e.sub_event_title || undefined,
