@@ -172,11 +172,25 @@ async function eveningNotification(currentTime: string, today: string, testMode 
   return { type: 'evening', users: userIds.length, ...result }
 }
 
+// ── LINE Push (OneSignal と併用) ─────────────────────────────
+const LINE_TOKEN = process.env.LINE_CHANNEL_ACCESS_TOKEN || ''
+async function sendLinePush(to: string, text: string) {
+  if (!LINE_TOKEN) return false
+  try {
+    const res = await fetch('https://api.line.me/v2/bot/message/push', {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${LINE_TOKEN}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ to, messages: [{ type: 'text', text }] }),
+    })
+    return res.ok
+  } catch { return false }
+}
+
 // ── 3. MYイベントリマインダー（1時間前） ─────────────────────
 async function myEventReminder(currentTime: string, today: string) {
   const { data: users } = await supabase
     .from('profiles')
-    .select('id')
+    .select('id, line_user_id')
     .eq('notif_event_reminder', true)
 
   if (!users || users.length === 0) return { type: 'reminder', skipped: true }
@@ -189,10 +203,11 @@ async function myEventReminder(currentTime: string, today: string) {
   const targetTime = `${targetHour}:${targetMinute}`
 
   let sent = 0
+  let lineSent = 0
   for (const user of users) {
     const { data: entries } = await supabase
       .from('my_entries')
-      .select('event_title, start_date')
+      .select('event_title, sub_event_title, tag, start_date, source_url, spot_name')
       .eq('user_id', user.id)
 
     if (!entries || entries.length === 0) continue
@@ -207,14 +222,28 @@ async function myEventReminder(currentTime: string, today: string) {
 
     if (upcoming.length === 0) continue
 
+    // OneSignal
     const lines = upcoming.map(e => `・${e.event_title} ${targetTime}〜`)
     const content = lines.join('\n')
-
     await sendNotification([user.id], '⏰ まもなく開始', content, 'https://connects-nu.vercel.app/my')
     sent++
+
+    // LINE Push (line_user_id がある場合)
+    if (user.line_user_id) {
+      for (const e of upcoming) {
+        let msg = `⚡ まもなく開始！\n\n`
+        msg += `${e.event_title}\n`
+        if (e.sub_event_title) msg += `　${e.sub_event_title}\n`
+        msg += `🕐 ${targetTime}〜\n`
+        if (e.spot_name) msg += `📍 ${e.spot_name}\n`
+        if (e.source_url) msg += `\n🔗 ${e.source_url}\n`
+        msg += `\n━━━━━━━━━━\nConnect+\nhttps://connects-nu.vercel.app/my`
+        if (await sendLinePush(user.line_user_id, msg)) lineSent++
+      }
+    }
   }
 
-  return { type: 'reminder', users: sent }
+  return { type: 'reminder', users: sent, lineSent }
 }
 
 // ── API Route（毎時 Cron で呼ばれる） ────────────────────────
