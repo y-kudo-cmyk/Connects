@@ -1,6 +1,7 @@
 import TabBar from '@/components/TabBar'
 import AuthGuard from '@/components/AuthGuard'
 import SupabaseDataProvider from '@/components/SupabaseDataProvider'
+import LanguagePrompt from '@/components/LanguagePrompt'
 
 export default function MainLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -18,6 +19,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
           </main>
           <TabBar />
         </div>
+        <LanguagePrompt />
       </SupabaseDataProvider>
     </AuthGuard>
   )
