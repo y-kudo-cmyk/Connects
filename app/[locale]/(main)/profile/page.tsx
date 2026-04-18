@@ -790,11 +790,18 @@ export default function ProfilePage() {
       <div style={{ height: 'calc(80px + env(safe-area-inset-bottom, 0px))' }} />
 
       {/* --- Image crop modal --- */}
-      {cropSrc && (
+      {cropSrc && cropTarget === 'banner' && (
+        <FreeCropModal
+          src={cropSrc}
+          onConfirm={onCropConfirm}
+          onCancel={() => setCropSrc(null)}
+        />
+      )}
+      {cropSrc && cropTarget === 'avatar' && (
         <ImageCropModal
           src={cropSrc}
-          aspectRatio={cropTarget === 'banner' ? 2 : 1}
-          circle={cropTarget === 'avatar'}
+          aspectRatio={1}
+          circle
           onConfirm={onCropConfirm}
           onCancel={() => setCropSrc(null)}
         />
@@ -1358,27 +1365,43 @@ function ConcertHistoryModal({ entry, onClose, onSave, onUpdate }: {
   const [viewImages, setViewImages] = useState<string[]>(entry.viewImages ?? [])
   const [images, setImages] = useState<string[]>(entry.images ?? [])
   const [uploading, setUploading] = useState(false)
-  const [ticketCropSrc, setTicketCropSrc] = useState<string | null>(null)
+  const [cropState, setCropState] = useState<{ src: string; slot: 'ticket' | 'view' | 'memory1' | 'memory2' } | null>(null)
 
-  const handleUpload = async (
-    files: FileList | null,
-    setter: React.Dispatch<React.SetStateAction<string[]>>,
-    bucket: string,
-    field: 'ticketImages' | 'viewImages' | 'images',
-    current: string[],
-  ) => {
-    if (!files) return
+  const openCrop = (file: File, slot: 'ticket' | 'view' | 'memory1' | 'memory2') => {
+    const reader = new FileReader()
+    reader.onload = () => setCropState({ src: reader.result as string, slot })
+    reader.readAsDataURL(file)
+  }
+
+  const handleCropConfirm = async (dataUrl: string) => {
+    const slot = cropState?.slot
+    setCropState(null)
+    if (!slot) return
     setUploading(true)
     try {
-      const { uploadImage } = await import('@/lib/supabase/uploadImage')
-      let next = current
-      for (const f of Array.from(files)) {
-        const url = await uploadImage(bucket, f, 1200, 0.8)
-        if (url) next = [...next, url]
-      }
-      if (next !== current) {
-        setter(next)
-        onUpdate({ [field]: next } as Partial<MyEntry>)
+      const bucket = slot === 'ticket' ? 'tickets' : 'memories'
+      const url = await uploadDataUrl(bucket, dataUrl)
+      if (!url) return
+      if (slot === 'ticket') {
+        const next = [...ticketImages, url]
+        setTicketImages(next)
+        onUpdate({ ticketImages: next })
+      } else if (slot === 'view') {
+        const next = [...viewImages, url]
+        setViewImages(next)
+        onUpdate({ viewImages: next })
+      } else if (slot === 'memory1') {
+        const next = [...images]
+        while (next.length < 2) next.push('')
+        next[1] = url
+        setImages(next)
+        onUpdate({ images: next })
+      } else if (slot === 'memory2') {
+        const next = [...images]
+        while (next.length < 3) next.push('')
+        next[2] = url
+        setImages(next)
+        onUpdate({ images: next })
       }
     } finally {
       setUploading(false)
@@ -1533,74 +1556,20 @@ function ConcertHistoryModal({ entry, onClose, onSave, onUpdate }: {
 
         {/* Hidden file inputs */}
         <input ref={ticketRef} type="file" accept="image/*" className="hidden"
-          onChange={(e) => {
-            const f = e.target.files?.[0]
-            e.target.value = ''
-            if (!f) return
-            const reader = new FileReader()
-            reader.onload = () => setTicketCropSrc(reader.result as string)
-            reader.readAsDataURL(f)
-          }} />
+          onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ''; if (f) openCrop(f, 'ticket') }} />
         <input ref={viewRef} type="file" accept="image/*" className="hidden"
-          onChange={(e) => { handleUpload(e.target.files, setViewImages, 'memories', 'viewImages', viewImages); e.target.value = '' }} />
+          onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ''; if (f) openCrop(f, 'view') }} />
         <input ref={memory1Ref} type="file" accept="image/*" className="hidden"
-          onChange={(e) => {
-            if (!e.target.files?.[0]) return
-            setUploading(true)
-            const file = e.target.files[0]
-            import('@/lib/supabase/uploadImage').then(({ uploadImage }) => {
-              uploadImage('memories', file, 1200, 0.8).then((url) => {
-                if (url) {
-                  const next = [...images]
-                  while (next.length < 2) next.push('')
-                  next[1] = url
-                  setImages(next)
-                  onUpdate({ images: next })
-                }
-                setUploading(false)
-              })
-            })
-            e.target.value = ''
-          }} />
+          onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ''; if (f) openCrop(f, 'memory1') }} />
         <input ref={memory2Ref} type="file" accept="image/*" className="hidden"
-          onChange={(e) => {
-            if (!e.target.files?.[0]) return
-            setUploading(true)
-            const file = e.target.files[0]
-            import('@/lib/supabase/uploadImage').then(({ uploadImage }) => {
-              uploadImage('memories', file, 1200, 0.8).then((url) => {
-                if (url) {
-                  const next = [...images]
-                  while (next.length < 3) next.push('')
-                  next[2] = url
-                  setImages(next)
-                  onUpdate({ images: next })
-                }
-                setUploading(false)
-              })
-            })
-            e.target.value = ''
-          }} />
+          onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ''; if (f) openCrop(f, 'memory2') }} />
       </div>
 
-      {ticketCropSrc && (
+      {cropState && (
         <FreeCropModal
-          src={ticketCropSrc}
-          onCancel={() => setTicketCropSrc(null)}
-          onConfirm={async (dataUrl) => {
-            setTicketCropSrc(null)
-            setUploading(true)
-            try {
-              const url = await uploadDataUrl('tickets', dataUrl)
-              if (url) {
-                const next = [...ticketImages, url]
-                setTicketImages(next)
-                onUpdate({ ticketImages: next })
-              }
-            } finally {
-              setUploading(false)
-            }
-          }}
+          src={cropState.src}
+          onCancel={() => setCropState(null)}
+          onConfirm={handleCropConfirm}
         />
       )}
     </div>,
