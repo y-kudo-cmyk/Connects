@@ -164,6 +164,17 @@ export default function AlbumDetail({ product, userCards, onBack, onCardTap }: A
     return 99
   }
 
+  // 店舗名をセクションヘッダ用に短縮（横並びで高さを揃えるため 1 行固定）
+  const shortStoreName = (name: string): string => {
+    const n = name.toLowerCase()
+    if (n.includes('universal')) return 'UMS'
+    if (n.includes('weverse')) return 'Weverse'
+    if (n.includes('hmv')) return 'HMV'
+    if (n.includes('tower')) return 'TOWER'
+    if (n.includes('tsutaya')) return 'TSUTAYA'
+    return name
+  }
+
   // STORE tier: store-first pivot (Weverse → [通常版, DAREDEVIL版]) で base同士を横並び
   // 他のtier: base-first
   const groupedByTierAndBase = useMemo(() => {
@@ -366,15 +377,16 @@ export default function AlbumDetail({ product, userCards, onBack, onCardTap }: A
     void compact
     const totalOwned = subs.reduce((acc, s) => acc + s.cards.filter(c => ownedMap.has(c.id)).length, 0)
     const totalCards = subs.reduce((acc, s) => acc + s.cards.length, 0)
+    const displayBase = isStore ? shortStoreName(base) : base
     return (
                 <div key={base || 'no-base'}>
-                  <div className="flex items-center gap-2 mb-2">
+                  <div className="flex items-center gap-2 mb-2" style={{ minHeight: 20 }}>
                     <div
-                      className="w-1 h-3.5 rounded-full"
+                      className="w-1 h-3.5 rounded-full flex-shrink-0"
                       style={{ background: memberColor }}
                     />
-                    <h3 className="text-xs font-bold" style={{ color: '#1C1C1E' }}>{base || '—'}</h3>
-                    <span className="text-[10px]" style={{ color: '#8E8E93' }}>
+                    <h3 className="text-xs font-bold whitespace-nowrap overflow-hidden text-ellipsis" style={{ color: '#1C1C1E' }}>{displayBase || '—'}</h3>
+                    <span className="text-[10px] whitespace-nowrap flex-shrink-0" style={{ color: '#8E8E93' }}>
                       {totalOwned}/{totalCards}
                     </span>
                   </div>
