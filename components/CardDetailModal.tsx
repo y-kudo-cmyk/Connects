@@ -84,23 +84,10 @@ export default function CardDetailModal({ card, owned, userId, onClose, onSave, 
     const file = e.target.files?.[0]
     e.target.value = '' // allow reselect same file
     if (!file) return
-    const isPhotocard = (card.card_type || '').toLowerCase() === 'photocard'
-    if (!isPhotocard) {
-      // Non-photocard: skip fixed-ratio crop, upload as-is
-      const dataUrl = await fileToDataUrl(file)
-      if (side === 'front') {
-        setFrontFile(file)
-        setFrontPreview(dataUrl)
-      } else {
-        setBackFile(file)
-        setBackPreview(dataUrl)
-      }
-      return
-    }
     const dataUrl = await fileToDataUrl(file)
     setCropSrc(dataUrl)
     setCropSide(side)
-  }, [card.card_type])
+  }, [])
 
   const handleCropConfirm = useCallback((dataUrl: string) => {
     if (!cropSide) return
@@ -370,7 +357,7 @@ export default function CardDetailModal({ card, owned, userId, onClose, onSave, 
       {cropSrc && (
         <ImageCropModal
           src={cropSrc}
-          aspectRatio={CARD_ASPECT}
+          aspectRatio={(card.card_type || '').toLowerCase() === 'photocard' ? CARD_ASPECT : 0}
           onConfirm={handleCropConfirm}
           onCancel={handleCropCancel}
         />

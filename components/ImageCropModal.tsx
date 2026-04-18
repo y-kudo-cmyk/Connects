@@ -27,12 +27,20 @@ export default function ImageCropModal({ src, aspectRatio = 4, circle = false, o
   const pinchStart = useRef<{ dist: number; scale: number } | null>(null)
 
   // コンテナサイズとクロップ枠を計算
+  // aspectRatio === 0 の場合は、画像の自然比に合わせて枠サイズを決定（自由トリミング相当）
   const getCropFrame = () => {
     const c = containerRef.current
     if (!c) return { x: 0, y: 0, w: 0, h: 0 }
     const cw = c.clientWidth
     const ch = c.clientHeight
-    const frameAR = circle ? 1 : aspectRatio
+    let frameAR: number
+    if (circle) frameAR = 1
+    else if (aspectRatio === 0) {
+      const img = imgRef.current
+      frameAR = img && img.naturalWidth > 0 ? img.naturalWidth / img.naturalHeight : 1
+    } else {
+      frameAR = aspectRatio
+    }
     let fw: number, fh: number
     if (cw / ch > frameAR) {
       fh = ch * 0.85
@@ -175,8 +183,9 @@ export default function ImageCropModal({ src, aspectRatio = 4, circle = false, o
     const sh = frame.h / scale
 
     // 出力キャンバス
+    const effectiveAR = aspectRatio === 0 ? (img.naturalWidth / img.naturalHeight) : aspectRatio
     const outW = circle ? 400 : 1200
-    const outH = circle ? 400 : Math.round(outW / aspectRatio)
+    const outH = circle ? 400 : Math.round(outW / effectiveAR)
     const canvas = document.createElement('canvas')
     canvas.width = outW
     canvas.height = outH
@@ -248,7 +257,7 @@ export default function ImageCropModal({ src, aspectRatio = 4, circle = false, o
         />
 
         {/* クロップオーバーレイ */}
-        {ready && <CropOverlay circle={circle} aspectRatio={aspectRatio} />}
+        {ready && <CropOverlay circle={circle} aspectRatio={aspectRatio === 0 && imgRef.current ? imgRef.current.naturalWidth / imgRef.current.naturalHeight : aspectRatio} />}
       </div>
 
       {/* ヒント */}
