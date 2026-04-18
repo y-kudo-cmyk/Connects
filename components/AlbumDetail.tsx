@@ -349,10 +349,10 @@ export default function AlbumDetail({ product, userCards, onBack, onCardTap }: A
                       const compact = allEntries.filter(([b, s]) => isCompact(b, s))
                       return (
                         <>
-                          {regular.map(([base, subs]) => renderBaseBlock(base, subs, tier))}
+                          {regular.map(([base, subs]) => renderBaseBlock(base, subs, tier, false))}
                           {compact.length > 0 && (
                             <div className="grid grid-cols-2 gap-3">
-                              {compact.map(([base, subs]) => renderBaseBlock(base, subs, tier))}
+                              {compact.map(([base, subs]) => renderBaseBlock(base, subs, tier, true))}
                             </div>
                           )}
                         </>
@@ -374,10 +374,10 @@ export default function AlbumDetail({ product, userCards, onBack, onCardTap }: A
     </div>
   )
 
-  function renderBaseBlock(base: string, subs: { store: string; versionId: string; cards: CardMaster[] }[], tier: string) {
+  function renderBaseBlock(base: string, subs: { store: string; versionId: string; cards: CardMaster[] }[], tier: string, compact = false) {
     const isStore = STORE_TIERS.has(tier)
-    // STORE tier は各subが1枚なので grid-cols-1（枠を大きく）、他は4列
-    const gridCols = isStore ? 'grid-cols-1' : 'grid-cols-4'
+    // STORE tier / compact (KiT 半幅で横並び) は 1列で枠を大きく。通常は4列
+    const gridCols = isStore || compact ? 'grid-cols-1' : 'grid-cols-4'
     const totalOwned = subs.reduce((acc, s) => acc + s.cards.filter(c => ownedMap.has(c.id)).length, 0)
     const totalCards = subs.reduce((acc, s) => acc + s.cards.length, 0)
     return (
@@ -398,14 +398,14 @@ export default function AlbumDetail({ product, userCards, onBack, onCardTap }: A
                     return (
                       <div key={versionId} className="mb-3">
                         {store && (
-                          <div className="flex items-center gap-2 mb-1.5 pl-2.5">
+                          <div className="flex items-center gap-2 mb-1.5 pl-2.5" style={{ minHeight: 22 }}>
                             <span
-                              className="text-[10px] font-bold px-2 py-0.5 rounded-full"
+                              className="text-[10px] font-bold px-2 py-0.5 rounded-full whitespace-nowrap overflow-hidden text-ellipsis max-w-full"
                               style={{ background: 'rgba(28,28,30,0.06)', color: '#636366' }}
                             >
                               {store}
                             </span>
-                            <span className="text-[9px]" style={{ color: '#8E8E93' }}>
+                            <span className="text-[9px] whitespace-nowrap" style={{ color: '#8E8E93' }}>
                               {ownedInVersion}/{versionCards.length}
                             </span>
                           </div>
