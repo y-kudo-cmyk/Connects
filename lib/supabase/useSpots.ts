@@ -24,6 +24,7 @@ export type SupabaseSpot = {
   x_posted: boolean
   submitted_by: string | null
   submitter?: { nickname: string } | null
+  created_at?: string
 }
 
 export type SupabaseSpotPhoto = {

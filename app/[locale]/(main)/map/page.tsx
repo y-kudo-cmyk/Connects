@@ -96,7 +96,7 @@ export default function MapPage() {
       if (!spot.members.includes('ALL') && !spot.members.some((m) => m.toUpperCase() === filterUpper)) return false
     }
     return true
-  })
+  }).sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''))
 
   const activeScheduleEvents = useMemo(() => {
     const today = TODAY

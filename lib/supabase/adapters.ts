@@ -129,6 +129,7 @@ export type AppSpot = {
   verifiedCount: number
   contributor?: string
   submittedByName?: string
+  createdAt?: string
 }
 
 export type AppSpotPhoto = {
@@ -169,6 +170,7 @@ export function toAppSpot(s: SupabaseSpot, photos: SupabaseSpotPhoto[]): AppSpot
     status: s.status,
     verifiedCount: s.verified_count,
     submittedByName: s.submitter?.nickname || undefined,
+    createdAt: s.created_at,
   }
 }
 
