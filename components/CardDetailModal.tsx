@@ -179,7 +179,7 @@ export default function CardDetailModal({ card, owned, userId, onClose, onSave, 
     <div
       className="fixed inset-0 flex items-end justify-center"
       style={{ background: 'rgba(0,0,0,0.55)', zIndex: 60 }}
-      onClick={onClose}
+      onClick={(e) => { if (e.target === e.currentTarget) onClose() }}
     >
       <div
         className="w-full max-w-lg rounded-t-2xl overflow-hidden flex flex-col relative"
