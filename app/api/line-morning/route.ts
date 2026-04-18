@@ -59,10 +59,22 @@ type Event = {
 
 function formatEvent(e: Event, options: { useAlarm?: boolean; warning?: boolean } = {}): string {
   const icon = options.useAlarm ? '⏰' : options.warning ? `⚠️${TAG_ICON[e.tag] || '📌'}` : (TAG_ICON[e.tag] || '📌')
-  const time = formatTime(e.start_date)
-  const dateMD = formatMD(e.start_date)
+  const startTime = formatTime(e.start_date)
+  const endTime = e.end_date ? formatTime(e.end_date) : ''
+  const startMD = formatMD(e.start_date)
   const endMD = e.end_date ? formatMD(e.end_date) : ''
-  const displayDate = endMD && endMD !== dateMD ? `${dateMD}〜${endMD}` : (time && time !== '00:00' ? `${dateMD} ${time}` : dateMD)
+  const hasStartTime = startTime && startTime !== '00:00'
+  const hasEndTime = endTime && endTime !== '00:00'
+  let displayDate: string
+  if (endMD && endMD !== startMD) {
+    // 期間イベント
+    const startPart = hasStartTime ? `${startMD} ${startTime}` : startMD
+    const endPart = hasEndTime ? `${endMD} ${endTime}` : endMD
+    displayDate = `${startPart}〜${endPart}`
+  } else {
+    // 単日
+    displayDate = hasStartTime ? `${startMD} ${startTime}` : startMD
+  }
   const title = e.event_title
   const sub = e.sub_event_title ? `\n　${e.sub_event_title}` : ''
   const tagLabel = options.useAlarm ? `【${e.tag}】` : ''
