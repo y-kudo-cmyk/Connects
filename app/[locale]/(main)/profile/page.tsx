@@ -88,14 +88,14 @@ function SwipeableConcertRow({
   }
 
   const d = entry.date ? new Date(entry.date) : null
+  const dateStr = d ? `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, '0')}.${String(d.getDate()).padStart(2, '0')}` : ''
   return (
-    <div className="relative overflow-hidden rounded-xl">
+    <div style={{ position: 'relative', overflow: 'hidden', borderRadius: 12, marginBottom: 8, background: '#EF4444' }}>
       {/* 削除ボタン（右側に露出） */}
-      <div className="absolute inset-y-0 right-0 flex items-center justify-center"
-        style={{ width: DELETE_WIDTH, background: '#EF4444' }}>
+      <div style={{ position: 'absolute', top: 0, right: 0, bottom: 0, width: DELETE_WIDTH, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#EF4444' }}>
         {!confirming ? (
           <button onClick={() => setConfirming(true)}
-            className="w-full h-full flex items-center justify-center">
+            style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'transparent', border: 'none', color: '#FFF' }}>
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" strokeWidth="2">
               <polyline points="3 6 5 6 21 6" />
               <path d="M19 6l-2 14a2 2 0 01-2 2H9a2 2 0 01-2-2L5 6" />
@@ -104,11 +104,11 @@ function SwipeableConcertRow({
             </svg>
           </button>
         ) : (
-          <div className="flex flex-col items-center gap-1">
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
             <button onClick={() => { onDelete(); setConfirming(false); setOffset(0) }}
-              className="text-[10px] font-bold text-white">削除</button>
+              style={{ fontSize: 10, fontWeight: 700, color: '#FFF', background: 'transparent', border: 'none' }}>削除</button>
             <button onClick={() => { setConfirming(false); setOffset(0) }}
-              className="text-[9px] text-white opacity-70">取消</button>
+              style={{ fontSize: 9, color: '#FFF', opacity: 0.7, background: 'transparent', border: 'none' }}>取消</button>
           </div>
         )}
       </div>
@@ -122,29 +122,39 @@ function SwipeableConcertRow({
         onPointerDown={(e) => { if (e.pointerType !== 'touch') onStart(e.clientX) }}
         onPointerMove={(e) => { if (e.pointerType !== 'touch' && startX.current !== null) onMove(e.clientX) }}
         onPointerUp={(e) => { if (e.pointerType !== 'touch') onEnd() }}
-        className="relative flex items-center gap-3 px-3 py-2.5 rounded-xl text-left w-full"
         style={{
+          position: 'relative',
+          display: 'flex',
+          alignItems: 'center',
+          gap: 12,
+          padding: '10px 12px',
+          borderRadius: 12,
+          textAlign: 'left',
+          width: '100%',
+          border: 'none',
           background: '#FFFFFF',
           transform: `translateX(${offset}px)`,
           transition: startX.current === null ? 'transform 0.15s' : 'none',
         }}
       >
         <div
-          className="w-14 h-14 rounded-lg flex-shrink-0"
           style={{
+            width: 56,
+            height: 56,
+            borderRadius: 8,
+            flexShrink: 0,
             background: entry.images?.[0]
               ? `url(${entry.images[0]}) center/cover`
               : 'linear-gradient(135deg, rgba(243,180,227,0.2) 0%, rgba(167,139,250,0.15) 100%)',
           }}
         />
-        <div className="flex-1 min-w-0">
-          <p className="text-xs font-bold truncate" style={{ color: '#1C1C1E' }}>{entry.title}</p>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <p style={{ fontSize: 12, fontWeight: 700, color: '#1C1C1E', margin: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{entry.title}</p>
           {entry.subTitle && (
-            <p className="text-[10px] truncate" style={{ color: '#636366' }}>{entry.subTitle}</p>
+            <p style={{ fontSize: 10, color: '#636366', margin: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{entry.subTitle}</p>
           )}
-          <p className="text-[10px] mt-0.5" style={{ color: '#8E8E93' }}>
-            {d ? `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, '0')}.${String(d.getDate()).padStart(2, '0')}` : ''}
-            {entry.venue ? ` · ${entry.venue}` : ''}
+          <p style={{ fontSize: 10, color: '#8E8E93', margin: 0, marginTop: 2 }}>
+            {dateStr}{entry.venue ? ` · ${entry.venue}` : ''}
           </p>
         </div>
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#C7C7CC" strokeWidth="2">
@@ -644,7 +654,6 @@ export default function ProfilePage() {
       </div>
 
       {/* 参戦記録 詳細モーダル */}
-      {(() => { if (showConcerts) console.log('[ConcertModal] render, portalMounted:', portalMounted, 'liveEntries:', liveEntries.length); return null })()}
       {showConcerts && portalMounted && createPortal(
         <div style={{ position: 'fixed', inset: 0, background: '#F8F9FA', zIndex: 99999, display: 'flex', flexDirection: 'column' }}>
           <div style={{ flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 16px', borderBottom: '1px solid #E5E5EA', paddingTop: 'calc(14px + env(safe-area-inset-top, 0px))', background: '#FFFFFF' }}>
@@ -662,23 +671,33 @@ export default function ProfilePage() {
             </button>
           </div>
 
-          <div style={{ flex: 1, overflowY: 'auto', padding: '16px', paddingBottom: 'calc(80px + env(safe-area-inset-bottom, 0px))', background: '#FFFF00' }}>
-            <p style={{ fontSize: 14, color: '#000', margin: 0, marginBottom: 8, fontWeight: 'bold' }}>
-              DEBUG: 参戦記録 {liveEntries.length}件
-            </p>
+          <div style={{ flex: 1, overflowY: 'auto', padding: '12px 16px', paddingBottom: 'calc(80px + env(safe-area-inset-bottom, 0px))' }}>
+            <p style={{ fontSize: 10, color: '#8E8E93', margin: 0, marginBottom: 8 }}>← 左にスワイプで削除</p>
             {liveEntries
               .slice()
               .sort((a, b) => (b.date || '').localeCompare(a.date || ''))
-              .slice(0, 5)
               .map((e) => (
-                <div key={e.id} style={{ padding: '10px', marginBottom: '8px', background: '#FFFFFF', borderRadius: 8 }}>
-                  <p style={{ fontSize: 12, fontWeight: 700, color: '#000', margin: 0 }}>{e.title}</p>
-                  <p style={{ fontSize: 10, color: '#666', margin: 0 }}>{e.date} | {e.venue || '-'}</p>
-                </div>
+                <SwipeableConcertRow
+                  key={e.id}
+                  entry={e}
+                  onOpen={() => setEditHistoryEntry(e)}
+                  onDelete={() => removeEntry(e.id)}
+                />
               ))}
           </div>
         </div>,
         document.body
+      )}
+
+      {editHistoryEntry && (
+        <ConcertHistoryModal
+          entry={editHistoryEntry}
+          onClose={() => setEditHistoryEntry(null)}
+          onSave={(updates) => {
+            updateEntry(editHistoryEntry.id, updates)
+            setEditHistoryEntry(null)
+          }}
+        />
       )}
 
       {/* --- Fan club membership --- */}
@@ -739,10 +758,7 @@ export default function ProfilePage() {
       {liveEntries.length > 0 && (
         <div className="px-4 mb-4">
           <button
-            onClick={() => {
-              console.log('[ConcertBtn] tap, liveEntries:', liveEntries.length, 'portalMounted:', portalMounted)
-              setShowConcerts(true)
-            }}
+            onClick={() => setShowConcerts(true)}
             className="w-full flex items-center justify-between px-4 py-3 rounded-xl"
             style={{ background: '#FFFFFF' }}
           >
