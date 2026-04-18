@@ -134,6 +134,21 @@ export default function AlbumDetail({ product, userCards, onBack, onCardTap }: A
     return ordered
   }, [memberCards, versions])
 
+  // Further group versions by their base name (before " - " separator)
+  // e.g. "BLUE/ECHO - Weverse Shop" → base "BLUE/ECHO", store "Weverse Shop"
+  const groupedByBase = useMemo(() => {
+    const groups = new Map<string, { store: string; versionId: string; cards: CardMaster[] }[]>()
+    for (const [versionId, cards] of groupedByVersion.entries()) {
+      const fullName = versionNameMap.get(versionId) || versionId
+      const sepIdx = fullName.indexOf(' - ')
+      const base = sepIdx >= 0 ? fullName.slice(0, sepIdx) : fullName
+      const store = sepIdx >= 0 ? fullName.slice(sepIdx + 3) : ''
+      if (!groups.has(base)) groups.set(base, [])
+      groups.get(base)!.push({ store, versionId, cards })
+    }
+    return groups
+  }, [groupedByVersion, versionNameMap])
+
   const totalInMember = memberCards.length
   const ownedInMember = memberCards.filter(c => ownedMap.has(c.id)).length
   const totalAll = cards.length
@@ -248,25 +263,41 @@ export default function AlbumDetail({ product, userCards, onBack, onCardTap }: A
             </div>
           )}
 
-          <div className="px-4 space-y-4 pb-6">
-            {Array.from(groupedByVersion.entries()).map(([versionId, versionCards]) => {
-              const versionName = versionNameMap.get(versionId) || versionId || '—'
-              const ownedInVersion = versionCards.filter(c => ownedMap.has(c.id)).length
-
+          <div className="px-4 space-y-5 pb-6">
+            {Array.from(groupedByBase.entries()).map(([base, subs]) => {
+              const totalOwned = subs.reduce((acc, s) => acc + s.cards.filter(c => ownedMap.has(c.id)).length, 0)
+              const totalCards = subs.reduce((acc, s) => acc + s.cards.length, 0)
               return (
-                <div key={versionId || 'no-version'}>
-                  <div className="flex items-center gap-2 mb-2">
+                <div key={base || 'no-base'}>
+                  <div className="flex items-center gap-2 mb-3">
                     <div
                       className="w-1.5 h-4 rounded-full"
                       style={{ background: memberColor }}
                     />
-                    <h3 className="text-xs font-bold" style={{ color: '#1C1C1E' }}>{versionName}</h3>
+                    <h3 className="text-sm font-black" style={{ color: '#1C1C1E' }}>{base || '—'}</h3>
                     <span className="text-[10px]" style={{ color: '#8E8E93' }}>
-                      {ownedInVersion}/{versionCards.length}
+                      {totalOwned}/{totalCards}
                     </span>
                   </div>
-                  <div className="grid grid-cols-4 gap-2">
-                    {versionCards.map(card => {
+                  {subs.map(({ store, versionId, cards: versionCards }) => {
+                    const ownedInVersion = versionCards.filter(c => ownedMap.has(c.id)).length
+                    return (
+                      <div key={versionId} className="mb-3">
+                        {store && (
+                          <div className="flex items-center gap-2 mb-1.5 pl-2.5">
+                            <span
+                              className="text-[10px] font-bold px-2 py-0.5 rounded-full"
+                              style={{ background: 'rgba(28,28,30,0.06)', color: '#636366' }}
+                            >
+                              {store}
+                            </span>
+                            <span className="text-[9px]" style={{ color: '#8E8E93' }}>
+                              {ownedInVersion}/{versionCards.length}
+                            </span>
+                          </div>
+                        )}
+                        <div className="grid grid-cols-4 gap-2">
+                          {versionCards.map(card => {
                       const owned = ownedMap.get(card.id) || null
                       const displayImage = owned?.front_image_url || card.front_image_url || ''
                       const hasImage = !!displayImage
@@ -315,8 +346,11 @@ export default function AlbumDetail({ product, userCards, onBack, onCardTap }: A
                           )}
                         </button>
                       )
-                    })}
-                  </div>
+                          })}
+                        </div>
+                      </div>
+                    )
+                  })}
                 </div>
               )
             })}
