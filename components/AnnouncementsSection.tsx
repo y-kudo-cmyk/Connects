@@ -34,8 +34,9 @@ export default function AnnouncementsSection({ announcements }: { announcements:
   }
 
   // 管理者のみキャンペーン表示（公開時にこのチェックを外す）
+  // admin は完了フラグに関わらず常時表示（再テストしやすいように）
   const isAdmin = user && CAMPAIGN_ADMIN_IDS.includes(user.id)
-  const showCampaign = !campaignDone && isAdmin
+  const showCampaign = isAdmin && (!campaignDone || isAdmin)
   const totalCount = visible.length + (showCampaign ? 1 : 0)
 
   if (totalCount === 0) return null
