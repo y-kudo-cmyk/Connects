@@ -6,6 +6,7 @@ import { useTranslations } from 'next-intl'
 import { createClient } from '@/lib/supabase/client'
 import type { CardMaster, UserCard } from '@/lib/useCardData'
 import ImageCropModal from '@/components/ImageCropModal'
+import FreeCropModal from '@/components/FreeCropModal'
 
 const CARD_ASPECT = 2 / 3 // width / height (トレカ比率)
 
@@ -354,10 +355,17 @@ export default function CardDetailModal({ card, owned, userId, onClose, onSave, 
           </button>
         </div>
       </div>
-      {cropSrc && (
+      {cropSrc && (card.card_type || '').toLowerCase() === 'photocard' && (
         <ImageCropModal
           src={cropSrc}
-          aspectRatio={(card.card_type || '').toLowerCase() === 'photocard' ? CARD_ASPECT : 0}
+          aspectRatio={CARD_ASPECT}
+          onConfirm={handleCropConfirm}
+          onCancel={handleCropCancel}
+        />
+      )}
+      {cropSrc && (card.card_type || '').toLowerCase() !== 'photocard' && (
+        <FreeCropModal
+          src={cropSrc}
           onConfirm={handleCropConfirm}
           onCancel={handleCropCancel}
         />
