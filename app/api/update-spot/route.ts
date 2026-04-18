@@ -17,6 +17,27 @@ export async function POST(req: NextRequest) {
     const newId = 'SP' + String(lastNum + 1).padStart(5, '0')
     const { error } = await sb.from('spots').insert({ id: newId, ...updates, submitted_by: user.id })
     if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+    // spot image があれば spot_photos 行も作成（詳細モーダルのカルーセルで表示されるように）
+    if (updates.image_url) {
+      await sb.from('spot_photos').insert({
+        spot_id: newId,
+        image_url: updates.image_url,
+        source_url: updates.source_url || null,
+        platform: null,
+        tags: updates.related_artists || null,
+        contributor: null,
+        submitted_by: user.id,
+        visit_date: null,
+        status: 'pending',
+        votes: 0,
+      })
+    }
+    // 投稿活動ログ
+    await sb.from('user_activity').insert({
+      user_id: user.id,
+      action: 'spot_add',
+      detail: `spot:${newId}`,
+    })
     return NextResponse.json({ ok: true, id: newId })
   }
 
