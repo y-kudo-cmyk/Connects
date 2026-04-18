@@ -136,9 +136,19 @@ export default function AlbumDetail({ product, userCards, onBack, onCardTap }: A
 
   // Further group versions by tier → base name (before " - " separator)
   // e.g. tier=STORE_JP, "BLUE/ECHO - Weverse Shop" → base "BLUE/ECHO", store "Weverse Shop"
+  // Fallback: infer tier from version_id prefix if DB tier column is absent
+  function inferTier(versionId: string): string {
+    if (/_LUCKY_/i.test(versionId)) return 'LUCKY_DRAW'
+    if (/_BEN_|_BENEFIT_/i.test(versionId)) return 'STORE_JP'
+    if (/_EVENT_/i.test(versionId)) return 'EVENT'
+    if (/_VENUE_/i.test(versionId)) return 'VENUE'
+    if (/_MERCH_/i.test(versionId)) return 'MERCH_BONUS'
+    return 'INCLUDED'
+  }
+
   const versionTierMap = useMemo(() => {
     const m = new Map<string, string>()
-    for (const v of versions) m.set(v.version_id, v.tier || 'INCLUDED')
+    for (const v of versions) m.set(v.version_id, v.tier || inferTier(v.version_id))
     return m
   }, [versions])
 
