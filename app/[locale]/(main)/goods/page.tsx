@@ -12,6 +12,7 @@ import CardDetailModal from '@/components/CardDetailModal'
 const DEV_USER_IDS = [
   '86c91b90-0060-4a3d-bf10-d5c846604882', // yuta
   '9c19a9f6-d3ab-4ea2-8391-1df73ef556c0', // はるゆ (hakuren.x1215@gmail.com)
+  '65ba4bc6-917d-4689-aeaf-8d4b5b01a004', // y-kudo (y-kudo@connectsplus.net)
   // k.m.s-lv.38@ezweb.ne.jp — 未登録、登録後にIDを追加
 ]
 
