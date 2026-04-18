@@ -61,5 +61,10 @@ export async function POST(req: NextRequest) {
     }
   }
 
+  // Glide時代の投稿spotを引き継ぎ: original_submitter_email が一致するspotに submitted_by を設定
+  await sb.from('spots')
+    .update({ submitted_by: user.id, original_submitter_email: null })
+    .eq('original_submitter_email', normalized)
+
   return NextResponse.json({ ok: true, created: true })
 }
