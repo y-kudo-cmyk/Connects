@@ -394,21 +394,25 @@ export default function CardDetailModal({ card, owned, userId, onClose, onSave, 
           </button>
         </div>
       </div>
-      {cropSrc && (card.card_type || '').toLowerCase() === 'photocard' && (
-        <ImageCropModal
-          src={cropSrc}
-          aspectRatio={CARD_ASPECT}
-          onConfirm={handleCropConfirm}
-          onCancel={handleCropCancel}
-        />
-      )}
-      {cropSrc && (card.card_type || '').toLowerCase() !== 'photocard' && (
-        <FreeCropModal
-          src={cropSrc}
-          onConfirm={handleCropConfirm}
-          onCancel={handleCropCancel}
-        />
-      )}
+      {cropSrc && (() => {
+        const type = (card.card_type || '').toLowerCase()
+        // photocard / luckydraw はトレカ固定比、その他 (id_card, puzzle, tear-off_poster 等) は自由
+        const isTradingCard = type === 'photocard' || type === 'luckydraw'
+        return isTradingCard ? (
+          <ImageCropModal
+            src={cropSrc}
+            aspectRatio={CARD_ASPECT}
+            onConfirm={handleCropConfirm}
+            onCancel={handleCropCancel}
+          />
+        ) : (
+          <FreeCropModal
+            src={cropSrc}
+            onConfirm={handleCropConfirm}
+            onCancel={handleCropCancel}
+          />
+        )
+      })()}
     </div>,
     document.body
   )
