@@ -229,7 +229,8 @@ export default function AlbumDetail({ product, userCards, onBack, onCardTap }: A
                   <div className="grid grid-cols-4 gap-2">
                     {versionCards.map(card => {
                       const owned = ownedMap.get(card.id) || null
-                      const hasImage = !!card.front_image_url
+                      const displayImage = owned?.front_image_url || card.front_image_url || ''
+                      const hasImage = !!displayImage
                       const accent = memberColorMap.get(card.member_id) || memberColor
 
                       return (
@@ -239,7 +240,7 @@ export default function AlbumDetail({ product, userCards, onBack, onCardTap }: A
                           className="relative aspect-[2/3] rounded-lg overflow-hidden transition-transform active:scale-95"
                           style={{
                             background: owned
-                              ? (hasImage ? `url(${card.front_image_url}) center/cover` : 'rgba(243,180,227,0.15)')
+                              ? (hasImage ? `url(${displayImage}) center/cover` : 'rgba(243,180,227,0.15)')
                               : '#E5E5EA',
                             border: owned ? `2px solid ${accent}` : '2px solid transparent',
                           }}
