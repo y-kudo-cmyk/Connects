@@ -4,12 +4,16 @@ import { useTranslations } from 'next-intl'
 import { useAuth } from '@/lib/supabase/useAuth'
 
 // 開発中のGOODSページを表示するユーザーID
-const DEV_USER_ID = '86c91b90-0060-4a3d-bf10-d5c846604882'
+const DEV_USER_IDS = [
+  '86c91b90-0060-4a3d-bf10-d5c846604882', // yuta
+  '9c19a9f6-d3ab-4ea2-8391-1df73ef556c0', // はるゆ (hakuren.x1215@gmail.com)
+  // k.m.s-lv.38@ezweb.ne.jp — 未登録、登録後にIDを追加
+]
 
 export default function GoodsPage() {
   const t = useTranslations()
   const { user } = useAuth()
-  const isDev = user?.id === DEV_USER_ID
+  const isDev = user && DEV_USER_IDS.includes(user.id)
 
   if (!isDev) {
     return (
