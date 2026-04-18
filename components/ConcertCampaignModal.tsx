@@ -5,6 +5,7 @@ import { createPortal } from 'react-dom'
 import { useTranslations } from 'next-intl'
 import { createClient } from '@/lib/supabase/client'
 import { useAuth } from '@/lib/supabase/useAuth'
+import { useRouter } from '@/i18n/navigation'
 
 const supabase = createClient()
 
@@ -17,6 +18,7 @@ type Props = {
 export default function ConcertCampaignModal({ open, onClose, onComplete }: Props) {
   const t = useTranslations('Campaign')
   const { user } = useAuth()
+  const router = useRouter()
   const [step, setStep] = useState<'intro' | 'loading' | 'done'>('intro')
   const [registeredCount, setRegisteredCount] = useState(0)
 
@@ -90,6 +92,7 @@ export default function ConcertCampaignModal({ open, onClose, onComplete }: Prop
     onComplete()
     onClose()
     setStep('intro')
+    router.push('/profile')
   }
 
   return createPortal(
