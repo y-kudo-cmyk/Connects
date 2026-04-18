@@ -396,7 +396,7 @@ export default function AlbumDetail({ product, userCards, onBack, onCardTap }: A
                     const ownedInVersion = versionCards.filter(c => ownedMap.has(c.id)).length
                     return (
                       <div key={versionId} className="mb-3">
-                        {store && (
+                        {store && store !== '通常' && (
                           <div className="flex items-center gap-2 mb-1.5 pl-2.5" style={{ minHeight: 22 }}>
                             <span
                               className="text-[10px] font-bold px-2 py-0.5 rounded-full whitespace-nowrap overflow-hidden text-ellipsis max-w-full"
