@@ -74,7 +74,7 @@ export function useSpotPhotos() {
       image_url: photo.imageUrl,
       source_url: photo.sourceUrl || null,
       platform: photo.platform || null,
-      tags: photo.tags?.join(', ') || null,
+      tags: photo.tags?.length ? photo.tags.map(t => `#${t}`).join(' ') : null,
       contributor: photo.contributor || null,
       submitted_by: user.id,
       visit_date: photo.date || null,
