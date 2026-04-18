@@ -134,14 +134,7 @@ export default function NewSchedulePreview() {
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img src="/logo.png" alt="" className="w-10 h-10 opacity-40" />
                   </div>
-                  {/* タグバッジ */}
-                  <span
-                    className="absolute top-2 left-2 text-[9px] font-bold px-1.5 py-0.5 rounded"
-                    style={{ background: cfg.bg, color: cfg.color }}
-                  >
-                    {cfg.icon} {cfg.label}
-                  </span>
-                  {/* 承認バッジ */}
+                  {/* 承認バッジ（タグは画像下に移動したため、画像上は承認のみ） */}
                   <span
                     className="absolute top-2 right-2 text-[8px] font-bold px-1.5 py-0.5 rounded-full"
                     style={event.verifiedCount >= VOTE_THRESHOLD
@@ -158,13 +151,21 @@ export default function NewSchedulePreview() {
                   onClick={() => setDetailEvent(event)}
                   className="flex-1 p-3 flex flex-col gap-1.5 text-left"
                 >
-                  {/* Date chip */}
-                  <span
-                    className="text-[10px] font-black px-2 py-0.5 rounded-full self-start"
-                    style={{ background: cfg.bg, color: cfg.color }}
-                  >
-                    {d.getMonth()+1}/{d.getDate()}({dayNamesShort[d.getDay()]}){event.time && event.time !== '00:00' ? ` ${event.time}` : ''}
-                  </span>
+                  {/* タグ + 日付 chip */}
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    <span
+                      className="text-[9px] font-bold px-1.5 py-0.5 rounded"
+                      style={{ background: cfg.bg, color: cfg.color }}
+                    >
+                      {cfg.icon} {cfg.label}
+                    </span>
+                    <span
+                      className="text-[10px] font-black px-2 py-0.5 rounded-full"
+                      style={{ background: cfg.bg, color: cfg.color }}
+                    >
+                      {d.getMonth()+1}/{d.getDate()}({dayNamesShort[d.getDay()]}){event.time && event.time !== '00:00' ? ` ${event.time}` : ''}
+                    </span>
+                  </div>
 
                   {/* Title */}
                   <p className="text-[10px] leading-tight" style={{ color: '#8E8E93' }}>
