@@ -13,6 +13,7 @@ import { COUNTRIES, countryFlag } from '@/lib/countryUtils'
 import ImageCropModal from '@/components/ImageCropModal'
 import { useMyEntries, MyEntry } from '@/lib/useMyEntries'
 import { createClient } from '@/lib/supabase/client'
+import { seventeenMembers } from '@/lib/config/constants'
 
 const LANGUAGES = [
   { code: 'ja' as const, flag: '\u{1F1EF}\u{1F1F5}', label: '\u65E5\u672C\u8A9E' },
@@ -81,6 +82,31 @@ export default function ProfilePage() {
   const [feedbackMsg, setFeedbackMsg] = useState('')
   const [feedbackState, setFeedbackState] = useState<'idle' | 'sending' | 'done' | 'error'>('idle')
   const [cropSrc, setCropSrc] = useState<string | null>(null)
+  const [favMemberIds, setFavMemberIds] = useState<string[]>([])
+
+  useEffect(() => {
+    if (!user) return
+    let cancelled = false
+    const run = async () => {
+      const supabase = createClient()
+      const { data } = await supabase.from('profiles').select('fav_member_ids').eq('id', user.id).single()
+      if (cancelled) return
+      const ids = (data?.fav_member_ids as string[] | null) ?? []
+      setFavMemberIds(Array.isArray(ids) ? ids : [])
+    }
+    void run()
+    return () => { cancelled = true }
+  }, [user])
+
+  const toggleFavMember = useCallback(async (memberId: string) => {
+    if (!user) return
+    const prev = favMemberIds
+    const next = prev.includes(memberId) ? prev.filter(id => id !== memberId) : [...prev, memberId]
+    setFavMemberIds(next) // optimistic
+    const supabase = createClient()
+    const { error } = await supabase.from('profiles').update({ fav_member_ids: next }).eq('id', user.id)
+    if (error) setFavMemberIds(prev) // revert on error
+  }, [user, favMemberIds])
   const [cropTarget, setCropTarget] = useState<'banner' | 'avatar'>('banner')
   const [showLangPicker, setShowLangPicker] = useState(false)
   const [showCountryPicker, setShowCountryPicker] = useState(false)
@@ -408,6 +434,51 @@ export default function ProfilePage() {
           <svg width="14" height="14" viewBox="0 0 24 24" fill="#3B82F6">
             <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78L12 21.23l8.84-8.84a5.5 5.5 0 000-7.78z" />
           </svg>
+        </div>
+      </div>
+
+      {/* --- Favorite Members (推しメンバー) --- */}
+      <div className="px-4 mb-4">
+        <p className="text-xs font-semibold mb-1" style={{ color: '#8E8E93' }}>推しメンバー</p>
+        <p className="text-[10px] mb-2" style={{ color: '#8E8E93' }}>複数選択できます</p>
+        <div className="flex flex-wrap gap-2">
+          {seventeenMembers.map((m, i) => {
+            const memberId = `A${String(i + 1).padStart(6, '0')}`
+            const selected = favMemberIds.includes(memberId)
+            return (
+              <button
+                key={memberId}
+                onClick={() => toggleFavMember(memberId)}
+                className="relative rounded-xl overflow-hidden transition-all"
+                style={{
+                  width: 64,
+                  height: 64,
+                  background: m.photo ? `url(${m.photo}) center/cover` : m.color,
+                  border: selected ? `3px solid ${m.color}` : '3px solid transparent',
+                  opacity: selected ? 1 : 0.85,
+                }}
+              >
+                {selected && (
+                  <div
+                    className="absolute top-0.5 right-0.5 w-5 h-5 rounded-full flex items-center justify-center"
+                    style={{ background: m.color, border: '2px solid #FFFFFF' }}
+                  >
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                      <polyline points="20 6 9 17 4 12" />
+                    </svg>
+                  </div>
+                )}
+                <div
+                  className="absolute bottom-0 left-0 right-0 text-center py-1"
+                  style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.75), rgba(0,0,0,0))' }}
+                >
+                  <span className="text-[9px] font-bold" style={{ color: '#FFFFFF' }}>
+                    {m.name}
+                  </span>
+                </div>
+              </button>
+            )
+          })}
         </div>
       </div>
 

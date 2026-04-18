@@ -1,9 +1,10 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { useTranslations } from 'next-intl'
 import { useCardVersions, useCardMaster, type CardProduct, type CardMaster, type UserCard, productTypeLabels } from '@/lib/useCardData'
 import { seventeenMembers } from '@/lib/config/constants'
+import { createClient } from '@/lib/supabase/client'
 
 interface AlbumDetailProps {
   product: CardProduct
@@ -39,6 +40,32 @@ export default function AlbumDetail({ product, userCards, onBack, onCardTap }: A
   const { versions, loading: versionsLoading } = useCardVersions(product.product_id)
   const { cards, loading: cardsLoading } = useCardMaster(product.product_id)
   const [selectedMemberId, setSelectedMemberId] = useState<string | null>(null)
+  const [favMemberIds, setFavMemberIds] = useState<string[]>([])
+
+  useEffect(() => {
+    let cancelled = false
+    const run = async () => {
+      try {
+        const supabase = createClient()
+        const { data: { user } } = await supabase.auth.getUser()
+        if (!user) return
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('fav_member_ids')
+          .eq('id', user.id)
+          .single()
+        if (error || cancelled) return
+        const ids = (data?.fav_member_ids as string[] | null) ?? []
+        setFavMemberIds(Array.isArray(ids) ? ids : [])
+      } catch {
+        // treat as empty
+      }
+    }
+    void run()
+    return () => { cancelled = true }
+  }, [])
+
+  const favSet = useMemo(() => new Set(favMemberIds), [favMemberIds])
 
   const ownedMap = useMemo(() => {
     const m = new Map<string, UserCard>()
@@ -64,12 +91,20 @@ export default function AlbumDetail({ product, userCards, onBack, onCardTap }: A
     return memberOrder.filter(m => present.has(m.memberId))
   }, [cards])
 
+  const sortedMembers = useMemo(() => {
+    const oshi = availableMembers.filter(m => favSet.has(m.memberId))
+    const rest = availableMembers.filter(m => !favSet.has(m.memberId))
+    return [...oshi, ...rest]
+  }, [availableMembers, favSet])
+
   const activeMemberId = useMemo(() => {
     if (selectedMemberId && availableMembers.some(m => m.memberId === selectedMemberId)) {
       return selectedMemberId
     }
+    const firstOshi = availableMembers.find(m => favSet.has(m.memberId))
+    if (firstOshi) return firstOshi.memberId
     return availableMembers[0]?.memberId ?? null
-  }, [selectedMemberId, availableMembers])
+  }, [selectedMemberId, availableMembers, favSet])
 
   const activeMember = useMemo(
     () => availableMembers.find(m => m.memberId === activeMemberId) ?? null,
@@ -172,11 +207,15 @@ export default function AlbumDetail({ product, userCards, onBack, onCardTap }: A
         </div>
       ) : (
         <>
-          {availableMembers.length > 0 && (
+          {sortedMembers.length > 0 && (
             <div className="px-4 pb-3 overflow-x-auto">
               <div className="flex gap-1.5" style={{ minWidth: 'max-content' }}>
-                {availableMembers.map(m => {
+                {sortedMembers.map(m => {
                   const isActive = m.memberId === activeMemberId
+                  const isOshi = favSet.has(m.memberId)
+                  const boxShadow = isActive
+                    ? (isOshi ? `0 0 0 3px ${m.color}` : `0 0 0 2px ${m.color}`)
+                    : (isOshi ? `0 0 0 1.5px ${m.color}` : 'none')
                   return (
                     <button
                       key={m.memberId}
@@ -185,10 +224,10 @@ export default function AlbumDetail({ product, userCards, onBack, onCardTap }: A
                       style={{
                         background: isActive ? '#1C1C1E' : 'rgba(28,28,30,0.06)',
                         color: isActive ? '#FFFFFF' : '#636366',
-                        boxShadow: isActive ? `0 0 0 2px ${m.color}` : 'none',
+                        boxShadow,
                       }}
                     >
-                      {m.index + 1}. {m.name}
+                      {isOshi ? '\u2605 ' : ''}{m.index + 1}. {m.name}
                     </button>
                   )
                 })}
