@@ -142,6 +142,10 @@ export default function AlbumDetail({ product, userCards, onBack, onCardTap }: A
     return m
   }, [versions])
 
+  const STORE_TIERS = new Set(['STORE_JP', 'STORE_KR'])
+
+  // For STORE tiers: pivot to store-first (Weverse → [BLUE/ECHO, COMPACT])
+  // For other tiers: base-first (same as before)
   const groupedByTierAndBase = useMemo(() => {
     const tiers = new Map<string, Map<string, { store: string; versionId: string; cards: CardMaster[] }[]>>()
     for (const [versionId, cards] of groupedByVersion.entries()) {
@@ -152,8 +156,14 @@ export default function AlbumDetail({ product, userCards, onBack, onCardTap }: A
       const store = sepIdx >= 0 ? fullName.slice(sepIdx + 3) : ''
       if (!tiers.has(tier)) tiers.set(tier, new Map())
       const tierMap = tiers.get(tier)!
-      if (!tierMap.has(base)) tierMap.set(base, [])
-      tierMap.get(base)!.push({ store, versionId, cards })
+      if (STORE_TIERS.has(tier) && store) {
+        // store-first pivot
+        if (!tierMap.has(store)) tierMap.set(store, [])
+        tierMap.get(store)!.push({ store: base, versionId, cards })
+      } else {
+        if (!tierMap.has(base)) tierMap.set(base, [])
+        tierMap.get(base)!.push({ store, versionId, cards })
+      }
     }
     return tiers
   }, [groupedByVersion, versionNameMap, versionTierMap])
