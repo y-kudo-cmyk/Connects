@@ -5,6 +5,27 @@ import { createPortal } from 'react-dom'
 import { useTranslations } from 'next-intl'
 import { createClient } from '@/lib/supabase/client'
 import type { CardMaster, UserCard } from '@/lib/useCardData'
+import ImageCropModal from '@/components/ImageCropModal'
+
+const CARD_ASPECT = 2 / 3 // width / height (トレカ比率)
+
+function dataUrlToFile(dataUrl: string, filename: string): File {
+  const [header, base64] = dataUrl.split(',')
+  const mime = header.match(/:(.*?);/)?.[1] || 'image/jpeg'
+  const bin = atob(base64)
+  const arr = new Uint8Array(bin.length)
+  for (let i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i)
+  return new File([arr], filename, { type: mime })
+}
+
+function fileToDataUrl(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onload = () => resolve(reader.result as string)
+    reader.onerror = reject
+    reader.readAsDataURL(file)
+  })
+}
 
 const supabase = createClient()
 
@@ -52,22 +73,39 @@ export default function CardDetailModal({ card, owned, userId, onClose, onSave, 
   const [saved, setSaved] = useState(false)
   const [errorMsg, setErrorMsg] = useState<string>('')
   const [mounted, setMounted] = useState(false)
+  const [cropSrc, setCropSrc] = useState<string | null>(null)
+  const [cropSide, setCropSide] = useState<'front' | 'back' | null>(null)
   const frontRef = useRef<HTMLInputElement>(null)
   const backRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => { setMounted(true) }, [])
 
-  const handleImageSelect = useCallback((side: 'front' | 'back') => (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageSelect = useCallback((side: 'front' | 'back') => async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
+    e.target.value = '' // allow reselect same file
     if (!file) return
-    const url = URL.createObjectURL(file)
-    if (side === 'front') {
+    const dataUrl = await fileToDataUrl(file)
+    setCropSrc(dataUrl)
+    setCropSide(side)
+  }, [])
+
+  const handleCropConfirm = useCallback((dataUrl: string) => {
+    if (!cropSide) return
+    const file = dataUrlToFile(dataUrl, `${cropSide}-${Date.now()}.webp`)
+    if (cropSide === 'front') {
       setFrontFile(file)
-      setFrontPreview(url)
+      setFrontPreview(dataUrl)
     } else {
       setBackFile(file)
-      setBackPreview(url)
+      setBackPreview(dataUrl)
     }
+    setCropSrc(null)
+    setCropSide(null)
+  }, [cropSide])
+
+  const handleCropCancel = useCallback(() => {
+    setCropSrc(null)
+    setCropSide(null)
   }, [])
 
   const handleSave = useCallback(async () => {
@@ -316,6 +354,14 @@ export default function CardDetailModal({ card, owned, userId, onClose, onSave, 
           </button>
         </div>
       </div>
+      {cropSrc && (
+        <ImageCropModal
+          src={cropSrc}
+          aspectRatio={CARD_ASPECT}
+          onConfirm={handleCropConfirm}
+          onCancel={handleCropCancel}
+        />
+      )}
     </div>,
     document.body
   )
