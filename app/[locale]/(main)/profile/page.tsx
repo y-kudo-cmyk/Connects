@@ -67,7 +67,6 @@ function SwipeableConcertRow({
   onDelete: () => void
 }) {
   const [offset, setOffset] = useState(0)
-  const [confirming, setConfirming] = useState(false)
   const startX = useRef<number | null>(null)
   const startOffset = useRef(0)
   const currentOffset = useRef(0)
@@ -115,30 +114,22 @@ function SwipeableConcertRow({
     >
       {/* 削除ボタン（右側に露出） */}
       <div style={{ position: 'absolute', top: 0, right: 0, bottom: 0, width: DELETE_WIDTH, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#EF4444' }}>
-        {!confirming ? (
-          <button onClick={() => setConfirming(true)}
-            style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'transparent', border: 'none', color: '#FFF' }}>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" strokeWidth="2">
-              <polyline points="3 6 5 6 21 6" />
-              <path d="M19 6l-2 14a2 2 0 01-2 2H9a2 2 0 01-2-2L5 6" />
-              <line x1="10" y1="11" x2="10" y2="17" />
-              <line x1="14" y1="11" x2="14" y2="17" />
-            </svg>
-          </button>
-        ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
-            <button onClick={() => { onDelete(); setConfirming(false); setOffset(0) }}
-              style={{ fontSize: 10, fontWeight: 700, color: '#FFF', background: 'transparent', border: 'none' }}>削除</button>
-            <button onClick={() => { setConfirming(false); setOffset(0) }}
-              style={{ fontSize: 9, color: '#FFF', opacity: 0.7, background: 'transparent', border: 'none' }}>取消</button>
-          </div>
-        )}
+        <button onClick={() => { onDelete(); setOffset(0) }}
+          style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 2, background: 'transparent', border: 'none', color: '#FFF' }}>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" strokeWidth="2">
+            <polyline points="3 6 5 6 21 6" />
+            <path d="M19 6l-2 14a2 2 0 01-2 2H9a2 2 0 01-2-2L5 6" />
+            <line x1="10" y1="11" x2="10" y2="17" />
+            <line x1="14" y1="11" x2="14" y2="17" />
+          </svg>
+          <span style={{ fontSize: 10, fontWeight: 700 }}>削除</span>
+        </button>
       </div>
 
       {/* コンテンツ */}
-      <div
+      <button
+        type="button"
         onClick={onTap}
-        role="button"
         style={{
           position: 'relative',
           display: 'flex',
@@ -178,7 +169,7 @@ function SwipeableConcertRow({
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#C7C7CC" strokeWidth="2">
           <path d="M9 18l6-6-6-6" />
         </svg>
-      </div>
+      </button>
     </div>
   )
 }
