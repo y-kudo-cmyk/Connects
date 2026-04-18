@@ -646,26 +646,24 @@ export default function ProfilePage() {
       {/* 参戦記録 詳細モーダル */}
       {(() => { if (showConcerts) console.log('[ConcertModal] render, portalMounted:', portalMounted, 'liveEntries:', liveEntries.length); return null })()}
       {showConcerts && portalMounted && createPortal(
-        <div className="fixed inset-0 flex flex-col" style={{ background: '#FF00FF', zIndex: 99999 }}>
-          <div className="flex items-center justify-between px-4 py-3 flex-shrink-0"
-            style={{ borderBottom: '1px solid #E5E5EA', paddingTop: 'calc(14px + env(safe-area-inset-top, 0px))' }}>
-            <div className="flex items-center gap-2">
-              <span className="text-base">🎤</span>
-              <p className="text-sm font-bold" style={{ color: '#1C1C1E' }}>参戦記録</p>
-              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full" style={{ background: 'rgba(243,180,227,0.12)', color: '#F3B4E3' }}>
+        <div style={{ position: 'fixed', inset: 0, background: '#F8F9FA', zIndex: 99999, display: 'flex', flexDirection: 'column' }}>
+          <div style={{ flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 16px', borderBottom: '1px solid #E5E5EA', paddingTop: 'calc(14px + env(safe-area-inset-top, 0px))', background: '#FFFFFF' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <span style={{ fontSize: 16 }}>🎤</span>
+              <p style={{ fontSize: 14, fontWeight: 700, color: '#1C1C1E', margin: 0 }}>参戦記録</p>
+              <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 999, background: 'rgba(243,180,227,0.12)', color: '#F3B4E3' }}>
                 {liveEntries.length}件
               </span>
             </div>
-            <button onClick={() => setShowConcerts(false)} className="w-11 h-11 flex items-center justify-center">
+            <button onClick={() => setShowConcerts(false)} style={{ width: 44, height: 44, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'transparent', border: 'none' }}>
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#636366" strokeWidth="2">
                 <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
               </svg>
             </button>
           </div>
 
-          <div className="flex-1 overflow-y-auto px-4 py-4 flex flex-col gap-2"
-            style={{ paddingBottom: 'calc(80px + env(safe-area-inset-bottom, 0px))' }}>
-            <p className="text-[10px] mb-1" style={{ color: '#8E8E93' }}>
+          <div style={{ flex: 1, overflowY: 'auto', padding: '16px', display: 'flex', flexDirection: 'column', gap: 8, paddingBottom: 'calc(80px + env(safe-area-inset-bottom, 0px))' }}>
+            <p style={{ fontSize: 10, color: '#8E8E93', margin: 0, marginBottom: 4 }}>
               左にスワイプで削除
             </p>
             {liveEntries
