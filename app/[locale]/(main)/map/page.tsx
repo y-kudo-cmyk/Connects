@@ -517,8 +517,34 @@ function SpotDetailScreen({
   const [editAddress, setEditAddress] = useState(spot.address)
   const [editGenre, setEditGenre] = useState(spot.genre.toUpperCase())
   const [editOfficialUrl, setEditOfficialUrl] = useState(spot.officialUrl ?? '')
+  const [userRole, setUserRole] = useState<string | null>(null)
+  const [showDeleteSpotConfirm, setShowDeleteSpotConfirm] = useState(false)
+
+  useEffect(() => {
+    if (!user) return
+    const supabase = createClient()
+    supabase.from('profiles').select('role').eq('id', user.id).maybeSingle()
+      .then(({ data }) => { if (data?.role) setUserRole(data.role) })
+  }, [user?.id])
+  const isAdmin = userRole === 'admin'
 
   const ALL_GENRE_KEYS: SpotGenreType[] = ['CAFE', 'RESTAURANT', 'FASHION', 'ENTERTAINMENT', 'MUSIC', 'OTHER']
+
+  const handleDeleteSpot = async () => {
+    const supabase = createClient()
+    // Cleanup related records first
+    await supabase.from('spot_photos').delete().eq('spot_id', spot.id)
+    await supabase.from('favorite_spots').delete().eq('spot_id', spot.id)
+    // spot_photo_votes may not have spot_id; ignore failure
+    try { await supabase.from('spot_photo_votes').delete().eq('spot_id', spot.id) } catch { /* optional */ }
+    const { error } = await supabase.from('spots').delete().eq('id', spot.id)
+    if (error) {
+      alert(`削除失敗: ${error.message}`)
+      return
+    }
+    if (onRefresh) await onRefresh()
+    onClose()
+  }
 
   const handleEditSave = async () => {
     setEditSaving(true)
@@ -794,6 +820,7 @@ function SpotDetailScreen({
               {uniquePhotos.map((photo) => (
                 <PhotoCard key={photo.id} photo={photo}
                   isUserPhoto={userPhotos.some((p) => p.id === photo.id)}
+                  isAdmin={isAdmin}
                   onRemove={() => onRemovePhoto(photo.id)}
                   spotId={spot.id}
                   spotMemo={spot.description}
@@ -817,7 +844,42 @@ function SpotDetailScreen({
             {t('Map.uploadPhoto')}
           </button>
 
+          {/* Adminのみ: スポット削除 */}
+          {isAdmin && (
+            <button onClick={() => setShowDeleteSpotConfirm(true)}
+              className="w-full flex items-center justify-center gap-2 py-3 rounded-2xl text-xs font-bold"
+              style={{ background: 'rgba(239,68,68,0.08)', color: '#EF4444', border: '1px solid rgba(239,68,68,0.25)' }}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <polyline points="3 6 5 6 21 6" />
+                <path d="M19 6l-2 14a2 2 0 01-2 2H9a2 2 0 01-2-2L5 6" />
+              </svg>
+              [Admin] スポットを削除
+            </button>
+          )}
+
         </div>
+
+        {/* スポット削除確認 */}
+        {showDeleteSpotConfirm && createPortal(
+          <div className="fixed inset-0 z-[80] flex items-center justify-center px-6"
+            onClick={() => setShowDeleteSpotConfirm(false)}>
+            <div className="absolute inset-0" style={{ background: 'rgba(0,0,0,0.55)' }} />
+            <div className="relative w-full max-w-sm rounded-2xl p-5 flex flex-col gap-3"
+              style={{ background: '#FFFFFF' }} onClick={(e) => e.stopPropagation()}>
+              <p className="text-sm font-bold" style={{ color: '#1C1C1E' }}>スポットを削除しますか？</p>
+              <p className="text-xs" style={{ color: '#636366' }}>「{spot.name}」と、そのspot_photos / favorites を全部削除します。この操作は取り消せません。</p>
+              <div className="flex gap-2 mt-2">
+                <button onClick={() => setShowDeleteSpotConfirm(false)}
+                  className="flex-1 py-2.5 rounded-xl text-sm font-bold"
+                  style={{ background: '#F0F0F5', color: '#636366' }}>キャンセル</button>
+                <button onClick={() => { setShowDeleteSpotConfirm(false); handleDeleteSpot() }}
+                  className="flex-1 py-2.5 rounded-xl text-sm font-bold"
+                  style={{ background: '#EF4444', color: '#FFFFFF' }}>削除</button>
+              </div>
+            </div>
+          </div>,
+          document.body
+        )}
 
         {/* スクロール余白（タブバーに被らないように） */}
         <div style={{ height: 'calc(80px + env(safe-area-inset-bottom, 0px))' }} />
@@ -829,10 +891,11 @@ function SpotDetailScreen({
 
 // ─── 写真カード ─────────────────────────────────────────────
 function PhotoCard({
-  photo, isUserPhoto, onRemove, spotId, spotMemo, spotContributor, onSavePhoto, onVotePhoto,
+  photo, isUserPhoto, isAdmin = false, onRemove, spotId, spotMemo, spotContributor, onSavePhoto, onVotePhoto,
 }: {
   photo: SpotPhoto
   isUserPhoto: boolean
+  isAdmin?: boolean
   onRemove: () => void
   spotId: string
   spotMemo?: string
@@ -918,6 +981,20 @@ function PhotoCard({
             <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" />
           </svg>
         </button>
+        {/* Admin: 写真削除ボタン（右上） */}
+        {(isAdmin || isUserPhoto) && (
+          <button onClick={(e) => {
+            e.preventDefault(); e.stopPropagation()
+            if (confirm('この写真を削除しますか？')) onRemove()
+          }}
+            className="absolute top-1.5 right-1.5 w-6 h-6 rounded-full flex items-center justify-center"
+            style={{ background: 'rgba(239,68,68,0.85)' }}>
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" strokeWidth="3">
+              <polyline points="3 6 5 6 21 6" />
+              <path d="M19 6l-2 14a2 2 0 01-2 2H9a2 2 0 01-2-2L5 6" />
+            </svg>
+          </button>
+        )}
       </div>
       {/* タグ + 日付 */}
       <div className="px-2 py-2 flex flex-col gap-1">
