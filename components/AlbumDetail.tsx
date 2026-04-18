@@ -164,7 +164,8 @@ export default function AlbumDetail({ product, userCards, onBack, onCardTap }: A
     return 99
   }
 
-  // すべて base-first グループ化（base="通常版"/"DAREDEVIL版"等、下に店舗sub）
+  // STORE tier: store-first pivot (Weverse → [通常版, DAREDEVIL版]) で base同士を横並び
+  // 他のtier: base-first
   const groupedByTierAndBase = useMemo(() => {
     const tiers = new Map<string, Map<string, { store: string; versionId: string; cards: CardMaster[] }[]>>()
     for (const [versionId, cards] of groupedByVersion.entries()) {
@@ -175,15 +176,22 @@ export default function AlbumDetail({ product, userCards, onBack, onCardTap }: A
       const store = sepIdx >= 0 ? fullName.slice(sepIdx + 3) : ''
       if (!tiers.has(tier)) tiers.set(tier, new Map())
       const tierMap = tiers.get(tier)!
-      if (!tierMap.has(base)) tierMap.set(base, [])
-      tierMap.get(base)!.push({ store, versionId, cards })
+      if (STORE_TIERS.has(tier) && store) {
+        // store-first: key=店舗, 各要素のstore=baseに入替（UIでsub headerに表示する値）
+        if (!tierMap.has(store)) tierMap.set(store, [])
+        tierMap.get(store)!.push({ store: base, versionId, cards })
+      } else {
+        if (!tierMap.has(base)) tierMap.set(base, [])
+        tierMap.get(base)!.push({ store, versionId, cards })
+      }
     }
-    // STORE tier: base内のsubsを店舗順にソート
+    // STORE tier: 店舗キーを表示順にソート
     for (const [tier, tierMap] of tiers.entries()) {
       if (STORE_TIERS.has(tier)) {
-        for (const subs of tierMap.values()) {
-          subs.sort((a, b) => storeRank(a.store) - storeRank(b.store))
-        }
+        const sorted = new Map(
+          Array.from(tierMap.entries()).sort((a, b) => storeRank(a[0]) - storeRank(b[0]))
+        )
+        tiers.set(tier, sorted)
       }
     }
     return tiers
