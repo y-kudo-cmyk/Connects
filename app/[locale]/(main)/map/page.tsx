@@ -967,14 +967,20 @@ function PhotoCard({
           const isComplete = hasMembers && hasSource
           return (
             <button
-              onClick={(e) => { e.preventDefault(); e.stopPropagation(); if (isComplete) onVotePhoto(photo.id) }}
-              disabled={!isComplete}
+              onClick={(e) => {
+                e.preventDefault()
+                e.stopPropagation()
+                if (isComplete) onVotePhoto(photo.id)
+                else setShowEdit(true)  // 未入力なら編集モーダルを開く
+              }}
               className="mt-1.5 py-1.5 rounded-md text-[10px] font-bold"
               style={!isComplete
-                ? { background: '#F0F0F5', color: '#8E8E93' }
+                ? { background: 'rgba(245,158,11,0.12)', color: '#F59E0B' }
                 : { background: 'rgba(52,211,153,0.15)', color: '#34D399' }
               }>
-              {!isComplete ? t('MapPage.memberSourceRequired') : `👍 ${t('MapPage.approveAction')}（${photo.votes ?? 0}/3）`}
+              {!isComplete
+                ? `✏️ ${t('MapPage.memberSourceRequired')}`
+                : `👍 ${t('MapPage.approveAction')}（${photo.votes ?? 0}/3）`}
             </button>
           )
         })()}
