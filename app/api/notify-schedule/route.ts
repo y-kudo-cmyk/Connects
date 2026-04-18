@@ -174,10 +174,6 @@ async function eveningNotification(currentTime: string, today: string, testMode 
 
 // ── 3. MYイベントリマインダー（1時間前） ─────────────────────
 async function myEventReminder(currentTime: string, today: string) {
-  // :00 の時のみ発火（:30 に発火すると30分前通知になってしまうため）
-  const [h, m] = currentTime.split(':').map(Number)
-  if (m !== 0) return { type: 'reminder', skipped: true, reason: 'not on the hour' }
-
   const { data: users } = await supabase
     .from('profiles')
     .select('id')
@@ -186,8 +182,11 @@ async function myEventReminder(currentTime: string, today: string) {
   if (!users || users.length === 0) return { type: 'reminder', skipped: true }
 
   // 現在時刻の1時間後 = リマインダー対象の開始時刻
+  // cron は :00 / :30 に発火するので、:00 なら次時間の :00、:30 なら次時間の :30 のイベントがヒットする
+  const [h, m] = currentTime.split(':').map(Number)
   const targetHour = String(h + 1).padStart(2, '0')
-  const targetTime = `${targetHour}:00`
+  const targetMinute = String(m).padStart(2, '0')
+  const targetTime = `${targetHour}:${targetMinute}`
 
   let sent = 0
   for (const user of users) {
