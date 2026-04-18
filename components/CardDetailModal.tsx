@@ -122,16 +122,16 @@ export default function CardDetailModal({ card, owned, userId, onClose, onSave, 
       onClick={onClose}
     >
       <div
-        className="w-full max-w-lg rounded-t-2xl overflow-hidden"
+        className="w-full max-w-lg rounded-t-2xl overflow-hidden flex flex-col"
         style={{ background: '#F8F9FA', maxHeight: '90vh' }}
         onClick={e => e.stopPropagation()}
       >
         {/* Drag handle */}
-        <div className="flex justify-center pt-3 pb-2">
+        <div className="flex justify-center pt-3 pb-2 flex-shrink-0">
           <div className="w-10 h-1 rounded-full" style={{ background: '#C7C7CC' }} />
         </div>
 
-        <div className="overflow-y-auto px-4 pb-6" style={{ maxHeight: 'calc(90vh - 40px)', paddingBottom: 'calc(24px + env(safe-area-inset-bottom, 0px))' }}>
+        <div className="overflow-y-auto px-4 flex-1">
           {/* Card info header */}
           <div className="flex items-center gap-2 mb-4">
             <h3 className="text-base font-black" style={{ color: '#1C1C1E' }}>
@@ -219,7 +219,7 @@ export default function CardDetailModal({ card, owned, userId, onClose, onSave, 
           </div>
 
           {/* Notes */}
-          <div className="mb-5">
+          <div className="mb-4">
             <label className="text-[10px] font-bold mb-1 block" style={{ color: '#636366' }}>{t('notes')}</label>
             <textarea
               value={notes}
@@ -230,31 +230,38 @@ export default function CardDetailModal({ card, owned, userId, onClose, onSave, 
               style={{ background: '#FFFFFF', border: '1px solid #E5E5EA', color: '#1C1C1E' }}
             />
           </div>
+        </div>
 
-          {/* Actions */}
-          <div className="flex gap-3">
-            {owned && (
-              <button
-                onClick={() => { onDelete(owned.id); onClose() }}
-                className="py-3 px-4 rounded-xl text-sm font-bold"
-                style={{ background: 'rgba(248,113,113,0.12)', color: '#F87171' }}
-              >
-                {t('removeCard')}
-              </button>
-            )}
+        {/* Actions (pinned to bottom) */}
+        <div
+          className="flex gap-3 px-4 pt-3 flex-shrink-0"
+          style={{
+            background: '#F8F9FA',
+            borderTop: '1px solid #E5E5EA',
+            paddingBottom: 'calc(12px + env(safe-area-inset-bottom, 0px))',
+          }}
+        >
+          {owned && (
             <button
-              onClick={handleSave}
-              disabled={saving}
-              className="flex-1 py-3 rounded-xl text-sm font-bold transition-opacity"
-              style={{
-                background: '#F3B4E3',
-                color: '#FFFFFF',
-                opacity: saving ? 0.6 : 1,
-              }}
+              onClick={() => { onDelete(owned.id); onClose() }}
+              className="py-3 px-4 rounded-xl text-sm font-bold"
+              style={{ background: 'rgba(248,113,113,0.12)', color: '#F87171' }}
             >
-              {saving ? t('saving') : (owned ? t('updateCard') : t('addCard'))}
+              {t('removeCard')}
             </button>
-          </div>
+          )}
+          <button
+            onClick={handleSave}
+            disabled={saving}
+            className="flex-1 py-3 rounded-xl text-sm font-bold transition-opacity"
+            style={{
+              background: '#F3B4E3',
+              color: '#FFFFFF',
+              opacity: saving ? 0.6 : 1,
+            }}
+          >
+            {saving ? t('saving') : (owned ? t('updateCard') : t('addCard'))}
+          </button>
         </div>
       </div>
     </div>
