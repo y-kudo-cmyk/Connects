@@ -322,10 +322,43 @@ export default function AlbumDetail({ product, userCards, onBack, onCardTap }: A
                   </div>
 
                   <div className="space-y-4">
-                    {Array.from(tierMap.entries()).map(([base, subs]) => {
-                      const totalOwned = subs.reduce((acc, s) => acc + s.cards.filter(c => ownedMap.has(c.id)).length, 0)
-                      const totalCards = subs.reduce((acc, s) => acc + s.cards.length, 0)
+                    {(() => {
+                      const allEntries = Array.from(tierMap.entries())
+                      const isCompact = (base: string, subs: typeof tierMap extends Map<string, infer V> ? V : never) =>
+                        /^KiT\b/i.test(base) && subs.reduce((acc, s) => acc + s.cards.length, 0) <= 2
+                      const regular = allEntries.filter(([b, s]) => !isCompact(b, s))
+                      const compact = allEntries.filter(([b, s]) => isCompact(b, s))
                       return (
+                        <>
+                          {regular.map(([base, subs]) => renderBaseBlock(base, subs))}
+                          {compact.length > 0 && (
+                            <div className="grid grid-cols-2 gap-3">
+                              {compact.map(([base, subs]) => renderBaseBlock(base, subs))}
+                            </div>
+                          )}
+                        </>
+                      )
+                    })()}
+                  </div>
+                </section>
+              )
+            })}
+          </div>
+
+          {memberCards.length === 0 && (
+            <div className="text-center py-12">
+              <p className="text-sm" style={{ color: '#8E8E93' }}>{t('noCards')}</p>
+            </div>
+          )}
+        </>
+      )}
+    </div>
+  )
+
+  function renderBaseBlock(base: string, subs: { store: string; versionId: string; cards: CardMaster[] }[]) {
+    const totalOwned = subs.reduce((acc, s) => acc + s.cards.filter(c => ownedMap.has(c.id)).length, 0)
+    const totalCards = subs.reduce((acc, s) => acc + s.cards.length, 0)
+    return (
                 <div key={base || 'no-base'}>
                   <div className="flex items-center gap-2 mb-2">
                     <div
@@ -410,21 +443,6 @@ export default function AlbumDetail({ product, userCards, onBack, onCardTap }: A
                     )
                   })}
                 </div>
-              )
-            })}
-                  </div>
-                </section>
-              )
-            })}
-          </div>
-
-          {memberCards.length === 0 && (
-            <div className="text-center py-12">
-              <p className="text-sm" style={{ color: '#8E8E93' }}>{t('noCards')}</p>
-            </div>
-          )}
-        </>
-      )}
-    </div>
-  )
+    )
+  }
 }
