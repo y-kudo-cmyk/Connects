@@ -471,7 +471,7 @@ export default function SchedulePage() {
               ) : (
                 <button
                   onClick={() => {
-                    addTodo({ id: Date.now().toString(), eventId: todoEvent.id, title: todoEvent.title, date: todoEvent.date, dateEnd: todoEvent.dateEnd, time: todoEvent.time, sourceUrl: todoEvent.sourceUrl, sourceName: todoEvent.sourceName, done: false, notif: true, createdAt: new Date().toISOString() })
+                    addTodo({ id: Date.now().toString(), eventId: todoEvent.id, title: todoEvent.title, subTitle: todoEvent.subTitle, date: todoEvent.date, dateEnd: todoEvent.dateEnd, time: todoEvent.time, sourceUrl: todoEvent.sourceUrl, sourceName: todoEvent.sourceName, done: false, notif: true, createdAt: new Date().toISOString() })
                     if (todoAddToMy && !alreadyInMy) addToMy(todoEvent)
                     setTodoEvent(null)
                   }}

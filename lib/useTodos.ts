@@ -9,6 +9,7 @@ export type Todo = {
   id: string
   eventId?: string
   title: string
+  subTitle?: string
   date: string
   dateEnd?: string
   time?: string
@@ -25,6 +26,7 @@ type DbTodo = {
   user_id: string
   event_id: string | null
   title: string
+  sub_title: string | null
   date: string
   date_end: string | null
   time: string | null
@@ -41,6 +43,7 @@ function toApp(row: DbTodo): Todo {
     id: row.id,
     eventId: row.event_id ?? undefined,
     title: row.title,
+    subTitle: row.sub_title ?? undefined,
     date: row.date,
     dateEnd: row.date_end ?? undefined,
     time: row.time ?? undefined,
@@ -75,6 +78,7 @@ export function useTodos() {
       user_id: user.id,
       event_id: t.eventId || null,
       title: t.title,
+      sub_title: t.subTitle || null,
       date: t.date,
       date_end: t.dateEnd || null,
       time: t.time || null,
@@ -97,6 +101,7 @@ export function useTodos() {
   const updateTodo = async (id: string, patch: Partial<Todo>) => {
     const dbPatch: Record<string, unknown> = {}
     if (patch.title !== undefined) dbPatch.title = patch.title
+    if (patch.subTitle !== undefined) dbPatch.sub_title = patch.subTitle || null
     if (patch.date !== undefined) dbPatch.date = patch.date
     if (patch.dateEnd !== undefined) dbPatch.date_end = patch.dateEnd || null
     if (patch.time !== undefined) dbPatch.time = patch.time || null

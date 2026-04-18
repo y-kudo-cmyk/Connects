@@ -148,6 +148,7 @@
     "readMore": "자세히 보기 →"
   },
   "Schedule": {
+    "subTitle": "서브 타이틀",
     "scheduleTitle": "SCHEDULE",
     "overseas": "🌍 해외",
     "noEventsThisDay": "이 날 일정이 없습니다",

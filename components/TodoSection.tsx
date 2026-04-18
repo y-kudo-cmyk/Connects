@@ -170,6 +170,7 @@ function TodoRow({ todo, onToggle, onRemove, onUpdate }: {
   const [expanded, setExpanded] = useState(false)
   const [editing, setEditing] = useState(false)
   const [editTitle, setEditTitle] = useState(todo.title)
+  const [editSubTitle, setEditSubTitle] = useState(todo.subTitle ?? '')
   const [editDate, setEditDate] = useState(todo.date)
   const [editDateEnd, setEditDateEnd] = useState(todo.dateEnd ?? '')
   const [editTime, setEditTime] = useState(todo.time ?? '')
@@ -197,6 +198,12 @@ function TodoRow({ todo, onToggle, onRemove, onUpdate }: {
             style={{ color: todo.done ? '#8E8E93' : '#1C1C1E', textDecoration: todo.done ? 'line-through' : 'none' }}>
             {todo.title}
           </p>
+          {todo.subTitle && (
+            <p className="text-xs leading-snug mt-0.5"
+              style={{ color: todo.done ? '#8E8E93' : '#636366', textDecoration: todo.done ? 'line-through' : 'none' }}>
+              {todo.subTitle}
+            </p>
+          )}
           <div className="flex items-center gap-2 mt-1 flex-wrap">
             <span className="flex items-center gap-1 text-[10px] font-bold px-1.5 py-0.5 rounded"
               style={{ background: cfg.bg, color: cfg.color }}>
@@ -226,6 +233,11 @@ function TodoRow({ todo, onToggle, onRemove, onUpdate }: {
               {/* タイトル編集 */}
               <input type="text" value={editTitle} onChange={(e) => setEditTitle(e.target.value)}
                 className="w-full px-3 py-2.5 rounded-xl text-sm font-bold outline-none"
+                style={{ background: '#F8F9FA', border: '1px solid #E5E5EA', color: '#1C1C1E' }} />
+              {/* サブタイトル編集 */}
+              <input type="text" value={editSubTitle} onChange={(e) => setEditSubTitle(e.target.value)}
+                placeholder={t('Schedule.subTitle')}
+                className="w-full px-3 py-2 rounded-xl text-xs outline-none"
                 style={{ background: '#F8F9FA', border: '1px solid #E5E5EA', color: '#1C1C1E' }} />
               {/* 日付 */}
               <div className="flex gap-2">
@@ -257,7 +269,9 @@ function TodoRow({ todo, onToggle, onRemove, onUpdate }: {
               <div className="flex gap-2">
                 <button onClick={() => {
                   onUpdate({
-                    title: editTitle, date: editDate,
+                    title: editTitle,
+                    subTitle: editSubTitle || undefined,
+                    date: editDate,
                     dateEnd: editDateEnd || undefined, time: editTime || undefined,
                     memo: editMemo || undefined, sourceUrl: editUrl || undefined,
                   })
@@ -265,7 +279,8 @@ function TodoRow({ todo, onToggle, onRemove, onUpdate }: {
                 }} className="flex-1 py-2.5 rounded-xl text-xs font-bold"
                   style={{ background: '#F3B4E3', color: '#FFFFFF' }}>{t('Common.save')}</button>
                 <button onClick={() => {
-                  setEditTitle(todo.title); setEditDate(todo.date); setEditDateEnd(todo.dateEnd ?? '')
+                  setEditTitle(todo.title); setEditSubTitle(todo.subTitle ?? '')
+                  setEditDate(todo.date); setEditDateEnd(todo.dateEnd ?? '')
                   setEditTime(todo.time ?? ''); setEditMemo(todo.memo ?? ''); setEditUrl(todo.sourceUrl ?? '')
                   setEditing(false)
                 }} className="px-4 py-2.5 rounded-xl text-xs"
