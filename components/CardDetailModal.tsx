@@ -180,13 +180,15 @@ export default function CardDetailModal({ card, owned, userId, onClose, onSave, 
                 }}
               >
                 {!backPreview && (
-                  <div className="flex flex-col items-center gap-1">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#C7C7CC" strokeWidth="1.5">
+                  <div className="flex flex-col items-center gap-1 px-1 text-center">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#F3B4E3" strokeWidth="1.5">
                       <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
                       <polyline points="17 8 12 3 7 8" />
                       <line x1="12" y1="3" x2="12" y2="15" />
                     </svg>
-                    <span className="text-[9px]" style={{ color: '#C7C7CC' }}>{t('uploadPhoto')}</span>
+                    <span className="text-[9px] font-semibold leading-tight" style={{ color: '#636366' }}>
+                      裏面画像の投稿に<br/>ご協力ください
+                    </span>
                   </div>
                 )}
               </button>
