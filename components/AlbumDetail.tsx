@@ -351,9 +351,26 @@ export default function AlbumDetail({ product, userCards, onBack, onCardTap }: A
                     </span>
                   </div>
 
-                  <div className="space-y-4">
-                    {Array.from(tierMap.entries()).map(([base, subs]) => renderBaseBlock(base, subs, tier, false))}
-                  </div>
+                  {(() => {
+                    const entries = Array.from(tierMap.entries())
+                    // 各baseが1枚ずつ (subs.length=1 かつ 1枚) のものはペアで横並び
+                    const isSingle = ([, subs]: [string, { cards: CardMaster[] }[]]) =>
+                      subs.length === 1 && subs[0].cards.length === 1
+                    const singles = entries.filter(isSingle)
+                    const multis = entries.filter((e) => !isSingle(e))
+                    const storeTier = STORE_TIERS.has(tier)
+                    return (
+                      <div className="space-y-4">
+                        {multis.map(([base, subs]) => renderBaseBlock(base, subs, tier, false))}
+                        {singles.length > 0 && !storeTier && (
+                          <div className="grid grid-cols-2 gap-3">
+                            {singles.map(([base, subs]) => renderBaseBlock(base, subs, tier, true))}
+                          </div>
+                        )}
+                        {singles.length > 0 && storeTier && singles.map(([base, subs]) => renderBaseBlock(base, subs, tier, false))}
+                      </div>
+                    )
+                  })()}
                 </section>
               )
             })}
@@ -371,11 +388,11 @@ export default function AlbumDetail({ product, userCards, onBack, onCardTap }: A
 
   function renderBaseBlock(base: string, subs: { store: string; versionId: string; cards: CardMaster[] }[], tier: string, compact = false) {
     const isStore = STORE_TIERS.has(tier)
-    // STORE tier内のサブは grid-cols-1（サブの列幅でカードが1枚入る大きさ）
-    // INCLUDED 側は sub の枚数が2以下なら grid-cols-2、3枚以上は grid-cols-4
+    // STORE tier: サブ列幅でカード1枚
+    // compact (半幅ペアで横並び): カード1枚が半幅セルを満たす
+    // INCLUDED 通常: sub の枚数が2以下なら grid-cols-2、3枚以上は grid-cols-4
     const maxSubCount = subs.reduce((acc, s) => Math.max(acc, s.cards.length), 0)
-    const gridCols = isStore ? 'grid-cols-1' : maxSubCount <= 2 ? 'grid-cols-2' : 'grid-cols-4'
-    void compact
+    const gridCols = isStore || compact ? 'grid-cols-1' : maxSubCount <= 2 ? 'grid-cols-2' : 'grid-cols-4'
     const totalOwned = subs.reduce((acc, s) => acc + s.cards.filter(c => ownedMap.has(c.id)).length, 0)
     const totalCards = subs.reduce((acc, s) => acc + s.cards.length, 0)
     const displayBase = isStore ? shortStoreName(base) : base
