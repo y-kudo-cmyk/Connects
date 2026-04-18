@@ -24,16 +24,17 @@ const LANGUAGES = [
 // membership_number from profile (e.g. U000001)
 
 const RANKS = [
-  { key: 'none',     label: 'None',     color: '#8E8E93', bg: '#F0F0F5',   initial: '\u25CB', min: 0,   next: 1   },
-  { key: 'bronze',   label: 'Bronze',   color: '#CD7F32', bg: '#F5E6D3',   initial: 'B',  min: 1,   next: 10  },
-  { key: 'silver',   label: 'Silver',   color: '#7D7D7D', bg: '#EBEBEB',   initial: 'S',  min: 10,  next: 30  },
-  { key: 'gold',     label: 'Gold',     color: '#B8921A', bg: '#FBF0CC',   initial: 'G',  min: 30,  next: 75  },
-  { key: 'platinum', label: 'Platinum', color: '#6B5EA8', bg: '#EAE6F8',   initial: 'P',  min: 75,  next: 150 },
-  { key: 'diamond',  label: 'Diamond',  color: '#0EA5C9', bg: '#DCEFFE',   initial: 'D',  min: 150, next: null},
+  { key: 'none',     label: 'None',     color: '#8E8E93', bg: '#F0F0F5',   initial: '\u25CB', min: 0,    next: 100  },
+  { key: 'bronze',   label: 'Bronze',   color: '#CD7F32', bg: '#F5E6D3',   initial: 'B',  min: 100,  next: 500  },
+  { key: 'silver',   label: 'Silver',   color: '#7D7D7D', bg: '#EBEBEB',   initial: 'S',  min: 500,  next: 1000 },
+  { key: 'gold',     label: 'Gold',     color: '#B8921A', bg: '#FBF0CC',   initial: 'G',  min: 1000, next: 2000 },
+  { key: 'platinum', label: 'Platinum', color: '#6B5EA8', bg: '#EAE6F8',   initial: 'P',  min: 2000, next: 3000 },
+  { key: 'diamond',  label: 'Diamond',  color: '#0EA5C9', bg: '#DCEFFE',   initial: 'D',  min: 3000, next: null},
 ] as const
 
+// スコア重み: 投稿5 / 承認1 / 編集2 / 紹介5 / ソースURL追加3（ソースURLは編集と同じカラムに集計、重みは暫定2=編集と同じ。将来分離する場合は別途実装）
 function calcScore(s: { posts: number; approvals: number; edits: number; referrals: number }) {
-  return s.posts + s.approvals + s.edits + s.referrals * 2
+  return s.posts * 5 + s.approvals * 1 + s.edits * 2 + s.referrals * 5
 }
 
 function getRank(score: number) {
