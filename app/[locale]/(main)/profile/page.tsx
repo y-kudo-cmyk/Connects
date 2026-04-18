@@ -1399,7 +1399,7 @@ function ConcertHistoryModal({ entry, onClose, onSave }: {
   ]
 
   return createPortal(
-    <div className="fixed inset-0 z-[60] flex flex-col justify-end">
+    <div className="fixed inset-0 flex flex-col justify-end" style={{ zIndex: 100000 }}>
       <div className="absolute inset-0" style={{ background: 'rgba(0,0,0,0.55)' }} onClick={onClose} />
       <div className="relative flex flex-col rounded-t-2xl overflow-hidden"
         style={{ background: '#F8F9FA', maxHeight: '85vh' }}>
