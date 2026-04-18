@@ -126,8 +126,15 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ ok: true, skipped: true, reason: 'no events', date: today })
   }
 
-  // 本日まで（期間の最終日）
-  const lastDayEvents = todayEvents.filter(e => e.end_date && e.end_date.slice(0, 10) === today)
+  // 本日まで（期間の最終日）— TICKET → POPUP → MERCH → その他 の順
+  const LAST_DAY_ORDER: Record<string, number> = { TICKET: 0, POPUP: 1, MERCH: 2 }
+  const lastDayEvents = todayEvents
+    .filter(e => e.end_date && e.end_date.slice(0, 10) === today)
+    .sort((a, b) => {
+      const ra = LAST_DAY_ORDER[a.tag] ?? 99
+      const rb = LAST_DAY_ORDER[b.tag] ?? 99
+      return ra - rb
+    })
   // 本日のみ
   const todayOnly = todayEvents
     .filter(e => !e.end_date)
