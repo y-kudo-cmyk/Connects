@@ -98,21 +98,27 @@ export default function FreeCropModal({ src, onConfirm, onCancel }: Props) {
   // 確定：クロップ領域を元画像座標に変換してcanvas描画
   const confirm = () => {
     const img = imgRef.current
-    if (!img) return
+    if (!img) { console.warn('[FreeCrop] no img ref'); return }
+    if (!ready || !img.naturalWidth || !imgRect.w) {
+      console.warn('[FreeCrop] not ready', { ready, naturalWidth: img.naturalWidth, imgRectW: imgRect.w })
+      return
+    }
     const scale = img.naturalWidth / imgRect.w
     const sx = (crop.x - imgRect.x) * scale
     const sy = (crop.y - imgRect.y) * scale
-    const sw = crop.w * scale
-    const sh = crop.h * scale
+    const sw = Math.max(1, crop.w * scale)
+    const sh = Math.max(1, crop.h * scale)
     const outW = Math.min(1600, Math.round(sw))
-    const outH = Math.round(outW * (sh / sw))
+    const outH = Math.max(1, Math.round(outW * (sh / sw)))
     const canvas = document.createElement('canvas')
     canvas.width = outW
     canvas.height = outH
     const ctx = canvas.getContext('2d')
     if (!ctx) return
     ctx.drawImage(img, sx, sy, sw, sh, 0, 0, outW, outH)
-    onConfirm(canvas.toDataURL('image/jpeg', 0.9))
+    const dataUrl = canvas.toDataURL('image/jpeg', 0.9)
+    console.log('[FreeCrop] confirm, dataUrl length=', dataUrl.length, 'size=', outW + 'x' + outH)
+    onConfirm(dataUrl)
   }
 
   if (!portalMounted) return null

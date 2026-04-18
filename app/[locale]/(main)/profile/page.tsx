@@ -1368,6 +1368,7 @@ function ConcertHistoryModal({ entry, onClose, onSave, onUpdate }: {
 
   const handleCropConfirm = async (dataUrl: string) => {
     const slot = cropState?.slot
+    console.log('[CropConfirm] slot=', slot, 'dataUrl length=', dataUrl?.length)
     setCropState(null)
     if (!slot) return
 
@@ -1394,11 +1395,13 @@ function ConcertHistoryModal({ entry, onClose, onSave, onUpdate }: {
       optimisticImages = next
       setImages(next)
     }
+    console.log('[CropConfirm] state set, starting upload')
 
     setUploading(true)
     try {
       const bucket = slot === 'ticket' ? 'tickets' : 'memories'
       const url = await uploadDataUrl(bucket, dataUrl)
+      console.log('[CropConfirm] upload result:', url)
       if (!url) return
       // dataUrl を Supabase 公開URLに差し替えて永続化
       if (optimisticTicket) {
@@ -1414,6 +1417,8 @@ function ConcertHistoryModal({ entry, onClose, onSave, onUpdate }: {
         setImages(final)
         onUpdate({ images: final })
       }
+    } catch (e) {
+      console.error('[CropConfirm] error:', e)
     } finally {
       setUploading(false)
     }
