@@ -340,7 +340,7 @@ export default function AlbumDetail({ product, userCards, onBack, onCardTap }: A
                     </span>
                   </div>
 
-                  <div className="space-y-4">
+                  <div className={STORE_TIERS.has(tier) ? 'grid grid-cols-2 gap-3' : 'space-y-4'}>
                     {(() => {
                       const allEntries = Array.from(tierMap.entries())
                       const isCompact = (base: string, subs: typeof tierMap extends Map<string, infer V> ? V : never) =>
