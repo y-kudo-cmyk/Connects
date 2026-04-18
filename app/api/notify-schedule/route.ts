@@ -211,7 +211,7 @@ async function myEventReminder(currentTime: string, today: string) {
     const lines = upcoming.map(e => `・${e.event_title} ${targetTime}〜`)
     const content = lines.join('\n')
 
-    await sendNotification([user.id], '⏰ 1時間後に開始', content, 'https://connects-nu.vercel.app/my')
+    await sendNotification([user.id], '⏰ まもなく開始', content, 'https://connects-nu.vercel.app/my')
     sent++
   }
 
