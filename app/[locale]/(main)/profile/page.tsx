@@ -790,18 +790,11 @@ export default function ProfilePage() {
       <div style={{ height: 'calc(80px + env(safe-area-inset-bottom, 0px))' }} />
 
       {/* --- Image crop modal --- */}
-      {cropSrc && cropTarget === 'banner' && (
-        <FreeCropModal
-          src={cropSrc}
-          onConfirm={onCropConfirm}
-          onCancel={() => setCropSrc(null)}
-        />
-      )}
-      {cropSrc && cropTarget === 'avatar' && (
+      {cropSrc && (
         <ImageCropModal
           src={cropSrc}
-          aspectRatio={1}
-          circle
+          aspectRatio={cropTarget === 'banner' ? 2 : 1}
+          circle={cropTarget === 'avatar'}
           onConfirm={onCropConfirm}
           onCancel={() => setCropSrc(null)}
         />
