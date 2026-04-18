@@ -8,51 +8,10 @@ import AlbumList from '@/components/AlbumList'
 import AlbumDetail from '@/components/AlbumDetail'
 import CardDetailModal from '@/components/CardDetailModal'
 
-// 開発中のGOODSページを表示するユーザーID
-const DEV_USER_IDS = [
-  '86c91b90-0060-4a3d-bf10-d5c846604882', // yuta
-  '9c19a9f6-d3ab-4ea2-8391-1df73ef556c0', // はるゆ (hakuren.x1215@gmail.com)
-  '65ba4bc6-917d-4689-aeaf-8d4b5b01a004', // y-kudo (y-kudo@connectsplus.net)
-  // k.m.s-lv.38@ezweb.ne.jp — 未登録、登録後にIDを追加
-]
-
 export default function GoodsPage() {
-  const t = useTranslations()
   const { user } = useAuth()
-  const isDev = user && DEV_USER_IDS.includes(user.id)
-
-  // ── Non-dev: coming soon ────────────────────────────────────
-  if (!isDev) {
-    return (
-      <div className="flex flex-col items-center justify-center" style={{ minHeight: '100vh', background: '#F8F9FA' }}>
-        <div className="flex flex-col items-center gap-4 px-6">
-          <div
-            className="w-20 h-20 rounded-full flex items-center justify-center"
-            style={{ background: 'rgba(243,180,227,0.15)' }}
-          >
-            <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#F3B4E3" strokeWidth="1.5">
-              <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z" />
-              <line x1="3" y1="6" x2="21" y2="6" />
-              <path d="M16 10a4 4 0 01-8 0" />
-            </svg>
-          </div>
-          <h1 className="text-xl font-black" style={{ color: '#1C1C1E' }}>GOODS</h1>
-          <p className="text-sm text-center leading-relaxed" style={{ color: '#8E8E93' }}>
-            {t('Goods.goodsComingSoon')}
-          </p>
-          <span
-            className="text-xs font-bold px-4 py-2 rounded-full"
-            style={{ background: 'rgba(243,180,227,0.12)', color: '#F3B4E3' }}
-          >
-            {t('Common.comingSoon')}
-          </span>
-        </div>
-      </div>
-    )
-  }
-
-  // ── Dev: digital album UI ───────────────────────────────────
-  return <GoodsContent userId={user!.id} />
+  if (!user) return null
+  return <GoodsContent userId={user.id} />
 }
 
 // ── Main content (separated to avoid hooks-under-condition) ───
