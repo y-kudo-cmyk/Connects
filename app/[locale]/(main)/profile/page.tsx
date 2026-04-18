@@ -702,6 +702,7 @@ export default function ProfilePage() {
         <ConcertHistoryModal
           entry={editHistoryEntry}
           onClose={() => setEditHistoryEntry(null)}
+          onUpdate={(updates) => updateEntry(editHistoryEntry.id, updates)}
           onSave={(updates) => {
             updateEntry(editHistoryEntry.id, updates)
             setEditHistoryEntry(null)
@@ -1340,10 +1341,11 @@ export default function ProfilePage() {
 }
 
 // --- Concert History Photo Modal ---
-function ConcertHistoryModal({ entry, onClose, onSave }: {
+function ConcertHistoryModal({ entry, onClose, onSave, onUpdate }: {
   entry: MyEntry
   onClose: () => void
   onSave: (updates: Partial<MyEntry>) => void
+  onUpdate: (updates: Partial<MyEntry>) => void
 }) {
   const t = useTranslations()
   const ticketRef = useRef<HTMLInputElement>(null)
@@ -1358,17 +1360,27 @@ function ConcertHistoryModal({ entry, onClose, onSave }: {
 
   const handleUpload = async (
     files: FileList | null,
-    setter: (fn: (prev: string[]) => string[]) => void,
+    setter: React.Dispatch<React.SetStateAction<string[]>>,
     bucket: string,
+    field: 'ticketImages' | 'viewImages' | 'images',
+    current: string[],
   ) => {
     if (!files) return
     setUploading(true)
-    const { uploadImage } = await import('@/lib/supabase/uploadImage')
-    for (const f of Array.from(files)) {
-      const url = await uploadImage(bucket, f, 1200, 0.8)
-      if (url) setter((prev) => [...prev, url])
+    try {
+      const { uploadImage } = await import('@/lib/supabase/uploadImage')
+      let next = current
+      for (const f of Array.from(files)) {
+        const url = await uploadImage(bucket, f, 1200, 0.8)
+        if (url) next = [...next, url]
+      }
+      if (next !== current) {
+        setter(next)
+        onUpdate({ [field]: next } as Partial<MyEntry>)
+      }
+    } finally {
+      setUploading(false)
     }
-    setUploading(false)
   }
 
   const handleSave = () => {
@@ -1385,33 +1397,35 @@ function ConcertHistoryModal({ entry, onClose, onSave }: {
       label: t('ProfilePage.ticketPhoto'),
       image: ticketImages[0],
       onUpload: () => ticketRef.current?.click(),
-      onRemove: () => setTicketImages([]),
+      onRemove: () => { setTicketImages([]); onUpdate({ ticketImages: [] }) },
     },
     {
       label: t('ProfilePage.seatViewPhoto'),
       image: viewImages[0],
       onUpload: () => viewRef.current?.click(),
-      onRemove: () => setViewImages([]),
+      onRemove: () => { setViewImages([]); onUpdate({ viewImages: [] }) },
     },
     {
       label: t('ProfilePage.memoryPhoto1'),
       image: images[1],
       onUpload: () => memory1Ref.current?.click(),
-      onRemove: () => setImages((prev) => {
-        const next = [...prev]
+      onRemove: () => {
+        const next = [...images]
         next[1] = ''
-        return next
-      }),
+        setImages(next)
+        onUpdate({ images: next })
+      },
     },
     {
       label: t('ProfilePage.memoryPhoto2'),
       image: images[2],
       onUpload: () => memory2Ref.current?.click(),
-      onRemove: () => setImages((prev) => {
-        const next = [...prev]
+      onRemove: () => {
+        const next = [...images]
         next[2] = ''
-        return next
-      }),
+        setImages(next)
+        onUpdate({ images: next })
+      },
     },
   ]
 
@@ -1517,21 +1531,23 @@ function ConcertHistoryModal({ entry, onClose, onSave }: {
 
         {/* Hidden file inputs */}
         <input ref={ticketRef} type="file" accept="image/*" className="hidden"
-          onChange={(e) => { handleUpload(e.target.files, setTicketImages, 'tickets'); e.target.value = '' }} />
+          onChange={(e) => { handleUpload(e.target.files, setTicketImages, 'tickets', 'ticketImages', ticketImages); e.target.value = '' }} />
         <input ref={viewRef} type="file" accept="image/*" className="hidden"
-          onChange={(e) => { handleUpload(e.target.files, setViewImages, 'memories'); e.target.value = '' }} />
+          onChange={(e) => { handleUpload(e.target.files, setViewImages, 'memories', 'viewImages', viewImages); e.target.value = '' }} />
         <input ref={memory1Ref} type="file" accept="image/*" className="hidden"
           onChange={(e) => {
             if (!e.target.files?.[0]) return
             setUploading(true)
+            const file = e.target.files[0]
             import('@/lib/supabase/uploadImage').then(({ uploadImage }) => {
-              uploadImage('memories', e.target.files![0], 1200, 0.8).then((url) => {
-                if (url) setImages((prev) => {
-                  const next = [...prev]
+              uploadImage('memories', file, 1200, 0.8).then((url) => {
+                if (url) {
+                  const next = [...images]
                   while (next.length < 2) next.push('')
                   next[1] = url
-                  return next
-                })
+                  setImages(next)
+                  onUpdate({ images: next })
+                }
                 setUploading(false)
               })
             })
@@ -1541,14 +1557,16 @@ function ConcertHistoryModal({ entry, onClose, onSave }: {
           onChange={(e) => {
             if (!e.target.files?.[0]) return
             setUploading(true)
+            const file = e.target.files[0]
             import('@/lib/supabase/uploadImage').then(({ uploadImage }) => {
-              uploadImage('memories', e.target.files![0], 1200, 0.8).then((url) => {
-                if (url) setImages((prev) => {
-                  const next = [...prev]
+              uploadImage('memories', file, 1200, 0.8).then((url) => {
+                if (url) {
+                  const next = [...images]
                   while (next.length < 3) next.push('')
                   next[2] = url
-                  return next
-                })
+                  setImages(next)
+                  onUpdate({ images: next })
+                }
                 setUploading(false)
               })
             })
