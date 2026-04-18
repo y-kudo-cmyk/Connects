@@ -44,6 +44,7 @@ export type ProfileData = {
   country: string
   lineLinked: boolean
   xLinked: boolean
+  role: 'user' | 'admin' | string
   notif: NotifSettings
   fanClubs: FanClubMembership[]
   stats: ProfileStats
@@ -59,6 +60,7 @@ const DEFAULT: ProfileData = {
   country: 'JP',
   lineLinked: false,
   xLinked: false,
+  role: 'user',
   notif: {
     morningOn: false,
     morningTime: '08:00',
@@ -114,6 +116,7 @@ export function useProfile() {
       country: p.country ?? 'JP',
       lineLinked: !!p.line_user_id,
       xLinked: false,
+      role: p.role ?? 'user',
       notif: {
         morningOn: p.notif_morning_on ?? false,
         morningTime: p.notif_morning_time ?? '08:00',

@@ -726,28 +726,32 @@ export default function ProfilePage() {
                   </div>
                 )}
 
-                {/* LINE */}
-                <div className="flex items-center gap-3 px-4 py-3.5" style={{ borderTop: '1px solid #F0F0F5' }}>
-                  <div className="w-6 h-6 rounded flex items-center justify-center text-[10px] font-black flex-shrink-0"
-                    style={{ background: '#06C755', color: '#FFFFFF' }}>L</div>
-                  <span className="flex-1 text-sm font-medium" style={{ color: '#1C1C1E' }}>{t('Profile.linkLine')}</span>
-                  {profile.lineLinked ? (
-                    <span className="px-3 py-1.5 rounded-full text-xs font-bold"
-                      style={{ background: '#06C75520', color: '#06C755' }}>
-                      {t('Profile.linked')}
-                    </span>
-                  ) : (
-                    <a href="https://line.me/R/ti/p/@529grkxp" target="_blank" rel="noopener noreferrer"
-                      className="px-3 py-1.5 rounded-full text-xs font-bold"
-                      style={{ background: '#06C755', color: '#FFFFFF' }}>
-                      {t('ProfilePage.addFriend')}
-                    </a>
-                  )}
-                </div>
-                {!profile.lineLinked && (
-                  <p className="px-5 pb-2 text-[10px]" style={{ color: '#8E8E93' }}>
-                    {t('ProfilePage.addFriendHint')}
-                  </p>
+                {/* LINE (テスト中: admin のみ表示) */}
+                {profile.role === 'admin' && (
+                  <>
+                    <div className="flex items-center gap-3 px-4 py-3.5" style={{ borderTop: '1px solid #F0F0F5' }}>
+                      <div className="w-6 h-6 rounded flex items-center justify-center text-[10px] font-black flex-shrink-0"
+                        style={{ background: '#06C755', color: '#FFFFFF' }}>L</div>
+                      <span className="flex-1 text-sm font-medium" style={{ color: '#1C1C1E' }}>{t('Profile.linkLine')}</span>
+                      {profile.lineLinked ? (
+                        <span className="px-3 py-1.5 rounded-full text-xs font-bold"
+                          style={{ background: '#06C75520', color: '#06C755' }}>
+                          {t('Profile.linked')}
+                        </span>
+                      ) : (
+                        <a href="https://line.me/R/ti/p/@529grkxp" target="_blank" rel="noopener noreferrer"
+                          className="px-3 py-1.5 rounded-full text-xs font-bold"
+                          style={{ background: '#06C755', color: '#FFFFFF' }}>
+                          {t('ProfilePage.addFriend')}
+                        </a>
+                      )}
+                    </div>
+                    {!profile.lineLinked && (
+                      <p className="px-5 pb-2 text-[10px]" style={{ color: '#8E8E93' }}>
+                        {t('ProfilePage.addFriendHint')}
+                      </p>
+                    )}
+                  </>
                 )}
 
                 {/* X */}
