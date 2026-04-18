@@ -1384,6 +1384,7 @@ function NewSpotModal({
   const [description, setDescription] = useState('')
   const [officialUrl, setOfficialUrl] = useState('')
   const [sourceUrl, setSourceUrl] = useState('')
+  const [visitDate, setVisitDate] = useState('')
   const [imageDataUrl, setImageDataUrl] = useState<string | undefined>(undefined)
   const [screenshotUrl, setScreenshotUrl] = useState<string | undefined>(undefined)
   const fileRef = useRef<HTMLInputElement>(null)
@@ -1463,6 +1464,7 @@ function NewSpotModal({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           _createSpot: true,
+          _visitDate: visitDate || null,
           updates: {
             spot_name: name.trim(),
             spot_address: address.trim(),
@@ -1674,6 +1676,16 @@ function NewSpotModal({
             </label>
             <input type="url" value={sourceUrl} onChange={(e) => setSourceUrl(e.target.value)}
               placeholder="https://www.instagram.com/p/..."
+              className="w-full px-3 py-3 rounded-xl text-sm outline-none"
+              style={{ background: '#F0F0F5', color: '#1C1C1E', border: '1px solid #E5E5EA' }} />
+          </div>
+
+          {/* 来店日/投稿日 */}
+          <div>
+            <label className="text-xs font-bold mb-2 block" style={{ color: '#636366' }}>
+              {t('Map.photoVisitDate')}
+            </label>
+            <input type="date" value={visitDate} onChange={(e) => setVisitDate(e.target.value)}
               className="w-full px-3 py-3 rounded-xl text-sm outline-none"
               style={{ background: '#F0F0F5', color: '#1C1C1E', border: '1px solid #E5E5EA' }} />
           </div>

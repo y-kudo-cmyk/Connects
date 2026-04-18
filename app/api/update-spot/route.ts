@@ -8,7 +8,7 @@ export async function POST(req: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  const { spotId, photoId, updates, _table, _createSpot } = await req.json()
+  const { spotId, photoId, updates, _table, _createSpot, _visitDate } = await req.json()
 
   if (_createSpot && updates) {
     const sb = createServiceClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!)
@@ -27,7 +27,7 @@ export async function POST(req: NextRequest) {
         tags: updates.related_artists || null,
         contributor: null,
         submitted_by: user.id,
-        visit_date: null,
+        visit_date: _visitDate || null,
         status: 'pending',
         votes: 0,
       })
