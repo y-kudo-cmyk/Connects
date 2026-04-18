@@ -1399,8 +1399,7 @@ function ConcertHistoryModal({ entry, onClose, onSave, onUpdate }: {
 
     setUploading(true)
     try {
-      const bucket = slot === 'ticket' ? 'tickets' : 'memories'
-      const url = await uploadDataUrl(bucket, dataUrl)
+      const url = await uploadDataUrl('event-images', dataUrl)
       console.log('[CropConfirm] upload result:', url)
       if (!url) return
       // dataUrl を Supabase 公開URLに差し替えて永続化
