@@ -154,6 +154,16 @@ export default function AlbumDetail({ product, userCards, onBack, onCardTap }: A
 
   const STORE_TIERS = new Set(['STORE_JP', 'STORE_KR'])
 
+  // 店舗表示順: Weverse → UMS → HMV → Tower → TSUTAYA → その他
+  const STORE_ORDER = ['weverse', 'ums', 'universal', 'hmv', 'tower', 'tsutaya']
+  const storeRank = (name: string): number => {
+    const n = name.toLowerCase()
+    for (let i = 0; i < STORE_ORDER.length; i++) {
+      if (n.includes(STORE_ORDER[i])) return i
+    }
+    return 99
+  }
+
   // For STORE tiers: pivot to store-first (Weverse → [BLUE/ECHO, COMPACT])
   // For other tiers: base-first (same as before)
   const groupedByTierAndBase = useMemo(() => {
@@ -167,12 +177,20 @@ export default function AlbumDetail({ product, userCards, onBack, onCardTap }: A
       if (!tiers.has(tier)) tiers.set(tier, new Map())
       const tierMap = tiers.get(tier)!
       if (STORE_TIERS.has(tier) && store) {
-        // store-first pivot
         if (!tierMap.has(store)) tierMap.set(store, [])
         tierMap.get(store)!.push({ store: base, versionId, cards })
       } else {
         if (!tierMap.has(base)) tierMap.set(base, [])
         tierMap.get(base)!.push({ store, versionId, cards })
+      }
+    }
+    // STORE tier は store 名順にソート
+    for (const [tier, tierMap] of tiers.entries()) {
+      if (STORE_TIERS.has(tier)) {
+        const sorted = new Map(
+          Array.from(tierMap.entries()).sort((a, b) => storeRank(a[0]) - storeRank(b[0]))
+        )
+        tiers.set(tier, sorted)
       }
     }
     return tiers
@@ -330,10 +348,10 @@ export default function AlbumDetail({ product, userCards, onBack, onCardTap }: A
                       const compact = allEntries.filter(([b, s]) => isCompact(b, s))
                       return (
                         <>
-                          {regular.map(([base, subs]) => renderBaseBlock(base, subs))}
+                          {regular.map(([base, subs]) => renderBaseBlock(base, subs, tier))}
                           {compact.length > 0 && (
                             <div className="grid grid-cols-2 gap-3">
-                              {compact.map(([base, subs]) => renderBaseBlock(base, subs))}
+                              {compact.map(([base, subs]) => renderBaseBlock(base, subs, tier))}
                             </div>
                           )}
                         </>
@@ -355,7 +373,8 @@ export default function AlbumDetail({ product, userCards, onBack, onCardTap }: A
     </div>
   )
 
-  function renderBaseBlock(base: string, subs: { store: string; versionId: string; cards: CardMaster[] }[]) {
+  function renderBaseBlock(base: string, subs: { store: string; versionId: string; cards: CardMaster[] }[], tier: string) {
+    const gridCols = STORE_TIERS.has(tier) ? 'grid-cols-2' : 'grid-cols-4'
     const totalOwned = subs.reduce((acc, s) => acc + s.cards.filter(c => ownedMap.has(c.id)).length, 0)
     const totalCards = subs.reduce((acc, s) => acc + s.cards.length, 0)
     return (
@@ -387,7 +406,7 @@ export default function AlbumDetail({ product, userCards, onBack, onCardTap }: A
                             </span>
                           </div>
                         )}
-                        <div className="grid grid-cols-4 gap-2">
+                        <div className={`grid ${gridCols} gap-2`}>
                           {versionCards.map(card => {
                       const owned = ownedMap.get(card.id) || null
                       const displayImage = owned?.front_image_url || card.front_image_url || ''
