@@ -17,6 +17,10 @@
       "schedule": "0,30 * * * *"
     },
     {
+      "path": "/api/line-morning",
+      "schedule": "0 23 * * *"
+    },
+    {
       "path": "/api/scrape-schedule",
       "schedule": "0 0 1 1 *"
     }
