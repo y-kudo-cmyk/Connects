@@ -50,6 +50,7 @@ export default function CardDetailModal({ card, owned, userId, onClose, onSave, 
   const [backFile, setBackFile] = useState<File | null>(null)
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
+  const [errorMsg, setErrorMsg] = useState<string>('')
   const [mounted, setMounted] = useState(false)
   const frontRef = useRef<HTMLInputElement>(null)
   const backRef = useRef<HTMLInputElement>(null)
@@ -71,28 +72,37 @@ export default function CardDetailModal({ card, owned, userId, onClose, onSave, 
 
   const handleSave = useCallback(async () => {
     setSaving(true)
+    setErrorMsg('')
     try {
       let frontUrl = owned?.front_image_url || card.front_image_url || ''
       let backUrl = owned?.back_image_url || card.back_image_url || ''
 
       if (frontFile) {
-        frontUrl = await uploadImage(frontFile, `cards/${userId}/${card.id}_front_${Date.now()}`)
+        try {
+          frontUrl = await uploadImage(frontFile, `cards/${userId}/${card.id}_front_${Date.now()}`)
+        } catch (e) {
+          const msg = e instanceof Error ? e.message : String(e)
+          throw new Error(`表面画像アップロード失敗: ${msg}`)
+        }
       }
       if (backFile) {
-        backUrl = await uploadImage(backFile, `cards/${userId}/${card.id}_back_${Date.now()}`)
+        try {
+          backUrl = await uploadImage(backFile, `cards/${userId}/${card.id}_back_${Date.now()}`)
+        } catch (e) {
+          const msg = e instanceof Error ? e.message : String(e)
+          throw new Error(`裏面画像アップロード失敗: ${msg}`)
+        }
       }
 
       if (owned) {
-        // Update existing
         const { error } = await supabase.from('user_cards').update({
           quantity,
           notes,
           front_image_url: frontUrl,
           back_image_url: backUrl,
         }).eq('id', owned.id)
-        if (error) throw error
+        if (error) throw new Error(`DB更新失敗: ${error.message}`)
       } else {
-        // Create new
         const id = `CARD-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`
         const { error } = await supabase.from('user_cards').insert({
           id,
@@ -108,7 +118,7 @@ export default function CardDetailModal({ card, owned, userId, onClose, onSave, 
           notes,
           status: 'ACTIVE',
         })
-        if (error) throw error
+        if (error) throw new Error(`DB登録失敗: ${error.message}`)
       }
 
       onSave()
@@ -117,7 +127,9 @@ export default function CardDetailModal({ card, owned, userId, onClose, onSave, 
         onClose()
       }, 1200)
     } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err)
       console.error('Save card error:', err)
+      setErrorMsg(msg)
     } finally {
       setSaving(false)
     }
@@ -260,6 +272,16 @@ export default function CardDetailModal({ card, owned, userId, onClose, onSave, 
               style={{ background: '#FFFFFF', border: '1px solid #E5E5EA', color: '#1C1C1E' }}
             />
           </div>
+
+          {/* Error message */}
+          {errorMsg && (
+            <div
+              className="mb-4 rounded-xl px-3 py-2.5 text-xs"
+              style={{ background: 'rgba(248,113,113,0.12)', color: '#B91C1C', border: '1px solid rgba(248,113,113,0.3)' }}
+            >
+              ⚠️ {errorMsg}
+            </div>
+          )}
         </div>
 
         {/* Actions (pinned to bottom) */}
