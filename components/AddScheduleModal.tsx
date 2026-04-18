@@ -149,7 +149,7 @@ export default function AddScheduleModal({ onClose, onRefresh }: { onClose: () =
           </div>
         </div>
 
-        <div className="flex-1 overflow-y-auto px-4 py-4 flex flex-col gap-4">
+        <div className="flex-1 overflow-y-auto px-4 py-4 flex flex-col gap-4" style={{ paddingBottom: 'calc(100px + env(safe-area-inset-bottom, 0px))' }}>
           {/* タイトル */}
           <input type="text" value={title} onChange={(e) => setTitle(e.target.value)}
             placeholder={t('Schedule.titlePlaceholder')}
@@ -270,7 +270,6 @@ export default function AddScheduleModal({ onClose, onRefresh }: { onClose: () =
           )}
         </div>
 
-        <div style={{ height: 'calc(80px + env(safe-area-inset-bottom, 0px))' }} />
       </div>
     </div>,
     document.body
