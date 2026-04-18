@@ -11,6 +11,7 @@ import { uploadDataUrl } from '@/lib/supabase/uploadImage'
 import { useReferral } from '@/lib/useReferral'
 import { COUNTRIES, countryFlag } from '@/lib/countryUtils'
 import ImageCropModal from '@/components/ImageCropModal'
+import FreeCropModal from '@/components/FreeCropModal'
 import { useMyEntries, MyEntry } from '@/lib/useMyEntries'
 import { createClient } from '@/lib/supabase/client'
 import { seventeenMembers } from '@/lib/config/constants'
@@ -1357,6 +1358,7 @@ function ConcertHistoryModal({ entry, onClose, onSave, onUpdate }: {
   const [viewImages, setViewImages] = useState<string[]>(entry.viewImages ?? [])
   const [images, setImages] = useState<string[]>(entry.images ?? [])
   const [uploading, setUploading] = useState(false)
+  const [ticketCropSrc, setTicketCropSrc] = useState<string | null>(null)
 
   const handleUpload = async (
     files: FileList | null,
@@ -1531,7 +1533,14 @@ function ConcertHistoryModal({ entry, onClose, onSave, onUpdate }: {
 
         {/* Hidden file inputs */}
         <input ref={ticketRef} type="file" accept="image/*" className="hidden"
-          onChange={(e) => { handleUpload(e.target.files, setTicketImages, 'tickets', 'ticketImages', ticketImages); e.target.value = '' }} />
+          onChange={(e) => {
+            const f = e.target.files?.[0]
+            e.target.value = ''
+            if (!f) return
+            const reader = new FileReader()
+            reader.onload = () => setTicketCropSrc(reader.result as string)
+            reader.readAsDataURL(f)
+          }} />
         <input ref={viewRef} type="file" accept="image/*" className="hidden"
           onChange={(e) => { handleUpload(e.target.files, setViewImages, 'memories', 'viewImages', viewImages); e.target.value = '' }} />
         <input ref={memory1Ref} type="file" accept="image/*" className="hidden"
@@ -1573,6 +1582,27 @@ function ConcertHistoryModal({ entry, onClose, onSave, onUpdate }: {
             e.target.value = ''
           }} />
       </div>
+
+      {ticketCropSrc && (
+        <FreeCropModal
+          src={ticketCropSrc}
+          onCancel={() => setTicketCropSrc(null)}
+          onConfirm={async (dataUrl) => {
+            setTicketCropSrc(null)
+            setUploading(true)
+            try {
+              const url = await uploadDataUrl('tickets', dataUrl)
+              if (url) {
+                const next = [...ticketImages, url]
+                setTicketImages(next)
+                onUpdate({ ticketImages: next })
+              }
+            } finally {
+              setUploading(false)
+            }
+          }}
+        />
+      )}
     </div>,
     document.body
   )
