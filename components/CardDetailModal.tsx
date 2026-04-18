@@ -117,8 +117,8 @@ export default function CardDetailModal({ card, owned, userId, onClose, onSave, 
 
   return (
     <div
-      className="fixed inset-0 z-60 flex items-end justify-center"
-      style={{ background: 'rgba(0,0,0,0.55)' }}
+      className="fixed inset-0 flex items-end justify-center"
+      style={{ background: 'rgba(0,0,0,0.55)', zIndex: 60 }}
       onClick={onClose}
     >
       <div
