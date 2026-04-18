@@ -164,8 +164,7 @@ export default function AlbumDetail({ product, userCards, onBack, onCardTap }: A
     return 99
   }
 
-  // For STORE tiers: pivot to store-first (Weverse → [BLUE/ECHO, COMPACT])
-  // For other tiers: base-first (same as before)
+  // すべて base-first グループ化（base="通常版"/"DAREDEVIL版"等、下に店舗sub）
   const groupedByTierAndBase = useMemo(() => {
     const tiers = new Map<string, Map<string, { store: string; versionId: string; cards: CardMaster[] }[]>>()
     for (const [versionId, cards] of groupedByVersion.entries()) {
@@ -176,21 +175,15 @@ export default function AlbumDetail({ product, userCards, onBack, onCardTap }: A
       const store = sepIdx >= 0 ? fullName.slice(sepIdx + 3) : ''
       if (!tiers.has(tier)) tiers.set(tier, new Map())
       const tierMap = tiers.get(tier)!
-      if (STORE_TIERS.has(tier) && store) {
-        if (!tierMap.has(store)) tierMap.set(store, [])
-        tierMap.get(store)!.push({ store: base, versionId, cards })
-      } else {
-        if (!tierMap.has(base)) tierMap.set(base, [])
-        tierMap.get(base)!.push({ store, versionId, cards })
-      }
+      if (!tierMap.has(base)) tierMap.set(base, [])
+      tierMap.get(base)!.push({ store, versionId, cards })
     }
-    // STORE tier は store 名順にソート
+    // STORE tier: base内のsubsを店舗順にソート
     for (const [tier, tierMap] of tiers.entries()) {
       if (STORE_TIERS.has(tier)) {
-        const sorted = new Map(
-          Array.from(tierMap.entries()).sort((a, b) => storeRank(a[0]) - storeRank(b[0]))
-        )
-        tiers.set(tier, sorted)
+        for (const subs of tierMap.values()) {
+          subs.sort((a, b) => storeRank(a.store) - storeRank(b.store))
+        }
       }
     }
     return tiers
