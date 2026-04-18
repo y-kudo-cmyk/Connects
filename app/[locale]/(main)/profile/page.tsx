@@ -646,7 +646,7 @@ export default function ProfilePage() {
       {/* 参戦記録 詳細モーダル */}
       {(() => { if (showConcerts) console.log('[ConcertModal] render, portalMounted:', portalMounted, 'liveEntries:', liveEntries.length); return null })()}
       {showConcerts && portalMounted && createPortal(
-        <div className="fixed inset-0 flex flex-col" style={{ background: '#F8F9FA', zIndex: 9999 }}>
+        <div className="fixed inset-0 flex flex-col" style={{ background: '#FF00FF', zIndex: 99999 }}>
           <div className="flex items-center justify-between px-4 py-3 flex-shrink-0"
             style={{ borderBottom: '1px solid #E5E5EA', paddingTop: 'calc(14px + env(safe-area-inset-top, 0px))' }}>
             <div className="flex items-center gap-2">
