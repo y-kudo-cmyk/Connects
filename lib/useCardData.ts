@@ -23,6 +23,7 @@ export interface CardVersion {
   product_id: string
   version_name: string
   tier?: VersionTier
+  sort_order?: number
 }
 
 export interface CardMaster {
@@ -102,7 +103,10 @@ export function useCardVersions(productId: string | null) {
         .from('card_versions')
         .select('*')
         .eq('product_id', productId)
-        .order('version_id')
+        // Official release order (set by scripts/fix-all-album-orders.mjs)
+        // with version_id as a stable tiebreaker.
+        .order('sort_order', { ascending: true })
+        .order('version_id', { ascending: true })
       if (!error && data) setVersions(data)
       setLoading(false)
     }

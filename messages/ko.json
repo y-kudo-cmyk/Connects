@@ -471,6 +471,7 @@
   "MyPage": {
     "sourceLink": "🔗 소스 ↗",
     "seatView": "좌석에서의 전망",
+    "seatViewOthers": "다른 CARAT의 좌석 뷰",
     "viewImagePublic": "⚠ 이 이미지는 다른 유저에게도 공개됩니다"
   },
   "ProfilePage": {

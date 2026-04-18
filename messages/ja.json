@@ -471,6 +471,7 @@
   "MyPage": {
     "sourceLink": "🔗 ソース ↗",
     "seatView": "座席からの眺め",
+    "seatViewOthers": "他のCARATの座席ビュー",
     "viewImagePublic": "⚠ この画像は他のユーザーにも公開されます"
   },
   "ProfilePage": {

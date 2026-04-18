@@ -1094,6 +1094,18 @@ function EditModal({ entry, onClose, onSave, onRemove }: {
             </EditSection>
           )}
 
+          {/* 他のCARATの座席ビュー */}
+          {showTicketSection && (
+            <EditSection label={t('MyPage.seatViewOthers') || '他のCARATの座席ビュー'}>
+              <SeatViewPreview
+                seatInfo={seatInfo}
+                venue={entry.venue}
+                eventName={entry.title}
+                eventDate={entry.date}
+              />
+            </EditSection>
+          )}
+
           {/* メモ */}
           <EditSection label={t('My.memo')}>
             <textarea value={memo} onChange={(e) => setMemo(e.target.value)}

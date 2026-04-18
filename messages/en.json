@@ -471,6 +471,7 @@
   "MyPage": {
     "sourceLink": "Source",
     "seatView": "Seat view",
+    "seatViewOthers": "Other CARATs' seat views",
     "viewImagePublic": "This image will be visible to other users"
   },
   "ProfilePage": {
