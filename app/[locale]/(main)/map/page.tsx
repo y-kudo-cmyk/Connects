@@ -1283,7 +1283,6 @@ function NewSpotModal({
 }) {
   const t = useTranslations()
   const [name, setName] = useState('')
-  const [nameLocal, setNameLocal] = useState('')
   const [address, setAddress] = useState('')
   const [city, setCity] = useState('')
   const [genre, setGenre] = useState<SpotGenre>('cafe')
@@ -1332,7 +1331,6 @@ function NewSpotModal({
         if (data.spots?.[0]) {
           const s = data.spots[0]
           if (s.name && !name) setName(s.name)
-          if (s.nameLocal && !nameLocal) setNameLocal(s.nameLocal)
           if (s.address && !address) setAddress(s.address)
           if (s.city && !city) setCity(s.city)
           if (s.genre) setGenre(s.genre as SpotGenre)
@@ -1347,7 +1345,7 @@ function NewSpotModal({
   }
 
   const handleSubmit = async () => {
-    if (!name.trim() || !address.trim()) return
+    if (!name.trim() || !address.trim() || !imageDataUrl || selectedMembers.length === 0) return
     try {
       // 画像をStorageにアップロード
       let imageUrl = ''
@@ -1486,17 +1484,6 @@ function NewSpotModal({
               style={{ background: '#F0F0F5', color: '#1C1C1E', border: '1px solid #E5E5EA' }} />
           </div>
 
-          {/* 現地語名 */}
-          <div>
-            <label className="text-xs font-bold mb-2 block" style={{ color: '#636366' }}>
-              {t('Map.newSpotLocalName')} <span style={{ color: '#8E8E93', fontWeight: 400 }}>（{t('Map.newSpotLocalNameSub')}）</span>
-            </label>
-            <input type="text" value={nameLocal} onChange={(e) => setNameLocal(e.target.value)}
-              placeholder="例: 하이브 인사이트"
-              className="w-full px-3 py-3 rounded-xl text-sm outline-none"
-              style={{ background: '#F0F0F5', color: '#1C1C1E', border: '1px solid #E5E5EA' }} />
-          </div>
-
           {/* 住所 */}
           <div>
             <label className="text-xs font-bold mb-2 block" style={{ color: '#636366' }}>
@@ -1506,6 +1493,7 @@ function NewSpotModal({
               placeholder="例: ソウル特別市龍山区漢南大路42キル 35"
               className="w-full px-3 py-3 rounded-xl text-sm outline-none"
               style={{ background: '#F0F0F5', color: '#1C1C1E', border: '1px solid #E5E5EA' }} />
+            <p className="text-[10px] mt-1" style={{ color: '#8E8E93' }}>※現地の表記を優先</p>
           </div>
 
           {/* ジャンル */}
@@ -1528,7 +1516,7 @@ function NewSpotModal({
           {/* メンバー */}
           <div>
             <label className="text-xs font-bold mb-2 block" style={{ color: '#636366' }}>
-              {t('Map.newSpotMember')} <span style={{ color: '#8E8E93', fontWeight: 400 }}>（{t('Map.newSpotMemberSub')}）</span>
+              {t('Map.newSpotMember')} <span style={{ color: '#F87171' }}>*</span> <span style={{ color: '#8E8E93', fontWeight: 400 }}>（{t('Map.newSpotMemberSub')}）</span>
             </label>
             <div className="flex flex-wrap gap-2">
               {seventeenMembers.map((m) => {
@@ -1611,11 +1599,11 @@ function NewSpotModal({
           {/* 投稿ボタン */}
           <button
             onClick={handleSubmit}
-            disabled={!name.trim() || !address.trim() || !imageDataUrl}
+            disabled={!name.trim() || !address.trim() || !imageDataUrl || selectedMembers.length === 0}
             className="w-full py-4 rounded-2xl text-sm font-bold min-h-[52px]"
             style={{
-              background: name.trim() && address.trim() && imageDataUrl ? '#F3B4E3' : '#E5E5EA',
-              color: name.trim() && address.trim() && imageDataUrl ? '#FFFFFF' : '#8E8E93',
+              background: (name.trim() && address.trim() && imageDataUrl && selectedMembers.length > 0) ? '#F3B4E3' : '#E5E5EA',
+              color: (name.trim() && address.trim() && imageDataUrl && selectedMembers.length > 0) ? '#FFFFFF' : '#8E8E93',
             }}>
             {t('Common.submit')}
           </button>
