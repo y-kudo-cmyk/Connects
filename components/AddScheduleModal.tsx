@@ -19,6 +19,7 @@ export default function AddScheduleModal({ onClose, onRefresh }: { onClose: () =
   const [startDate, setStartDate] = useState('')
   const [startTime, setStartTime] = useState('')
   const [endDate, setEndDate] = useState('')
+  const [endTime, setEndTime] = useState('')
   const [venue, setVenue] = useState('')
   const [country, setCountry] = useState('')
   const [sourceUrl, setSourceUrl] = useState('')
@@ -59,7 +60,9 @@ export default function AddScheduleModal({ onClose, onRefresh }: { onClose: () =
     const startIso = startTime
       ? `${startDate}T${startTime}:00`
       : `${startDate}T00:00:00`
-    const endIso = endDate ? `${endDate}T00:00:00` : null
+    const endIso = endDate
+      ? (endTime ? `${endDate}T${endTime}:00` : `${endDate}T00:00:00`)
+      : null
 
     const { error } = await supabase.from('events').insert({
       tag,
@@ -220,6 +223,9 @@ export default function AddScheduleModal({ onClose, onRefresh }: { onClose: () =
             <input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)}
               className="flex-1 px-3 py-2.5 rounded-xl text-sm outline-none"
               style={{ background: '#FFFFFF', border: '1px solid #E5E5EA', color: '#1C1C1E' }} />
+            <input type="time" value={endTime} onChange={(e) => setEndTime(e.target.value)}
+              className="w-28 px-3 py-2.5 rounded-xl text-sm outline-none"
+              style={{ background: '#FFFFFF', border: '1px solid #E5E5EA', color: '#1C1C1E' }} />
           </div>
 
           {/* 会場 */}
@@ -259,11 +265,13 @@ export default function AddScheduleModal({ onClose, onRefresh }: { onClose: () =
             style={{ background: '#FFFFFF', border: sourceUrl.trim() ? '1px solid #E5E5EA' : '1px solid #FCA5A5', color: '#1C1C1E' }} />
 
           {/* 備考 */}
-          <textarea value={notes} onChange={(e) => setNotes(e.target.value)}
-            placeholder={t('Schedule.notesPlaceholder')}
-            rows={2}
-            className="w-full px-3 py-2.5 rounded-xl text-sm outline-none resize-none"
-            style={{ background: '#FFFFFF', border: '1px solid #E5E5EA', color: '#1C1C1E' }} />
+          <div>
+            <label className="text-xs font-bold mb-1.5 block" style={{ color: '#636366' }}>{t('Schedule.notesPlaceholder')}</label>
+            <textarea value={notes} onChange={(e) => setNotes(e.target.value)}
+              rows={3}
+              className="w-full px-3 py-2.5 rounded-xl text-sm outline-none resize-none"
+              style={{ background: '#FFFFFF', border: '1px solid #E5E5EA', color: '#1C1C1E' }} />
+          </div>
 
           {submitError && (
             <p className="text-xs text-center" style={{ color: '#EF4444' }}>{submitError}</p>
