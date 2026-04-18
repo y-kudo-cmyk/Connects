@@ -9,6 +9,11 @@ import AlbumList from '@/components/AlbumList'
 import AlbumDetail from '@/components/AlbumDetail'
 import CardDetailModal from '@/components/CardDetailModal'
 
+// admin以外でもGOODSを閲覧できる追加ユーザーID
+const EXTRA_GOODS_USER_IDS = [
+  '9c19a9f6-d3ab-4ea2-8391-1df73ef556c0', // はるゆ (hakuren.x1215@gmail.com)
+]
+
 export default function GoodsPage() {
   const t = useTranslations()
   const { user } = useAuth()
@@ -27,7 +32,8 @@ export default function GoodsPage() {
 
   if (!user || !roleLoaded) return null
 
-  if (role !== 'admin') {
+  const allowed = role === 'admin' || EXTRA_GOODS_USER_IDS.includes(user.id)
+  if (!allowed) {
     return (
       <div className="flex flex-col items-center justify-center" style={{ minHeight: '100vh', background: '#F8F9FA' }}>
         <div className="flex flex-col items-center gap-4 px-6">
