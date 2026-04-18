@@ -174,6 +174,10 @@ async function eveningNotification(currentTime: string, today: string, testMode 
 
 // ── 3. MYイベントリマインダー（1時間前） ─────────────────────
 async function myEventReminder(currentTime: string, today: string) {
+  // :00 の時のみ発火（:30 に発火すると30分前通知になってしまうため）
+  const [h, m] = currentTime.split(':').map(Number)
+  if (m !== 0) return { type: 'reminder', skipped: true, reason: 'not on the hour' }
+
   const { data: users } = await supabase
     .from('profiles')
     .select('id')
@@ -182,7 +186,6 @@ async function myEventReminder(currentTime: string, today: string) {
   if (!users || users.length === 0) return { type: 'reminder', skipped: true }
 
   // 現在時刻の1時間後 = リマインダー対象の開始時刻
-  const [h, m] = currentTime.split(':').map(Number)
   const targetHour = String(h + 1).padStart(2, '0')
   const targetTime = `${targetHour}:00`
 
@@ -205,12 +208,10 @@ async function myEventReminder(currentTime: string, today: string) {
 
     if (upcoming.length === 0) continue
 
-    let content = `⏰ まもなく開始！\n`
-    upcoming.forEach(e => {
-      content += `・${e.event_title} ${targetTime}〜\n`
-    })
+    const lines = upcoming.map(e => `・${e.event_title} ${targetTime}〜`)
+    const content = lines.join('\n')
 
-    await sendNotification([user.id], '⏰ 1時間後に開始', content.trim(), 'https://connects-nu.vercel.app/my')
+    await sendNotification([user.id], '⏰ 1時間後に開始', content, 'https://connects-nu.vercel.app/my')
     sent++
   }
 
