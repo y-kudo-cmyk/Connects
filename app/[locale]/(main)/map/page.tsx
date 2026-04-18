@@ -826,7 +826,7 @@ function SpotDetailScreen({
               </button>
             </div>
           ) : (
-            <div className="flex gap-2 px-4 overflow-x-auto" style={{ scrollbarWidth: 'thin' }}>
+            <div className="flex gap-2 px-4 overflow-x-auto items-stretch" style={{ scrollbarWidth: 'thin' }}>
               {uniquePhotos.map((photo) => (
                 <PhotoCard key={photo.id} photo={photo}
                   isUserPhoto={userPhotos.some((p) => p.id === photo.id)}
@@ -1007,7 +1007,7 @@ function PhotoCard({
         )}
       </div>
       {/* タグ + 日付 */}
-      <div className="px-2 py-2 flex flex-col gap-1">
+      <div className="px-2 py-2 flex flex-col gap-1 mt-auto">
         {savedTags.length > 0 && (
           <div className="flex flex-wrap gap-1">
             {savedTags.map((tag) => {
