@@ -374,7 +374,8 @@ export default function AlbumDetail({ product, userCards, onBack, onCardTap }: A
   )
 
   function renderBaseBlock(base: string, subs: { store: string; versionId: string; cards: CardMaster[] }[], tier: string) {
-    const gridCols = STORE_TIERS.has(tier) ? 'grid-cols-2' : 'grid-cols-4'
+    const isStore = STORE_TIERS.has(tier)
+    const gridCols = 'grid-cols-4'
     const totalOwned = subs.reduce((acc, s) => acc + s.cards.filter(c => ownedMap.has(c.id)).length, 0)
     const totalCards = subs.reduce((acc, s) => acc + s.cards.length, 0)
     return (
@@ -389,6 +390,7 @@ export default function AlbumDetail({ product, userCards, onBack, onCardTap }: A
                       {totalOwned}/{totalCards}
                     </span>
                   </div>
+                  <div className={isStore && subs.length > 1 ? 'grid grid-cols-2 gap-3' : ''}>
                   {subs.map(({ store, versionId, cards: versionCards }) => {
                     const ownedInVersion = versionCards.filter(c => ownedMap.has(c.id)).length
                     return (
@@ -461,6 +463,7 @@ export default function AlbumDetail({ product, userCards, onBack, onCardTap }: A
                       </div>
                     )
                   })}
+                  </div>
                 </div>
     )
   }
