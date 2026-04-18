@@ -207,13 +207,13 @@ async function myEventReminder(currentTime: string, today: string) {
   for (const user of users) {
     const { data: entries } = await supabase
       .from('my_entries')
-      .select('event_title, sub_event_title, tag, start_date, source_url, spot_name')
+      .select('event_title, sub_event_title, tag, start_date, end_date, source_url, spot_name')
       .eq('user_id', user.id)
 
     if (!entries || entries.length === 0) continue
 
     // 今日の、1時間後に開始するイベントを抽出（LIVE は除外）
-    const upcoming = entries.filter(e => {
+    const upcomingStart = entries.filter(e => {
       if (!e.start_date) return false
       if (e.tag === 'LIVE') return false
       const date = e.start_date.slice(0, 10)
@@ -221,22 +221,44 @@ async function myEventReminder(currentTime: string, today: string) {
       return date === today && time === targetTime
     })
 
-    if (upcoming.length === 0) continue
+    // TICKET のみ、1時間後に終了するイベントを抽出
+    const upcomingEnd = entries.filter(e => {
+      if (e.tag !== 'TICKET') return false
+      if (!e.end_date) return false
+      const date = e.end_date.slice(0, 10)
+      const time = e.end_date.slice(11, 16)
+      return date === today && time === targetTime
+    })
+
+    if (upcomingStart.length === 0 && upcomingEnd.length === 0) continue
 
     // OneSignal
-    const lines = upcoming.map(e => `・${e.event_title} ${targetTime}〜`)
-    const content = lines.join('\n')
-    await sendNotification([user.id], '⏰ まもなく開始', content, 'https://connects-nu.vercel.app/my')
-    sent++
+    if (upcomingStart.length > 0) {
+      const content = upcomingStart.map(e => `・${e.event_title} ${targetTime}〜`).join('\n')
+      await sendNotification([user.id], '⏰ まもなく開始', content, 'https://connects-nu.vercel.app/my')
+      sent++
+    }
+    if (upcomingEnd.length > 0) {
+      const content = upcomingEnd.map(e => `・${e.event_title} ${targetTime}締切`).join('\n')
+      await sendNotification([user.id], '⏰ まもなく終了', content, 'https://connects-nu.vercel.app/my')
+      sent++
+    }
 
     // LINE Push (line_user_id がある場合)
     if (user.line_user_id) {
-      for (const e of upcoming) {
-        let msg = `⚡ まもなく開始！\n\n`
-        msg += `${e.event_title}\n`
+      for (const e of upcomingStart) {
+        let msg = `⚡ まもなく開始！\n\n${e.event_title}\n`
         if (e.sub_event_title) msg += `　${e.sub_event_title}\n`
         msg += `🕐 ${targetTime}〜\n`
         if (e.spot_name) msg += `📍 ${e.spot_name}\n`
+        if (e.source_url) msg += `\n🔗 ${e.source_url}\n`
+        msg += `\n━━━━━━━━━━\nConnect+\nhttps://connects-nu.vercel.app/my`
+        if (await sendLinePush(user.line_user_id, msg)) lineSent++
+      }
+      for (const e of upcomingEnd) {
+        let msg = `⚠️ まもなく終了！\n\n${e.event_title}\n`
+        if (e.sub_event_title) msg += `　${e.sub_event_title}\n`
+        msg += `🕐 ${targetTime} 締切\n`
         if (e.source_url) msg += `\n🔗 ${e.source_url}\n`
         msg += `\n━━━━━━━━━━\nConnect+\nhttps://connects-nu.vercel.app/my`
         if (await sendLinePush(user.line_user_id, msg)) lineSent++
