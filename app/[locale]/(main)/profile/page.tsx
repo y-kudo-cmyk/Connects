@@ -183,7 +183,7 @@ export default function ProfilePage() {
   const startEditBio = () => { setBioInput(profile.bio); setEditingBio(true) }
   const saveBio = () => { update({ bio: bioInput }); setEditingBio(false) }
 
-  const openNewFc = () => { setFcForm({}); setFcModal('new') }
+  const openNewFc = () => { setFcForm({ clubName: 'SEVENTEEN' }); setFcModal('new') }
   const openEditFc = (fc: FanClubMembership) => { setFcForm({ ...fc }); setFcModal(fc.id) }
   const saveFc = () => {
     if (!fcForm.clubName || !fcForm.memberNumber) return
