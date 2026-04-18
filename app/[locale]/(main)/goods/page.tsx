@@ -21,7 +21,7 @@ export default function GoodsPage() {
   const [roleLoaded, setRoleLoaded] = useState(false)
 
   useEffect(() => {
-    if (!user) { setRoleLoaded(true); return }
+    if (!user) return
     const supabase = createClient()
     supabase.from('profiles').select('role').eq('id', user.id).maybeSingle()
       .then(({ data }) => {
