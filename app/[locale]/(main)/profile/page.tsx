@@ -1370,31 +1370,49 @@ function ConcertHistoryModal({ entry, onClose, onSave, onUpdate }: {
     const slot = cropState?.slot
     setCropState(null)
     if (!slot) return
+
+    // Optimistic: 画像をまずそのまま表示（アップロード完了を待たない）
+    let optimisticTicket: string[] | null = null
+    let optimisticView: string[] | null = null
+    let optimisticImages: string[] | null = null
+    if (slot === 'ticket') {
+      optimisticTicket = [...ticketImages, dataUrl]
+      setTicketImages(optimisticTicket)
+    } else if (slot === 'view') {
+      optimisticView = [...viewImages, dataUrl]
+      setViewImages(optimisticView)
+    } else if (slot === 'memory1') {
+      const next = [...images]
+      while (next.length < 2) next.push('')
+      next[1] = dataUrl
+      optimisticImages = next
+      setImages(next)
+    } else if (slot === 'memory2') {
+      const next = [...images]
+      while (next.length < 3) next.push('')
+      next[2] = dataUrl
+      optimisticImages = next
+      setImages(next)
+    }
+
     setUploading(true)
     try {
       const bucket = slot === 'ticket' ? 'tickets' : 'memories'
       const url = await uploadDataUrl(bucket, dataUrl)
       if (!url) return
-      if (slot === 'ticket') {
-        const next = [...ticketImages, url]
-        setTicketImages(next)
-        onUpdate({ ticketImages: next })
-      } else if (slot === 'view') {
-        const next = [...viewImages, url]
-        setViewImages(next)
-        onUpdate({ viewImages: next })
-      } else if (slot === 'memory1') {
-        const next = [...images]
-        while (next.length < 2) next.push('')
-        next[1] = url
-        setImages(next)
-        onUpdate({ images: next })
-      } else if (slot === 'memory2') {
-        const next = [...images]
-        while (next.length < 3) next.push('')
-        next[2] = url
-        setImages(next)
-        onUpdate({ images: next })
+      // dataUrl を Supabase 公開URLに差し替えて永続化
+      if (optimisticTicket) {
+        const final = optimisticTicket.map((u) => (u === dataUrl ? url : u))
+        setTicketImages(final)
+        onUpdate({ ticketImages: final })
+      } else if (optimisticView) {
+        const final = optimisticView.map((u) => (u === dataUrl ? url : u))
+        setViewImages(final)
+        onUpdate({ viewImages: final })
+      } else if (optimisticImages) {
+        const final = optimisticImages.map((u) => (u === dataUrl ? url : u))
+        setImages(final)
+        onUpdate({ images: final })
       }
     } finally {
       setUploading(false)
