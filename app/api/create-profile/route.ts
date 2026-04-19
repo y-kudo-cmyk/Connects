@@ -37,6 +37,9 @@ export async function POST(req: NextRequest) {
     nickname: g?.nickname || user.user_metadata?.name || email.split('@')[0],
     membership_number: g?.membership_number || '',
     avatar_url: g?.avatar_url || user.user_metadata?.avatar_url || '',
+    ref_code: g?.ref_code || '',          // Glide 紹介コード引継ぎ
+    introduced_by: g?.introduced_by || '', // 招待者
+    is_verified: g?.is_verified || false,
     language: 'ja',
     country: 'JP',
   })
