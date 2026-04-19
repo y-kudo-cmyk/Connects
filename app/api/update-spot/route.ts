@@ -67,8 +67,11 @@ export async function POST(req: NextRequest) {
       const relatedArtists = [...allTags].map(t => `#${t}`).join(' ')
       await sb.from('spots').update({ related_artists: relatedArtists }).eq('id', spotId)
     }
-    // source_url が埋まったらヒントmemoをクリア（photoの親spotに反映）
-    if (updates.source_url && String(updates.source_url).trim() && spotId) {
+    // source_url / spot_url が埋まったらヒントmemoをクリア（photoの親spotに反映）
+    const filledPhotoUrl =
+      (updates.source_url && String(updates.source_url).trim()) ||
+      (updates.spot_url && String(updates.spot_url).trim())
+    if (filledPhotoUrl && spotId) {
       await sb.from('spots').update({ memo: '' }).eq('id', spotId)
     }
     editDetail = `photo:${photoId}:${Object.keys(updates).join(',')}`
@@ -81,8 +84,11 @@ export async function POST(req: NextRequest) {
     // スポットの更新
     const { error } = await sb.from('spots').update(updates).eq('id', spotId)
     if (error) return NextResponse.json({ error: error.message }, { status: 500 })
-    // spot 自身の source_url が埋まったら memo もクリア
-    if (updates.source_url && String(updates.source_url).trim()) {
+    // spot 自身の source_url または spot_url が埋まったら memo もクリア
+    const filledSpotUrl =
+      (updates.source_url && String(updates.source_url).trim()) ||
+      (updates.spot_url && String(updates.spot_url).trim())
+    if (filledSpotUrl) {
       await sb.from('spots').update({ memo: '' }).eq('id', spotId)
     }
     editDetail = `spot:${spotId}:${Object.keys(updates).join(',')}`

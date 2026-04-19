@@ -10,14 +10,16 @@ const isScrapedMemo = (m) => {
   return m.includes('[인스타') || m.includes('[SVT Record') || m.includes('[위버스') || m.toLowerCase().includes('instagram story')
 }
 
-const { data: spots } = await s.from('spots').select('id, spot_name, source_url, memo')
+const { data: spots } = await s.from('spots').select('id, spot_name, source_url, spot_url, memo')
 let cleared = 0
 for (const sp of spots) {
   const hasSpotSource = sp.source_url && sp.source_url.trim() && sp.source_url !== 'instagram story'
-  if (!hasSpotSource) continue
+  const hasSpotHp = sp.spot_url && sp.spot_url.trim()
+  if (!hasSpotSource && !hasSpotHp) continue
   if (!isScrapedMemo(sp.memo)) continue
   await s.from('spots').update({ memo: '' }).eq('id', sp.id)
-  console.log(`  [spot.source_url] cleared ${sp.id} ${sp.spot_name} ("${sp.memo.slice(0,40)}...")`)
+  const reason = hasSpotSource ? 'source_url' : 'spot_url'
+  console.log(`  [${reason}] cleared ${sp.id} ${sp.spot_name} ("${sp.memo.slice(0,40)}...")`)
   cleared++
 }
 
