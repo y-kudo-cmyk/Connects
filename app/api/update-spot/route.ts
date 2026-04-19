@@ -13,6 +13,16 @@ function isScrapedHintMemo(memo: string | null | undefined): boolean {
   )
 }
 
+// admin だけが書き換え可能なフィールド（非admin値は無視）
+const ADMIN_ONLY_SPOT_FIELDS = ['status', 'verified_count', 'artist_id', 'submitted_by', 'is_master', 'checked']
+const ADMIN_ONLY_EVENT_FIELDS = ['status', 'verified_count', 'artist_id', 'submitted_by', 'checked', 'cancelled']
+const ADMIN_ONLY_PHOTO_FIELDS = ['status', 'votes', 'submitted_by']
+function stripAdminOnly(updates: Record<string, unknown>, keys: readonly string[]): Record<string, unknown> {
+  const out = { ...updates }
+  for (const k of keys) delete out[k]
+  return out
+}
+
 export async function POST(req: NextRequest) {
   // 認証チェック
   const supabase = await createClient()
@@ -26,7 +36,7 @@ export async function POST(req: NextRequest) {
     const { data: lastSpot } = await sb.from('spots').select('id').order('id', { ascending: false }).limit(1)
     const lastNum = lastSpot?.[0]?.id ? parseInt(lastSpot[0].id.replace('SP', '')) : 0
     const newId = 'SP' + String(lastNum + 1).padStart(5, '0')
-    const { error } = await sb.from('spots').insert({ id: newId, ...updates, submitted_by: user.id })
+    const { error } = await sb.from('spots').insert({ id: newId, ...updates, submitted_by: user.id, last_edited_by: user.id })
     if (error) return NextResponse.json({ error: error.message }, { status: 500 })
     // spot image があれば spot_photos 行も作成（詳細モーダルのカルーセルで表示されるように）
     if (updates.image_url) {
@@ -59,11 +69,17 @@ export async function POST(req: NextRequest) {
     process.env.SUPABASE_SERVICE_ROLE_KEY!,
   )
 
+  // 呼び出し元の admin 判定（admin のみ特権フィールド書換OK）
+  const { data: profile } = await sb.from('profiles').select('role').eq('id', user.id).maybeSingle()
+  const isAdmin = profile?.role === 'admin'
+
   let editDetail = ''
 
   if (photoId) {
-    // 写真の更新
-    const { error } = await sb.from('spot_photos').update(updates).eq('id', photoId)
+    // 一般ユーザーは admin-only フィールドを除外
+    const safeUpdates = isAdmin ? updates : stripAdminOnly(updates, ADMIN_ONLY_PHOTO_FIELDS)
+    // 最終更新者を記録
+    const { error } = await sb.from('spot_photos').update({ ...safeUpdates, last_edited_by: user.id }).eq('id', photoId)
     if (error) return NextResponse.json({ error: error.message }, { status: 500 })
     // spot の related_artists も写真のタグから再計算
     if (updates.tags && spotId) {
@@ -88,15 +104,17 @@ export async function POST(req: NextRequest) {
         await sb.from('spots').update({ memo: '' }).eq('id', spotId)
       }
     }
-    editDetail = `photo:${photoId}:${Object.keys(updates).join(',')}`
+    editDetail = `photo:${photoId}:${Object.keys(safeUpdates).join(',')}`
   } else if (_table === 'events') {
-    // イベントの更新
-    const { error } = await sb.from('events').update(updates).eq('id', spotId)
+    // イベントの更新（admin-only フィールドは一般ユーザーからは無視）
+    const safeUpdates = isAdmin ? updates : stripAdminOnly(updates, ADMIN_ONLY_EVENT_FIELDS)
+    const { error } = await sb.from('events').update({ ...safeUpdates, last_edited_by: user.id }).eq('id', spotId)
     if (error) return NextResponse.json({ error: error.message }, { status: 500 })
-    editDetail = `event:${spotId}:${Object.keys(updates).join(',')}`
+    editDetail = `event:${spotId}:${Object.keys(safeUpdates).join(',')}`
   } else {
-    // スポットの更新
-    const { error } = await sb.from('spots').update(updates).eq('id', spotId)
+    // スポットの更新（admin-only フィールドは一般ユーザーからは無視）
+    const safeUpdates = isAdmin ? updates : stripAdminOnly(updates, ADMIN_ONLY_SPOT_FIELDS)
+    const { error } = await sb.from('spots').update({ ...safeUpdates, last_edited_by: user.id }).eq('id', spotId)
     if (error) return NextResponse.json({ error: error.message }, { status: 500 })
     // spot 自身の source_url または spot_url が埋まったらヒントmemoクリア（スクレピング由来のみ）
     const filledSpotUrl =
@@ -108,7 +126,7 @@ export async function POST(req: NextRequest) {
         await sb.from('spots').update({ memo: '' }).eq('id', spotId)
       }
     }
-    editDetail = `spot:${spotId}:${Object.keys(updates).join(',')}`
+    editDetail = `spot:${spotId}:${Object.keys(safeUpdates).join(',')}`
   }
 
   // 編集ログを記録 (統計用)
