@@ -41,7 +41,7 @@ export async function POST(req: NextRequest) {
     const { data: entries } = await sb.from('glide_my_entries').select('*').ilike('mail', normalized).eq('migrated', false)
     if (entries && entries.length > 0) {
       for (const e of entries) {
-        await sb.from('my_entries').insert({
+        const { error: insErr } = await sb.from('my_entries').insert({
           user_id: user.id,
           event_title: e.event_title,
           sub_event_title: e.sub_event_title || null,
@@ -54,9 +54,13 @@ export async function POST(req: NextRequest) {
           source_url: e.source_url || null,
           ticket_image_url: e.ticket_image_url || null,
           notes: e.notes || null,
-        }).then(() => {
-          sb.from('glide_my_entries').update({ migrated: true }).eq('id', e.id)
         })
+        // 正常に my_entries に入った行だけ migrated=true にする
+        if (!insErr) {
+          await sb.from('glide_my_entries').update({ migrated: true }).eq('id', e.id)
+        } else {
+          console.error('create-profile: my_entries insert failed:', insErr.message)
+        }
       }
     }
   }
