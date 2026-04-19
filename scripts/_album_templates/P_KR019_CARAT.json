@@ -1,0 +1,13 @@
+{
+  "productId": "P_KR019",
+  "versionId": "V_KR019_04",
+  "albumName": "SEVENTEENTH HEAVEN CARAT ver.",
+  "imageSize": { "width": 2481, "height": 2481 },
+  "cards": [
+    { "cardType": "binder",    "detail": "Binder",      "left": 370,  "top": 846,  "width": 759, "height": 965 },
+    { "cardType": "photocard", "detail": "Photocard 1", "left": 1221, "top": 660,  "width": 422, "height": 645 },
+    { "cardType": "photocard", "detail": "Photocard 2", "left": 1685, "top": 660,  "width": 422, "height": 645 },
+    { "cardType": "photocard", "detail": "Photocard 3", "left": 1221, "top": 1347, "width": 422, "height": 648 },
+    { "cardType": "photocard", "detail": "Photocard 4", "left": 1685, "top": 1347, "width": 422, "height": 648 }
+  ]
+}
