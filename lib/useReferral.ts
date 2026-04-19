@@ -41,13 +41,20 @@ export function useReferral() {
     if (!user) return { ok: false, error: 'ログインしてください' }
     if (trimmed === myCode) return { ok: false, error: '自分のコードは登録できません' }
 
-    // コード存在チェック
-    const { data: refUser } = await supabase
+    // コード存在チェック: profiles or glide_users (Glide移行中の既存会員分)
+    const { data: inProfiles } = await supabase
       .from('profiles')
       .select('id')
       .eq('ref_code', trimmed)
       .maybeSingle()
-    if (!refUser) return { ok: false, error: 'そのコードのユーザーは見つかりません' }
+    if (!inProfiles) {
+      const { data: inGlide } = await supabase
+        .from('glide_users')
+        .select('membership_number')
+        .eq('ref_code', trimmed)
+        .maybeSingle()
+      if (!inGlide) return { ok: false, error: 'そのコードのユーザーは見つかりません' }
+    }
 
     const { error } = await supabase
       .from('profiles')
