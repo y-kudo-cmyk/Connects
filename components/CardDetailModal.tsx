@@ -132,6 +132,8 @@ export default function CardDetailModal({ card, owned, userId, isBetaUser = fals
       setBackFile(file)
       setBackPreview(dataUrl)
     }
+    // 画像を登録したら所持枚数 0 → 1 に自動セット (明示値は触らない)
+    setQuantity(q => (q === 0 ? 1 : q))
     setCropSrc(null)
     setCropSide(null)
   }, [cropSide])
