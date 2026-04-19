@@ -36,33 +36,19 @@ export function useReferral() {
   const setIntroducer = async (code: string): Promise<{ ok: boolean; error?: string }> => {
     const trimmed = code.trim()
     if (!trimmed) return { ok: false, error: 'コードを入力してください' }
-    if (introducedBy) return { ok: false, error: '既に紹介者が設定されています' }
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) return { ok: false, error: 'ログインしてください' }
-    if (trimmed === myCode) return { ok: false, error: '自分のコードは登録できません' }
-
-    // コード存在チェック: profiles or glide_users (Glide移行中の既存会員分)
-    const { data: inProfiles } = await supabase
-      .from('profiles')
-      .select('id')
-      .eq('ref_code', trimmed)
-      .maybeSingle()
-    if (!inProfiles) {
-      const { data: inGlide } = await supabase
-        .from('glide_users')
-        .select('membership_number')
-        .eq('ref_code', trimmed)
-        .maybeSingle()
-      if (!inGlide) return { ok: false, error: 'そのコードのユーザーは見つかりません' }
+    try {
+      const res = await fetch('/api/set-referrer', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code: trimmed }),
+      })
+      const data = await res.json()
+      if (!res.ok) return { ok: false, error: data.error || '登録に失敗しました' }
+      setIntroducedBy(trimmed)
+      return { ok: true }
+    } catch {
+      return { ok: false, error: 'ネットワークエラー' }
     }
-
-    const { error } = await supabase
-      .from('profiles')
-      .update({ introduced_by: trimmed })
-      .eq('id', user.id)
-    if (error) return { ok: false, error: error.message }
-    setIntroducedBy(trimmed)
-    return { ok: true }
   }
 
   // 旧 API 互換: /join, /onboarding で使ってた verified / verify は
