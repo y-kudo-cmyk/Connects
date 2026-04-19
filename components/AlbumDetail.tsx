@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useEffect } from 'react'
 import { useTranslations } from 'next-intl'
-import { useCardVersions, useCardMaster, type CardProduct, type CardMaster, type UserCard, productTypeLabels } from '@/lib/useCardData'
+import { useCardVersions, useCardMaster, type CardProduct, type CardMaster, type UserCard, productTypeLabels, getCardAspect, isTradingCardFit } from '@/lib/useCardData'
 import { seventeenMembers } from '@/lib/config/constants'
 import { createClient } from '@/lib/supabase/client'
 
@@ -441,14 +441,17 @@ export default function AlbumDetail({ product, userCards, onBack, onCardTap }: A
                       const accent = memberColorMap.get(card.member_id) || memberColor
                       const wantedOnly = owned && !hasQty  // qty=0, want-only
 
+                      const cardAspect = getCardAspect(card.card_type)
+                      const bgSize = isTradingCardFit(card.card_type) ? 'cover' : 'contain'
                       return (
                         <button
                           key={card.id}
                           onClick={() => onCardTap(card, owned)}
-                          className="relative aspect-[2/3] rounded-lg overflow-hidden transition-transform active:scale-95"
+                          className="relative rounded-lg overflow-hidden transition-transform active:scale-95"
                           style={{
+                            aspectRatio: cardAspect,
                             background: hasQty
-                              ? (hasImage ? `url(${displayImage}) center/cover` : 'rgba(243,180,227,0.15)')
+                              ? (hasImage ? `rgba(243,180,227,0.15) url(${displayImage}) center / ${bgSize} no-repeat` : 'rgba(243,180,227,0.15)')
                               : '#E5E5EA',
                             border: hasQty ? `2px solid ${accent}` : wantedOnly ? '2px dashed #60A5FA' : '2px solid transparent',
                           }}

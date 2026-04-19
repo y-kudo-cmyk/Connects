@@ -5,6 +5,7 @@ import { createPortal } from 'react-dom'
 import { useTranslations } from 'next-intl'
 import { createClient } from '@/lib/supabase/client'
 import type { CardMaster, UserCard } from '@/lib/useCardData'
+import { getCardAspect, isTradingCardFit } from '@/lib/useCardData'
 import ImageCropModal from '@/components/ImageCropModal'
 import FreeCropModal from '@/components/FreeCropModal'
 
@@ -250,13 +251,20 @@ export default function CardDetailModal({ card, owned, userId, isBetaUser = fals
           </div>
 
           {/* Front / Back image */}
+          {(() => {
+            const aspect = getCardAspect(card.card_type)
+            const bgSize = isTradingCardFit(card.card_type) ? 'cover' : 'contain'
+            const bgRepeat = bgSize === 'contain' ? 'no-repeat' : 'no-repeat'
+            const bgFill = 'rgba(243,180,227,0.1)'
+            return (
           <div className="grid grid-cols-2 gap-3 mb-4">
             {/* Front */}
             <div>
               <label className="text-[10px] font-bold mb-1 block" style={{ color: '#636366' }}>{t('frontImage')}</label>
-              <div className="relative w-full aspect-[2/3] rounded-xl overflow-hidden"
+              <div className="relative w-full rounded-xl overflow-hidden"
                 style={{
-                  background: frontPreview ? `url(${frontPreview}) center/cover` : 'rgba(243,180,227,0.1)',
+                  aspectRatio: aspect,
+                  background: frontPreview ? `${bgFill} url(${frontPreview}) center / ${bgSize} ${bgRepeat}` : bgFill,
                   border: '2px dashed #E5E5EA',
                 }}>
                 <button
@@ -289,9 +297,10 @@ export default function CardDetailModal({ card, owned, userId, isBetaUser = fals
             {/* Back */}
             <div>
               <label className="text-[10px] font-bold mb-1 block" style={{ color: '#636366' }}>{t('backImage')}</label>
-              <div className="relative w-full aspect-[2/3] rounded-xl overflow-hidden"
+              <div className="relative w-full rounded-xl overflow-hidden"
                 style={{
-                  background: backPreview ? `url(${backPreview}) center/cover` : 'rgba(243,180,227,0.1)',
+                  aspectRatio: aspect,
+                  background: backPreview ? `${bgFill} url(${backPreview}) center / ${bgSize} ${bgRepeat}` : bgFill,
                   border: '2px dashed #E5E5EA',
                 }}>
                 <button
@@ -324,6 +333,8 @@ export default function CardDetailModal({ card, owned, userId, isBetaUser = fals
               <input ref={backRef} type="file" accept="image/*" className="hidden" onChange={handleImageSelect('back')} />
             </div>
           </div>
+            )
+          })()}
 
           {/* Quantity + Wanted (beta) side by side */}
           <div className="mb-4">

@@ -55,6 +55,23 @@ export interface UserCard {
   created_at: string
 }
 
+// ── Card display ratios (photocard=2:3, puzzle=1:1, etc.) ─────
+// Controls the frame aspect ratio + whether to cover/contain images.
+// Non-trading-card types use 'contain' so uploaded images aren't cropped.
+export function getCardAspect(cardType: string | null | undefined): string {
+  const t = (cardType || '').toLowerCase()
+  if (t === 'puzzle') return '1 / 1'
+  if (t === 'tear-off_poster') return '3 / 4'
+  if (t === 'scratch_card') return '3 / 4'
+  if (t === 'id_card') return '5 / 8'
+  return '2 / 3'  // photocard, luckydraw, fotocard, white, green, unknown
+}
+
+export function isTradingCardFit(cardType: string | null | undefined): boolean {
+  const t = (cardType || '').toLowerCase()
+  return t === 'photocard' || t === 'luckydraw' || t === 'fotocard'
+}
+
 // ── Product type labels ─────────────────────────────────────────
 export const productTypeLabels: Record<string, string> = {
   mini_album: 'Mini Album',
