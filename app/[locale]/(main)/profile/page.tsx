@@ -13,7 +13,7 @@ import { COUNTRIES, countryFlag } from '@/lib/countryUtils'
 import ImageCropModal from '@/components/ImageCropModal'
 import FreeCropModal from '@/components/FreeCropModal'
 import SeatInfoForm from '@/components/SeatInfoForm'
-import { useMyEntries, MyEntry, SeatInfo, compressImage } from '@/lib/useMyEntries'
+import { useMyEntries, MyEntry, SeatInfo } from '@/lib/useMyEntries'
 import { createClient } from '@/lib/supabase/client'
 import { seventeenMembers } from '@/lib/config/constants'
 
@@ -1364,21 +1364,13 @@ function ConcertHistoryModal({ entry, onClose, onSave, onUpdate }: {
   const [uploadError, setUploadError] = useState<string>('')
   const [cropState, setCropState] = useState<{ src: string; slot: 'ticket' | 'view' | 'memory1' | 'memory2' } | null>(null)
 
-  const openCrop = async (file: File, slot: 'ticket' | 'view' | 'memory1' | 'memory2') => {
+  const openCrop = (file: File, slot: 'ticket' | 'view' | 'memory1' | 'memory2') => {
+    // 昨日まで動いていたオリジナル: FileReader で直接 dataUrl を作ってクロップ画面へ
     setUploadError('')
-    try {
-      // SPOT と同じ compressImage (FileReader ベース) で dataUrl を取得。
-      // 巨大 iPhone 写真の onload 不発対策に 1600px へ事前リサイズ。
-      // compressImage 自体は reject しないのでタイムアウトで保護する。
-      const dataUrl = await Promise.race([
-        compressImage(file, 1600, 0.88),
-        new Promise<never>((_, reject) => setTimeout(() => reject(new Error('画像処理タイムアウト (10秒)')), 10000)),
-      ])
-      setCropState({ src: dataUrl, slot })
-    } catch (e) {
-      console.error('[openCrop] compress failed:', e)
-      setUploadError('画像の読み込みに失敗しました: ' + (e instanceof Error ? e.message : String(e)))
-    }
+    const reader = new FileReader()
+    reader.onload = () => setCropState({ src: reader.result as string, slot })
+    reader.onerror = () => setUploadError('画像の読み込みに失敗しました (FileReader)')
+    reader.readAsDataURL(file)
   }
 
   const handleCropConfirm = async (dataUrl: string) => {

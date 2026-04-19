@@ -6,7 +6,6 @@ import { useTranslations } from 'next-intl'
 import { createClient } from '@/lib/supabase/client'
 import type { CardMaster, UserCard } from '@/lib/useCardData'
 import { getCardAspect, isTradingCardFit } from '@/lib/useCardData'
-import { compressImage } from '@/lib/useMyEntries'
 import ImageCropModal from '@/components/ImageCropModal'
 import FreeCropModal from '@/components/FreeCropModal'
 
@@ -21,13 +20,13 @@ function dataUrlToFile(dataUrl: string, filename: string): File {
   return new File([arr], filename, { type: mime })
 }
 
-// iPhone の巨大写真で後続の <img onload> が発火しないことがあるため、
-// 圧縮して 1600px 程度の dataUrl にしてからクロップ画面へ渡す。
-async function fileToDataUrl(file: File): Promise<string> {
-  return Promise.race([
-    compressImage(file, 1600, 0.88),
-    new Promise<never>((_, reject) => setTimeout(() => reject(new Error('画像処理タイムアウト (10秒)')), 10000)),
-  ])
+function fileToDataUrl(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onload = () => resolve(reader.result as string)
+    reader.onerror = reject
+    reader.readAsDataURL(file)
+  })
 }
 
 const supabase = createClient()
