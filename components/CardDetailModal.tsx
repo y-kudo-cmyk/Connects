@@ -196,6 +196,25 @@ export default function CardDetailModal({ card, owned, userId, isBetaUser = fals
         if (error) throw new Error(`DB登録失敗: ${error.message}`)
       }
 
+      // card_master.front/back が空なら、このアップロードを台紙として昇格させる
+      // (早い者勝ち。他ユーザーが既に台紙を設定していたら何もしない)
+      if ((frontFile || backFile) && card.id) {
+        try {
+          await fetch('/api/promote-master-image', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              cardMasterId: card.id,
+              frontUrl: frontFile ? frontUrl : undefined,
+              backUrl: backFile ? backUrl : undefined,
+            }),
+          })
+        } catch (e) {
+          // 台紙昇格の失敗は保存自体には影響させない
+          console.warn('[CardDetailModal] promote-master-image failed:', e)
+        }
+      }
+
       onSave()
       setSaved(true)
       setTimeout(() => {
