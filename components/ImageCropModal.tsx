@@ -218,7 +218,7 @@ export default function ImageCropModal({ src, aspectRatio = 4, circle = false, o
   if (!portalMounted) return null
 
   return createPortal(
-    <div className="fixed inset-0 flex flex-col" style={{ background: '#111', zIndex: 200 }}>
+    <div className="fixed inset-0 flex flex-col" style={{ background: '#111', zIndex: 200000 }}>
       {/* ヘッダー */}
       <div
         className="flex items-center justify-between px-5 flex-shrink-0"

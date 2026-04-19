@@ -134,7 +134,7 @@ export default function FreeCropModal({ src, onConfirm, onCancel }: Props) {
   if (!portalMounted) return null
 
   return createPortal(
-    <div className="fixed inset-0 flex flex-col" style={{ background: '#111', zIndex: 200 }}>
+    <div className="fixed inset-0 flex flex-col" style={{ background: '#111', zIndex: 200000 }}>
       <div
         className="flex items-center justify-between px-5 flex-shrink-0"
         style={{ paddingTop: 'calc(14px + env(safe-area-inset-top, 0px))', paddingBottom: 14 }}
