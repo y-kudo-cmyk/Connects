@@ -21,7 +21,7 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
       try {
         const { data: profile } = await supabase
           .from('profiles')
-          .select('id, role')
+          .select('id, role, mail')
           .eq('id', user.id)
           .maybeSingle()
 
@@ -33,6 +33,12 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
         } else if (profile.role === 'banned') {
           setBanned(true)
           return
+        } else if ((!profile.mail || profile.mail === '') && user.email) {
+          // trigger が null email で profile を作った場合のリカバリ
+          await fetch('/api/create-profile', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+          }).catch(() => {})
         }
 
         // ログイン記録 + 通知（30分に1回まで）

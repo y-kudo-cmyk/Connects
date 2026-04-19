@@ -12,12 +12,19 @@ export async function POST(req: NextRequest) {
     process.env.SUPABASE_SERVICE_ROLE_KEY!,
   )
 
-  // 既にprofileがあるか
-  const { data: existing } = await sb.from('profiles').select('id').eq('id', user.id).maybeSingle()
-  if (existing) return NextResponse.json({ ok: true, existing: true })
-
   const email = user.email || ''
   const normalized = email.toLowerCase().trim()
+
+  // 既にprofileがあるか
+  const { data: existing } = await sb.from('profiles').select('id, mail').eq('id', user.id).maybeSingle()
+  if (existing) {
+    // mail が空なら補完 (trigger が null email で作成した or 古い create-profile)
+    if ((!existing.mail || existing.mail === '') && email) {
+      const { error: fixErr } = await sb.from('profiles').update({ mail: email }).eq('id', user.id)
+      if (fixErr) console.error('create-profile: mail backfill failed:', fixErr.message)
+    }
+    return NextResponse.json({ ok: true, existing: true, mailFilled: (!existing.mail && !!email) })
+  }
 
   // glide_usersから情報取得
   const { data: glideUser } = await sb.from('glide_users').select('*').ilike('mail', normalized).limit(1)
