@@ -16,14 +16,24 @@ export async function POST(req: NextRequest) {
   const normalized = email.toLowerCase().trim()
 
   // 既にprofileがあるか
-  const { data: existing } = await sb.from('profiles').select('id, mail').eq('id', user.id).maybeSingle()
+  const { data: existing } = await sb.from('profiles').select('id, mail, ref_code, introduced_by').eq('id', user.id).maybeSingle()
   if (existing) {
-    // mail が空なら補完 (trigger が null email で作成した or 古い create-profile)
-    if ((!existing.mail || existing.mail === '') && email) {
-      const { error: fixErr } = await sb.from('profiles').update({ mail: email }).eq('id', user.id)
-      if (fixErr) console.error('create-profile: mail backfill failed:', fixErr.message)
+    const updates: Record<string, unknown> = {}
+    // mail が空なら補完
+    if ((!existing.mail || existing.mail === '') && email) updates.mail = email
+
+    // ref_code が空で glide_users 側にあれば補完
+    if (!existing.ref_code || existing.ref_code === '') {
+      const { data: glideUser } = await sb.from('glide_users').select('ref_code, introduced_by, is_verified').ilike('mail', normalized).maybeSingle()
+      if (glideUser?.ref_code) updates.ref_code = glideUser.ref_code
+      if (!existing.introduced_by && glideUser?.introduced_by) updates.introduced_by = glideUser.introduced_by
     }
-    return NextResponse.json({ ok: true, existing: true, mailFilled: (!existing.mail && !!email) })
+
+    if (Object.keys(updates).length > 0) {
+      const { error: fixErr } = await sb.from('profiles').update(updates).eq('id', user.id)
+      if (fixErr) console.error('create-profile: backfill failed:', fixErr.message)
+    }
+    return NextResponse.json({ ok: true, existing: true, filled: Object.keys(updates) })
   }
 
   // glide_usersから情報取得

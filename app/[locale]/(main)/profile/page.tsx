@@ -1713,18 +1713,11 @@ function ReferralSection() {
           )}
         </div>
 
-        {/* 紹介者入力 */}
+        {/* 紹介者入力 — 未設定時のみ表示、登録後は非表示 */}
+        {!introducedBy && (
         <div className="pt-3" style={{ borderTop: '1px solid #F0F0F5' }}>
           <p className="text-[10px] font-bold mb-1" style={{ color: '#8E8E93' }}>紹介してくれた人のコード</p>
-          {introducedBy ? (
-            <div className="flex items-center justify-between">
-              <code className="px-3 py-2 rounded-xl text-sm font-bold" style={{ background: 'rgba(59,130,246,0.12)', color: '#3B82F6' }}>
-                {introducedBy}
-              </code>
-              <span className="text-[10px]" style={{ color: '#8E8E93' }}>登録済み</span>
-            </div>
-          ) : (
-            <>
+          <>
               <div className="flex items-center gap-2">
                 <input
                   value={inputCode}
@@ -1757,8 +1750,8 @@ function ReferralSection() {
                 紹介してくれた人がいる場合のみ入力してください (一度だけ設定可能)
               </p>
             </>
-          )}
         </div>
+        )}
       </div>
     </div>
   )
