@@ -8,12 +8,12 @@ import { useTranslations } from 'next-intl'
 import { usePageView } from '@/lib/useActivityLog'
 import { useProfile, FanClubMembership, NotifSettings } from '@/lib/useProfile'
 import { uploadDataUrl } from '@/lib/supabase/uploadImage'
-import { useReferral } from '@/lib/useReferral'
 import { COUNTRIES, countryFlag } from '@/lib/countryUtils'
 import ImageCropModal from '@/components/ImageCropModal'
 import FreeCropModal from '@/components/FreeCropModal'
 import SeatInfoForm from '@/components/SeatInfoForm'
 import { useMyEntries, MyEntry, SeatInfo } from '@/lib/useMyEntries'
+import { useReferral } from '@/lib/useReferral'
 import { createClient } from '@/lib/supabase/client'
 import { seventeenMembers } from '@/lib/config/constants'
 
@@ -190,8 +190,6 @@ export default function ProfilePage() {
   const [editingBio, setEditingBio] = useState(false)
   const [bioInput, setBioInput] = useState('')
 
-  const { myCode } = useReferral()
-  const [copied, setCopied] = useState(false)
   const [fcModal, setFcModal] = useState<'new' | string | null>(null)
   const [fcForm, setFcForm] = useState<Partial<FanClubMembership>>({})
   const [showSignOutConfirm, setShowSignOutConfirm] = useState(false)
@@ -650,19 +648,7 @@ export default function ProfilePage() {
       </div>
 
       {/* --- Referral code --- */}
-      <div className="px-4 mb-4">
-        <p className="text-xs font-semibold mb-2" style={{ color: '#8E8E93' }}>{t('Common.yourRefCode')}</p>
-        <div className="rounded-2xl p-4" style={{ background: '#FFFFFF', opacity: 0.5 }}>
-          <div className="flex items-center justify-between">
-            <span className="text-sm font-bold" style={{ color: '#8E8E93' }}>
-              {t('ProfilePage.referralFeature')}
-            </span>
-            <span className="px-3 py-1.5 rounded-full text-xs font-bold" style={{ background: '#F0F0F5', color: '#8E8E93' }}>
-              {t('ProfilePage.preparing')}
-            </span>
-          </div>
-        </div>
-      </div>
+      <ReferralSection />
 
       {/* 参戦記録 詳細モーダル */}
       {showConcerts && portalMounted && createPortal(
@@ -1661,6 +1647,119 @@ function FcField({ label, value, placeholder, onChange, inputType = 'text' }: {
         className="w-full px-3 py-2.5 rounded-xl text-sm outline-none"
         style={{ background: '#F8F9FA', border: '1px solid #E5E5EA', color: '#1C1C1E' }}
       />
+    </div>
+  )
+}
+
+// ── Referral section (my code display + copy + input for inviter) ──
+function ReferralSection() {
+  const { myCode, introducedBy, loading, setIntroducer } = useReferral()
+  const [copied, setCopied] = useState(false)
+  const [inputCode, setInputCode] = useState('')
+  const [submitState, setSubmitState] = useState<{ status: 'idle' | 'saving' | 'ok' | 'err'; msg?: string }>({ status: 'idle' })
+
+  const APP_URL = 'https://app.connectsplus.net'
+
+  const handleCopy = async () => {
+    if (!myCode) return
+    const text = `${APP_URL}\n紹介コード : ${myCode}`
+    try {
+      await navigator.clipboard.writeText(text)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 1800)
+    } catch { /* noop */ }
+  }
+
+  const handleSubmit = async () => {
+    setSubmitState({ status: 'saving' })
+    const res = await setIntroducer(inputCode)
+    if (res.ok) {
+      setSubmitState({ status: 'ok' })
+      setInputCode('')
+    } else {
+      setSubmitState({ status: 'err', msg: res.error })
+    }
+  }
+
+  if (loading) return null
+
+  return (
+    <div className="px-4 mb-4">
+      <p className="text-xs font-semibold mb-2" style={{ color: '#8E8E93' }}>紹介コード</p>
+      <div className="rounded-2xl p-4" style={{ background: '#FFFFFF' }}>
+        {/* 自分のコード */}
+        <div className="mb-3">
+          <p className="text-[10px] font-bold mb-1" style={{ color: '#8E8E93' }}>あなたの紹介コード</p>
+          {myCode ? (
+            <div className="flex items-center gap-2">
+              <code className="flex-1 px-3 py-2 rounded-xl text-sm font-bold" style={{ background: 'rgba(243,180,227,0.12)', color: '#F3B4E3' }}>
+                {myCode}
+              </code>
+              <button
+                onClick={handleCopy}
+                className="px-3 py-2 rounded-xl text-xs font-bold"
+                style={{ background: copied ? '#22C55E' : '#1C1C1E', color: '#FFFFFF', minWidth: 90 }}
+              >
+                {copied ? 'コピーしました' : 'コピー'}
+              </button>
+            </div>
+          ) : (
+            <p className="text-xs" style={{ color: '#8E8E93' }}>移行完了後に発行されます</p>
+          )}
+          {myCode && (
+            <p className="text-[10px] mt-1.5" style={{ color: '#8E8E93' }}>
+              友達にこのコードを教えて Connects+ に登録してもらいましょう
+            </p>
+          )}
+        </div>
+
+        {/* 紹介者入力 */}
+        <div className="pt-3" style={{ borderTop: '1px solid #F0F0F5' }}>
+          <p className="text-[10px] font-bold mb-1" style={{ color: '#8E8E93' }}>紹介してくれた人のコード</p>
+          {introducedBy ? (
+            <div className="flex items-center justify-between">
+              <code className="px-3 py-2 rounded-xl text-sm font-bold" style={{ background: 'rgba(59,130,246,0.12)', color: '#3B82F6' }}>
+                {introducedBy}
+              </code>
+              <span className="text-[10px]" style={{ color: '#8E8E93' }}>登録済み</span>
+            </div>
+          ) : (
+            <>
+              <div className="flex items-center gap-2">
+                <input
+                  value={inputCode}
+                  onChange={e => setInputCode(e.target.value)}
+                  placeholder="例: U000001-0027"
+                  className="flex-1 px-3 py-2 rounded-xl text-sm outline-none"
+                  style={{ background: '#F8F9FA', border: '1px solid #E5E5EA', color: '#1C1C1E' }}
+                  disabled={submitState.status === 'saving'}
+                />
+                <button
+                  onClick={handleSubmit}
+                  disabled={!inputCode.trim() || submitState.status === 'saving'}
+                  className="px-4 py-2 rounded-xl text-xs font-bold"
+                  style={{
+                    background: inputCode.trim() ? '#F3B4E3' : '#E5E5EA',
+                    color: inputCode.trim() ? '#FFFFFF' : '#8E8E93',
+                    minWidth: 70,
+                  }}
+                >
+                  {submitState.status === 'saving' ? '...' : '登録'}
+                </button>
+              </div>
+              {submitState.status === 'err' && (
+                <p className="text-[10px] mt-1.5" style={{ color: '#EF4444' }}>{submitState.msg}</p>
+              )}
+              {submitState.status === 'ok' && (
+                <p className="text-[10px] mt-1.5" style={{ color: '#22C55E' }}>登録しました ✓</p>
+              )}
+              <p className="text-[10px] mt-1.5" style={{ color: '#8E8E93' }}>
+                紹介してくれた人がいる場合のみ入力してください (一度だけ設定可能)
+              </p>
+            </>
+          )}
+        </div>
+      </div>
     </div>
   )
 }

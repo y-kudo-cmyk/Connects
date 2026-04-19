@@ -1,39 +1,67 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { createClient } from './supabase/client'
 
-const VERIFIED_KEY = 'cp-referral-verified'
-const MY_CODE_KEY = 'cp-my-referral'
+const supabase = createClient()
 
-function generateCode(): string {
-  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789' // 紛らわしい文字除外
-  let code = 'CP'
-  for (let i = 0; i < 6; i++) {
-    code += chars[Math.floor(Math.random() * chars.length)]
-  }
-  return code
-}
-
+/**
+ * DB から自分の紹介コード + 招待者コードを取得
+ * 既存 profiles.ref_code / introduced_by を参照。
+ */
 export function useReferral() {
-  const [verified, setVerified] = useState<boolean | null>(null)
   const [myCode, setMyCode] = useState<string>('')
+  const [introducedBy, setIntroducedBy] = useState<string>('')
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    const v = localStorage.getItem(VERIFIED_KEY)
-    setVerified(v === 'true')
-
-    let code = localStorage.getItem(MY_CODE_KEY)
-    if (!code) {
-      code = generateCode()
-      localStorage.setItem(MY_CODE_KEY, code)
-    }
-    setMyCode(code)
+    let cancelled = false
+    ;(async () => {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) { setLoading(false); return }
+      const { data } = await supabase
+        .from('profiles')
+        .select('ref_code, introduced_by')
+        .eq('id', user.id)
+        .maybeSingle()
+      if (cancelled) return
+      setMyCode(data?.ref_code || '')
+      setIntroducedBy(data?.introduced_by || '')
+      setLoading(false)
+    })()
+    return () => { cancelled = true }
   }, [])
 
-  const verify = () => {
-    localStorage.setItem(VERIFIED_KEY, 'true')
-    setVerified(true)
+  /** 紹介者コードを設定 (1回だけ、既に設定済みなら上書き不可) */
+  const setIntroducer = async (code: string): Promise<{ ok: boolean; error?: string }> => {
+    const trimmed = code.trim()
+    if (!trimmed) return { ok: false, error: 'コードを入力してください' }
+    if (introducedBy) return { ok: false, error: '既に紹介者が設定されています' }
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return { ok: false, error: 'ログインしてください' }
+    if (trimmed === myCode) return { ok: false, error: '自分のコードは登録できません' }
+
+    // コード存在チェック
+    const { data: refUser } = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('ref_code', trimmed)
+      .maybeSingle()
+    if (!refUser) return { ok: false, error: 'そのコードのユーザーは見つかりません' }
+
+    const { error } = await supabase
+      .from('profiles')
+      .update({ introduced_by: trimmed })
+      .eq('id', user.id)
+    if (error) return { ok: false, error: error.message }
+    setIntroducedBy(trimmed)
+    return { ok: true }
   }
 
-  return { verified, myCode, verify }
+  // 旧 API 互換: /join, /onboarding で使ってた verified / verify は
+  // URL 紹介制度を廃止したので常に true / no-op とする (登録は自由)
+  const verified = true
+  const verify = () => {}
+
+  return { myCode, introducedBy, loading, setIntroducer, verified, verify }
 }
