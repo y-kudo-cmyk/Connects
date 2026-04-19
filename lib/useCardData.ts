@@ -57,15 +57,17 @@ export interface UserCard {
 
 // ── Card display ratios (photocard=2:3, puzzle=1:1, etc.) ─────
 // Frame aspect ratio per card type. Actual SEVENTEEN goods shapes:
-//   photocard/luckydraw/fotocard = 2:3 vertical trading card
+//   photocard/luckydraw/fotocard/minicard = 2:3 vertical trading card
 //   id_card = 8:5 landscape (wallet / credit-card size)
 //   scratch_card = 2:1 landscape (lottery ticket style)
 //   puzzle = 1:1 square
+//   sticker = 1:1 square (typical album sticker)
 //   tear-off_poster = 3:4 vertical poster page
 // Non-trading types use 'contain' so uploaded images aren't cropped.
 export function getCardAspect(cardType: string | null | undefined): string {
   const t = (cardType || '').toLowerCase()
   if (t === 'puzzle') return '1 / 1'
+  if (t === 'sticker') return '1 / 1'
   if (t === 'id_card') return '8 / 5'
   if (t === 'scratch_card') return '2 / 1'
   if (t === 'tear-off_poster') return '3 / 4'
@@ -80,7 +82,7 @@ export function isLandscapeCard(cardType: string | null | undefined): boolean {
 
 export function isTradingCardFit(cardType: string | null | undefined): boolean {
   const t = (cardType || '').toLowerCase()
-  return t === 'photocard' || t === 'luckydraw' || t === 'fotocard'
+  return t === 'photocard' || t === 'luckydraw' || t === 'fotocard' || t === 'minicard'
 }
 
 // ── Product type labels ─────────────────────────────────────────
