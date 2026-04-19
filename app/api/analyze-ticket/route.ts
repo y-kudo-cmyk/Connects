@@ -19,15 +19,25 @@ export async function POST(req: NextRequest) {
     const result = await model.generateContent([
       { inlineData: { data: imageBase64, mimeType } },
       `このチケット画像から座席情報を抽出してください。
-チケットに記載されている座席に関する情報（エリア、スタンド、ゾーン、ブロック、列、席番号、ゲートなど）を見つけ、
-以下のJSON配列形式で返してください。見つかった情報のみを含め、空の項目は含めないでください。
+以下のJSON配列形式で返してください。見つかった情報のみを含めてください。
 
-[
-  { "label": "フィールド名（チケットに書いてある通りの言葉）", "value": "値" },
-  ...
-]
+重要ルール:
+- label は必ず日本語で返すこと（チケットが英語でも日本語に翻訳）
+  * Section / Area → エリア
+  * Stand → スタンド
+  * Block → ブロック
+  * Row / Line → 列
+  * Seat / Seat No → 座席番号
+  * Gate / Entrance → ゲート
+  * Zone → ゾーン
+  * Floor → フロア
+  * Level → レベル
+  * 公演日 / Date → 日時
+- value は数字や英数字はチケット通りのままでOK
+- 「Seat」「Section」のような英語ラベルは絶対に使わない
+- 見出しだけ拾って値が空のものは返さない
 
-例：
+形式:
 [
   { "label": "スタンド", "value": "アリーナ" },
   { "label": "ブロック", "value": "A" },
