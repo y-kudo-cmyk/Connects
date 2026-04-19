@@ -13,7 +13,7 @@ import { COUNTRIES, countryFlag } from '@/lib/countryUtils'
 import ImageCropModal from '@/components/ImageCropModal'
 import FreeCropModal from '@/components/FreeCropModal'
 import SeatInfoForm from '@/components/SeatInfoForm'
-import { useMyEntries, MyEntry, SeatInfo } from '@/lib/useMyEntries'
+import { useMyEntries, MyEntry, SeatInfo, compressImage } from '@/lib/useMyEntries'
 import { createClient } from '@/lib/supabase/client'
 import { seventeenMembers } from '@/lib/config/constants'
 
@@ -1364,10 +1364,16 @@ function ConcertHistoryModal({ entry, onClose, onSave, onUpdate }: {
   const [uploadError, setUploadError] = useState<string>('')
   const [cropState, setCropState] = useState<{ src: string; slot: 'ticket' | 'view' | 'memory1' | 'memory2' } | null>(null)
 
-  const openCrop = (file: File, slot: 'ticket' | 'view' | 'memory1' | 'memory2') => {
-    const reader = new FileReader()
-    reader.onload = () => setCropState({ src: reader.result as string, slot })
-    reader.readAsDataURL(file)
+  const openCrop = async (file: File, slot: 'ticket' | 'view' | 'memory1' | 'memory2') => {
+    try {
+      // iPhone の巨大写真 (20MB+ dataUrl) はクロップ画面の img.onLoad が
+      // 発火しないことがあるので、先に圧縮してからクロップ画面に渡す
+      const dataUrl = await compressImage(file, 1600, 0.88)
+      setCropState({ src: dataUrl, slot })
+    } catch (e) {
+      console.error('[openCrop] compress failed:', e)
+      setUploadError('画像の読み込みに失敗しました。別の画像で試してください。')
+    }
   }
 
   const handleCropConfirm = async (dataUrl: string) => {
