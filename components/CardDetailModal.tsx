@@ -66,9 +66,8 @@ async function uploadImage(file: File, path: string): Promise<string> {
 
 export default function CardDetailModal({ card, owned, userId, isBetaUser = false, favMemberIds = [], onClose, onSave, onDelete }: CardDetailModalProps) {
   const t = useTranslations('Goods')
-  // 未登録カードの所持デフォルト: beta=0 (求を登録しやすく), 非beta=1 (従来通り)
-  const defaultQty = owned?.quantity ?? (isBetaUser ? 0 : 1)
-  const [quantity, setQuantity] = useState(defaultQty)
+  // 未登録カードの所持デフォルトは 0 (持ってるものだけ +で増やす)
+  const [quantity, setQuantity] = useState(owned?.quantity ?? 0)
   // 欲しい枚数デフォルト: 推しメンバー=1, 推し外=0. 既存値があれば優先
   const isOshi = favMemberIds.includes(card.member_id)
   const defaultWanted = isOshi ? 1 : 0
@@ -336,7 +335,7 @@ export default function CardDetailModal({ card, owned, userId, isBetaUser = fals
                 </label>
                 <div className="flex items-center gap-2">
                   <button
-                    onClick={() => setQuantity(q => Math.max(isBetaUser ? 0 : 1, q - 1))}
+                    onClick={() => setQuantity(q => Math.max(0, q - 1))}
                     className="w-8 h-8 rounded-lg flex items-center justify-center text-base font-bold"
                     style={{ background: '#E5E5EA', color: '#636366' }}
                   >
