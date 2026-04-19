@@ -15,41 +15,49 @@ export async function POST(req: NextRequest) {
     if (!imageBase64) return NextResponse.json({ error: 'no image' }, { status: 400 })
 
     const model = genAI.getGenerativeModel({
-      model: 'gemini-2.5-flash',
+      model: 'gemini-2.5-pro',
       generationConfig: {
         responseMimeType: 'application/json',
-        temperature: 0.1,
+        temperature: 0,
       },
     })
 
     const result = await model.generateContent([
       { inlineData: { data: imageBase64, mimeType } },
-      `SEVENTEEN のコンサートチケット画像から、そのチケット1枚分の座席情報を抽出してください。
+      `日本のコンサートチケット (SEVENTEEN / K-POP公演) の画像から座席情報を OCR で抽出してください。
 
-必須ルール:
-1. このチケット1枚の座席情報のみ抽出する（他の席や座席表の一覧は拾わない）
-2. 返すのは JSON 配列のみ、余計なテキスト禁止
-3. label は必ず日本語のみ。英単語は翻訳する:
-   Seat / Seat No / Seat Number → 座席番号
-   Section / Area / Sector → エリア
-   Zone → ゾーン
-   Stand → スタンド
-   Block → ブロック
-   Row / Line → 列
-   Gate / Entrance → ゲート
-   Floor / Level → フロア
-   Date → 日時
-4. value は実際の値のみ（"Seat A1" ではなく "A1"）
-5. 値が空や "N/A" の項目は含めない
-6. 同じラベルを複数回返さない（最も具体的な1つだけ）
-7. アリーナ席/スタンド席など「席種」は label="席種" にする
+【厳守ルール】
+1. このチケット**1枚分の座席情報のみ**。座席表の一覧や他の席は絶対に拾わない。
+2. 返すのは JSON 配列のみ、余計なテキスト禁止。
+3. label は日本語のみ。英語表記は以下に翻訳:
+   - Seat / Seat No / Seat Number / Seat # → 座席番号
+   - Section / Area / Sector / セクション → エリア
+   - Stand / スタンド席 → スタンド
+   - Block / ブロック → ブロック
+   - Row / Line / 列番号 / Row No → 列
+   - Zone / ゾーン → ゾーン
+   - Gate / Entrance / Entry / 入場口 / 入口 → ゲート
+   - Floor / Level / 階 → フロア
+   - Date / Show Date / 公演日時 / 日付 → 日時
+4. value は値のみ (ラベル文字は含めない)。例: "Seat A1" なら value="A1"
+5. 値が空/N/A/-/空白のみ は含めない
+6. 同じ label を複数回返さない (最も具体的な1つを選ぶ)
+7. アリーナ/スタンド/バルコニー等の席種は label="席種" (例: value="アリーナ")
+8. 数字に「列」「番」「席」等の単位が付いてる場合は単位付きで返す (例: "3列")
+9. チケットに書かれてない情報は返さない (推測しない)
 
-出力例（この形式の JSON 配列だけ返す）:
+【日本語チケットによくあるパターン例】
+- アリーナ 1ブロック 5列 12番
+- スタンド2階 ○列 ○番
+- 指定席 H列 34番
+- バルコニー席 A-15
+
+【出力JSON形式】
 [
   {"label": "席種", "value": "アリーナ"},
-  {"label": "ブロック", "value": "A12"},
-  {"label": "列", "value": "3"},
-  {"label": "座席番号", "value": "15"},
+  {"label": "ブロック", "value": "A"},
+  {"label": "列", "value": "3列"},
+  {"label": "座席番号", "value": "15番"},
   {"label": "ゲート", "value": "北2"}
 ]`,
     ])
