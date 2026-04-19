@@ -76,8 +76,18 @@ function GoodsContent({ userId, isAdmin }: { userId: string; isAdmin: boolean })
   const [selectedProduct, setSelectedProduct] = useState<CardProduct | null>(null)
   const [modalCard, setModalCard] = useState<{ card: CardMaster; owned: UserCard | null } | null>(null)
   const [shareModal, setShareModal] = useState<{ initialProductId?: string } | null>(null)
+  const [favMemberIds, setFavMemberIds] = useState<string[]>([])
   // ベータ機能（譲・求シェア、欲しい枚数）は admin のみ
   const isBetaUser = isAdmin
+
+  useEffect(() => {
+    const supabase = createClient()
+    supabase.from('profiles').select('fav_member_ids').eq('id', userId).maybeSingle()
+      .then(({ data }) => {
+        const ids = (data?.fav_member_ids as string[] | null) ?? []
+        setFavMemberIds(Array.isArray(ids) ? ids : [])
+      })
+  }, [userId])
 
   // Build product card counts for the album list
   const userCardProductIds = useMemo(() => {
@@ -168,6 +178,7 @@ function GoodsContent({ userId, isAdmin }: { userId: string; isAdmin: boolean })
           owned={modalCard.owned}
           userId={userId}
           isBetaUser={isBetaUser}
+          favMemberIds={favMemberIds}
           onClose={() => setModalCard(null)}
           onSave={refreshUserCards}
           onDelete={handleDeleteCard}
