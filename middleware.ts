@@ -1,11 +1,23 @@
-import { type NextRequest } from 'next/server'
+import { NextResponse, type NextRequest } from 'next/server'
 import createIntlMiddleware from 'next-intl/middleware'
 import { routing } from './i18n/routing'
 import { updateSession } from '@/lib/supabase/middleware'
 
 const intlMiddleware = createIntlMiddleware(routing)
+const CANONICAL_HOST = 'app.connectsplus.net'
 
 export async function middleware(request: NextRequest) {
+  // 0. Vercel URL (.vercel.app) で開かれた場合、canonical domain に301リダイレクト
+  //    PWA として Vercel URL を追加してしまった人を app.connectsplus.net へ誘導
+  const host = request.headers.get('host') || ''
+  if (host.endsWith('.vercel.app')) {
+    const url = request.nextUrl.clone()
+    url.host = CANONICAL_HOST
+    url.port = ''
+    url.protocol = 'https:'
+    return NextResponse.redirect(url, 301)
+  }
+
   // 1. Supabase セッション管理 + 認証・認可チェック
   const supabaseResponse = await updateSession(request)
 
