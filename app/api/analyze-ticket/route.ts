@@ -1,9 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { GoogleGenerativeAI } from '@google/generative-ai'
+import { createClient } from '@/lib/supabase/server'
 
 const genAI = new GoogleGenerativeAI(process.env.GOOGLE_GENERATIVE_AI_API_KEY ?? '')
 
 export async function POST(req: NextRequest) {
+  // 認証必須（Gemini コスト保護）
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
   try {
     const { imageBase64, mimeType = 'image/jpeg' } = await req.json()
     if (!imageBase64) return NextResponse.json({ error: 'no image' }, { status: 400 })
