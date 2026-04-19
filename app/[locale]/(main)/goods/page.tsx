@@ -13,6 +13,7 @@ import ShareCollectionModal from '@/components/ShareCollectionModal'
 // admin以外でもGOODSを閲覧できる追加ユーザーID
 const EXTRA_GOODS_USER_IDS = [
   '9c19a9f6-d3ab-4ea2-8391-1df73ef556c0', // はるゆ (hakuren.x1215@gmail.com)
+  'f8c7b5c5-4cc9-48d9-aa54-fbbba17f0ac4', // まお (k.m.s-lv.38@ezweb.ne.jp)
 ]
 
 export default function GoodsPage() {
