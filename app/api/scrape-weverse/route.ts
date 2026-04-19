@@ -8,7 +8,8 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!,
 )
 
-const SCRAPE_SUBMITTER = '86c91b90-0060-4a3d-bf10-d5c846604882' // 管理者（YUTA）がscrape投稿扱い
+// Scrape投稿者: 環境変数 SCRAPE_SUBMITTER_USER_ID（未設定ならadmin YUTAのIDにfallback）
+const SCRAPE_SUBMITTER = process.env.SCRAPE_SUBMITTER_USER_ID || '86c91b90-0060-4a3d-bf10-d5c846604882'
 const APIFY_TOKEN = process.env.APIFY_API_TOKEN!
 const WEVERSE_ACCESS_TOKEN = process.env.WEVERSE_ACCESS_TOKEN || ''
 const WEVERSE_REFRESH_TOKEN = process.env.WEVERSE_REFRESH_TOKEN!

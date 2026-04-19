@@ -11,7 +11,8 @@ const supabase = createClient(
 )
 
 const BASE_URL = 'https://www.seventeen-17.jp'
-const SCRAPE_SUBMITTER = '86c91b90-0060-4a3d-bf10-d5c846604882' // 管理者アカウント（YUTA）— スクレイピング投稿はこの人の投稿として扱う
+// Scrape投稿者: 環境変数 SCRAPE_SUBMITTER_USER_ID（未設定ならadmin YUTAのIDにfallback）
+const SCRAPE_SUBMITTER = process.env.SCRAPE_SUBMITTER_USER_ID || '86c91b90-0060-4a3d-bf10-d5c846604882'
 
 // ── NEWSページから記事を抽出 ────────────────────────────────
 type NewsItem = { title: string; date: string; category: string; url: string }
