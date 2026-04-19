@@ -25,8 +25,18 @@ export default function FreeCropModal({ src, onConfirm, onCancel }: Props) {
   // クロップ矩形（コンテナ座標）
   const [crop, setCrop] = useState<Rect>({ x: 0, y: 0, w: 0, h: 0 })
   const [ready, setReady] = useState(false)
+  const [loadError, setLoadError] = useState<string>('')
   const [portalMounted, setPortalMounted] = useState(false)
   useEffect(() => { setPortalMounted(true) }, [])
+
+  // 画像読み込みタイムアウト: ready になるまでに 8 秒待ってもダメなら通知
+  useEffect(() => {
+    if (ready) return
+    const t = window.setTimeout(() => {
+      if (!ready) setLoadError('画像の読み込みに時間がかかっています。キャンセルして別の画像で試してください。')
+    }, 8000)
+    return () => window.clearTimeout(t)
+  }, [ready])
 
   // 画像読み込み完了時に初期矩形を設定
   const init = () => {
@@ -150,6 +160,7 @@ export default function FreeCropModal({ src, onConfirm, onCancel }: Props) {
           src={src}
           alt=""
           onLoad={init}
+          onError={() => setLoadError('画像を読み込めませんでした')}
           draggable={false}
           style={{
             position: 'absolute',
@@ -162,6 +173,18 @@ export default function FreeCropModal({ src, onConfirm, onCancel }: Props) {
             opacity: ready ? 1 : 0,
           }}
         />
+        {!ready && !loadError && (
+          <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none' }}>
+            <div style={{ color: '#FFF', fontSize: 13, fontWeight: 600 }}>画像読み込み中…</div>
+          </div>
+        )}
+        {loadError && (
+          <div style={{ position: 'absolute', inset: 20, display: 'flex', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none' }}>
+            <div style={{ color: '#FCA5A5', fontSize: 12, fontWeight: 600, textAlign: 'center', background: 'rgba(0,0,0,0.6)', padding: 12, borderRadius: 8 }}>
+              ⚠️ {loadError}
+            </div>
+          </div>
+        )}
 
         {/* 暗いオーバーレイ（クロップ外） */}
         {ready && (
