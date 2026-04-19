@@ -34,6 +34,7 @@ interface CardDetailModalProps {
   card: CardMaster
   owned: UserCard | null
   userId: string
+  isBetaUser?: boolean  // 譲・求シェア、欲しい枚数 UIの表示フラグ (admin用)
   onClose: () => void
   onSave: () => void
   onDelete: (id: string) => void
@@ -62,9 +63,11 @@ async function uploadImage(file: File, path: string): Promise<string> {
   return urlData.publicUrl
 }
 
-export default function CardDetailModal({ card, owned, userId, onClose, onSave, onDelete }: CardDetailModalProps) {
+export default function CardDetailModal({ card, owned, userId, isBetaUser = false, onClose, onSave, onDelete }: CardDetailModalProps) {
   const t = useTranslations('Goods')
   const [quantity, setQuantity] = useState(owned?.quantity ?? 1)
+  // quantity can be 0 to represent "want but don't have" (beta users only)
+  const [wantedCount, setWantedCount] = useState<number | null>(owned?.wanted_count ?? null)
   const [notes, setNotes] = useState(owned?.notes ?? '')
   const [frontPreview, setFrontPreview] = useState<string>(owned?.front_image_url || card.front_image_url || '')
   const [backPreview, setBackPreview] = useState<string>(owned?.back_image_url || card.back_image_url || '')
@@ -153,6 +156,7 @@ export default function CardDetailModal({ card, owned, userId, onClose, onSave, 
       if (owned) {
         const { error } = await supabase.from('user_cards').update({
           quantity,
+          wanted_count: wantedCount,
           notes,
           front_image_url: frontUrl,
           back_image_url: backUrl,
@@ -171,6 +175,7 @@ export default function CardDetailModal({ card, owned, userId, onClose, onSave, 
           front_image_url: frontUrl,
           back_image_url: backUrl,
           quantity,
+          wanted_count: wantedCount,
           notes,
           status: 'ACTIVE',
         })
@@ -189,7 +194,7 @@ export default function CardDetailModal({ card, owned, userId, onClose, onSave, 
     } finally {
       setSaving(false)
     }
-  }, [owned, card, userId, quantity, notes, frontFile, backFile, onSave, onClose])
+  }, [owned, card, userId, quantity, wantedCount, notes, frontFile, backFile, onSave, onClose])
 
   if (!mounted) return null
 
@@ -321,7 +326,7 @@ export default function CardDetailModal({ card, owned, userId, onClose, onSave, 
             <label className="text-[10px] font-bold mb-1 block" style={{ color: '#636366' }}>{t('quantity')}</label>
             <div className="flex items-center gap-3">
               <button
-                onClick={() => setQuantity(q => Math.max(1, q - 1))}
+                onClick={() => setQuantity(q => Math.max(isBetaUser ? 0 : 1, q - 1))}
                 className="w-9 h-9 rounded-lg flex items-center justify-center text-lg font-bold"
                 style={{ background: '#E5E5EA', color: '#636366' }}
               >
@@ -337,6 +342,65 @@ export default function CardDetailModal({ card, owned, userId, onClose, onSave, 
               </button>
             </div>
           </div>
+
+          {/* Wanted count (beta) */}
+          {isBetaUser && (
+          <div className="mb-4">
+            <label className="text-[10px] font-bold mb-1 block" style={{ color: '#636366' }}>
+              欲しい枚数
+              <span className="ml-1 font-normal" style={{ color: '#8E8E93' }}>
+                (未設定: 推し=1 / 推し外=0)
+              </span>
+            </label>
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => setWantedCount(null)}
+                className="px-3 h-9 rounded-lg flex items-center justify-center text-xs font-bold"
+                style={{
+                  background: wantedCount === null ? '#F3B4E3' : '#E5E5EA',
+                  color: wantedCount === null ? '#FFFFFF' : '#636366',
+                }}
+              >
+                自動
+              </button>
+              <button
+                onClick={() => setWantedCount(w => Math.max(0, (w ?? 0) - 1))}
+                disabled={wantedCount === null}
+                className="w-9 h-9 rounded-lg flex items-center justify-center text-lg font-bold"
+                style={{
+                  background: '#E5E5EA',
+                  color: '#636366',
+                  opacity: wantedCount === null ? 0.4 : 1,
+                }}
+              >
+                -
+              </button>
+              <span className="text-lg font-black w-8 text-center" style={{ color: wantedCount === null ? '#C7C7CC' : '#1C1C1E' }}>
+                {wantedCount === null ? '—' : wantedCount}
+              </span>
+              <button
+                onClick={() => setWantedCount(w => (w ?? 0) + 1)}
+                className="w-9 h-9 rounded-lg flex items-center justify-center text-lg font-bold"
+                style={{ background: '#F3B4E3', color: '#FFFFFF' }}
+              >
+                +
+              </button>
+            </div>
+            {wantedCount !== null && (
+              <div className="mt-2 flex gap-4 text-[11px]" style={{ color: '#636366' }}>
+                {quantity - wantedCount > 0 && (
+                  <span>譲: <b style={{ color: '#F3B4E3' }}>{quantity - wantedCount}</b>枚</span>
+                )}
+                {wantedCount - quantity > 0 && (
+                  <span>求: <b style={{ color: '#60A5FA' }}>{wantedCount - quantity}</b>枚</span>
+                )}
+                {quantity === wantedCount && (
+                  <span style={{ color: '#22C55E' }}>✓ 完了</span>
+                )}
+              </div>
+            )}
+          </div>
+          )}
 
           {/* Notes */}
           <div className="mb-4">

@@ -49,6 +49,7 @@ export interface UserCard {
   front_image_url: string
   back_image_url: string
   quantity: number
+  wanted_count: number | null  // ユーザー設定の「欲しい枚数」 null = デフォルトロジック適用
   notes: string
   status: string
   created_at: string

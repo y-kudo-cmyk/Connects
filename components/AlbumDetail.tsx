@@ -219,10 +219,12 @@ export default function AlbumDetail({ product, userCards, onBack, onCardTap }: A
     MERCH_BONUS: { icon: '🛒', label: 'MERCH付属',         bg: 'rgba(139,92,246,0.06)' },
   }
 
+  // "Owned" only counts rows with quantity > 0 (qty=0 means "want but don't have")
+  const isActuallyOwned = (id: string) => (ownedMap.get(id)?.quantity ?? 0) > 0
   const totalInMember = memberCards.length
-  const ownedInMember = memberCards.filter(c => ownedMap.has(c.id)).length
+  const ownedInMember = memberCards.filter(c => isActuallyOwned(c.id)).length
   const totalAll = cards.length
-  const ownedAll = cards.filter(c => ownedMap.has(c.id)).length
+  const ownedAll = cards.filter(c => isActuallyOwned(c.id)).length
   const memberProgressPct = totalInMember > 0 ? Math.round((ownedInMember / totalInMember) * 100) : 0
 
   const hasFn = (t as unknown as { has?: (key: string) => boolean }).has
@@ -339,7 +341,7 @@ export default function AlbumDetail({ product, userCards, onBack, onCardTap }: A
               const meta = TIER_META[tier] || { icon: '📌', label: tier, bg: '#F0F0F5' }
               // Tier total
               let tierOwned = 0, tierTotal = 0
-              for (const subs of tierMap.values()) for (const s of subs) { tierOwned += s.cards.filter(c => ownedMap.has(c.id)).length; tierTotal += s.cards.length }
+              for (const subs of tierMap.values()) for (const s of subs) { tierOwned += s.cards.filter(c => isActuallyOwned(c.id)).length; tierTotal += s.cards.length }
 
               return (
                 <section key={tier} className="rounded-xl px-3 py-3" style={{ background: meta.bg }}>
@@ -393,7 +395,7 @@ export default function AlbumDetail({ product, userCards, onBack, onCardTap }: A
     // INCLUDED 通常: sub内の枚数で列数を決定。3枚以下は3列（店舗幅と統一）、4枚以上は4列
     const maxSubCount = subs.reduce((acc, s) => Math.max(acc, s.cards.length), 0)
     const gridCols = isStore || compact ? 'grid-cols-1' : maxSubCount <= 3 ? 'grid-cols-3' : 'grid-cols-4'
-    const totalOwned = subs.reduce((acc, s) => acc + s.cards.filter(c => ownedMap.has(c.id)).length, 0)
+    const totalOwned = subs.reduce((acc, s) => acc + s.cards.filter(c => isActuallyOwned(c.id)).length, 0)
     const totalCards = subs.reduce((acc, s) => acc + s.cards.length, 0)
     const displayBase = isStore ? shortStoreName(base) : base
     return (
@@ -410,7 +412,7 @@ export default function AlbumDetail({ product, userCards, onBack, onCardTap }: A
                   </div>
                   <div className={isStore ? 'grid grid-cols-3 gap-2' : ''}>
                   {subs.map(({ store, versionId, cards: versionCards }) => {
-                    const ownedInVersion = versionCards.filter(c => ownedMap.has(c.id)).length
+                    const ownedInVersion = versionCards.filter(c => isActuallyOwned(c.id)).length
                     return (
                       <div key={versionId} className="mb-3">
                         {store ? (
@@ -433,9 +435,11 @@ export default function AlbumDetail({ product, userCards, onBack, onCardTap }: A
                         <div className={`grid ${gridCols} gap-2`}>
                           {versionCards.map(card => {
                       const owned = ownedMap.get(card.id) || null
+                      const hasQty = (owned?.quantity ?? 0) > 0
                       const displayImage = owned?.front_image_url || card.front_image_url || ''
                       const hasImage = !!displayImage
                       const accent = memberColorMap.get(card.member_id) || memberColor
+                      const wantedOnly = owned && !hasQty  // qty=0, want-only
 
                       return (
                         <button
@@ -443,17 +447,17 @@ export default function AlbumDetail({ product, userCards, onBack, onCardTap }: A
                           onClick={() => onCardTap(card, owned)}
                           className="relative aspect-[2/3] rounded-lg overflow-hidden transition-transform active:scale-95"
                           style={{
-                            background: owned
+                            background: hasQty
                               ? (hasImage ? `url(${displayImage}) center/cover` : 'rgba(243,180,227,0.15)')
                               : '#E5E5EA',
-                            border: owned ? `2px solid ${accent}` : '2px solid transparent',
+                            border: hasQty ? `2px solid ${accent}` : wantedOnly ? '2px dashed #60A5FA' : '2px solid transparent',
                           }}
                         >
                           {!hasImage && (
                             <div className="absolute inset-0 flex flex-col items-center justify-center p-1.5">
                               <svg
                                 width="20" height="20" viewBox="0 0 24 24" fill="none"
-                                stroke={owned ? accent : '#8E8E93'} strokeWidth="1.5"
+                                stroke={hasQty ? accent : '#8E8E93'} strokeWidth="1.5"
                               >
                                 <rect x="3" y="3" width="18" height="18" rx="2" />
                                 <circle cx="8.5" cy="8.5" r="1.5" />
@@ -461,21 +465,29 @@ export default function AlbumDetail({ product, userCards, onBack, onCardTap }: A
                               </svg>
                               <span
                                 className="text-[11px] mt-1.5 font-bold text-center leading-tight"
-                                style={{ color: owned ? '#1C1C1E' : '#636366' }}
+                                style={{ color: hasQty ? '#1C1C1E' : '#636366' }}
                               >
                                 {card.card_detail || card.card_type}
                               </span>
                             </div>
                           )}
-                          {!owned && hasImage && (
+                          {!hasQty && hasImage && (
                             <div className="absolute inset-0" style={{ background: 'rgba(0,0,0,0.5)' }} />
                           )}
-                          {owned && owned.quantity > 1 && (
+                          {hasQty && owned && owned.quantity > 1 && (
                             <div
                               className="absolute top-1 right-1 w-4 h-4 rounded-full flex items-center justify-center text-[8px] font-bold"
                               style={{ background: '#F3B4E3', color: '#FFFFFF' }}
                             >
                               {owned.quantity}
+                            </div>
+                          )}
+                          {wantedOnly && (
+                            <div
+                              className="absolute top-1 right-1 px-1.5 h-4 rounded-full flex items-center justify-center text-[8px] font-black"
+                              style={{ background: '#60A5FA', color: '#FFFFFF' }}
+                            >
+                              求
                             </div>
                           )}
                         </button>

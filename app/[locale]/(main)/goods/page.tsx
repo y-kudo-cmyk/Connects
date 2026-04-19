@@ -1,13 +1,14 @@
 'use client'
 
 import { useState, useMemo, useCallback, useEffect } from 'react'
-import { useTranslations } from 'next-intl'
+import { useTranslations, useLocale } from 'next-intl'
 import { useAuth } from '@/lib/supabase/useAuth'
 import { createClient } from '@/lib/supabase/client'
 import { useCardProducts, useUserCards, type CardProduct, type CardMaster, type UserCard } from '@/lib/useCardData'
 import AlbumList from '@/components/AlbumList'
 import AlbumDetail from '@/components/AlbumDetail'
 import CardDetailModal from '@/components/CardDetailModal'
+import ShareCollectionModal from '@/components/ShareCollectionModal'
 
 // admin以外でもGOODSを閲覧できる追加ユーザーID
 const EXTRA_GOODS_USER_IDS = [
@@ -62,17 +63,21 @@ export default function GoodsPage() {
     )
   }
 
-  return <GoodsContent userId={user.id} />
+  return <GoodsContent userId={user.id} isAdmin={role === 'admin'} />
 }
 
 // ── Main content (separated to avoid hooks-under-condition) ───
-function GoodsContent({ userId }: { userId: string }) {
+function GoodsContent({ userId, isAdmin }: { userId: string; isAdmin: boolean }) {
   const t = useTranslations('Goods')
+  const locale = useLocale()
   const { products } = useCardProducts()
   const { userCards, refresh: refreshUserCards, deleteCard } = useUserCards(userId)
 
   const [selectedProduct, setSelectedProduct] = useState<CardProduct | null>(null)
   const [modalCard, setModalCard] = useState<{ card: CardMaster; owned: UserCard | null } | null>(null)
+  const [shareModal, setShareModal] = useState<{ initialProductId?: string } | null>(null)
+  // ベータ機能（譲・求シェア、欲しい枚数）は admin のみ
+  const isBetaUser = isAdmin
 
   // Build product card counts for the album list
   const userCardProductIds = useMemo(() => {
@@ -110,9 +115,9 @@ function GoodsContent({ userId }: { userId: string }) {
 
       {/* Stats bar */}
       {userCards.length > 0 && (
-        <div className="px-4 pb-3">
+        <div className="px-4 pb-3 flex gap-2">
           <div
-            className="flex items-center gap-3 px-3 py-2 rounded-xl"
+            className="flex items-center gap-3 px-3 py-2 rounded-xl flex-1"
             style={{ background: 'rgba(243,180,227,0.08)' }}
           >
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#F3B4E3" strokeWidth="1.5">
@@ -123,6 +128,20 @@ function GoodsContent({ userId }: { userId: string }) {
               {t('collectionCount', { count: userCards.length })}
             </span>
           </div>
+          {isBetaUser && (
+            <button
+              onClick={() => setShareModal({ initialProductId: selectedProduct?.product_id })}
+              className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold"
+              style={{ background: '#1C1C1E', color: '#FFFFFF' }}
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8" />
+                <polyline points="16 6 12 2 8 6" />
+                <line x1="12" y1="2" x2="12" y2="15" />
+              </svg>
+              譲・求シェア
+            </button>
+          )}
         </div>
       )}
 
@@ -148,9 +167,22 @@ function GoodsContent({ userId }: { userId: string }) {
           card={modalCard.card}
           owned={modalCard.owned}
           userId={userId}
+          isBetaUser={isBetaUser}
           onClose={() => setModalCard(null)}
           onSave={refreshUserCards}
           onDelete={handleDeleteCard}
+        />
+      )}
+
+      {/* Share collection modal */}
+      {shareModal && (
+        <ShareCollectionModal
+          userId={userId}
+          locale={locale}
+          products={products}
+          userCards={userCards}
+          initialProductId={shareModal.initialProductId}
+          onClose={() => setShareModal(null)}
         />
       )}
     </div>
