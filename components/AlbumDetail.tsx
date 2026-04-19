@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useEffect } from 'react'
 import { useTranslations } from 'next-intl'
-import { useCardVersions, useCardMaster, type CardProduct, type CardMaster, type UserCard, productTypeLabels, getCardAspect, isTradingCardFit, isLandscapeCard } from '@/lib/useCardData'
+import { useCardVersions, useCardMaster, type CardProduct, type CardMaster, type UserCard, productTypeLabels, getCardAspect, isTradingCardFit } from '@/lib/useCardData'
 import { seventeenMembers } from '@/lib/config/constants'
 import { createClient } from '@/lib/supabase/client'
 
@@ -390,11 +390,7 @@ export default function AlbumDetail({ product, userCards, onBack, onCardTap }: A
 
   function renderBaseBlock(base: string, subs: { store: string; versionId: string; cards: CardMaster[] }[], tier: string, compact = false) {
     const isStore = STORE_TIERS.has(tier)
-    // STORE tier: サブ列幅でカード1枚（店舗内3列のうち1つ分）
-    // compact (半幅ペアで横並び): カード1枚が半幅セルを満たす
-    // INCLUDED 通常: sub内の枚数で列数を決定。3枚以下は3列（店舗幅と統一）、4枚以上は4列
-    const maxSubCount = subs.reduce((acc, s) => Math.max(acc, s.cards.length), 0)
-    const gridCols = isStore || compact ? 'grid-cols-1' : maxSubCount <= 3 ? 'grid-cols-3' : 'grid-cols-4'
+    // カードは固定高さで flex-wrap: 幅はタイプ別アスペクト比で決まる
     const totalOwned = subs.reduce((acc, s) => acc + s.cards.filter(c => isActuallyOwned(c.id)).length, 0)
     const totalCards = subs.reduce((acc, s) => acc + s.cards.length, 0)
     const displayBase = isStore ? shortStoreName(base) : base
@@ -432,7 +428,7 @@ export default function AlbumDetail({ product, userCards, onBack, onCardTap }: A
                         ) : (
                           <div className="mb-1.5" style={{ minHeight: 22 }} />
                         )}
-                        <div className={`grid ${gridCols} gap-2`}>
+                        <div className="flex flex-wrap gap-2">
                           {versionCards.map(card => {
                       const owned = ownedMap.get(card.id) || null
                       const hasQty = (owned?.quantity ?? 0) > 0
@@ -443,13 +439,13 @@ export default function AlbumDetail({ product, userCards, onBack, onCardTap }: A
 
                       const cardAspect = getCardAspect(card.card_type)
                       const bgSize = isTradingCardFit(card.card_type) ? 'cover' : 'contain'
-                      const landscape = isLandscapeCard(card.card_type)
                       return (
                         <button
                           key={card.id}
                           onClick={() => onCardTap(card, owned)}
-                          className={`relative rounded-lg overflow-hidden transition-transform active:scale-95 ${landscape ? 'col-span-2' : ''}`}
+                          className="relative rounded-lg overflow-hidden transition-transform active:scale-95 flex-shrink-0"
                           style={{
+                            height: 128,
                             aspectRatio: cardAspect,
                             background: hasQty
                               ? (hasImage ? `rgba(243,180,227,0.15) url(${displayImage}) center / ${bgSize} no-repeat` : 'rgba(243,180,227,0.15)')
