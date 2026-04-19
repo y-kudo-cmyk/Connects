@@ -1,0 +1,15 @@
+[
+  {"box_2d": [168, 248, 297, 366], "label": "HERE_1"},
+  {"box_2d": [168, 371, 297, 489], "label": "HERE_2"},
+  {"box_2d": [168, 510, 297, 628], "label": "HEAR_1"},
+  {"box_2d": [168, 633, 297, 751], "label": "HEAR_2"},
+  {"box_2d": [364, 171, 493, 312], "label": "DEAR_binder"},
+  {"box_2d": [364, 341, 493, 459], "label": "DEAR_pc1"},
+  {"box_2d": [364, 464, 493, 582], "label": "DEAR_pc2"},
+  {"box_2d": [364, 587, 493, 705], "label": "DEAR_pc3"},
+  {"box_2d": [364, 710, 493, 828], "label": "DEAR_pc4"},
+  {"box_2d": [561, 338, 676, 443], "label": "WEVERSE_qr"},
+  {"box_2d": [561, 447, 676, 552], "label": "WEVERSE_pc1"},
+  {"box_2d": [561, 556, 676, 661], "label": "WEVERSE_pc2"},
+  {"box_2d": [744, 447, 858, 552], "label": "KIT_pc1"}
+]

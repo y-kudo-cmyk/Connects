@@ -1,0 +1,119 @@
+[
+  {
+    "version": "HERE",
+    "card_type": "photocard",
+    "detail": "Photocard 1",
+    "x": 260,
+    "y": 310,
+    "width": 340,
+    "height": 510
+  },
+  {
+    "version": "HERE",
+    "card_type": "photocard",
+    "detail": "Photocard 2",
+    "x": 660,
+    "y": 310,
+    "width": 340,
+    "height": 510
+  },
+  {
+    "version": "HEAR",
+    "card_type": "photocard",
+    "detail": "Photocard 1",
+    "x": 1060,
+    "y": 310,
+    "width": 340,
+    "height": 510
+  },
+  {
+    "version": "HEAR",
+    "card_type": "photocard",
+    "detail": "Photocard 2",
+    "x": 1460,
+    "y": 310,
+    "width": 340,
+    "height": 510
+  },
+  {
+    "version": "DEAR",
+    "card_type": "binder",
+    "detail": "Binder",
+    "x": 260,
+    "y": 800,
+    "width": 340,
+    "height": 510
+  },
+  {
+    "version": "DEAR",
+    "card_type": "photocard",
+    "detail": "Photocard 1",
+    "x": 660,
+    "y": 800,
+    "width": 340,
+    "height": 510
+  },
+  {
+    "version": "DEAR",
+    "card_type": "photocard",
+    "detail": "Photocard 2",
+    "x": 1060,
+    "y": 800,
+    "width": 340,
+    "height": 510
+  },
+  {
+    "version": "DEAR",
+    "card_type": "photocard",
+    "detail": "Photocard 3",
+    "x": 1460,
+    "y": 800,
+    "width": 340,
+    "height": 510
+  },
+  {
+    "version": "DEAR",
+    "card_type": "photocard",
+    "detail": "Photocard 4",
+    "x": 1860,
+    "y": 800,
+    "width": 340,
+    "height": 510
+  },
+  {
+    "version": "WEVERSE",
+    "card_type": "qr",
+    "detail": "QR",
+    "x": 340,
+    "y": 1390,
+    "width": 340,
+    "height": 510
+  },
+  {
+    "version": "WEVERSE",
+    "card_type": "photocard",
+    "detail": "Photocard 1",
+    "x": 740,
+    "y": 1390,
+    "width": 340,
+    "height": 510
+  },
+  {
+    "version": "WEVERSE",
+    "card_type": "photocard",
+    "detail": "Photocard 2",
+    "x": 1140,
+    "y": 1390,
+    "width": 340,
+    "height": 510
+  },
+  {
+    "version": "KIT",
+    "card_type": "photocard",
+    "detail": "Photocard 1",
+    "x": 890,
+    "y": 1980,
+    "width": 340,
+    "height": 510
+  }
+]

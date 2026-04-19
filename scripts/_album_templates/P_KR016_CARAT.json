@@ -1,0 +1,13 @@
+{
+  "productId": "P_KR016",
+  "versionId": "V_KR016_05",
+  "albumName": "Face the Sun ep.5 Pioneer (CARAT ver.)",
+  "imageSize": { "width": 2048, "height": 1866 },
+  "cards": [
+    { "cardType": "photocard", "detail": "Photocard 1", "left": 168,  "top": 547, "width": 293, "height": 455 },
+    { "cardType": "photocard", "detail": "Photocard 2", "left": 481,  "top": 547, "width": 293, "height": 455 },
+    { "cardType": "photocard", "detail": "Photocard 3", "left": 795,  "top": 547, "width": 293, "height": 455 },
+    { "cardType": "photocard", "detail": "Photocard 4", "left": 1108, "top": 547, "width": 295, "height": 455 },
+    { "cardType": "binder",    "detail": "Binder",      "left": 1462, "top": 444, "width": 410, "height": 567 }
+  ]
+}

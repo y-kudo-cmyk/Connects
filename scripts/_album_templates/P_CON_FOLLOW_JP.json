@@ -1,0 +1,15 @@
+{
+  "productId": "P_CON_FOLLOW_JP",
+  "albumName": "『SEVENTEEN TOUR 'FOLLOW' TO JAPAN』",
+  "imageSize": { "width": 3508, "height": 2482 },
+  "cards": [
+    { "version": "FOLLOW", "cardType": "photocard", "detail": "Photocard 1", "left": 674,  "top": 615,  "width": 477, "height": 670 },
+    { "version": "FOLLOW", "cardType": "photocard", "detail": "Photocard 2", "left": 1242, "top": 615,  "width": 474, "height": 670 },
+    { "version": "FOLLOW", "cardType": "photocard", "detail": "Photocard 3", "left": 1793, "top": 615,  "width": 477, "height": 670 },
+    { "version": "FOLLOW", "cardType": "photocard", "detail": "Photocard 4", "left": 2354, "top": 615,  "width": 477, "height": 670 },
+    { "version": "FOLLOW", "cardType": "photocard", "detail": "Photocard 5", "left": 674,  "top": 1409, "width": 477, "height": 667 },
+    { "version": "FOLLOW", "cardType": "photocard", "detail": "Photocard 6", "left": 1235, "top": 1409, "width": 477, "height": 667 },
+    { "version": "FOLLOW", "cardType": "photocard", "detail": "Photocard 7", "left": 1793, "top": 1409, "width": 477, "height": 667 },
+    { "version": "FOLLOW", "cardType": "photocard", "detail": "Photocard 8", "left": 2354, "top": 1409, "width": 477, "height": 667 }
+  ]
+}

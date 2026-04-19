@@ -1,0 +1,13 @@
+{
+  "productId": "P_CON_FOLLOW_AGAIN_KR",
+  "albumName": "FOLLOW AGAIN IN SEOUL",
+  "imageSize": { "width": 3508, "height": 2482 },
+  "cards": [
+    { "version": "FOLLOW_AGAIN", "cardType": "photocard", "detail": "Photocard 1", "left": 645,  "top": 662,  "width": 407, "height": 615 },
+    { "version": "FOLLOW_AGAIN", "cardType": "photocard", "detail": "Photocard 2", "left": 1098, "top": 662,  "width": 403, "height": 615 },
+    { "version": "FOLLOW_AGAIN", "cardType": "photocard", "detail": "Photocard 3", "left": 1551, "top": 662,  "width": 407, "height": 615 },
+    { "version": "FOLLOW_AGAIN", "cardType": "photocard", "detail": "Photocard 4", "left": 2003, "top": 662,  "width": 407, "height": 615 },
+    { "version": "FOLLOW_AGAIN", "cardType": "photocard", "detail": "Photocard 5", "left": 2456, "top": 662,  "width": 407, "height": 615 },
+    { "version": "FOLLOW_AGAIN", "cardType": "photocard", "detail": "Photocard 6", "left": 2231, "top": 1459, "width": 403, "height": 613 }
+  ]
+}

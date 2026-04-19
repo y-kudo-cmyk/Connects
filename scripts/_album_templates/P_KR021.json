@@ -1,0 +1,20 @@
+{
+  "productId": "P_KR021",
+  "albumName": "17 IS RIGHT HERE",
+  "imageSize": { "width": 2481, "height": 3508 },
+  "cards": [
+    { "version": "HERE",    "cardType": "photocard", "detail": "Photocard 1", "left": 615,  "top": 589,  "width": 293, "height": 453 },
+    { "version": "HERE",    "cardType": "photocard", "detail": "Photocard 2", "left": 920,  "top": 589,  "width": 293, "height": 453 },
+    { "version": "HEAR",    "cardType": "photocard", "detail": "Photocard 1", "left": 1265, "top": 589,  "width": 293, "height": 453 },
+    { "version": "HEAR",    "cardType": "photocard", "detail": "Photocard 2", "left": 1570, "top": 589,  "width": 293, "height": 453 },
+    { "version": "DEAR",    "cardType": "binder",    "detail": "Binder",      "left": 424,  "top": 1277, "width": 350, "height": 453 },
+    { "version": "DEAR",    "cardType": "photocard", "detail": "Photocard 1", "left": 846,  "top": 1277, "width": 293, "height": 453 },
+    { "version": "DEAR",    "cardType": "photocard", "detail": "Photocard 2", "left": 1151, "top": 1277, "width": 293, "height": 453 },
+    { "version": "DEAR",    "cardType": "photocard", "detail": "Photocard 3", "left": 1456, "top": 1277, "width": 293, "height": 453 },
+    { "version": "DEAR",    "cardType": "photocard", "detail": "Photocard 4", "left": 1762, "top": 1277, "width": 293, "height": 453 },
+    { "version": "WEVERSE", "cardType": "qr",        "detail": "QR Card",     "left": 839,  "top": 1968, "width": 261, "height": 403 },
+    { "version": "WEVERSE", "cardType": "photocard", "detail": "Photocard 1", "left": 1109, "top": 1968, "width": 261, "height": 403 },
+    { "version": "WEVERSE", "cardType": "photocard", "detail": "Photocard 2", "left": 1379, "top": 1968, "width": 261, "height": 403 },
+    { "version": "KIT",     "cardType": "photocard", "detail": "Photocard 1", "left": 1109, "top": 2610, "width": 261, "height": 400 }
+  ]
+}

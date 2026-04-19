@@ -1,0 +1,554 @@
+{
+  "meta": {
+    "scraped_at": "2026-04-18",
+    "scraper": "Claude Code agent via WebFetch + WebSearch (network-level curl/fetch was blocked in sandbox; runnable scraper is scripts/scraped/scrape-site.mjs)",
+    "source_site": "https://www.seventeen-17.jp/",
+    "db_snapshot_source": "scripts/album_master.csv + scripts/fix-versions-phase1-2.mjs + scripts/seed-serenade-*.mjs + scripts/seed-happy-burstday-cards.mjs (DB not queried live; db_dump.mjs included for future runs)",
+    "coverage_note": "Announcement posts for the 10 highest-priority releases (2022-2026) were fully parsed. Older JP singles and 2015-2020 KR releases have only discography-level data."
+  },
+  "albums": [
+    {
+      "db_product_id": "P_UN006",
+      "db_product_name": "Serenade",
+      "db_release_date": "2026-01-12",
+      "db_versions_csv": ["standard"],
+      "db_versions_effective": [
+        "BLUE/ECHO - Weverse Shop",
+        "BLUE/ECHO - UMS",
+        "BLUE/ECHO - HMV/Loppi",
+        "BLUE/ECHO - Tower",
+        "BLUE/ECHO - TSUTAYA",
+        "COMPACT - Weverse Shop",
+        "COMPACT - UMS",
+        "COMPACT - HMV/Loppi",
+        "COMPACT - Tower",
+        "COMPACT - TSUTAYA",
+        "LUCKY DRAW - HMV",
+        "LUCKY DRAW - Tower",
+        "LUCKY DRAW - TSUTAYA"
+      ],
+      "db_versions_effective_note": "These version_ids actually use P_UN005 in seed-serenade-*.mjs even though CSV maps P_UN005=Hype Vibes, P_UN006=Serenade. DISCREPANCY flagged.",
+      "site_title": "DxS 1st Mini Album「Serenade」",
+      "site_release_date": "2026.01.12 (KR) / pre-order listed as 2025.12.17",
+      "site_discography_slug": "(not discovered; search returned no individual slug)",
+      "site_announcement_slug": "ycaftw",
+      "site_versions": [
+        { "name": "BLUE Ver.", "code": "HYBJ-05069", "price": 3300 },
+        { "name": "ECHO Ver.", "code": "HYBJ-05070", "price": 3300 },
+        { "name": "COMPACT Ver.", "code": "HYBJ-05072", "price": 2090, "random_types": 2 }
+      ],
+      "store_benefits": [
+        { "applies_to": ["BLUE Ver.", "ECHO Ver."], "store": "Weverse Shop", "benefit": "ホログラム入りスペシャルフォトカード", "count": 3, "image": "https://contents.perfect.ne.jp/media/974caa/wnxwnu0ns6.jpg" },
+        { "applies_to": ["BLUE Ver.", "ECHO Ver."], "store": "UNIVERSAL MUSIC STORE", "benefit": "スペシャルフォトカード", "count": 3, "image": "https://contents.perfect.ne.jp/media/974caa/5jig90h4mw.jpg" },
+        { "applies_to": ["BLUE Ver.", "ECHO Ver."], "store": "HMV・Loppi", "benefit": "スペシャルフォトカード", "count": 2, "image": "https://contents.perfect.ne.jp/media/974caa/fc4duaomwd.jpg" },
+        { "applies_to": ["BLUE Ver.", "ECHO Ver."], "store": "TOWER RECORDS", "benefit": "スペシャルフォトカード", "count": 2, "image": "https://contents.perfect.ne.jp/media/974caa/eyim6f8xcl.jpg" },
+        { "applies_to": ["BLUE Ver.", "ECHO Ver."], "store": "TSUTAYA RECORDS", "benefit": "スペシャルフォトカード", "count": 2, "image": "https://contents.perfect.ne.jp/media/974caa/csarku0rro.jpg" },
+        { "applies_to": ["COMPACT Ver."], "store": "Weverse Shop", "benefit": "ホログラム入りスペシャルフォトカード", "count": 3, "image": "https://contents.perfect.ne.jp/media/974caa/evzskndizc.jpg" },
+        { "applies_to": ["COMPACT Ver."], "store": "UNIVERSAL MUSIC STORE", "benefit": "スペシャルフォトカード", "count": 3, "image": "https://contents.perfect.ne.jp/media/974caa/6impkxxsdt.jpg" },
+        { "applies_to": ["COMPACT Ver."], "store": "HMV・Loppi", "benefit": "スペシャルフォトカード", "count": 2, "image": "https://contents.perfect.ne.jp/media/974caa/12i1rmxist.jpg" },
+        { "applies_to": ["COMPACT Ver."], "store": "TOWER RECORDS", "benefit": "スペシャルフォトカード", "count": 2, "image": "https://contents.perfect.ne.jp/media/974caa/nlf7t0gex6.jpg" },
+        { "applies_to": ["COMPACT Ver."], "store": "TSUTAYA RECORDS", "benefit": "スペシャルフォトカード", "count": 2, "image": "https://contents.perfect.ne.jp/media/974caa/ixjofu2x8e.jpg" },
+        { "applies_to": ["SET 2-pack BLUE+ECHO"], "store": "Weverse Shop", "benefit": "A4クリアポスター", "count": 1 },
+        { "applies_to": ["SET 2-pack BLUE+ECHO"], "store": "UNIVERSAL MUSIC STORE", "benefit": "A4クリアファイル", "count": 1 }
+      ],
+      "comparison": {
+        "version_match": "partial",
+        "missing_release_versions_in_db": ["BLUE Ver.", "ECHO Ver.", "COMPACT Ver."],
+        "note": "DB has no standard album versions for Serenade under P_UN006 - only BENEFIT_/LUCKY_ store-benefit versions under P_UN005. The master album versions BLUE/ECHO/COMPACT are missing. Also product_id mapping conflict between CSV (P_UN006) and seed scripts (P_UN005)."
+      }
+    },
+
+    {
+      "db_product_id": "P_UN005",
+      "db_product_name": "Hype Vibes",
+      "db_release_date": "2025-09-29",
+      "db_versions_csv": ["standard"],
+      "db_versions_effective_note": "Seed scripts for 'Serenade' wrote BENEFIT_/LUCKY_ versions under P_UN005, effectively clobbering HYPE VIBES. HYPE VIBES has no dedicated version rows.",
+      "site_title": "CxM 1st Mini Album「HYPE VIBES」",
+      "site_release_date": "2025.09.29 (KR) / 2025.09.30 (JP)",
+      "site_announcement_slug": "propwn",
+      "site_versions": [
+        { "name": "buddy Ver.", "code": "HYBJ-05062", "price": 3300 },
+        { "name": "combi Ver.", "code": "HYBJ-05063", "price": 3300 },
+        { "name": "COMPACT Ver.", "code": "HYBJ-05065", "price": 2090, "random_types": 3 }
+      ],
+      "store_benefits": [
+        { "applies_to": ["buddy Ver.", "combi Ver."], "store": "Weverse Shop", "benefit": "ホログラム入りスペシャルフォトカード", "count": 3, "image": "https://contents.perfect.ne.jp/media/974caa/gahgte0jbw.jpg" },
+        { "applies_to": ["buddy Ver.", "combi Ver."], "store": "UNIVERSAL MUSIC STORE", "benefit": "スペシャルフォトカード", "count": 3, "image": "https://contents.perfect.ne.jp/media/974caa/k23eds64z0.jpg" },
+        { "applies_to": ["buddy Ver.", "combi Ver."], "store": "HMV・Loppi", "benefit": "スペシャルフォトカード", "count": 3, "image": "https://contents.perfect.ne.jp/media/974caa/gypnxti059.jpg" },
+        { "applies_to": ["buddy Ver.", "combi Ver."], "store": "TOWER RECORDS", "benefit": "スペシャルフォトカード", "count": 3, "image": "https://contents.perfect.ne.jp/media/974caa/tth58kbwtz.jpg" },
+        { "applies_to": ["buddy Ver.", "combi Ver."], "store": "TSUTAYA RECORDS", "benefit": "スペシャルフォトカード", "count": 3, "image": "https://contents.perfect.ne.jp/media/974caa/unrn7zgzmz.jpg" },
+        { "applies_to": ["buddy Ver.", "combi Ver."], "store": "Amazon", "benefit": "スペシャルフォトカード", "count": 3, "image": "https://contents.perfect.ne.jp/media/974caa/auua8pmkos.jpg" },
+        { "applies_to": ["buddy Ver.", "combi Ver."], "store": "Rakuten Books", "benefit": "スペシャルフォトカード", "count": 3, "image": "https://contents.perfect.ne.jp/media/974caa/szlown3nzy.jpg" },
+        { "applies_to": ["COMPACT Ver."], "store": "Weverse Shop", "benefit": "ホログラム入りスペシャルフォトカード", "count": 3, "image": "https://contents.perfect.ne.jp/media/974caa/qmgqbtcido.jpg" },
+        { "applies_to": ["COMPACT Ver."], "store": "UNIVERSAL MUSIC STORE", "benefit": "スペシャルフォトカード", "count": 3, "image": "https://contents.perfect.ne.jp/media/974caa/6cr9ji2gnz.jpg" },
+        { "applies_to": ["COMPACT Ver."], "store": "HMV・Loppi", "benefit": "スペシャルフォトカード", "count": 3, "image": "https://contents.perfect.ne.jp/media/974caa/bpqcvrge7r.jpg" },
+        { "applies_to": ["COMPACT Ver."], "store": "TOWER RECORDS", "benefit": "スペシャルフォトカード", "count": 3, "image": "https://contents.perfect.ne.jp/media/974caa/ncubwpyllv.jpg" },
+        { "applies_to": ["COMPACT Ver."], "store": "TSUTAYA RECORDS", "benefit": "スペシャルフォトカード", "count": 3, "image": "https://contents.perfect.ne.jp/media/974caa/pj3i8r5ots.jpg" }
+      ],
+      "comparison": {
+        "version_match": "missing",
+        "missing_release_versions_in_db": ["buddy Ver.", "combi Ver.", "COMPACT Ver."],
+        "missing_store_benefits_in_db": "all 12 store benefits (7 stores for buddy/combi, 5+ for COMPACT) are missing"
+      }
+    },
+
+    {
+      "db_product_id": "P_KR023",
+      "db_product_name": "Happy Burstday",
+      "db_release_date": "2025-05-26",
+      "db_versions_effective": [
+        "NEW ESCAPE Ver.",
+        "NEW MYSELF Ver.",
+        "NEW BURSTDAY Ver.",
+        "DAREDEVIL Ver.",
+        "Weverse Albums Ver.",
+        "KiT NEW ESCAPE Ver.",
+        "KiT NEW BURSTDAY Ver."
+      ],
+      "db_versions_csv_raw": ["BURST", "PARTY", "DAY", "CARAT ver."],
+      "db_versions_csv_note": "CSV has placeholder 'BURST/PARTY/DAY/CARAT'; fix-versions-phase1-2.mjs replaced with correct names.",
+      "site_title": "SEVENTEEN 5th Album「HAPPY BURSTDAY」",
+      "site_release_date": "2025.05.26 (KR) / 2025.05.27 (JP)",
+      "site_discography_slug": "incaiv",
+      "site_announcement_slug": "nceard",
+      "site_versions": [
+        { "name": "NEW ESCAPE Ver.", "price": 3410 },
+        { "name": "NEW MYSELF Ver.", "price": 3410 },
+        { "name": "NEW BURSTDAY Ver.", "price": 3410 },
+        { "name": "DAREDEVIL Ver.", "price": 2090, "random_types": 12 }
+      ],
+      "store_benefits": [
+        { "applies_to": ["NEW ESCAPE Ver.", "NEW MYSELF Ver.", "NEW BURSTDAY Ver."], "store": "Weverse Shop", "benefit": "ホログラム入りフォトカード", "count": 12, "image": "https://contents.perfect.ne.jp/media/974caa/ezeexl6hmm.jpg" },
+        { "applies_to": ["NEW ESCAPE Ver.", "NEW MYSELF Ver.", "NEW BURSTDAY Ver."], "store": "UNIVERSAL MUSIC STORE", "benefit": "フォトカード", "count": 12, "image": "https://contents.perfect.ne.jp/media/974caa/f8vl3pxxix.jpg" },
+        { "applies_to": ["NEW ESCAPE Ver.", "NEW MYSELF Ver.", "NEW BURSTDAY Ver."], "store": "HMV・Loppi", "benefit": "フォトカード", "count": 12, "image": "https://contents.perfect.ne.jp/media/974caa/0isqfriol6.jpg" },
+        { "applies_to": ["NEW ESCAPE Ver.", "NEW MYSELF Ver.", "NEW BURSTDAY Ver."], "store": "TOWER RECORDS", "benefit": "フォトカード", "count": 12, "image": "https://contents.perfect.ne.jp/media/974caa/rrzuhhll6t.jpg" },
+        { "applies_to": ["NEW ESCAPE Ver.", "NEW MYSELF Ver.", "NEW BURSTDAY Ver."], "store": "TSUTAYA RECORDS", "benefit": "フォトカード", "count": 12, "image": "https://contents.perfect.ne.jp/media/974caa/w3fl5gu1fs.jpg" },
+        { "applies_to": ["3-version SET"], "store": "Weverse Shop", "benefit": "アコーディオンフォトカード+ホログラムカード", "count": 3, "image": "https://contents.perfect.ne.jp/media/974caa/buj1pugrgt.jpg" },
+        { "applies_to": ["3-version SET"], "store": "UNIVERSAL MUSIC STORE", "benefit": "A4クリアファイル+フォトカード", "count": 3, "image": "https://contents.perfect.ne.jp/media/974caa/gvxstskp1c.jpg" }
+      ],
+      "comparison": {
+        "version_match": "clean (after fix-versions-phase1-2.mjs)",
+        "orphaned_db_versions": ["Weverse Albums Ver.", "KiT NEW ESCAPE Ver.", "KiT NEW BURSTDAY Ver."],
+        "orphaned_db_versions_note": "These 3 exist in DB but are not listed on the Japan release announcement. Weverse Albums is a KR-only digital-style release; KiT is a KR chip album. Likely legit but flag since Japan site does not carry them.",
+        "missing_store_benefits_in_db": "all 7 chain-specific benefits are missing (not seeded)"
+      }
+    },
+
+    {
+      "db_product_id": "P_KR022",
+      "db_product_name": "SPILL THE FEELS",
+      "db_release_date": "2024-10-14",
+      "db_versions_csv": ["CARAT", "FEELING", "SPILL"],
+      "db_versions_post_fix": ["CARAT", "FEELING", "SPILL"],
+      "db_versions_note": "'FEELING'/'SPILL' are NOT real version names on the JP site; actual versions are 'FEEL BLUE (Ver.0)', 'FEEL NEW (Ver.1)', 'FEEL YOU (Ver.2)'. Also CARAT Ver. is a separate SKU released Oct 15. fix-versions-phase1-2 deleted V_KR022_04 (a duplicate CARAT) but did NOT rename the others.",
+      "site_title": "SEVENTEEN 12th Mini Album「SPILL THE FEELS」",
+      "site_release_date": "2024.10.14 (KR) / 2024.10.15 (JP)",
+      "site_discography_slug": "xlrnjm",
+      "site_announcement_slugs": {
+        "main": "dsqfzx",
+        "standard_benefits": "fsyzgw",
+        "carat_benefits": "fnmapa"
+      },
+      "site_versions": [
+        { "name": "FEEL BLUE (Ver.0)", "price": 2035 },
+        { "name": "FEEL NEW (Ver.1)", "price": 2035 },
+        { "name": "FEEL YOU (Ver.2)", "price": 2035 },
+        { "name": "CARAT Ver.", "price": 2035, "random_types": 13 }
+      ],
+      "store_benefits": [
+        { "applies_to": ["FEEL BLUE", "FEEL NEW", "FEEL YOU"], "store": "Weverse Shop", "benefit": "ホログラム入りスペシャルフォトカード", "count": 13, "image": "https://contents.perfect.ne.jp/media/974caa/bnubsph9vx.jpg" },
+        { "applies_to": ["FEEL BLUE", "FEEL NEW", "FEEL YOU"], "store": "UNIVERSAL MUSIC STORE", "benefit": "スペシャルフォトカード", "count": 13, "image": "https://contents.perfect.ne.jp/media/974caa/tibbnthawz.jpg" },
+        { "applies_to": ["FEEL BLUE", "FEEL NEW", "FEEL YOU"], "store": "HMV・Loppi", "benefit": "スペシャルフォトカード", "count": 13, "image": "https://contents.perfect.ne.jp/media/974caa/4y74oqkyas.jpg" },
+        { "applies_to": ["FEEL BLUE", "FEEL NEW", "FEEL YOU"], "store": "TOWER RECORDS", "benefit": "スペシャルフォトカード", "count": 13, "image": "https://contents.perfect.ne.jp/media/974caa/vpsvayzjdx.jpg" },
+        { "applies_to": ["FEEL BLUE", "FEEL NEW", "FEEL YOU"], "store": "TSUTAYA RECORDS", "benefit": "スペシャルフォトカード", "count": 13, "image": "https://contents.perfect.ne.jp/media/974caa/3nvpfo3jzv.jpg" },
+        { "applies_to": ["3-Version SET"], "store": "Weverse Shop", "benefit": "フォトカードホルダー", "count": 1, "image": "https://contents.perfect.ne.jp/media/974caa/md3zyegq1t.jpg" },
+        { "applies_to": ["3-Version SET"], "store": "UNIVERSAL MUSIC STORE", "benefit": "A4クリアファイル", "count": 1, "image": "https://contents.perfect.ne.jp/media/974caa/6mdt6ycnnk.jpg" },
+        { "applies_to": ["CARAT Ver."], "store": "Weverse Shop", "benefit": "ホログラム入りスペシャルフォトカード", "count": 13, "image": "https://contents.perfect.ne.jp/media/974caa/c3q137z3qr.jpg" },
+        { "applies_to": ["CARAT Ver."], "store": "UNIVERSAL MUSIC STORE", "benefit": "スペシャルフォトカード", "count": 13, "image": "https://contents.perfect.ne.jp/media/974caa/iwjwzjvh0r.jpg" },
+        { "applies_to": ["CARAT Ver."], "store": "HMV・Loppi", "benefit": "スペシャルフォトカード", "count": 13, "image": "https://contents.perfect.ne.jp/media/974caa/buvhtbvbok.jpg" },
+        { "applies_to": ["CARAT Ver."], "store": "TOWER RECORDS", "benefit": "スペシャルフォトカード", "count": 13, "image": "https://contents.perfect.ne.jp/media/974caa/kdgzth55rd.jpg" },
+        { "applies_to": ["CARAT Ver."], "store": "TSUTAYA RECORDS", "benefit": "スペシャルフォトカード", "count": 13, "image": "https://contents.perfect.ne.jp/media/974caa/wjsytaths7.jpg" }
+      ],
+      "comparison": {
+        "version_match": "mismatch",
+        "version_mismatches": [
+          { "db_name": "FEELING", "site_name_candidate": "FEEL NEW (Ver.1)" },
+          { "db_name": "SPILL", "site_name_candidate": "FEEL YOU (Ver.2) or FEEL BLUE (Ver.0)" }
+        ],
+        "missing_db_version": "FEEL BLUE (Ver.0) is likely missing — CSV only lists 3 versions but site has 4 (BLUE/NEW/YOU/CARAT)",
+        "missing_store_benefits_in_db": "all 12 chain-specific benefits missing"
+      }
+    },
+
+    {
+      "db_product_id": "P_KR021",
+      "db_product_name": "17 IS RIGHT HERE",
+      "db_release_date": "2024-04-29",
+      "db_versions_csv": ["HERE", "DEAR"],
+      "site_title": "SEVENTEEN BEST ALBUM「17 IS RIGHT HERE」",
+      "site_release_date": "2024.04.29 (KR) / 2024.04.30 (JP)",
+      "site_discography_slug": "dkmcme",
+      "site_announcement_slugs": { "main": "ocyari", "chain_benefits": "qdzwfu" },
+      "site_versions": [
+        { "name": "HERE Ver.", "code": "HYBJ-05001", "price": 5874 },
+        { "name": "HEAR Ver.", "code": "HYBJ-05002", "price": 5874 }
+      ],
+      "store_benefits": [
+        { "applies_to": ["HERE Ver.", "HEAR Ver."], "store": "Weverse Shop", "benefit": "ホログラム入りスペシャルフォトカード", "count": 13, "image": "https://contents.perfect.ne.jp/media/974caa/blbij6bgnx.jpg" },
+        { "applies_to": ["HERE Ver.", "HEAR Ver."], "store": "UNIVERSAL MUSIC STORE", "benefit": "スペシャルフォトカード", "count": 13, "image": "https://contents.perfect.ne.jp/media/974caa/uirjhdaswl.jpg" },
+        { "applies_to": ["HERE Ver.", "HEAR Ver."], "store": "HMV・Loppi", "benefit": "スペシャルフォトカード", "count": 13, "image": "https://contents.perfect.ne.jp/media/974caa/0mdxixgn61.jpg" },
+        { "applies_to": ["HERE Ver.", "HEAR Ver."], "store": "TOWER RECORDS", "benefit": "スペシャルフォトカード", "count": 13, "image": "https://contents.perfect.ne.jp/media/974caa/ekiutkclyd.jpg" },
+        { "applies_to": ["HERE Ver.", "HEAR Ver."], "store": "TSUTAYA RECORDS", "benefit": "スペシャルフォトカード", "count": 13, "image": "https://contents.perfect.ne.jp/media/974caa/gaccx3tw0v.jpg" },
+        { "applies_to": ["2-album SET"], "store": "Weverse Shop", "benefit": "フォトカードホルダー+グループフォトカード", "count": 1, "image": "https://contents.perfect.ne.jp/media/974caa/wsivkdqesp.jpg" },
+        { "applies_to": ["2-album SET"], "store": "UNIVERSAL MUSIC STORE", "benefit": "A4クリアファイル", "count": 1, "image": "https://contents.perfect.ne.jp/media/974caa/5guxmhskk1.jpg" }
+      ],
+      "comparison": {
+        "version_match": "mismatch",
+        "version_mismatches": [{ "db_name": "DEAR", "site_name": "HEAR Ver.", "likely_typo": true }],
+        "missing_store_benefits_in_db": "all 7 chain-specific benefits missing"
+      }
+    },
+
+    {
+      "db_product_id": "P_KR019",
+      "db_product_name": "SEVENTEENTH HEAVEN",
+      "db_release_date": "2023-10-23",
+      "db_versions_csv": ["AM 5:26", "PM 2:14", "PM 10:23", "CARAT ver."],
+      "db_versions_post_fix": ["AM 5:26", "PM 2:14", "PM 10:23", "CARAT ver."],
+      "db_versions_post_fix_note": "fix-versions-phase1-2 deleted V_KR019_05 (pioneer — stray) and V_KR019_06 (duplicate CARAT).",
+      "site_title": "SEVENTEEN 11th Mini Album「SEVENTEENTH HEAVEN」",
+      "site_release_date": "2023.10.23 (KR) / 2023.10.25 (JP)",
+      "site_discography_slug": "smakmm",
+      "site_announcement_slugs": { "main": "ruqmnq", "chain_benefits": "scmrxk" },
+      "site_versions": [
+        { "name": "AM 5:26 Ver." },
+        { "name": "PM 2:14 Ver." },
+        { "name": "PM 10:23 Ver." },
+        { "name": "CARAT Ver.", "random_types": 13 }
+      ],
+      "store_benefits": [
+        { "applies_to": ["AM 5:26", "PM 2:14", "PM 10:23"], "store": "Weverse Shop", "benefit": "ホログラム入りスペシャルフォトカード", "count": 13, "image": "https://contents.perfect.ne.jp/media/974caa/3xl73whst3.jpg" },
+        { "applies_to": ["AM 5:26", "PM 2:14", "PM 10:23"], "store": "UNIVERSAL MUSIC STORE", "benefit": "スペシャルフォトカード", "count": 13, "image": "https://contents.perfect.ne.jp/media/974caa/tk3vgwxldw.jpg" },
+        { "applies_to": ["AM 5:26", "PM 2:14", "PM 10:23"], "store": "HMV・Loppi", "benefit": "スペシャルフォトカード", "count": 13, "image": "https://contents.perfect.ne.jp/media/974caa/wl2gb1vdk1.jpg" },
+        { "applies_to": ["AM 5:26", "PM 2:14", "PM 10:23"], "store": "TOWER RECORDS", "benefit": "スペシャルフォトカード", "count": 13, "image": "https://contents.perfect.ne.jp/media/974caa/nxs0ly5ak1.jpg" },
+        { "applies_to": ["AM 5:26", "PM 2:14", "PM 10:23"], "store": "TSUTAYA RECORDS", "benefit": "スペシャルフォトカード", "count": 13, "image": "https://contents.perfect.ne.jp/media/974caa/elk839rdmf.jpg" },
+        { "applies_to": ["3-Version SET"], "store": "Weverse Shop", "benefit": "A4クリアポスター + ロゴステッカーセット", "count": 3, "image": "https://contents.perfect.ne.jp/media/974caa/eyxosvwr43.jpg" },
+        { "applies_to": ["3-Version SET"], "store": "UNIVERSAL MUSIC STORE", "benefit": "A4クリアファイル", "count": 1, "image": "https://contents.perfect.ne.jp/media/974caa/0np51jbazg.jpg" }
+      ],
+      "comparison": {
+        "version_match": "clean",
+        "missing_store_benefits_in_db": "all 7 chain-specific benefits missing"
+      }
+    },
+
+    {
+      "db_product_id": "P_KR018",
+      "db_product_name": "FML",
+      "db_release_date": "2023-04-24",
+      "db_versions_csv": ["FULL OF LOVE", "FIGHT OR LOVE", "FADED MONO LOVE", "CARAT ver."],
+      "site_title": "SEVENTEEN 10th Mini Album「FML」",
+      "site_release_date": "2023.04.24 (KR) / 2023.04.26 (JP)",
+      "site_discography_slug": "xmsjsm",
+      "site_announcement_slugs": { "main": "valrrh", "chain_benefits": "zqluvr" },
+      "site_versions": [
+        { "name": "Version A (FULL OF LOVE)", "code": "PROV-1046", "price": 2970 },
+        { "name": "Version B (FIGHT OR LOVE)", "code": "PROV-1047", "price": 2970 },
+        { "name": "Version C (FADED MONO LIFE)", "code": "PROV-1048", "price": 2970 }
+      ],
+      "site_versions_note": "JP announcement lists versions only as A/B/C but KR versions are 'Fallen, Misfit, Lost' / 'Faded Mono Life' / 'Fight for My Life'. DB CSV spellings ('MONO LOVE', 'FIGHT OR LOVE') appear to be typos — should be 'MONO LIFE' and 'FIGHT FOR MY LIFE'.",
+      "store_benefits": [
+        { "applies_to": ["A", "B", "C"], "store": "Weverse Shop", "benefit": "ホログラム入りスペシャルフォトカード", "count": 13, "image": "https://contents.perfect.ne.jp/media/974caa/vs79fzlvif.jpg" },
+        { "applies_to": ["A", "B", "C"], "store": "UNIVERSAL MUSIC STORE", "benefit": "スペシャルフォトカード", "count": 13, "image": "https://contents.perfect.ne.jp/media/974caa/jpyjfp84xx.jpg" },
+        { "applies_to": ["A", "B", "C"], "store": "HMV・Loppi", "benefit": "スペシャルフォトカード", "count": 13, "image": "https://contents.perfect.ne.jp/media/974caa/rbnmq6glir.jpg" },
+        { "applies_to": ["A", "B", "C"], "store": "TOWER RECORDS", "benefit": "スペシャルフォトカード", "count": 13, "image": "https://contents.perfect.ne.jp/media/974caa/ktzjs0zjq2.jpg" },
+        { "applies_to": ["A", "B", "C"], "store": "TSUTAYA RECORDS", "benefit": "スペシャルフォトカード", "count": 13, "image": "https://contents.perfect.ne.jp/media/974caa/nyojfwiamk.jpg" },
+        { "applies_to": ["3-Version SET"], "store": "Weverse Shop", "benefit": "A4クリアポスター", "count": 1, "image": "https://contents.perfect.ne.jp/media/974caa/bpbuld91ca.jpg" },
+        { "applies_to": ["3-Version SET"], "store": "UNIVERSAL MUSIC STORE", "benefit": "B2ポスター", "count": 1, "image": "https://contents.perfect.ne.jp/media/974caa/i4ney77lja.jpg" }
+      ],
+      "comparison": {
+        "version_match": "mismatch",
+        "version_mismatches": [
+          { "db_name": "FIGHT OR LOVE", "correct_name": "FIGHT FOR MY LIFE / Version B", "likely_typo": true },
+          { "db_name": "FADED MONO LOVE", "correct_name": "FADED MONO LIFE", "likely_typo": true }
+        ],
+        "missing_store_benefits_in_db": "all 7 chain-specific benefits missing"
+      }
+    },
+
+    {
+      "db_product_id": "P_UN002",
+      "db_product_name": "Teleparty",
+      "db_release_date": "2025-01-08",
+      "db_versions_csv": ["standard"],
+      "site_title": "BSS 2nd Single Album「TELEPARTY」",
+      "site_release_date": "2025.01.08 (KR) / 2025.01.17 (JP)",
+      "site_discography_slug": "(not confirmed)",
+      "site_announcement_slugs": { "main": "dtrizz", "chain_benefits": "aanjum" },
+      "site_versions": [
+        { "name": "GA Ver.", "code": "HYBJ-05041", "price": 3080 },
+        { "name": "NA Ver.", "code": "HYBJ-05042", "price": 3080 }
+      ],
+      "store_benefits": [
+        { "applies_to": ["GA Ver.", "NA Ver."], "store": "Weverse Shop", "benefit": "ホログラム入りスペシャルフォトカード", "count": 3, "image": "https://contents.perfect.ne.jp/media/974caa/uzkim6arut.jpg" },
+        { "applies_to": ["GA Ver.", "NA Ver."], "store": "UNIVERSAL MUSIC STORE", "benefit": "スペシャルフォトカード", "count": 3, "image": "https://contents.perfect.ne.jp/media/974caa/mhdlpbmqmn.jpg" },
+        { "applies_to": ["GA Ver.", "NA Ver."], "store": "HMV・Loppi", "benefit": "スペシャルフォトカード", "count": 3, "image": "https://contents.perfect.ne.jp/media/974caa/oysh407tio.jpg" },
+        { "applies_to": ["GA Ver.", "NA Ver."], "store": "TOWER RECORDS", "benefit": "スペシャルフォトカード", "count": 3, "image": "https://contents.perfect.ne.jp/media/974caa/xlokdjygzg.jpg" },
+        { "applies_to": ["GA Ver.", "NA Ver."], "store": "TSUTAYA RECORDS", "benefit": "スペシャルフォトカード", "count": 3, "image": "https://contents.perfect.ne.jp/media/974caa/lqnkmeawin.jpg" },
+        { "applies_to": ["2-Version SET"], "store": "Weverse Shop", "benefit": "フォトカードホルダー", "count": 1, "image": "https://contents.perfect.ne.jp/media/974caa/asy8sywqk9.jpg" },
+        { "applies_to": ["2-Version SET"], "store": "UNIVERSAL MUSIC STORE", "benefit": "A4クリアファイル(logo)", "count": 1, "image": "https://contents.perfect.ne.jp/media/974caa/mxailwmpeu.jpg" }
+      ],
+      "comparison": {
+        "version_match": "missing",
+        "missing_release_versions_in_db": ["GA Ver.", "NA Ver."],
+        "missing_store_benefits_in_db": "all 7 chain-specific benefits missing"
+      }
+    },
+
+    {
+      "db_product_id": "P_UN004",
+      "db_product_name": "Beam",
+      "db_release_date": "2025-03-10",
+      "db_versions_csv": ["standard"],
+      "site_title": "HOSHI X WOOZI 1st Single Album「BEAM」",
+      "site_release_date": "2025.03.10 (KR) / 2025.03.12 (JP)",
+      "site_announcement_slug": "rwrlrm",
+      "site_versions": [
+        { "name": "+ (plus) Ver.", "code": "HYBJ-05044", "price": 3135 },
+        { "name": "x (doubled) Ver.", "code": "HYBJ-05045", "price": 3135 }
+      ],
+      "store_benefits": [
+        { "applies_to": ["+ Ver."], "store": "Weverse Shop", "benefit": "ホログラム入りフォトカード", "count": 1, "image": "https://contents.perfect.ne.jp/media/974caa/uxhinvucwf.jpg" },
+        { "applies_to": ["+ Ver."], "store": "UNIVERSAL MUSIC STORE", "benefit": "スペシャルフォトカード", "count": 1, "image": "https://contents.perfect.ne.jp/media/974caa/kzmtauqo3r.jpg" },
+        { "applies_to": ["+ Ver."], "store": "HMV・Loppi", "benefit": "スペシャルフォトカード", "count": 1, "image": "https://contents.perfect.ne.jp/media/974caa/axqxo9j2qz.jpg" },
+        { "applies_to": ["+ Ver."], "store": "TOWER RECORDS", "benefit": "スペシャルフォトカード", "count": 1, "image": "https://contents.perfect.ne.jp/media/974caa/klukc7ofm0.jpg" },
+        { "applies_to": ["+ Ver."], "store": "TSUTAYA RECORDS", "benefit": "スペシャルフォトカード", "count": 1, "image": "https://contents.perfect.ne.jp/media/974caa/veusork7ek.jpg" },
+        { "applies_to": ["2-Version SET"], "store": "Weverse Shop", "benefit": "ホログラムフォトカード(2枚)+スマホステッカー(3枚)", "count": 1, "image": "https://contents.perfect.ne.jp/media/974caa/vtcxn2nhrx.jpg" },
+        { "applies_to": ["2-Version SET"], "store": "UNIVERSAL MUSIC STORE", "benefit": "スペシャルフォトカード(2枚)+A5クリアファイル", "count": 1, "image": "https://contents.perfect.ne.jp/media/974caa/gvlbkq5qrx.jpg" }
+      ],
+      "comparison": {
+        "version_match": "missing",
+        "missing_release_versions_in_db": ["+ Ver.", "x Ver."],
+        "note": "x Ver. single-purchase benefits were not fully parsed on the announcement page but likely mirror + Ver.",
+        "missing_store_benefits_in_db": "all 7+ chain-specific benefits missing"
+      }
+    },
+
+    {
+      "db_product_id": "P_UN001",
+      "db_product_name": "SECOND WIND",
+      "db_release_date": "2023-02-06",
+      "db_versions_csv": ["standard"],
+      "site_title": "BSS 1st Single Album「SECOND WIND」",
+      "site_release_date": "2023.02.06 (KR) / 2023.02.07 (JP)",
+      "site_announcement_slug": "bktfud",
+      "site_versions": [{ "name": "standard", "price": 2750 }],
+      "store_benefits": [
+        { "applies_to": ["standard"], "store": "Weverse Shop", "benefit": "ホログラム仕様クリアフォトカード", "count": 4, "image": "https://contents.perfect.ne.jp/media/974caa/p6c612n8xb.jpg" },
+        { "applies_to": ["standard"], "store": "UNIVERSAL MUSIC STORE", "benefit": "ホログラム仕様フォトカード", "count": 4, "image": "https://contents.perfect.ne.jp/media/974caa/slr23qryjg.jpg" }
+      ],
+      "comparison": {
+        "version_match": "clean (single standard version)",
+        "missing_store_benefits_in_db": "2 chain-specific benefits missing"
+      }
+    },
+
+    {
+      "db_product_id": "P_KR017",
+      "db_product_name": "Sector 17",
+      "db_release_date": "2022-07-18",
+      "db_versions_csv": ["NEW HEIGHTS", "NEW BEGINNING", "COMPACT"],
+      "site_title": "SEVENTEEN 4th Album Repackage「SECTOR 17」",
+      "site_release_date": "2022.07.18 (KR) / 2022.07.30 (JP)",
+      "site_discography_slug": "atwpya",
+      "site_announcement_slugs": { "main": "gsbkot", "chain_benefits_mentioned_slug": "fnldmk" },
+      "site_versions": [
+        { "name": "NEW HEIGHTS" },
+        { "name": "NEW BEGINNING" },
+        { "name": "COMPACT Ver.", "price": 1650, "random_types": 14 }
+      ],
+      "store_benefits_partial": [
+        { "applies_to": ["NEW HEIGHTS / NEW BEGINNING", "COMPACT Ver."], "store": "Weverse Shop", "benefit": "スペシャルフォトカード", "count": 13 },
+        { "applies_to": ["NEW HEIGHTS / NEW BEGINNING", "COMPACT Ver."], "store": "HMV・Loppi", "benefit": "スペシャルフォトカード", "count": 13 }
+      ],
+      "comparison": {
+        "version_match": "clean",
+        "missing_store_benefits_in_db": "all chain-specific benefits missing (and full benefit page fnldmk not fully parsed — needs a re-run)"
+      }
+    },
+
+    {
+      "db_product_id": "P_KR016",
+      "db_product_name": "Face the Sun",
+      "db_release_date": "2022-05-27",
+      "db_versions_csv": ["ep.1 Control", "ep.2 Shadow", "ep.3 Ray", "ep.4 Path", "ep.5 Pioneer (CARAT ver.)"],
+      "db_versions_post_fix_note": "fix-versions-phase1-2 deleted V_KR016_06 (duplicate CARAT). 5 versions remain. ep.5 Pioneer label combines with CARAT — slightly off: CARAT Ver. is a separate KR-only release.",
+      "site_title": "SEVENTEEN 4th Album「Face the Sun」",
+      "site_release_date": "2022.05.27 (KR) / 2022.06.10 (JP)",
+      "site_discography_slug": "hrhcnu",
+      "site_announcement_slugs": { "main": "tjkkjq", "chain_benefits_mentioned_slug": "ylwsrd" },
+      "site_versions": [
+        { "name": "ep.1 Control" },
+        { "name": "ep.2 Shadow" },
+        { "name": "ep.3 Ray" },
+        { "name": "ep.4 Path" },
+        { "name": "ep.5 Pioneer" },
+        { "name": "CARAT Ver.", "price": 1430, "random_types_binder": 13, "random_types_photocard": 52, "jp_release": "2022-06-10" }
+      ],
+      "comparison": {
+        "version_match": "mismatch",
+        "version_mismatches": [{ "db_name": "ep.5 Pioneer (CARAT ver.)", "site_names": ["ep.5 Pioneer", "CARAT Ver."], "note": "DB merged two separate versions into one row; should be split." }],
+        "missing_store_benefits_in_db": "chain-specific benefits (WeverseShop polaroid photocard 13種, etc.) not seeded — need follow-up fetch of ylwsrd"
+      }
+    },
+
+    {
+      "db_product_id": "P_KR015",
+      "db_product_name": "Attacca",
+      "db_release_date": "2021-10-22",
+      "db_versions_csv": ["Op.1", "Op.2", "Op.3"],
+      "site_title": "SEVENTEEN 9th Mini Album「Attacca」",
+      "site_release_date": "2021.10.22 (KR) / 2021.10.23 (JP)",
+      "site_announcement_slugs": { "main": "yjsosv", "carat_release": "aorlym", "chain_benefits_mentioned_slug": "jpezaw" },
+      "site_versions": [
+        { "name": "Op.1", "code": "PROS-1013", "price": 2420 },
+        { "name": "Op.2", "code": "PROS-1014", "price": 2420 },
+        { "name": "Op.3", "code": "PROS-1015", "price": 2420 },
+        { "name": "CARAT Ver.", "price": 1430, "random_types": 13 }
+      ],
+      "store_benefits_partial": [
+        { "applies_to": ["Op.1-3"], "store": "Weverse Shop", "benefit": "スペシャルフォトカード", "count": 13 },
+        { "applies_to": ["Op.1-3"], "store": "UNIVERSAL MUSIC STORE", "benefit": "L判生写真", "count": 13 },
+        { "applies_to": ["Op.1-3"], "store": "HMV・Loppi", "benefit": "スペシャルフォトカード", "count": 13 },
+        { "applies_to": ["3-Version SET"], "store": "Weverse Shop", "benefit": "A4クリアポスター" },
+        { "applies_to": ["3-Version SET"], "store": "UNIVERSAL MUSIC STORE", "benefit": "B2ポスター" }
+      ],
+      "comparison": {
+        "version_match": "missing_carat",
+        "missing_db_version": "CARAT Ver. (separate KR-only album released same day)",
+        "missing_store_benefits_in_db": "all chain-specific benefits missing"
+      }
+    },
+
+    {
+      "db_product_id": "P_KR014",
+      "db_product_name": "Your Choice",
+      "db_release_date": "2021-06-18",
+      "db_versions_csv": ["ONE SIDE", "OTHER SIDE", "BESIDE"],
+      "site_title": "SEVENTEEN 8th Mini Album「Your Choice」",
+      "site_release_date": "2021.06.18",
+      "site_discography_slug": "acyyeq",
+      "site_announcement_slug": "lhhqob",
+      "site_versions": [
+        { "name": "ONE SIDE Ver.", "code": "PROS-1010", "price": 2420 },
+        { "name": "OTHER SIDE Ver.", "code": "PROS-1011", "price": 2420 },
+        { "name": "BESIDE Ver.", "code": "PROS-1012", "price": 2420 }
+      ],
+      "store_benefits_partial": [
+        { "applies_to": ["ALL 3 Ver."], "store": "UMS / Weverse", "benefit": "Online Event A Entry Card" },
+        { "applies_to": ["ALL 3 Ver."], "store": "Tower/TSUTAYA/Amazon/Rakuten", "benefit": "Online Event B Entry Card" },
+        { "applies_to": ["ALL 3 Ver."], "store": "HMV/Loppi", "benefit": "Online Event C Entry Card" }
+      ],
+      "comparison": { "version_match": "clean", "missing_store_benefits_in_db": "online event entry benefits not seeded (legacy-style, unlikely needed)" }
+    },
+
+    {
+      "db_product_id": "P_KR013",
+      "db_product_name": "; [Semicolon]",
+      "db_release_date": "2020-10-19",
+      "db_versions_csv": ["standard"],
+      "db_versions_post_fix_note": "fix-versions-phase1-2 deleted V_KR013_02/03/04 (dul/set/net — stray Heng:garae leftovers).",
+      "site_title": "SEVENTEEN Special Album '; [Semicolon]'",
+      "site_release_date": "2020.10.19",
+      "site_discography_slug": "uxevdk",
+      "site_announcement_slug": "(not searched)",
+      "comparison": { "version_match": "clean (after fix)" }
+    },
+
+    {
+      "db_product_id": "P_KR012",
+      "db_product_name": "Heng:garae",
+      "db_release_date": "2020-06-22",
+      "db_versions_csv": ["DUL", "SET", "NET", "HANA"],
+      "comparison": { "version_match": "unknown (not scraped this run)" }
+    },
+    { "db_product_id": "P_KR011", "db_product_name": "An Ode", "db_release_date": "2019-09-16", "db_versions_csv": ["Begin", "Hope", "Truth", "Fear", "Journey"], "site_discography_slug": "mnqvfc", "comparison": { "version_match": "unknown (not scraped this run)" } },
+    { "db_product_id": "P_KR010", "db_product_name": "You Made My Dawn", "db_release_date": "2019-01-21", "db_versions_csv": ["ETERNAL SUNSHINE", "BEFORE DAWN", "DAWN"], "comparison": { "version_match": "unknown (not scraped this run)" } },
+    { "db_product_id": "P_KR009", "db_product_name": "You Make My Day", "db_release_date": "2018-07-16", "db_versions_csv": ["MEET", "FOLLOW", "SET"], "site_discography_slug": "tvgqhs", "comparison": { "version_match": "unknown (not scraped this run)" } },
+    { "db_product_id": "P_KR008", "db_product_name": "Director's Cut", "db_release_date": "2018-02-05", "db_versions_csv": ["PLOT", "SUNSET"], "db_versions_post_fix_note": "fix-versions-phase1-2 deleted V_KR008_03 (set the sun — wrong album).", "comparison": { "version_match": "clean (after fix)" } },
+    { "db_product_id": "P_KR007", "db_product_name": "Teen, Age", "db_release_date": "2017-11-06", "db_versions_csv": ["WHITE", "GREEN", "ORANGE", "RS13"], "comparison": { "version_match": "unknown (not scraped this run)" } },
+    { "db_product_id": "P_KR006", "db_product_name": "Al1", "db_release_date": "2017-05-22", "db_versions_csv": ["Alone 1", "Alone 2", "Alone 3"], "site_discography_slug": "nybkvw", "comparison": { "version_match": "unknown (not scraped this run)" } },
+    { "db_product_id": "P_KR005", "db_product_name": "Going Seventeen", "db_release_date": "2016-12-05", "db_versions_csv": ["MAKE A WISH", "MAKE IT HAPPEN"], "db_versions_post_fix_note": "fix-versions-phase1-2 deleted V_KR005_03 (orange) and V_KR005_04 (rq&s) — stray Teen, Age leftovers.", "comparison": { "version_match": "clean (after fix)" } },
+    { "db_product_id": "P_KR004", "db_product_name": "LOVE&LETTER Repackage", "db_release_date": "2016-07-04", "db_versions_csv": ["SPECIAL EDITION", "NORMAL EDITION"], "site_discography_slug": "gvsigi", "comparison": { "version_match": "unknown (not scraped this run)" } },
+    { "db_product_id": "P_KR003", "db_product_name": "LOVE&LETTER", "db_release_date": "2016-04-25", "db_versions_csv": ["LOVE ver.", "LETTER ver."], "db_versions_post_fix_note": "fix-versions-phase1-2 deleted V_KR003_03 (make a seventeen — stray).", "comparison": { "version_match": "clean (after fix)" } },
+    { "db_product_id": "P_KR002", "db_product_name": "BOYS BE", "db_release_date": "2015-09-10", "db_versions_csv": ["SEEK", "HIDE"], "comparison": { "version_match": "unknown (not scraped this run)" } },
+    { "db_product_id": "P_KR001", "db_product_name": "17 CARAT", "db_release_date": "2015-05-29", "db_versions_csv": ["SCENE", "STILL"], "comparison": { "version_match": "unknown (not scraped this run)" } },
+
+    { "db_product_id": "P_UN003", "db_product_name": "This Man", "db_release_date": "2024-06-17", "db_versions_csv": ["standard"], "site_title": "JEONGHAN X WONWOO 1st Single Album「THIS MAN」", "site_discography_slug": "okexiv", "site_announcement_slug": "vvlfmo (Story Book only; main release announcement not found)", "comparison": { "version_match": "unknown", "note": "Main release info not easily findable via search; Story Book announcement is not the release post." } },
+
+    { "db_product_id": "P_JP010", "db_product_name": "消費期限 (Shohikigen)", "db_release_date": "2024-09-25", "db_versions_csv": ["A", "B", "C", "Regular"], "site_announcement_slug": "etobfj", "comparison": { "version_match": "unknown (JP single; announcement not fully parsed this run)" } },
+    { "db_product_id": "P_JP008", "db_product_name": "Dream", "db_release_date": "2022-11-09", "db_versions_csv": ["A", "B", "C"], "site_discography_slug": "npsgug", "site_announcement_slug": "iojnms", "comparison": { "version_match": "unknown" } },
+    { "db_product_id": "P_JP007", "db_product_name": "Power of Love", "db_release_date": "2021-12-08", "db_versions_csv": ["A", "B", "C", "Regular"], "site_title": "SEVENTEEN JAPAN SPECIAL SINGLE「あいのちから」", "site_announcement_slug": "iyrftz", "comparison": { "version_match": "unknown", "note": "DB title 'Power of Love' is English for 'あいのちから' which is fine." } },
+    { "db_product_id": "P_JP006", "db_product_name": "ひとりじゃない (Not Alone)", "db_release_date": "2021-04-21", "db_versions_csv": ["A", "B", "C", "Regular"], "site_announcement_slug": "ngtoqb", "comparison": { "version_match": "unknown" } },
+    { "db_product_id": "P_JP005", "db_product_name": "24H", "db_release_date": "2020-09-09", "db_versions_csv": ["A", "B", "C"], "comparison": { "version_match": "unknown" } },
+    { "db_product_id": "P_JP004", "db_product_name": "舞い落ちる花びら (Fallin' Flower)", "db_release_date": "2020-04-01", "db_versions_csv": ["A", "B", "C", "Regular"], "comparison": { "version_match": "unknown" } },
+    { "db_product_id": "P_JP003", "db_product_name": "HAPPY ENDING", "db_release_date": "2019-04-24", "db_versions_csv": ["A", "B", "C", "Regular"], "comparison": { "version_match": "unknown" } },
+    { "db_product_id": "P_JP002", "db_product_name": "We Make You", "db_release_date": "2018-05-30", "db_versions_csv": ["A", "B", "C"], "site_discography_slug": "hokpzd (note: labeled Blu-ray on site, may be wrong)", "comparison": { "version_match": "unknown" } },
+    { "db_product_id": "P_JP001", "db_product_name": "Call Call Call!", "db_release_date": "2018-05-30", "db_versions_csv": ["A", "B", "C", "Regular"], "comparison": { "version_match": "unknown (not on JP discography page — may be duplicate of We Make You)" } },
+
+    { "db_product_id": "P_JP009", "db_product_name": "Sara Sara", "db_release_date": "2023-06-21", "db_versions_csv": ["A", "B", "C", "Regular"], "comparison": { "version_match": "not-found-on-site", "note": "No album called 'Sara Sara' on seventeen-17.jp discography. Between ALWAYS YOURS (2023.08) and DREAM (2022.11). May be a fabricated entry. FLAG." } },
+    { "db_product_id": "P_JP011_inferred", "db_product_name": "ALWAYS YOURS", "db_release_date": "2023-08-23", "db_versions_csv": "(created by fix-versions-phase1-2.mjs: standard)", "site_title": "SEVENTEEN JAPAN BEST ALBUM「ALWAYS YOURS」", "site_release_date": "2023.08.23", "comparison": { "version_match": "unknown", "note": "Present in DB but not in album_master.csv. Versions inserted by fix-versions-phase1-2.mjs as single 'standard'." } }
+  ],
+  "discovered_slugs": {
+    "discography_detail_pages": {
+      "xlrnjm": "SPILL THE FEELS",
+      "incaiv": "HAPPY BURSTDAY",
+      "smakmm": "SEVENTEENTH HEAVEN",
+      "dkmcme": "17 IS RIGHT HERE",
+      "xmsjsm": "FML",
+      "atwpya": "SECTOR 17",
+      "hrhcnu": "Face the Sun",
+      "okexiv": "THIS MAN",
+      "acyyeq": "Your Choice",
+      "mnqvfc": "An Ode",
+      "nybkvw": "Al1",
+      "gvsigi": "LOVE & LETTER Repackage",
+      "tvgqhs": "You Make My Day",
+      "uxevdk": "; [Semicolon]",
+      "hokpzd": "WE MAKE YOU (Blu-ray?)",
+      "npsgug": "SEVENTEEN JAPAN SPECIAL/3RD SINGLE compilation page (ひとりじゃない, 24H, あいのちから, 舞い落ちる花びら)",
+      "izqzet": "2017年夏開催 韓国コンサート映像 輸入盤"
+    },
+    "information_announcement_pages": {
+      "ycaftw": "DxS Serenade release",
+      "propwn": "CxM HYPE VIBES release",
+      "nceard": "HAPPY BURSTDAY release",
+      "dsqfzx": "SPILL THE FEELS release (main)",
+      "fsyzgw": "SPILL THE FEELS standard benefits",
+      "fnmapa": "SPILL THE FEELS CARAT benefits",
+      "ocyari": "17 IS RIGHT HERE release",
+      "qdzwfu": "17 IS RIGHT HERE chain benefits",
+      "ruqmnq": "SEVENTEENTH HEAVEN release",
+      "scmrxk": "SEVENTEENTH HEAVEN chain benefits",
+      "valrrh": "FML release",
+      "zqluvr": "FML chain benefits",
+      "dtrizz": "TELEPARTY release",
+      "aanjum": "TELEPARTY chain benefits",
+      "vvlfmo": "THIS MAN Story Book (NOT main release)",
+      "rwrlrm": "BEAM release",
+      "bktfud": "SECOND WIND release",
+      "gsbkot": "SECTOR 17 release",
+      "fnldmk": "SECTOR 17 chain benefits (not fully parsed)",
+      "tjkkjq": "Face the Sun release",
+      "ylwsrd": "Face the Sun chain benefits (not fully parsed)",
+      "aorlym": "Attacca CARAT Ver. release",
+      "yjsosv": "Attacca release",
+      "jpezaw": "Attacca chain benefits (not fully parsed)",
+      "lhhqob": "Your Choice release",
+      "etobfj": "消費期限 release",
+      "iojnms": "DREAM release",
+      "iyrftz": "あいのちから release",
+      "ngtoqb": "ひとりじゃない release"
+    }
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "productId": "P_CON_INCOMPLETE",
+  "albumName": "IN-COMPLETE",
+  "imageSize": { "width": 3508, "height": 2482 },
+  "cards": [
+    { "version": "INCOMPLETE", "cardType": "photocard", "detail": "Photocard 1", "left": 277,  "top": 524,  "width": 467, "height": 757 },
+    { "version": "INCOMPLETE", "cardType": "photocard", "detail": "Photocard 2", "left": 779,  "top": 524,  "width": 467, "height": 757 },
+    { "version": "INCOMPLETE", "cardType": "photocard", "detail": "Photocard 3", "left": 1284, "top": 524,  "width": 467, "height": 757 },
+    { "version": "INCOMPLETE", "cardType": "photocard", "detail": "Photocard 4", "left": 274,  "top": 1360, "width": 467, "height": 757 },
+    { "version": "INCOMPLETE", "cardType": "photocard", "detail": "Photocard 5", "left": 779,  "top": 1360, "width": 467, "height": 757 },
+    { "version": "INCOMPLETE", "cardType": "photocard", "detail": "Photocard 6", "left": 1284, "top": 1360, "width": 467, "height": 757 }
+  ]
+}

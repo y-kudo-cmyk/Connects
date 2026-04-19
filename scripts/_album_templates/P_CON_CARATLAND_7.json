@@ -1,0 +1,13 @@
+{
+  "productId": "P_CON_CARATLAND_7",
+  "albumName": "2023 SVT 7TH FAN MEETING SEVENTEEN in CARAT LAND",
+  "imageSize": { "width": 2481, "height": 2483 },
+  "cards": [
+    { "version": "CARATLAND_7", "cardType": "photocard", "detail": "Photocard 1", "left": 303,  "top": 705,  "width": 355, "height": 549 },
+    { "version": "CARATLAND_7", "cardType": "photocard", "detail": "Photocard 2", "left": 682,  "top": 705,  "width": 355, "height": 549 },
+    { "version": "CARATLAND_7", "cardType": "photocard", "detail": "Photocard 3", "left": 1062, "top": 705,  "width": 355, "height": 549 },
+    { "version": "CARATLAND_7", "cardType": "photocard", "detail": "Photocard 4", "left": 1441, "top": 705,  "width": 355, "height": 549 },
+    { "version": "CARATLAND_7", "cardType": "photocard", "detail": "Photocard 5", "left": 1821, "top": 705,  "width": 355, "height": 549 },
+    { "version": "CARATLAND_7", "cardType": "photocard", "detail": "Photocard 6", "left": 682,  "top": 1420, "width": 355, "height": 551 }
+  ]
+}

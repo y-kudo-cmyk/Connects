@@ -1,0 +1,15 @@
+{
+  "productId": "P_CON_BETHESUN_KR",
+  "albumName": "BE THE SUN World Tour IN SEOUL",
+  "imageSize": { "width": 2048, "height": 1872 },
+  "cards": [
+    { "version": "BETHESUN", "cardType": "photocard", "detail": "Photocard 1", "left": 283,  "top": 483,  "width": 307, "height": 479 },
+    { "version": "BETHESUN", "cardType": "photocard", "detail": "Photocard 2", "left": 643,  "top": 483,  "width": 303, "height": 479 },
+    { "version": "BETHESUN", "cardType": "photocard", "detail": "Photocard 3", "left": 999,  "top": 483,  "width": 303, "height": 479 },
+    { "version": "BETHESUN", "cardType": "photocard", "detail": "Photocard 4", "left": 1462, "top": 483,  "width": 303, "height": 479 },
+    { "version": "BETHESUN", "cardType": "photocard", "detail": "Photocard 5", "left": 283,  "top": 1048, "width": 307, "height": 479 },
+    { "version": "BETHESUN", "cardType": "photocard", "detail": "Photocard 6", "left": 643,  "top": 1048, "width": 303, "height": 479 },
+    { "version": "BETHESUN", "cardType": "photocard", "detail": "Photocard 7", "left": 999,  "top": 1048, "width": 303, "height": 479 },
+    { "version": "BETHESUN", "cardType": "photocard", "detail": "Photocard 8", "left": 1462, "top": 1048, "width": 303, "height": 479 }
+  ]
+}

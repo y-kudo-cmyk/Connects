@@ -1,0 +1,17 @@
+{
+  "productId": "P_CON_LOVE",
+  "albumName": "『SEVENTEEN 2023 JAPAN FANMEETING 'LOVE'』",
+  "imageSize": { "width": 3508, "height": 2482 },
+  "cards": [
+    { "version": "LOVE", "cardType": "photocard", "detail": "Photocard 1",  "left": 260,  "top": 650,  "width": 442, "height": 670 },
+    { "version": "LOVE", "cardType": "photocard", "detail": "Photocard 2",  "left": 740,  "top": 650,  "width": 442, "height": 670 },
+    { "version": "LOVE", "cardType": "photocard", "detail": "Photocard 3",  "left": 1221, "top": 650,  "width": 442, "height": 670 },
+    { "version": "LOVE", "cardType": "photocard", "detail": "Photocard 4",  "left": 1701, "top": 650,  "width": 442, "height": 670 },
+    { "version": "LOVE", "cardType": "photocard", "detail": "Photocard 5",  "left": 2182, "top": 650,  "width": 442, "height": 670 },
+    { "version": "LOVE", "cardType": "photocard", "detail": "Photocard 6",  "left": 260,  "top": 1429, "width": 442, "height": 670 },
+    { "version": "LOVE", "cardType": "photocard", "detail": "Photocard 7",  "left": 709,  "top": 1429, "width": 442, "height": 670 },
+    { "version": "LOVE", "cardType": "photocard", "detail": "Photocard 8",  "left": 1193, "top": 1429, "width": 453, "height": 670 },
+    { "version": "LOVE", "cardType": "photocard", "detail": "Photocard 9",  "left": 1684, "top": 1429, "width": 453, "height": 670 },
+    { "version": "LOVE", "cardType": "photocard", "detail": "Photocard 10", "left": 2171, "top": 1429, "width": 453, "height": 670 }
+  ]
+}

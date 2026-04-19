@@ -1,0 +1,15 @@
+{
+  "productId": "P_CON_HANABI",
+  "albumName": "『SEVENTEEN 2022 JAPAN FANMEETING 'HANABI'』",
+  "imageSize": { "width": 2048, "height": 1400 },
+  "cards": [
+    { "version": "HANABI", "cardType": "photocard", "detail": "Photocard 1", "left": 233, "top": 402, "width": 227, "height": 374 },
+    { "version": "HANABI", "cardType": "photocard", "detail": "Photocard 2", "left": 571, "top": 402, "width": 227, "height": 374 },
+    { "version": "HANABI", "cardType": "photocard", "detail": "Photocard 3", "left": 909, "top": 402, "width": 227, "height": 374 },
+    { "version": "HANABI", "cardType": "photocard", "detail": "Photocard 4", "left": 1247, "top": 402, "width": 227, "height": 374 },
+    { "version": "HANABI", "cardType": "photocard", "detail": "Photocard 5", "left": 1585, "top": 402, "width": 227, "height": 374 },
+    { "version": "HANABI", "cardType": "photocard", "detail": "Photocard 6", "left": 233, "top": 858, "width": 227, "height": 374 },
+    { "version": "HANABI", "cardType": "photocard", "detail": "Photocard 7", "left": 571, "top": 858, "width": 227, "height": 374 },
+    { "version": "HANABI", "cardType": "photocard", "detail": "Photocard 8", "left": 909, "top": 858, "width": 227, "height": 374 }
+  ]
+}

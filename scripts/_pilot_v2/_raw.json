@@ -1,0 +1,15 @@
+[
+  {"label": "HERE_photocard_1", "box_2d": [168,245,235,109,109]},
+  {"label": "HERE_photocard_2", "box_2d": [168,372,235,110,110]},
+  {"label": "HEAR_photocard_1", "box_2d": [168,511,235,110,110]},
+  {"label": "HEAR_photocard_2", "box_2d": [168,633,235,110,110]},
+  {"label": "DEAR_binder", "box_2d": [364,173,493,109,109]},
+  {"label": "DEAR_photocard_1", "box_2d": [364,399,493,109,109]},
+  {"label": "DEAR_photocard_2", "box_2d": [364,523,493,109,109]},
+  {"label": "DEAR_photocard_3", "box_2d": [364,647,493,109,109]},
+  {"label": "DEAR_photocard_4", "box_2d": [364,709,493,109,109]},
+  {"label": "WEVERSE_qr", "box_2d": [561,337,678,109,109]},
+  {"label": "WEVERSE_photocard_1", "box_2d": [561,446,678,109,109]},
+  {"label": "WEVERSE_photocard_2", "box_2d": [561,557,678,109,109]},
+  {"label": "KIT_photocard_1", "box_2d": [743,499,859,109,109]}
+]
