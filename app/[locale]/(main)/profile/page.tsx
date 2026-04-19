@@ -1361,6 +1361,7 @@ function ConcertHistoryModal({ entry, onClose, onSave, onUpdate }: {
   const [seatInfo, setSeatInfo] = useState<SeatInfo>(entry.seatInfo ?? { fields: [] })
   const [autoAnalyzeTrigger, setAutoAnalyzeTrigger] = useState(0)
   const [uploading, setUploading] = useState(false)
+  const [uploadError, setUploadError] = useState<string>('')
   const [cropState, setCropState] = useState<{ src: string; slot: 'ticket' | 'view' | 'memory1' | 'memory2' } | null>(null)
 
   const openCrop = (file: File, slot: 'ticket' | 'view' | 'memory1' | 'memory2') => {
@@ -1401,10 +1402,14 @@ function ConcertHistoryModal({ entry, onClose, onSave, onUpdate }: {
     console.log('[CropConfirm] state set, starting upload')
 
     setUploading(true)
+    setUploadError('')
     try {
       const url = await uploadDataUrl('event-images', dataUrl)
       console.log('[CropConfirm] upload result:', url)
-      if (!url) return
+      if (!url) {
+        setUploadError('アップロードに失敗しました（公開URLが取得できません）。ログアウト→再ログインを試してください。')
+        return
+      }
       // dataUrl を Supabase 公開URLに差し替えて永続化
       if (optimisticTicket) {
         const final = optimisticTicket.map((u) => (u === dataUrl ? url : u))
@@ -1423,6 +1428,8 @@ function ConcertHistoryModal({ entry, onClose, onSave, onUpdate }: {
       }
     } catch (e) {
       console.error('[CropConfirm] error:', e)
+      const msg = e instanceof Error ? e.message : String(e)
+      setUploadError(`アップロード中にエラー: ${msg}`)
     } finally {
       setUploading(false)
     }
@@ -1532,6 +1539,12 @@ function ConcertHistoryModal({ entry, onClose, onSave, onUpdate }: {
               style={{ background: 'rgba(243,180,227,0.1)' }}>
               <div className="w-4 h-4 border-2 border-t-transparent rounded-full animate-spin" style={{ borderColor: '#F3B4E3', borderTopColor: 'transparent' }} />
               <span className="text-xs font-bold" style={{ color: '#F3B4E3' }}>{t('Schedule.imageUploading')}</span>
+            </div>
+          )}
+          {uploadError && (
+            <div className="mb-3 px-3 py-2 rounded-xl text-xs"
+              style={{ background: 'rgba(248,113,113,0.12)', color: '#B91C1C', border: '1px solid rgba(248,113,113,0.3)' }}>
+              ⚠️ {uploadError}
             </div>
           )}
 
