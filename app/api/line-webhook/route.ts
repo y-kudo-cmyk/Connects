@@ -10,8 +10,14 @@ const supabase = createClient(
 )
 
 // LINE 署名検証
+// Production (NODE_ENV=production on Vercel) で secret 未設定は許容しない（webhook 全通り遮断）
 function verifyLineSignature(bodyText: string, signature: string | null): boolean {
-  if (!LINE_CHANNEL_SECRET || !signature) return true // secret 未設定時は検証スキップ（開発用）
+  if (!LINE_CHANNEL_SECRET) {
+    if (process.env.NODE_ENV === 'production') return false
+    console.warn('[line-webhook] LINE_CHANNEL_SECRET not set — skipping signature check (dev only)')
+    return true
+  }
+  if (!signature) return false
   const hash = crypto.createHmac('sha256', LINE_CHANNEL_SECRET).update(bodyText).digest('base64')
   return hash === signature
 }
