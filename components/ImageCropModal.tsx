@@ -21,6 +21,16 @@ export default function ImageCropModal({ src, aspectRatio = 4, circle = false, o
   const [scale, setScale] = useState(1)
   const [offset, setOffset] = useState({ x: 0, y: 0 })
   const [ready, setReady] = useState(false)
+  const [loadError, setLoadError] = useState('')
+
+  // 画像が 8 秒読み込まれなかったら通知 (iOS PWA の onload 不発対策)
+  useEffect(() => {
+    if (ready) return
+    const tid = window.setTimeout(() => {
+      if (!ready) setLoadError('画像の読み込みに時間がかかっています。キャンセルして別の画像でお試しください。')
+    }, 8000)
+    return () => window.clearTimeout(tid)
+  }, [ready])
 
   // ジェスチャー追跡用
   const dragStart = useRef<{ x: number; y: number; ox: number; oy: number } | null>(null)
@@ -242,6 +252,7 @@ export default function ImageCropModal({ src, aspectRatio = 4, circle = false, o
           src={src}
           alt=""
           onLoad={onImgLoad}
+          onError={() => setLoadError('画像を読み込めませんでした')}
           draggable={false}
           style={{
             position: 'absolute',
@@ -255,6 +266,20 @@ export default function ImageCropModal({ src, aspectRatio = 4, circle = false, o
             opacity: ready ? 1 : 0,
           }}
         />
+
+        {/* 読み込み中表示 */}
+        {!ready && !loadError && (
+          <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#FFF', fontSize: 13, fontWeight: 600, pointerEvents: 'none' }}>
+            画像読み込み中…
+          </div>
+        )}
+        {loadError && (
+          <div style={{ position: 'absolute', inset: 20, display: 'flex', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none' }}>
+            <div style={{ color: '#FCA5A5', fontSize: 12, fontWeight: 600, textAlign: 'center', background: 'rgba(0,0,0,0.6)', padding: 12, borderRadius: 8 }}>
+              ⚠️ {loadError}
+            </div>
+          </div>
+        )}
 
         {/* クロップオーバーレイ */}
         {ready && <CropOverlay circle={circle} aspectRatio={aspectRatio === 0 && imgRef.current ? imgRef.current.naturalWidth / imgRef.current.naturalHeight : aspectRatio} />}
