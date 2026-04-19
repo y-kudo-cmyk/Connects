@@ -2,25 +2,39 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { createClient as createServiceClient } from '@supabase/supabase-js'
 
+const MAX_MESSAGE_LEN = 2000
+const RATE_WINDOW_MIN = 10
+const RATE_MAX_PER_WINDOW = 3
+
 export async function POST(req: NextRequest) {
+  // 認証必須（スパム防止）
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
   const { message, nickname } = await req.json()
   if (!message?.trim()) {
     return NextResponse.json({ error: 'message required' }, { status: 400 })
   }
-
-  // 認証チェック
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  // 本文長さ制限
+  const trimmed = message.trim().slice(0, MAX_MESSAGE_LEN)
 
   const sb = createServiceClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!,
   )
 
+  // レート制限: 直近 RATE_WINDOW_MIN 分で RATE_MAX_PER_WINDOW 件以上なら 429
+  const since = new Date(Date.now() - RATE_WINDOW_MIN * 60_000).toISOString()
+  const { count } = await sb.from('feedback').select('*', { count: 'exact', head: true }).eq('user_id', user.id).gte('created_at', since)
+  if ((count ?? 0) >= RATE_MAX_PER_WINDOW) {
+    return NextResponse.json({ error: 'Too many feedback posts. Try again later.' }, { status: 429 })
+  }
+
   const { error } = await sb.from('feedback').insert({
-    user_id: user?.id || null,
+    user_id: user.id,
     nickname: nickname || '匿名',
-    message: message.trim(),
+    message: trimmed,
   })
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
@@ -34,7 +48,7 @@ export async function POST(req: NextRequest) {
       headers: { 'Authorization': `Bearer ${LINE_TOKEN}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({
         to: ADMIN_LINE_ID,
-        messages: [{ type: 'text', text: `📝 フィードバック\n${nickname || '匿名'}さんより:\n\n${message.trim().slice(0, 200)}` }],
+        messages: [{ type: 'text', text: `📝 フィードバック\n${nickname || '匿名'}さんより:\n\n${trimmed.slice(0, 200)}` }],
       }),
     }).catch(() => {})
   }
