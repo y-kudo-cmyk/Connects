@@ -52,7 +52,34 @@ JSONのみ返してください。余計なテキストは不要です。`,
     const jsonMatch = text.match(/\[[\s\S]*\]/)
     if (!jsonMatch) return NextResponse.json({ fields: [] })
 
-    const fields = JSON.parse(jsonMatch[0])
+    // Gemini が英語ラベルを返した場合のセーフティネット
+    const LABEL_TRANSLATIONS: Record<string, string> = {
+      seat: '座席番号', 'seat no': '座席番号', 'seat number': '座席番号', 'seat no.': '座席番号',
+      section: 'エリア', area: 'エリア', zone: 'ゾーン',
+      stand: 'スタンド',
+      block: 'ブロック',
+      row: '列', line: '列',
+      gate: 'ゲート', entrance: 'ゲート',
+      floor: 'フロア', level: 'レベル',
+      date: '日時', 'event date': '日時', 'show date': '日時',
+      venue: '会場', 'venue name': '会場',
+      sector: 'エリア',
+      column: '列',
+    }
+    function translateLabel(label: string): string {
+      const clean = label.trim().toLowerCase()
+      if (LABEL_TRANSLATIONS[clean]) return LABEL_TRANSLATIONS[clean]
+      for (const [en, ja] of Object.entries(LABEL_TRANSLATIONS)) {
+        if (clean.includes(en)) return ja
+      }
+      return label
+    }
+
+    type Field = { label: string; value: string }
+    const rawFields: Field[] = JSON.parse(jsonMatch[0])
+    const fields = rawFields
+      .filter(f => f && typeof f.label === 'string' && typeof f.value === 'string' && f.value.trim())
+      .map(f => ({ label: translateLabel(f.label), value: f.value }))
     return NextResponse.json({ fields })
   } catch (e) {
     console.error('analyze-ticket error:', e)
