@@ -12,7 +12,8 @@ import { useReferral } from '@/lib/useReferral'
 import { COUNTRIES, countryFlag } from '@/lib/countryUtils'
 import ImageCropModal from '@/components/ImageCropModal'
 import FreeCropModal from '@/components/FreeCropModal'
-import { useMyEntries, MyEntry } from '@/lib/useMyEntries'
+import SeatInfoForm from '@/components/SeatInfoForm'
+import { useMyEntries, MyEntry, SeatInfo } from '@/lib/useMyEntries'
 import { createClient } from '@/lib/supabase/client'
 import { seventeenMembers } from '@/lib/config/constants'
 
@@ -1357,6 +1358,8 @@ function ConcertHistoryModal({ entry, onClose, onSave, onUpdate }: {
   const [ticketImages, setTicketImages] = useState<string[]>(entry.ticketImages ?? [])
   const [viewImages, setViewImages] = useState<string[]>(entry.viewImages ?? [])
   const [images, setImages] = useState<string[]>(entry.images ?? [])
+  const [seatInfo, setSeatInfo] = useState<SeatInfo>(entry.seatInfo ?? { fields: [] })
+  const [autoAnalyzeTrigger, setAutoAnalyzeTrigger] = useState(0)
   const [uploading, setUploading] = useState(false)
   const [cropState, setCropState] = useState<{ src: string; slot: 'ticket' | 'view' | 'memory1' | 'memory2' } | null>(null)
 
@@ -1407,6 +1410,8 @@ function ConcertHistoryModal({ entry, onClose, onSave, onUpdate }: {
         const final = optimisticTicket.map((u) => (u === dataUrl ? url : u))
         setTicketImages(final)
         onUpdate({ ticketImages: final })
+        // チケット追加時に Gemini OCR を自動トリガー
+        setAutoAnalyzeTrigger((v) => v + 1)
       } else if (optimisticView) {
         const final = optimisticView.map((u) => (u === dataUrl ? url : u))
         setViewImages(final)
@@ -1424,7 +1429,13 @@ function ConcertHistoryModal({ entry, onClose, onSave, onUpdate }: {
   }
 
   const handleSave = () => {
-    onSave({ ticketImages, viewImages, images })
+    onSave({ ticketImages, viewImages, images, seatInfo })
+  }
+
+  // seatInfo が変わったら即保存（SeatInfoForm の Gemini 解析結果や編集を永続化）
+  const handleSeatInfoChange = (next: SeatInfo) => {
+    setSeatInfo(next)
+    onUpdate({ seatInfo: next })
   }
 
   const slots: {
@@ -1534,7 +1545,7 @@ function ConcertHistoryModal({ entry, onClose, onSave, onUpdate }: {
             </div>
           )}
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-2 gap-3 mb-4">
             {slots.map((slot, idx) => (
               <div key={idx}>
                 <p className="text-[11px] font-bold mb-1.5" style={{ color: '#636366' }}>{slot.label}</p>
@@ -1565,6 +1576,18 @@ function ConcertHistoryModal({ entry, onClose, onSave, onUpdate }: {
               </div>
             ))}
           </div>
+
+          {/* 座席情報（チケット画像アップで自動OCR→編集可）*/}
+          {ticketImages.length > 0 && (
+            <div className="rounded-xl px-3 py-3" style={{ background: '#FFFFFF', border: '1px solid #E5E5EA' }}>
+              <SeatInfoForm
+                value={seatInfo}
+                onChange={handleSeatInfoChange}
+                ticketImages={ticketImages}
+                autoAnalyzeTrigger={autoAnalyzeTrigger}
+              />
+            </div>
+          )}
         </div>
 
         <div style={{ height: 'calc(80px + env(safe-area-inset-bottom, 0px))' }} />
