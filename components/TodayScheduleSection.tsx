@@ -45,8 +45,8 @@ export default function TodayScheduleSection() {
       const isHome = (e.city || '') === homeCountry || !(e.city)
       const isPeriod = !!e.dateEnd
       const tag = e.tags?.[0] || ''
-      if (tag === 'LIVE' && isHome) return 0
-      if (tag === 'LIVE') return 1
+      if (tag === 'CONCERT' && isHome) return 0
+      if (tag === 'CONCERT') return 1
       if (tag === 'TICKET' && isHome) return 2
       if (tag === 'EVENT' && isHome && !isPeriod) return 3
       if (isHome && !isPeriod) return 4

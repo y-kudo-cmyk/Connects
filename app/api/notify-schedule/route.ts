@@ -82,7 +82,7 @@ async function morningNotification(currentTime: string, today: string, testMode 
 
   if (todayEvents.length === 0) return { type: 'morning', skipped: true, reason: 'no events' }
 
-  const liveEvents = todayEvents.filter(e => e.tag === 'LIVE')
+  const liveEvents = todayEvents.filter(e => e.tag === 'CONCERT')
   const ticketEvents = todayEvents.filter(e => e.tag === 'TICKET')
 
   const tagIcon: Record<string, string> = { LIVE: '🎤', TICKET: '🎫', CD: '💿', TV: '📺', POPUP: '🏪', MERCH: '🛒', MAGAZINE: '📖', EVENT: '❤️', LIVEVIEWING: '🎬', INFO: '📢', RADIO: '📻', YOUTUBE: '▶️' }
@@ -215,7 +215,7 @@ async function myEventReminder(currentTime: string, today: string) {
     // 今日の、1時間後に開始するイベントを抽出（LIVE は除外）
     const upcomingStart = entries.filter(e => {
       if (!e.start_date) return false
-      if (e.tag === 'LIVE') return false
+      if (e.tag === 'CONCERT') return false
       const date = e.start_date.slice(0, 10)
       const time = e.start_date.slice(11, 16)
       return date === today && time === targetTime

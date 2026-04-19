@@ -54,9 +54,9 @@ function categoryToTag(category: string, title: string): string {
   if (category === 'LIVE/EVENT') {
     if (title.includes('サイン会') || title.includes('POP-UP') || title.includes('ポップアップ')) return 'EVENT'
     if (title.includes('ライブビューイング') || title.includes('ライブ・ビューイング')) return 'LIVEVIEWING'
-    if (title.includes('ファンミ') || title.includes('FANMEETING')) return 'LIVE'
+    if (title.includes('ファンミ') || title.includes('FANMEETING')) return 'CONCERT'
     if (title.includes('先行') || title.includes('抽選') || title.includes('当落') || title.includes('一般発売')) return 'TICKET'
-    return 'LIVE'
+    return 'CONCERT'
   }
   if (category === 'RELEASE') {
     if (title.includes('MERCHANDISE') || title.includes('グッズ') || title.includes('Merch')) return 'MERCH'
@@ -171,7 +171,7 @@ export async function GET(request: NextRequest) {
       existingUrls.add(krUrl)
 
       newEvents.push({
-        tag: krTitle.includes('FAN MEETING') || krTitle.includes('CONCERT') || krTitle.includes('TOUR') ? 'LIVE'
+        tag: krTitle.includes('FAN MEETING') || krTitle.includes('CONCERT') || krTitle.includes('TOUR') ? 'CONCERT'
           : krTitle.includes('Album') || krTitle.includes('발매') ? 'CD'
           : 'INFO',
         artist_id: 'A000000',

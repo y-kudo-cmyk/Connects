@@ -4,7 +4,7 @@
 
 // ── スケジュールタグ ─────────────────────────────────────────
 export type ScheduleTag =
-  | 'LIVE'
+  | 'CONCERT'
   | 'TICKET'
   | 'CD'
   | 'LUCKY_DRAW'
@@ -21,7 +21,7 @@ export type ScheduleTag =
   | 'INFO'
 
 export const scheduleTagConfig: Record<ScheduleTag, { label: string; icon: string; color: string; bg: string }> = {
-  LIVE:       { label: 'LIVE',       icon: '🎤', color: '#F3B4E3', bg: 'rgba(243,180,227,0.15)' },
+  CONCERT:    { label: 'CONCERT',    icon: '🎤', color: '#F3B4E3', bg: 'rgba(243,180,227,0.15)' },
   TICKET:     { label: 'TICKET',     icon: '🎫', color: '#FCD34D', bg: 'rgba(252,211,77,0.15)'  },
   CD:         { label: 'ALBUM',      icon: '💿', color: '#A78BFA', bg: 'rgba(167,139,250,0.15)' },
   LUCKY_DRAW: { label: 'LUCKY DRAW', icon: '🂠', color: '#E879F9', bg: 'rgba(232,121,249,0.15)' },
@@ -40,7 +40,8 @@ export const scheduleTagConfig: Record<ScheduleTag, { label: string; icon: strin
 
 // DB → アプリのタグ変換マップ（Glideデータ移行用）
 export const dbTagToScheduleTag: Record<string, ScheduleTag> = {
-  'LIVE':       'LIVE',
+  'CONCERT':    'CONCERT',
+  'LIVE':       'CONCERT',  // legacy alias
   'TICKET':     'TICKET',
   'CD':         'CD',
   'LUCKY DRAW': 'LUCKY_DRAW',

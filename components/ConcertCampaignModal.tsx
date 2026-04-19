@@ -34,7 +34,7 @@ export default function ConcertCampaignModal({ open, onClose, onComplete }: Prop
       const { data: events } = await supabase
         .from('events')
         .select('id, event_title, sub_event_title, tag, start_date, end_date, spot_name, spot_address, image_url, source_url')
-        .eq('tag', 'LIVE')
+        .eq('tag', 'CONCERT')
         .eq('country', 'JP')
         .lt('start_date', today)
 

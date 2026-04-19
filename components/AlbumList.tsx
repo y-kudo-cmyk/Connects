@@ -25,7 +25,7 @@ export default function AlbumList({ onSelect, userCardProductIds, productCardCou
     { key: 'KR', label: t('regionKR') },
     { key: 'JP', label: t('regionJP') },
     { key: 'UNIT', label: t('regionUnit') },
-    { key: 'EVENT', label: 'EVENT' },
+    { key: 'CONCERT', label: 'CONCERT' },
   ]
 
   const filtered = useMemo(() => {
@@ -33,7 +33,7 @@ export default function AlbumList({ onSelect, userCardProductIds, productCardCou
       if (tab === 'UNIT') {
         return p.product_id.startsWith('P_UN')
       }
-      if (tab === 'EVENT') {
+      if (tab === 'CONCERT') {
         return p.region === 'EVENT' || p.product_id.startsWith('P_CON_') || p.product_id.startsWith('P_EVT_')
       }
       return p.region === tab && !p.product_id.startsWith('P_UN') && !p.product_id.startsWith('P_CON_') && !p.product_id.startsWith('P_EVT_')

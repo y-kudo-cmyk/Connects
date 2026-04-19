@@ -61,7 +61,7 @@ export function toAppEvent(e: SupabaseEvent): AppEvent {
 
   return {
     id: e.id,
-    type: tag === 'BIRTHDAY' ? 'birthday' : tag === 'LIVE' ? 'concert' : 'variety',
+    type: tag === 'BIRTHDAY' ? 'birthday' : tag === 'CONCERT' ? 'concert' : 'variety',
     artist: 'SEVENTEEN',
     artistColor: cfg?.color ?? '#636366',
     title: e.event_title,

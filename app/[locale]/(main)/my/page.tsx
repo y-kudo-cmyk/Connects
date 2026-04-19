@@ -144,7 +144,7 @@ export default function MyPage() {
     function sortKey(e: typeof a): number {
       const tag = e.tags?.[0] || ''
       const isPeriod = !!e.dateEnd
-      if (tag === 'LIVE') return 0
+      if (tag === 'CONCERT') return 0
       if (tag === 'TICKET') return 1
       if (tag === 'MERCH') return 2
       if (!isPeriod) return 3
@@ -906,7 +906,7 @@ function EditModal({ entry, onClose, onSave, onRemove }: {
   const color = editTagCfg?.color ?? cfg?.color ?? entry.color
   const dateStr = fmtDateRange(entry.date, entry.time, entry.dateEnd)
   // チケット画像・座席情報を表示するタグ（場所があるイベント）
-  const TICKET_TAGS = ['LIVE', 'EVENT', 'POPUP', 'LIVEVIEWING']
+  const TICKET_TAGS = ['CONCERT', 'EVENT', 'POPUP', 'LIVEVIEWING']
   const showTicketSection = entry.venue || !entry.tags?.length || entry.tags.some((t) => TICKET_TAGS.includes(t))
 
   const handleTicketUpload = async (files: FileList | null) => {

@@ -107,7 +107,7 @@ async function generateMorning(): Promise<{ text: string; imageUrl: string }> {
   const sorted = todayEvents.map(e => {
     const startDate = extractDate(e.start_date)
     const endDate = e.end_date ? extractDate(e.end_date) : startDate
-    const isLive = e.tag === 'LIVE' ? 0 : 1
+    const isLive = e.tag === 'CONCERT' ? 0 : 1
     const isJP = e.country === 'JP' ? 0 : 1
     let datePriority = 5
     if (startDate === today && endDate === today) datePriority = 1

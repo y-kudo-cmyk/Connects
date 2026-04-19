@@ -1,9 +1,9 @@
 export const PAID_FEATURE_ENABLED = false
 
-export type TagType = 'LIVE' | 'TICKET' | 'CD' | 'GOODS' | 'EVENT' | 'TV' | 'YOUTUBE' | 'RADIO' | 'LUCKYDRAW' | 'POPUP'
+export type TagType = 'CONCERT' | 'TICKET' | 'CD' | 'GOODS' | 'EVENT' | 'TV' | 'YOUTUBE' | 'RADIO' | 'LUCKYDRAW' | 'POPUP'
 
 export const tagConfig: Record<TagType, { label: string; icon: string; color: string; bg: string }> = {
-  LIVE:      { label: 'LIVE',      icon: '🎤', color: '#F3B4E3', bg: 'rgba(243,180,227,0.15)' },
+  CONCERT:   { label: 'CONCERT',   icon: '🎤', color: '#F3B4E3', bg: 'rgba(243,180,227,0.15)' },
   TICKET:    { label: 'TICKET',    icon: '🎫', color: '#FCD34D', bg: 'rgba(252,211,77,0.15)'  },
   CD:        { label: 'CD',        icon: '💿', color: '#A78BFA', bg: 'rgba(167,139,250,0.15)' },
   GOODS:     { label: 'GOODS',     icon: '🛒', color: '#34D399', bg: 'rgba(52,211,153,0.15)'  },

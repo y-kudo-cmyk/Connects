@@ -24,7 +24,7 @@ const FULL_MONTH = ['January','February','March','April','May','June','July','Au
 const MONTH_SHORT = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
 const DAY_NAMES = ['S','M','T','W','T','F','S']
 
-const ALL_TAGS: ScheduleTag[] = ['LIVE','POPUP','TICKET','CD','MERCH','EVENT','TV','YOUTUBE','RADIO','LUCKY_DRAW']
+const ALL_TAGS: ScheduleTag[] = ['CONCERT','POPUP','TICKET','CD','MERCH','EVENT','TV','YOUTUBE','RADIO','LUCKY_DRAW']
 
 function getEventTags(e: AppEvent): ScheduleTag[] {
   return (e.tags ?? []) as ScheduleTag[]
@@ -34,7 +34,7 @@ type Region = 'HOME' | 'OVERSEAS'
 
 function matchRegion(e: AppEvent, region: Region, homeCountry: string): boolean {
   // LIVEはどの地域でも表示
-  if (e.tags?.includes('LIVE')) return true
+  if (e.tags?.includes('CONCERT')) return true
   if (!e.city) return true
   const code = e.city.split(', ').pop() ?? ''
   const isHome = code === homeCountry

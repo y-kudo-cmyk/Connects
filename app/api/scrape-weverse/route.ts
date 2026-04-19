@@ -27,8 +27,8 @@ function normalize(s: string): string {
 
 // ── Weverse notice → タグ判定 ────────────────────────────────
 function noticeToTag(title: string): string {
-  if (title.includes('CONCERT') || title.includes('TOUR') || title.includes('FAN MEETING') || title.includes('FANMEETING')) return 'LIVE'
-  if (title.includes('ON STAGE')) return 'LIVE'
+  if (title.includes('CONCERT') || title.includes('TOUR') || title.includes('FAN MEETING') || title.includes('FANMEETING')) return 'CONCERT'
+  if (title.includes('ON STAGE')) return 'CONCERT'
   if (title.includes('音源発売') || title.includes('Album') || title.includes('발매')) return 'CD'
   if (title.includes('POP-UP') || title.includes('ポップアップ')) return 'POPUP'
   if (title.includes('MERCHANDISE') || title.includes('グッズ') || title.includes('商品')) return 'MERCH'

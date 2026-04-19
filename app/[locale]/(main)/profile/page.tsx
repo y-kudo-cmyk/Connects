@@ -236,7 +236,7 @@ export default function ProfilePage() {
 
   // Concert history: LIVE entries from my_entries
   const { entries, updateEntry, removeEntry } = useMyEntries()
-  const liveEntries = entries.filter((e) => e.tags?.includes('LIVE') || e.type === 'LIVE')
+  const liveEntries = entries.filter((e) => e.tags?.includes('CONCERT') || e.type === 'CONCERT')
   const [editHistoryEntry, setEditHistoryEntry] = useState<MyEntry | null>(null)
   const [showConcerts, setShowConcerts] = useState(false)
 
