@@ -50,7 +50,8 @@ function normalize(title: string): string {
     .toLowerCase()
 }
 
-async function detectDuplicates(sb: ReturnType<typeof createServiceClient>): Promise<Array<{ title: string; tag: string; date: string; ids: string[] }>> {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function detectDuplicates(sb: any): Promise<Array<{ title: string; tag: string; date: string; ids: string[] }>> {
   // 今日以降のイベントだけチェック（過去の重複は今さら）
   const today = new Date().toISOString().slice(0, 10)
   const { data: events } = await sb.from('events')
@@ -93,12 +94,13 @@ async function detectDuplicates(sb: ReturnType<typeof createServiceClient>): Pro
   return dupes
 }
 
-async function notifyAdminsLine(sb: ReturnType<typeof createServiceClient>, message: string) {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function notifyAdminsLine(sb: any, message: string) {
   const { data: admins } = await sb.from('profiles').select('line_user_id').eq('role', 'admin').not('line_user_id', 'is', null).neq('line_user_id', '')
   if (!admins?.length) return
   const token = process.env.LINE_CHANNEL_ACCESS_TOKEN
   if (!token) return
-  for (const a of admins) {
+  for (const a of admins as Array<{ line_user_id: string }>) {
     try {
       await fetch('https://api.line.me/v2/bot/message/push', {
         method: 'POST',
