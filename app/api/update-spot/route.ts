@@ -2,6 +2,17 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { createClient as createServiceClient } from '@supabase/supabase-js'
 
+// スクレイピング由来のヒントメモかどうか判定（ユーザー手書きメモは残す）
+function isScrapedHintMemo(memo: string | null | undefined): boolean {
+  if (!memo) return false
+  return (
+    memo.includes('[인스타') ||
+    memo.includes('[SVT Record') ||
+    memo.includes('[위버스') ||
+    memo.toLowerCase().includes('instagram story')
+  )
+}
+
 export async function POST(req: NextRequest) {
   // 認証チェック
   const supabase = await createClient()
@@ -67,12 +78,15 @@ export async function POST(req: NextRequest) {
       const relatedArtists = [...allTags].map(t => `#${t}`).join(' ')
       await sb.from('spots').update({ related_artists: relatedArtists }).eq('id', spotId)
     }
-    // source_url / spot_url が埋まったらヒントmemoをクリア（photoの親spotに反映）
+    // source_url / spot_url が埋まったらヒントmemoをクリア（スクレピング由来のみ、手書きは温存）
     const filledPhotoUrl =
       (updates.source_url && String(updates.source_url).trim()) ||
       (updates.spot_url && String(updates.spot_url).trim())
     if (filledPhotoUrl && spotId) {
-      await sb.from('spots').update({ memo: '' }).eq('id', spotId)
+      const { data: spotRow } = await sb.from('spots').select('memo').eq('id', spotId).maybeSingle()
+      if (isScrapedHintMemo(spotRow?.memo)) {
+        await sb.from('spots').update({ memo: '' }).eq('id', spotId)
+      }
     }
     editDetail = `photo:${photoId}:${Object.keys(updates).join(',')}`
   } else if (_table === 'events') {
@@ -84,12 +98,15 @@ export async function POST(req: NextRequest) {
     // スポットの更新
     const { error } = await sb.from('spots').update(updates).eq('id', spotId)
     if (error) return NextResponse.json({ error: error.message }, { status: 500 })
-    // spot 自身の source_url または spot_url が埋まったら memo もクリア
+    // spot 自身の source_url または spot_url が埋まったらヒントmemoクリア（スクレピング由来のみ）
     const filledSpotUrl =
       (updates.source_url && String(updates.source_url).trim()) ||
       (updates.spot_url && String(updates.spot_url).trim())
     if (filledSpotUrl) {
-      await sb.from('spots').update({ memo: '' }).eq('id', spotId)
+      const { data: spotRow } = await sb.from('spots').select('memo').eq('id', spotId).maybeSingle()
+      if (isScrapedHintMemo(spotRow?.memo)) {
+        await sb.from('spots').update({ memo: '' }).eq('id', spotId)
+      }
     }
     editDetail = `spot:${spotId}:${Object.keys(updates).join(',')}`
   }

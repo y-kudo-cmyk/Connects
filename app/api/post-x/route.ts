@@ -333,7 +333,9 @@ export async function GET(request: NextRequest) {
 // 手動呼び出し用 (dryRun 対応)
 export async function POST(request: NextRequest) {
   const authHeader = request.headers.get('authorization')
-  if (authHeader !== `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}`) {
+  // ADMIN_API_SECRET または CRON_SECRET で認証。service_role_key は受け付けない（DB鍵とAPI鍵を分離）。
+  const expected = process.env.ADMIN_API_SECRET || process.env.CRON_SECRET
+  if (!expected || authHeader !== `Bearer ${expected}`) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
