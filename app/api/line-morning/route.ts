@@ -1,4 +1,4 @@
-export const maxDuration = 60
+export const maxDuration = 300
 
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
@@ -182,9 +182,13 @@ export async function GET(request: NextRequest) {
   const targets = testMode ? lineIds.slice(0, 1) : lineIds
 
   let sent = 0
-  for (const id of targets) {
-    if (await sendLinePush(id, message)) sent++
-    await new Promise(r => setTimeout(r, 100))
+  let failed = 0
+  // 30件ずつ並列送信（LINE push APIは高レート許容、Vercelタイムアウト回避）
+  const BATCH = 30
+  for (let i = 0; i < targets.length; i += BATCH) {
+    const batch = targets.slice(i, i + BATCH)
+    const results = await Promise.all(batch.map((id) => sendLinePush(id, message)))
+    for (const r of results) { if (r) sent++; else failed++ }
   }
 
   return NextResponse.json({
@@ -194,6 +198,7 @@ export async function GET(request: NextRequest) {
     newEvents: newEvents.length,
     totalTargets: lineIds.length,
     sent,
+    failed,
     testMode,
   })
 }
