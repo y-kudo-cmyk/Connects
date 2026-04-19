@@ -66,9 +66,10 @@ async function uploadImage(file: File, path: string): Promise<string> {
 
 export default function CardDetailModal({ card, owned, userId, isBetaUser = false, favMemberIds = [], onClose, onSave, onDelete }: CardDetailModalProps) {
   const t = useTranslations('Goods')
-  const [quantity, setQuantity] = useState(owned?.quantity ?? 1)
-  // quantity can be 0 to represent "want but don't have" (beta users only)
-  // デフォルト: 推しメンバー=1, 推し外=0. 既存値があれば優先
+  // 未登録カードの所持デフォルト: beta=0 (求を登録しやすく), 非beta=1 (従来通り)
+  const defaultQty = owned?.quantity ?? (isBetaUser ? 0 : 1)
+  const [quantity, setQuantity] = useState(defaultQty)
+  // 欲しい枚数デフォルト: 推しメンバー=1, 推し外=0. 既存値があれば優先
   const isOshi = favMemberIds.includes(card.member_id)
   const defaultWanted = isOshi ? 1 : 0
   const [wantedCount, setWantedCount] = useState<number>(owned?.wanted_count ?? defaultWanted)
