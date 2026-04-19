@@ -439,6 +439,10 @@ export default function AlbumDetail({ product, userCards, onBack, onCardTap }: A
 
                       const cardAspect = getCardAspect(card.card_type)
                       const bgSize = isTradingCardFit(card.card_type) ? 'cover' : 'contain'
+                      // 画像があれば qty=0 でも画像表示する（保存済み画像の反映）
+                      const bgStyle = hasImage
+                        ? `rgba(243,180,227,0.15) url(${displayImage}) center / ${bgSize} no-repeat`
+                        : hasQty ? 'rgba(243,180,227,0.15)' : '#E5E5EA'
                       return (
                         <button
                           key={card.id}
@@ -447,9 +451,7 @@ export default function AlbumDetail({ product, userCards, onBack, onCardTap }: A
                           style={{
                             height: 128,
                             aspectRatio: cardAspect,
-                            background: hasQty
-                              ? (hasImage ? `rgba(243,180,227,0.15) url(${displayImage}) center / ${bgSize} no-repeat` : 'rgba(243,180,227,0.15)')
-                              : '#E5E5EA',
+                            background: bgStyle,
                             border: hasQty ? `2px solid ${accent}` : wantedOnly ? '2px dashed #60A5FA' : '2px solid transparent',
                           }}
                         >
@@ -471,8 +473,12 @@ export default function AlbumDetail({ product, userCards, onBack, onCardTap }: A
                               </span>
                             </div>
                           )}
-                          {!hasQty && hasImage && (
+                          {/* master画像（未所持）は暗く、user画像の qty=0 は薄く覆う */}
+                          {!owned && hasImage && (
                             <div className="absolute inset-0" style={{ background: 'rgba(0,0,0,0.5)' }} />
+                          )}
+                          {wantedOnly && hasImage && (
+                            <div className="absolute inset-0" style={{ background: 'rgba(96,165,250,0.18)' }} />
                           )}
                           {hasQty && owned && owned.quantity > 1 && (
                             <div
