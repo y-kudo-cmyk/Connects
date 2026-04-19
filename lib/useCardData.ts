@@ -101,7 +101,7 @@ export const productTypeLabels: Record<string, string> = {
 }
 
 // ── Region tab config ───────────────────────────────────────────
-export type RegionTab = 'KR' | 'JP' | 'UNIT'
+export type RegionTab = 'KR' | 'JP' | 'UNIT' | 'EVENT'
 
 // ── Hook: card products ─────────────────────────────────────────
 export function useCardProducts() {
