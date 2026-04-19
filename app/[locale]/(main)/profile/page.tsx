@@ -13,7 +13,7 @@ import { COUNTRIES, countryFlag } from '@/lib/countryUtils'
 import ImageCropModal from '@/components/ImageCropModal'
 import FreeCropModal from '@/components/FreeCropModal'
 import SeatInfoForm from '@/components/SeatInfoForm'
-import { useMyEntries, MyEntry, SeatInfo } from '@/lib/useMyEntries'
+import { useMyEntries, MyEntry, SeatInfo, compressImage } from '@/lib/useMyEntries'
 import { createClient } from '@/lib/supabase/client'
 import { seventeenMembers } from '@/lib/config/constants'
 
@@ -1364,58 +1364,21 @@ function ConcertHistoryModal({ entry, onClose, onSave, onUpdate }: {
   const [uploadError, setUploadError] = useState<string>('')
   const [cropState, setCropState] = useState<{ src: string; slot: 'ticket' | 'view' | 'memory1' | 'memory2' } | null>(null)
 
-  const openCrop = (file: File, slot: 'ticket' | 'view' | 'memory1' | 'memory2') => {
-    // ObjectURL 経由で Image → canvas リサイズ → dataUrl で FreeCropModal へ渡す。
-    // iOS Safari PWA では巨大 File を FileReader → Image の順で処理すると
-    // Image.onload が発火しないことがあるため、URL.createObjectURL を使用。
+  const openCrop = async (file: File, slot: 'ticket' | 'view' | 'memory1' | 'memory2') => {
     setUploadError('')
-    setUploading(true)
-    const url = URL.createObjectURL(file)
-    const img = new Image()
-    let settled = false
-    const timeoutId = window.setTimeout(() => {
-      if (settled) return
-      settled = true
-      URL.revokeObjectURL(url)
-      setUploading(false)
-      setUploadError('画像の読み込みがタイムアウトしました (10秒)。別の画像でお試しください。')
-    }, 10000)
-    img.onload = () => {
-      if (settled) return
-      settled = true
-      window.clearTimeout(timeoutId)
-      try {
-        const maxPx = 1600
-        let w = img.naturalWidth
-        let h = img.naturalHeight
-        if (w > maxPx || h > maxPx) {
-          if (w > h) { h = Math.round((h * maxPx) / w); w = maxPx }
-          else { w = Math.round((w * maxPx) / h); h = maxPx }
-        }
-        const canvas = document.createElement('canvas')
-        canvas.width = w
-        canvas.height = h
-        canvas.getContext('2d')!.drawImage(img, 0, 0, w, h)
-        const dataUrl = canvas.toDataURL('image/jpeg', 0.88)
-        URL.revokeObjectURL(url)
-        setUploading(false)
-        setCropState({ src: dataUrl, slot })
-      } catch (e) {
-        console.error('[openCrop] resize failed:', e)
-        URL.revokeObjectURL(url)
-        setUploading(false)
-        setUploadError('画像の処理に失敗しました: ' + (e instanceof Error ? e.message : String(e)))
-      }
+    try {
+      // SPOT と同じ compressImage (FileReader ベース) で dataUrl を取得。
+      // 巨大 iPhone 写真の onload 不発対策に 1600px へ事前リサイズ。
+      // compressImage 自体は reject しないのでタイムアウトで保護する。
+      const dataUrl = await Promise.race([
+        compressImage(file, 1600, 0.88),
+        new Promise<never>((_, reject) => setTimeout(() => reject(new Error('画像処理タイムアウト (10秒)')), 10000)),
+      ])
+      setCropState({ src: dataUrl, slot })
+    } catch (e) {
+      console.error('[openCrop] compress failed:', e)
+      setUploadError('画像の読み込みに失敗しました: ' + (e instanceof Error ? e.message : String(e)))
     }
-    img.onerror = () => {
-      if (settled) return
-      settled = true
-      window.clearTimeout(timeoutId)
-      URL.revokeObjectURL(url)
-      setUploading(false)
-      setUploadError('画像を読み込めませんでした (onerror)')
-    }
-    img.src = url
   }
 
   const handleCropConfirm = async (dataUrl: string) => {
