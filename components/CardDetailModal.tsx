@@ -310,7 +310,15 @@ export default function CardDetailModal({ card, owned, userId, isBetaUser = fals
                     </div>
                   )}
                 </button>
-                {frontPreview && (
+                {/* 台紙 (マスター画像のみ) のときはアップロード促すヒント */}
+                {frontPreview && !owned?.front_image_url && (
+                  <div className="absolute bottom-0 left-0 right-0 px-2 py-1.5 text-center pointer-events-none"
+                    style={{ background: 'rgba(0,0,0,0.65)', color: '#FFFFFF', fontSize: 9, fontWeight: 700 }}>
+                    ご自身のトレカの<br/>画像をアップしてください
+                  </div>
+                )}
+                {/* 自分のトレカがアップ済みの場合のみ再トリミング可能 */}
+                {frontPreview && owned?.front_image_url && (
                   <button
                     onClick={(e) => { e.stopPropagation(); handleRetrim('front') }}
                     className="absolute top-1.5 right-1.5 text-[10px] font-bold px-2 py-1 rounded-full"
@@ -348,7 +356,13 @@ export default function CardDetailModal({ card, owned, userId, isBetaUser = fals
                     </div>
                   )}
                 </button>
-                {backPreview && (
+                {backPreview && !owned?.back_image_url && (
+                  <div className="absolute bottom-0 left-0 right-0 px-2 py-1.5 text-center pointer-events-none"
+                    style={{ background: 'rgba(0,0,0,0.65)', color: '#FFFFFF', fontSize: 9, fontWeight: 700 }}>
+                    ご自身のトレカの<br/>画像をアップしてください
+                  </div>
+                )}
+                {backPreview && owned?.back_image_url && (
                   <button
                     onClick={(e) => { e.stopPropagation(); handleRetrim('back') }}
                     className="absolute top-1.5 right-1.5 text-[10px] font-bold px-2 py-1 rounded-full"
