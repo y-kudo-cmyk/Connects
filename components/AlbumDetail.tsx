@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useEffect } from 'react'
 import { useTranslations } from 'next-intl'
-import { useCardVersions, useCardMaster, type CardProduct, type CardMaster, type UserCard, productTypeLabels, getCardAspect, isTradingCardFit } from '@/lib/useCardData'
+import { useCardVersions, useCardMaster, type CardProduct, type CardMaster, type UserCard, productTypeLabels, getCardAspect, isTradingCardFit, isLandscapeCard } from '@/lib/useCardData'
 import { seventeenMembers } from '@/lib/config/constants'
 import { createClient } from '@/lib/supabase/client'
 
@@ -443,11 +443,12 @@ export default function AlbumDetail({ product, userCards, onBack, onCardTap }: A
 
                       const cardAspect = getCardAspect(card.card_type)
                       const bgSize = isTradingCardFit(card.card_type) ? 'cover' : 'contain'
+                      const landscape = isLandscapeCard(card.card_type)
                       return (
                         <button
                           key={card.id}
                           onClick={() => onCardTap(card, owned)}
-                          className="relative rounded-lg overflow-hidden transition-transform active:scale-95"
+                          className={`relative rounded-lg overflow-hidden transition-transform active:scale-95 ${landscape ? 'col-span-2' : ''}`}
                           style={{
                             aspectRatio: cardAspect,
                             background: hasQty
