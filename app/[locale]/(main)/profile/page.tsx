@@ -1729,7 +1729,7 @@ function ReferralSection() {
                 <input
                   value={inputCode}
                   onChange={e => setInputCode(e.target.value)}
-                  placeholder="例: U000001-0027"
+                  placeholder="UXXXXXX-XXXX"
                   className="flex-1 px-3 py-2 rounded-xl text-sm outline-none"
                   style={{ background: '#F8F9FA', border: '1px solid #E5E5EA', color: '#1C1C1E' }}
                   disabled={submitState.status === 'saving'}
