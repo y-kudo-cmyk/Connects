@@ -19,9 +19,11 @@ export function useUserSpots() {
 
   const fetchSpots = useCallback(async () => {
     if (!user) { setUserSpots([]); return }
+    // original_submitter_email 除外
+    const COLS = 'id, spot_name, spot_address, spot_url, genre, artist_id, related_artists, image_url, source_url, memo, lat, lng, is_master, submitted_by, status, verified_count, created_at'
     const { data } = await supabase
       .from('spots')
-      .select('*')
+      .select(COLS)
       .eq('submitted_by', user.id)
       .order('created_at', { ascending: false })
     if (data) {

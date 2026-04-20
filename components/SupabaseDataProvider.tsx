@@ -4,7 +4,7 @@ import { useEffect, useState, useCallback, createContext, useContext } from 'rea
 import { createClient } from '@/lib/supabase/client'
 import { toAppEvent, toAppSpot, type AppEvent, type AppSpot } from '@/lib/supabase/adapters'
 import type { SupabaseEvent } from '@/lib/supabase/useEvents'
-import type { SupabaseSpotPhoto } from '@/lib/supabase/useSpots'
+import type { SupabaseSpot, SupabaseSpotPhoto } from '@/lib/supabase/useSpots'
 
 const supabase = createClient()
 
@@ -72,13 +72,17 @@ export default function SupabaseDataProvider({ children }: { children: React.Rea
   }, [])
 
   const refreshSpots = useCallback(async () => {
+    // 個人情報（original_submitter_email）を除外した明示カラム
+    const SPOT_COLS = 'id, spot_name, spot_address, spot_url, genre, artist_id, related_artists, image_url, source_url, memo, lat, lng, is_master, submitted_by, status, verified_count, x_posted, created_at, updated_at, submitter:profiles!submitted_by(nickname)'
+    const PHOTO_COLS = 'id, spot_id, image_url, source_url, platform, tags, contributor, visit_date, caption, status, votes, created_at, submitted_by'
     const [spotsRes, photosRes] = await Promise.all([
-      supabase.from('spots').select('*, submitter:profiles!submitted_by(nickname)').order('spot_name'),
-      supabase.from('spot_photos').select('*'),
+      supabase.from('spots').select(SPOT_COLS).neq('status', 'deleted').order('spot_name'),
+      supabase.from('spot_photos').select(PHOTO_COLS).neq('status', 'deleted'),
     ])
     if (spotsRes.data && photosRes.data) {
       const photos = photosRes.data as SupabaseSpotPhoto[]
-      setSpots(spotsRes.data.map(s => toAppSpot(s, photos.filter(p => p.spot_id === s.id))))
+      const spots = spotsRes.data as unknown as SupabaseSpot[]
+      setSpots(spots.map(s => toAppSpot(s, photos.filter(p => p.spot_id === s.id))))
     }
   }, [])
 

@@ -47,9 +47,12 @@ export function useSpots() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
+    // 個人情報（original_submitter_email）を除外した明示カラム
+    const SPOT_COLS = 'id, spot_name, spot_address, spot_url, genre, artist_id, related_artists, image_url, source_url, memo, lat, lng, is_master, submitted_by, status, verified_count, x_posted, created_at, updated_at'
+    const PHOTO_COLS = 'id, spot_id, image_url, source_url, platform, tags, contributor, visit_date, caption, status, votes, created_at, submitted_by'
     Promise.all([
-      supabase.from('spots').select('*').neq('status', 'deleted').order('spot_name'),
-      supabase.from('spot_photos').select('*').neq('status', 'deleted'),
+      supabase.from('spots').select(SPOT_COLS).neq('status', 'deleted').order('spot_name'),
+      supabase.from('spot_photos').select(PHOTO_COLS).neq('status', 'deleted'),
     ]).then(([spotsRes, photosRes]) => {
       if (spotsRes.error) console.error('Spots fetch error:', spotsRes.error.message)
       else setSpots(spotsRes.data ?? [])
