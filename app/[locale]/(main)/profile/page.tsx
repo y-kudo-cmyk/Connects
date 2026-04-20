@@ -428,12 +428,23 @@ export default function ProfilePage() {
             </p>
           </div>
         ) : (
-          <button className="flex items-center gap-1.5 mb-1" onClick={startEditNickname}>
-            <span className="text-lg font-bold" style={{ color: '#1C1C1E' }}>{profile.nickname}</span>
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#636366" strokeWidth="2">
-              <path d="M12 20h9" /><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z" />
-            </svg>
-          </button>
+          <>
+            <button className="flex items-center gap-1.5 mb-1" onClick={startEditNickname}>
+              <span className="text-lg font-bold" style={{ color: '#1C1C1E' }}>{profile.nickname}</span>
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#636366" strokeWidth="2">
+                <path d="M12 20h9" /><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z" />
+              </svg>
+            </button>
+            <button
+              onClick={startEditNickname}
+              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg mb-2 text-left"
+              style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)' }}
+            >
+              <span className="text-[10px] leading-snug" style={{ color: '#EF4444' }}>
+                ⚠️ ユーザー名は他ユーザーに公開されます。本名等は変更してください
+              </span>
+            </button>
+          </>
         )}
 
         <div className="flex items-center gap-1.5 mb-3">
