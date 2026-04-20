@@ -441,7 +441,7 @@ export default function ProfilePage() {
               style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)' }}
             >
               <span className="text-[10px] leading-snug" style={{ color: '#EF4444' }}>
-                ⚠️ ユーザー名は他ユーザーに公開されます。本名等は変更してください
+                ⚠️ ユーザー名は他ユーザーに公開されます
               </span>
             </button>
           </>
