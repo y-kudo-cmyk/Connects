@@ -36,12 +36,14 @@ export async function GET(req: NextRequest) {
 type Evt = {
   id: string
   event_title: string
+  sub_event_title: string | null
   tag: string | null
   start_date: string | null
   end_date: string | null
   spot_name: string | null
   spot_address: string | null
   cancelled: boolean | null
+  status: string | null
 }
 
 function normalize(title: string): string {
@@ -50,23 +52,34 @@ function normalize(title: string): string {
     .toLowerCase()
 }
 
+/** UTC 時刻を JST の YYYY-MM-DD に変換 */
+function toJstDate(isoUtc: string): string {
+  const d = new Date(isoUtc)
+  const jst = new Date(d.getTime() + 9 * 60 * 60 * 1000)
+  return jst.toISOString().slice(0, 10)
+}
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function detectDuplicates(sb: any): Promise<Array<{ title: string; tag: string; date: string; ids: string[] }>> {
-  // 今日以降のイベントだけチェック（過去の重複は今さら）
+  // 今日以降のイベントだけチェック（過去の重複は今さら）。削除済みは除外。
   const today = new Date().toISOString().slice(0, 10)
   const { data: events } = await sb.from('events')
-    .select('id, event_title, tag, start_date, end_date, spot_name, spot_address, cancelled')
+    .select('id, event_title, sub_event_title, tag, start_date, end_date, spot_name, spot_address, cancelled, status')
     .gte('start_date', today + 'T00:00:00')
     .or('cancelled.eq.false,cancelled.is.null')
+    .neq('status', 'deleted')
     .order('start_date')
 
   if (!events) return []
 
-  // Group by (normalized_title + tag + date_bucket)
+  // Group by (normalized_title + normalized_sub + tag + JST date)
+  // sub_event_title が違うものは「意図的に分割された別イベント」として扱い、重複判定から外す。
+  // 日付は JST ベースで揃える（UTC だと 4/30 08:00 JST が 4/29 扱いになる）。
   const groups = new Map<string, Evt[]>()
   for (const e of events as Evt[]) {
     if (!e.start_date) continue
-    const key = `${normalize(e.event_title)}|${e.tag || ''}|${e.start_date.slice(0, 10)}`
+    const jstDate = toJstDate(e.start_date)
+    const key = `${normalize(e.event_title)}|${normalize(e.sub_event_title || '')}|${e.tag || ''}|${jstDate}`
     if (!groups.has(key)) groups.set(key, [])
     groups.get(key)!.push(e)
   }
@@ -84,9 +97,9 @@ async function detectDuplicates(sb: any): Promise<Array<{ title: string; tag: st
     for (const [, sameSpot] of bySpot) {
       if (sameSpot.length < 2) continue
       dupes.push({
-        title: sameSpot[0].event_title,
+        title: sameSpot[0].event_title + (sameSpot[0].sub_event_title ? ` — ${sameSpot[0].sub_event_title}` : ''),
         tag: sameSpot[0].tag || '',
-        date: sameSpot[0].start_date?.slice(0, 10) || '',
+        date: toJstDate(sameSpot[0].start_date || ''),
         ids: sameSpot.map(e => e.id),
       })
     }
