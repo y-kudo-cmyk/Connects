@@ -60,7 +60,7 @@ export async function updateEvent(
 
 export async function deleteEvent(eventId: string) {
   const supabase = await requireAdmin()
-  const { error } = await supabase.from("events").delete().eq("id", eventId)
+  const { error } = await supabase.from("events").update({ status: "deleted" }).eq("id", eventId)
 
   if (error) throw new Error(error.message)
   revalidatePath("/admin/posts")
@@ -124,8 +124,9 @@ export async function updateAnnouncement(id: string, formData: FormData) {
 }
 
 export async function deleteAnnouncement(id: string) {
+  // soft delete: published=false にして非公開化。行は保持して復元可能。
   const supabase = await requireAdmin()
-  const { error } = await supabase.from("announcements").delete().eq("id", id)
+  const { error } = await supabase.from("announcements").update({ published: false }).eq("id", id)
 
   if (error) throw new Error(error.message)
   revalidatePath("/admin/announcements")

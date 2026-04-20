@@ -89,6 +89,7 @@ export function useProfile() {
       .from('fan_club_memberships')
       .select('*')
       .eq('user_id', user.id)
+      .is('deleted_at', null)
 
     // 実際の投稿数・承認数・編集数をリアルタイムカウント
     const [
@@ -205,7 +206,7 @@ export function useProfile() {
   }, [fetchProfile])
 
   const removeFanClub = useCallback(async (id: string) => {
-    await supabase.from('fan_club_memberships').delete().eq('id', id)
+    await supabase.from('fan_club_memberships').update({ deleted_at: new Date().toISOString() }).eq('id', id)
     await fetchProfile()
   }, [fetchProfile])
 

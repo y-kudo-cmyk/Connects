@@ -109,6 +109,7 @@ export function useMyEntries() {
       .from('my_entries')
       .select('*')
       .eq('user_id', user.id)
+      .is('deleted_at', null)
       .order('created_at', { ascending: false })
     if (data) setEntries(data.map(toApp))
   }, [user])
@@ -158,9 +159,16 @@ export function useMyEntries() {
   }, [user, fetchEntries])
 
   const removeEntry = useCallback(async (id: string) => {
-    await supabase.from('my_entries').delete().eq('id', id)
+    await supabase.from('my_entries').update({ deleted_at: new Date().toISOString() }).eq('id', id)
+    if (user) {
+      await supabase.from('user_activity').insert({
+        user_id: user.id,
+        action: 'delete_my_entry',
+        detail: JSON.stringify({ entry_id: id }),
+      })
+    }
     await fetchEntries()
-  }, [fetchEntries])
+  }, [user, fetchEntries])
 
   const hasEntry = useCallback(
     (eventId: string) => entries.some((e) => e.eventId === eventId),

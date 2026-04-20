@@ -66,6 +66,7 @@ export function useTodos() {
       .from('todos')
       .select('*')
       .eq('user_id', user.id)
+      .is('deleted_at', null)
       .order('created_at', { ascending: false })
     if (data) setTodos(data.map(toApp))
   }, [user])
@@ -115,7 +116,14 @@ export function useTodos() {
   }
 
   const removeTodo = async (id: string) => {
-    await supabase.from('todos').delete().eq('id', id)
+    await supabase.from('todos').update({ deleted_at: new Date().toISOString() }).eq('id', id)
+    if (user) {
+      await supabase.from('user_activity').insert({
+        user_id: user.id,
+        action: 'delete_todo',
+        detail: JSON.stringify({ todo_id: id }),
+      })
+    }
     await fetchTodos()
   }
 

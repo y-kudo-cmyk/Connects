@@ -80,10 +80,18 @@ export default function EventDetailModal({
 
   const handleDelete = async () => {
     await supabase.from('event_votes').delete().eq('event_id', event.id)
-    const { error } = await supabase.from('events').delete().eq('id', event.id)
+    // soft delete: status='deleted' で非表示。行は保持。
+    const { error } = await supabase.from('events').update({ status: 'deleted' }).eq('id', event.id)
     if (error) {
       console.error('Delete error:', error.message)
       return
+    }
+    if (user?.id) {
+      await supabase.from('user_activity').insert({
+        user_id: user.id,
+        action: 'delete_event',
+        detail: JSON.stringify({ event_id: event.id, event_title: event.title }),
+      })
     }
     await onRefresh?.()
     onClose()

@@ -38,6 +38,7 @@ export function useEvents() {
     supabase
       .from('events')
       .select('*, submitter:profiles!submitted_by(nickname)')
+      .neq('status', 'deleted')
       .order('start_date', { ascending: true })
       .then(({ data, error }) => {
         if (error) console.error('Events fetch error:', error.message)
