@@ -60,15 +60,16 @@ export default async function InfoListPage({ params }: { params: Promise<{ local
         ) : (
           <ul style={{ listStyle: 'none', margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: 10 }}>
             {items.map(a => {
-              const { title, body } = pick(a)
+              const { title } = pick(a)
               const date = new Date(a.created_at).toLocaleDateString(locale === 'en' ? 'en-US' : locale === 'ko' ? 'ko-KR' : 'ja-JP')
-              const preview = body?.replace(/\s+/g, ' ').slice(0, 80) || ''
               return (
                 <li key={a.id}>
                   <Link
                     href={`/${locale}/info/${a.id}`}
                     style={{
-                      display: 'block',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 12,
                       background: '#FFFFFF',
                       borderRadius: 14,
                       padding: '14px 16px',
@@ -76,13 +77,15 @@ export default async function InfoListPage({ params }: { params: Promise<{ local
                       color: 'inherit',
                     }}
                   >
-                    <p style={{ fontSize: 10, color: '#8E8E93', margin: 0 }}>{date}</p>
-                    <h2 style={{ fontSize: 14, fontWeight: 800, color: '#1C1C1E', margin: '4px 0 4px' }}>{title}</h2>
-                    {preview && (
-                      <p style={{ fontSize: 11, color: '#636366', margin: 0, lineHeight: 1.5, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                        {preview}
-                      </p>
-                    )}
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 10, color: '#8E8E93' }}>{date}</div>
+                      <div style={{ fontSize: 14, fontWeight: 800, color: '#1C1C1E', marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        {title}
+                      </div>
+                    </div>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#C7C7CC" strokeWidth="2.5" style={{ flexShrink: 0 }}>
+                      <polyline points="9 18 15 12 9 6" />
+                    </svg>
                   </Link>
                 </li>
               )
