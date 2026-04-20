@@ -164,7 +164,7 @@ export default function MapPage() {
         {uploadSpot && (
           <PhotoUploadModal
             spot={uploadSpot}
-            defaultContributor={profile.nickname || t('Common.user')}
+            defaultContributor={profile.nickname || ''}
             onSave={async (photos) => { for (const photo of photos) { await addPhoto(uploadSpot.id, { ...photo, status: 'pending', votes: 0 }) } setUploadSpot(null) }}
             onClose={() => setUploadSpot(null)}
           />
@@ -480,7 +480,7 @@ export default function MapPage() {
       {/* 新規スポット投稿モーダル */}
       {showNewSpot && (
         <NewSpotModal
-          defaultContributor={profile.nickname || t('Common.user')}
+          defaultContributor={profile.nickname || ''}
           onClose={() => setShowNewSpot(false)}
           onRefresh={refreshSpots}
         />

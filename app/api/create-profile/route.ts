@@ -41,13 +41,10 @@ export async function POST(req: NextRequest) {
   const g = glideUser?.[0]
 
   // profile作成
-  // nickname に email 形式（@含む）が入るのを防ぐ：@が含まれる場合は local-part のみ
-  const stripEmail = (v?: string | null) => {
-    if (!v) return ''
-    return v.includes('@') ? v.split('@')[0] : v
-  }
-  const nicknameRaw = g?.nickname || user.user_metadata?.name || email.split('@')[0]
-  const nickname = stripEmail(nicknameRaw) || 'User'
+  // nickname: Glide 側にあればそれを、それ以外はユーザーが後から設定するまで空。
+  // email を勝手に nickname に入れない（MAP 等で個人情報が出る）。
+  const glideNickname = g?.nickname || ''
+  const nickname = glideNickname.includes('@') ? '' : glideNickname
   const { error } = await sb.from('profiles').insert({
     id: user.id,
     mail: email,
