@@ -2,35 +2,27 @@ export const maxDuration = 30
 
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import { sendPushNotification } from '@/lib/onesignal/server'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!,
 )
 
-const ONESIGNAL_APP_ID = process.env.NEXT_PUBLIC_ONESIGNAL_APP_ID!
-const ONESIGNAL_API_KEY = process.env.ONESIGNAL_REST_API_KEY!
-
-// ── OneSignal 送信 ───────────────────────────────────────────
-async function sendNotification(_userIds: string[], heading: string, content: string, url?: string) {
-  // TODO: external_id での個別送信に切り替える（OneSignal login 紐づけ修正後）
-  // 現在は全サブスクライバーに送信
-  const res = await fetch('https://onesignal.com/api/v1/notifications', {
-    method: 'POST',
-    headers: {
-      'Authorization': `Basic ${ONESIGNAL_API_KEY}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      app_id: ONESIGNAL_APP_ID,
-      included_segments: ['All'],
-      headings: { en: heading, ja: heading },
-      contents: { en: content, ja: content },
-      url: url || 'https://connects-nu.vercel.app',
-    }),
-  })
-  const data = await res.json()
-  return { success: !data.errors, recipients: data.recipients, id: data.id }
+// ── OneSignal 個別送信（external_id = profiles.id） ─────────
+async function sendNotification(userIds: string[], heading: string, content: string, url?: string) {
+  if (userIds.length === 0) return { success: true, recipients: 0, skipped: true }
+  try {
+    const result = await sendPushNotification({
+      title: heading,
+      message: content,
+      url,
+      target: { type: 'users', userIds },
+    })
+    return { success: true, recipients: result?.recipients ?? userIds.length, id: result?.id }
+  } catch (e) {
+    return { success: false, error: (e as Error).message }
+  }
 }
 
 // ── 日付ヘルパー（JST） ─────────────────────────────────────

@@ -2,12 +2,12 @@
   "productId": "P_KR018",
   "versionId": "V_KR018_04",
   "albumName": "FML CARAT ver.",
-  "imageSize": { "width": 3000, "height": 1833 },
+  "imageSize": { "width": 2739, "height": 3578 },
   "cards": [
-    { "cardType": "binder",    "detail": "Binder",      "left": 293,  "top": 646,  "width": 631, "height": 798 },
-    { "cardType": "photocard", "detail": "Photocard 1", "left": 956,  "top": 646,  "width": 258, "height": 387 },
-    { "cardType": "photocard", "detail": "Photocard 2", "left": 1236, "top": 646,  "width": 258, "height": 387 },
-    { "cardType": "photocard", "detail": "Photocard 3", "left": 956,  "top": 1058, "width": 258, "height": 385 },
-    { "cardType": "photocard", "detail": "Photocard 4", "left": 1236, "top": 1058, "width": 258, "height": 385 }
+    { "cardType": "binder",    "detail": "Binder",      "left": 1534, "top": 719,  "width": 460, "height": 594 },
+    { "cardType": "photocard", "detail": "Photocard 1", "left": 2032, "top": 719,  "width": 230, "height": 351 },
+    { "cardType": "photocard", "detail": "Photocard 2", "left": 2282, "top": 719,  "width": 230, "height": 351 },
+    { "cardType": "photocard", "detail": "Photocard 3", "left": 2032, "top": 1088, "width": 230, "height": 354 },
+    { "cardType": "photocard", "detail": "Photocard 4", "left": 2282, "top": 1088, "width": 230, "height": 354 }
   ]
 }

@@ -647,8 +647,8 @@ export default function ProfilePage() {
         )}
       </div>
 
-      {/* --- Referral code --- */}
-      <ReferralSection />
+      {/* --- Referral code (4/26 Glide 移行完了後に有効化) --- */}
+      {/* <ReferralSection /> */}
 
       {/* 参戦記録 詳細モーダル */}
       {showConcerts && portalMounted && createPortal(

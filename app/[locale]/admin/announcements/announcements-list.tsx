@@ -190,6 +190,19 @@ export function AnnouncementsList({
                     {a.link_url}
                   </p>
                 )}
+                {a.published && (
+                  <p className="mb-2 text-xs text-muted-foreground">
+                    公開URL:{' '}
+                    <a
+                      href={`/ja/info/${a.id}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-blue-600 underline"
+                    >
+                      /ja/info/{a.id}
+                    </a>
+                  </p>
+                )}
                 <div className="flex items-center justify-between">
                   <span className="text-xs text-muted-foreground">
                     {new Date(a.created_at).toLocaleDateString("ja-JP")}
