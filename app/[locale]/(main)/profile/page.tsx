@@ -407,20 +407,25 @@ export default function ProfilePage() {
       {/* --- User info --- */}
       <div className="px-4 pb-3">
         {editingNickname ? (
-          <div className="flex items-center gap-2 mb-1">
-            <input
-              type="text"
-              value={nicknameInput}
-              autoFocus
-              maxLength={20}
-              onChange={(e) => setNicknameInput(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && saveNickname()}
-              className="px-3 py-1.5 rounded-lg text-base font-bold outline-none"
-              style={{ background: '#FFFFFF', border: '1px solid #F3B4E3', color: '#1C1C1E', width: 180 }}
-            />
-            <button onClick={saveNickname} className="w-7 h-7 rounded-full flex items-center justify-center" style={{ background: '#F3B4E3' }}>
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" strokeWidth="3"><polyline points="20 6 9 17 4 12" /></svg>
-            </button>
+          <div className="mb-1">
+            <div className="flex items-center gap-2">
+              <input
+                type="text"
+                value={nicknameInput}
+                autoFocus
+                maxLength={20}
+                onChange={(e) => setNicknameInput(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && saveNickname()}
+                className="px-3 py-1.5 rounded-lg text-base font-bold outline-none"
+                style={{ background: '#FFFFFF', border: '1px solid #F3B4E3', color: '#1C1C1E', width: 180 }}
+              />
+              <button onClick={saveNickname} className="w-7 h-7 rounded-full flex items-center justify-center" style={{ background: '#F3B4E3' }}>
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" strokeWidth="3"><polyline points="20 6 9 17 4 12" /></svg>
+              </button>
+            </div>
+            <p className="text-[10px] mt-1.5" style={{ color: '#EF4444' }}>
+              ⚠️ ユーザー名は他のユーザーに表示される可能性があります
+            </p>
           </div>
         ) : (
           <button className="flex items-center gap-1.5 mb-1" onClick={startEditNickname}>

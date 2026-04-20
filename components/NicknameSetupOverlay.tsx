@@ -51,6 +51,9 @@ export default function NicknameSetupOverlay({ userId, onDone }: { userId: strin
             いつでも変更可能です。
           </p>
         </div>
+        <p style={{ fontSize: 10, color: '#EF4444', background: 'rgba(239,68,68,0.08)', padding: '8px 10px', borderRadius: 10, margin: '0 0 12px', lineHeight: 1.6, textAlign: 'center' }}>
+          ⚠️ ユーザー名は他のユーザーに表示される可能性があります
+        </p>
         <input
           type="text"
           value={nickname}
