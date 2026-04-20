@@ -48,8 +48,8 @@ export function useSpots() {
 
   useEffect(() => {
     Promise.all([
-      supabase.from('spots').select('*').order('spot_name'),
-      supabase.from('spot_photos').select('*'),
+      supabase.from('spots').select('*').neq('status', 'deleted').order('spot_name'),
+      supabase.from('spot_photos').select('*').neq('status', 'deleted'),
     ]).then(([spotsRes, photosRes]) => {
       if (spotsRes.error) console.error('Spots fetch error:', spotsRes.error.message)
       else setSpots(spotsRes.data ?? [])

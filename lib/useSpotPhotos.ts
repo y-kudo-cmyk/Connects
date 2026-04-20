@@ -54,6 +54,7 @@ export function useSpotPhotos() {
     const { data } = await supabase
       .from('spot_photos')
       .select('*')
+      .neq('status', 'deleted')
       .order('created_at', { ascending: false })
     if (data) {
       const map: Record<string, SpotPhoto[]> = {}
@@ -85,7 +86,8 @@ export function useSpotPhotos() {
   }, [user, fetchPhotos])
 
   const removePhoto = useCallback(async (_spotId: string, photoId: string) => {
-    await supabase.from('spot_photos').delete().eq('id', photoId)
+    // Soft delete: status='deleted' にして一覧から除外（DB 行は残す）
+    await supabase.from('spot_photos').update({ status: 'deleted' }).eq('id', photoId)
     await fetchPhotos()
   }, [fetchPhotos])
 

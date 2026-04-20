@@ -21,17 +21,19 @@ export async function POST(req: NextRequest) {
   const { spotId, photoId } = await req.json()
 
   if (photoId) {
-    const { error } = await sb.from('spot_photos').delete().eq('id', photoId)
+    // Soft delete（行は保持、status='deleted' で非表示）
+    const { error } = await sb.from('spot_photos').update({ status: 'deleted' }).eq('id', photoId)
     if (error) return NextResponse.json({ error: error.message }, { status: 500 })
     return NextResponse.json({ ok: true, deleted: 'photo', id: photoId })
   }
 
   if (!spotId) return NextResponse.json({ error: 'Missing spotId or photoId' }, { status: 400 })
 
-  // cleanup related rows
-  await sb.from('spot_photos').delete().eq('spot_id', spotId)
+  // スポット削除も soft delete：spot と紐づく photos を status='deleted' に。
+  // favorite_spots は集計外の関連表なので物理削除維持。
+  await sb.from('spot_photos').update({ status: 'deleted' }).eq('spot_id', spotId)
   await sb.from('favorite_spots').delete().eq('spot_id', spotId)
-  const { error } = await sb.from('spots').delete().eq('id', spotId)
+  const { error } = await sb.from('spots').update({ status: 'deleted' }).eq('id', spotId)
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 
   return NextResponse.json({ ok: true, deleted: 'spot', id: spotId })

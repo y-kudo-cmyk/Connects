@@ -71,7 +71,7 @@ export function useUserSpots() {
   }, [user, fetchSpots])
 
   const removeSpot = useCallback(async (id: string) => {
-    await supabase.from('spots').delete().eq('id', id)
+    await supabase.from('spots').update({ status: 'deleted' }).eq('id', id)
     await fetchSpots()
   }, [fetchSpots])
 
