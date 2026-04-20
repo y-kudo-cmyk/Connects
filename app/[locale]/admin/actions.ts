@@ -1,9 +1,13 @@
 "use server"
 
 import { createClient } from "@/lib/supabase/server"
+import { createClient as createServiceClient } from "@supabase/supabase-js"
 import { revalidatePath } from "next/cache"
 
-async function requireAdmin(): ReturnType<typeof createClient> {
+// 管理者ロールチェック後、RLS を回避する service role クライアントを返す。
+// RLS で SELECT/UPDATE/DELETE が self-only に制限されていても、
+// admin 判定後は全テーブル操作を許可する。
+async function requireAdmin() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) throw new Error("Unauthorized")
@@ -15,7 +19,11 @@ async function requireAdmin(): ReturnType<typeof createClient> {
     .single()
 
   if (profile?.role !== "admin") throw new Error("Forbidden")
-  return supabase
+
+  return createServiceClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+  )
 }
 
 // ── Posts ─────────────────────────────────────────────────────
