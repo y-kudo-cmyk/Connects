@@ -57,8 +57,10 @@ export default async function InfoPage({ params }: { params: Promise<{ id: strin
       </header>
       <main style={{ padding: '24px 16px 48px' }}>
         <article style={{ maxWidth: 680, margin: '0 auto', background: '#FFFFFF', borderRadius: 16, padding: 24 }}>
-          <div style={{ fontSize: 14, lineHeight: 1.9, color: '#1C1C1E', whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
-            {body}
+          <div style={{ fontSize: 14, lineHeight: 1.9, color: '#1C1C1E', wordBreak: 'break-word' }}>
+            {(body || '').replace(/\r\n/g, '\n').split('\n').map((line, i) => (
+              <p key={i} style={{ margin: 0, minHeight: '1.9em' }}>{line || '\u00A0'}</p>
+            ))}
           </div>
           {a.link_url && (
             <a
