@@ -16,17 +16,21 @@ export async function POST(req: NextRequest) {
   const normalized = email.toLowerCase().trim()
 
   // 既にprofileがあるか
-  const { data: existing } = await sb.from('profiles').select('id, mail, ref_code, introduced_by').eq('id', user.id).maybeSingle()
+  const { data: existing } = await sb.from('profiles').select('id, mail, ref_code, introduced_by, line_user_id, membership_number, is_verified, nickname').eq('id', user.id).maybeSingle()
   if (existing) {
     const updates: Record<string, unknown> = {}
     // mail が空なら補完
     if ((!existing.mail || existing.mail === '') && email) updates.mail = email
 
-    // ref_code が空で glide_users 側にあれば補完
-    if (!existing.ref_code || existing.ref_code === '') {
-      const { data: glideUser } = await sb.from('glide_users').select('ref_code, introduced_by, is_verified').ilike('mail', normalized).maybeSingle()
-      if (glideUser?.ref_code) updates.ref_code = glideUser.ref_code
-      if (!existing.introduced_by && glideUser?.introduced_by) updates.introduced_by = glideUser.introduced_by
+    // glide_users 全情報で不足分を補完
+    const { data: glideUser } = await sb.from('glide_users').select('nickname, ref_code, introduced_by, is_verified, line_user_id, membership_number').ilike('mail', normalized).maybeSingle()
+    if (glideUser) {
+      if ((!existing.ref_code || existing.ref_code === '') && glideUser.ref_code) updates.ref_code = glideUser.ref_code
+      if ((!existing.introduced_by || existing.introduced_by === '') && glideUser.introduced_by) updates.introduced_by = glideUser.introduced_by
+      if ((!existing.line_user_id || existing.line_user_id === '') && glideUser.line_user_id) updates.line_user_id = glideUser.line_user_id
+      if ((!existing.membership_number || existing.membership_number === '') && glideUser.membership_number) updates.membership_number = glideUser.membership_number
+      if (existing.is_verified !== true && glideUser.is_verified === true) updates.is_verified = true
+      if ((!existing.nickname || existing.nickname === '') && glideUser.nickname && !glideUser.nickname.includes('@')) updates.nickname = glideUser.nickname
     }
 
     if (Object.keys(updates).length > 0) {
@@ -54,6 +58,7 @@ export async function POST(req: NextRequest) {
     ref_code: g?.ref_code || '',          // Glide 紹介コード引継ぎ
     introduced_by: g?.introduced_by || '', // 招待者
     is_verified: g?.is_verified || false,
+    line_user_id: g?.line_user_id || '',  // Glide LINE ID 引継ぎ
     language: 'ja',
     country: 'JP',
   })
