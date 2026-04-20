@@ -187,12 +187,20 @@ async function myEventReminder(currentTime: string, today: string) {
 
   if (!users || users.length === 0) return { type: 'reminder', skipped: true }
 
-  // 現在時刻の1時間後 = リマインダー対象の開始時刻
-  // cron は :00 / :30 に発火するので、:00 なら次時間の :00、:30 なら次時間の :30 のイベントがヒットする
+  // 現在時刻の 1時間後を起点に 30分のウィンドウでイベントを拾う。
+  // cron は :00 / :30 発火なので、
+  //   cron HH:00 → ウィンドウ [HH+1:00, HH+1:30)
+  //   cron HH:30 → ウィンドウ [HH+1:30, HH+2:00)
+  // 分が :00 /:30 以外のイベントでも、30分前〜1時間前の範囲で1回届く。
   const [h, m] = currentTime.split(':').map(Number)
-  const targetHour = String(h + 1).padStart(2, '0')
-  const targetMinute = String(m).padStart(2, '0')
-  const targetTime = `${targetHour}:${targetMinute}`
+  const windowStartTotal = (h + 1) * 60 + m           // 分単位
+  const windowEndTotal = windowStartTotal + 30        // 30分後
+  const inWindow = (hhmm: string): boolean => {
+    const [eh, em] = hhmm.split(':').map(Number)
+    if (Number.isNaN(eh) || Number.isNaN(em)) return false
+    const t = eh * 60 + em
+    return t >= windowStartTotal && t < windowEndTotal
+  }
 
   let sent = 0
   let lineSent = 0
@@ -204,34 +212,34 @@ async function myEventReminder(currentTime: string, today: string) {
 
     if (!entries || entries.length === 0) continue
 
-    // 今日の、1時間後に開始するイベントを抽出（LIVE は除外）
+    // 今日の、1時間〜30分後に開始するイベントを抽出（CONCERT は除外）
     const upcomingStart = entries.filter(e => {
       if (!e.start_date) return false
       if (e.tag === 'CONCERT') return false
       const date = e.start_date.slice(0, 10)
       const time = e.start_date.slice(11, 16)
-      return date === today && time === targetTime
+      return date === today && inWindow(time)
     })
 
-    // TICKET のみ、1時間後に終了するイベントを抽出
+    // TICKET のみ、1時間〜30分後に終了するイベントを抽出
     const upcomingEnd = entries.filter(e => {
       if (e.tag !== 'TICKET') return false
       if (!e.end_date) return false
       const date = e.end_date.slice(0, 10)
       const time = e.end_date.slice(11, 16)
-      return date === today && time === targetTime
+      return date === today && inWindow(time)
     })
 
     if (upcomingStart.length === 0 && upcomingEnd.length === 0) continue
 
     // OneSignal
     if (upcomingStart.length > 0) {
-      const content = upcomingStart.map(e => `・${e.event_title} ${targetTime}〜`).join('\n')
+      const content = upcomingStart.map(e => `・${e.event_title} ${e.start_date.slice(11, 16)}〜`).join('\n')
       await sendNotification([user.id], '⏰ まもなく開始', content, 'https://connects-nu.vercel.app/my')
       sent++
     }
     if (upcomingEnd.length > 0) {
-      const content = upcomingEnd.map(e => `・${e.event_title} ${targetTime}締切`).join('\n')
+      const content = upcomingEnd.map(e => `・${e.event_title} ${e.end_date.slice(11, 16)}締切`).join('\n')
       await sendNotification([user.id], '⏰ まもなく終了', content, 'https://connects-nu.vercel.app/my')
       sent++
     }
@@ -239,18 +247,20 @@ async function myEventReminder(currentTime: string, today: string) {
     // LINE Push (line_user_id がある場合)
     if (user.line_user_id) {
       for (const e of upcomingStart) {
+        const eventTime = e.start_date.slice(11, 16)
         let msg = `⚡ まもなく開始！\n\n${e.event_title}\n`
         if (e.sub_event_title) msg += `　${e.sub_event_title}\n`
-        msg += `🕐 ${targetTime}〜\n`
+        msg += `🕐 ${eventTime}〜\n`
         if (e.spot_name) msg += `📍 ${e.spot_name}\n`
         if (e.source_url) msg += `\n🔗 ${e.source_url}\n`
         msg += `\n━━━━━━━━━━\nConnect+\nhttps://connects-nu.vercel.app/my`
         if (await sendLinePush(user.line_user_id, msg)) lineSent++
       }
       for (const e of upcomingEnd) {
+        const eventTime = e.end_date.slice(11, 16)
         let msg = `⚠️ まもなく終了！\n\n${e.event_title}\n`
         if (e.sub_event_title) msg += `　${e.sub_event_title}\n`
-        msg += `🕐 ${targetTime} 締切\n`
+        msg += `🕐 ${eventTime} 締切\n`
         if (e.source_url) msg += `\n🔗 ${e.source_url}\n`
         msg += `\n━━━━━━━━━━\nConnect+\nhttps://connects-nu.vercel.app/my`
         if (await sendLinePush(user.line_user_id, msg)) lineSent++
