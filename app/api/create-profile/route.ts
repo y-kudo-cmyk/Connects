@@ -41,10 +41,17 @@ export async function POST(req: NextRequest) {
   const g = glideUser?.[0]
 
   // profile作成
+  // nickname に email 形式（@含む）が入るのを防ぐ：@が含まれる場合は local-part のみ
+  const stripEmail = (v?: string | null) => {
+    if (!v) return ''
+    return v.includes('@') ? v.split('@')[0] : v
+  }
+  const nicknameRaw = g?.nickname || user.user_metadata?.name || email.split('@')[0]
+  const nickname = stripEmail(nicknameRaw) || 'User'
   const { error } = await sb.from('profiles').insert({
     id: user.id,
     mail: email,
-    nickname: g?.nickname || user.user_metadata?.name || email.split('@')[0],
+    nickname,
     membership_number: g?.membership_number || '',
     avatar_url: g?.avatar_url || user.user_metadata?.avatar_url || '',
     ref_code: g?.ref_code || '',          // Glide 紹介コード引継ぎ
