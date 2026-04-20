@@ -70,7 +70,7 @@ export function useSpotPhotos() {
 
   const addPhoto = useCallback(async (spotId: string, photo: SpotPhoto) => {
     if (!user) return
-    await supabase.from('spot_photos').insert({
+    const { data: inserted } = await supabase.from('spot_photos').insert({
       spot_id: spotId,
       image_url: photo.imageUrl,
       source_url: photo.sourceUrl || null,
@@ -81,15 +81,30 @@ export function useSpotPhotos() {
       visit_date: photo.date || null,
       status: 'pending',
       votes: 0,
+    }).select('id').single()
+    // 監査ログ（user_activity）
+    await supabase.from('user_activity').insert({
+      user_id: user.id,
+      action: 'post_photo',
+      detail: JSON.stringify({ photo_id: inserted?.id, spot_id: spotId, image_url: photo.imageUrl }),
     })
     await fetchPhotos()
   }, [user, fetchPhotos])
 
   const removePhoto = useCallback(async (_spotId: string, photoId: string) => {
+    // 削除前に元データを取得（監査ログに残す）
+    const { data: before } = await supabase.from('spot_photos').select('spot_id, image_url, submitted_by, contributor').eq('id', photoId).maybeSingle()
     // Soft delete: status='deleted' にして一覧から除外（DB 行は残す）
     await supabase.from('spot_photos').update({ status: 'deleted' }).eq('id', photoId)
+    if (user) {
+      await supabase.from('user_activity').insert({
+        user_id: user.id,
+        action: 'delete_photo',
+        detail: JSON.stringify({ photo_id: photoId, spot_id: before?.spot_id, image_url: before?.image_url, original_submitter: before?.submitted_by, original_contributor: before?.contributor }),
+      })
+    }
     await fetchPhotos()
-  }, [fetchPhotos])
+  }, [user, fetchPhotos])
 
   const votePhoto = useCallback(async (spotId: string, photoId: string) => {
     if (!user) return

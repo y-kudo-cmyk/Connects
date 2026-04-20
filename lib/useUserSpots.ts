@@ -67,13 +67,26 @@ export function useUserSpots() {
       status: 'pending',
       verified_count: 0,
     })
+    await supabase.from('user_activity').insert({
+      user_id: user.id,
+      action: 'post_spot',
+      detail: JSON.stringify({ spot_id: spot.id, spot_name: spot.name, address: spot.address }),
+    })
     await fetchSpots()
   }, [user, fetchSpots])
 
   const removeSpot = useCallback(async (id: string) => {
+    const { data: before } = await supabase.from('spots').select('spot_name, spot_address, submitted_by').eq('id', id).maybeSingle()
     await supabase.from('spots').update({ status: 'deleted' }).eq('id', id)
+    if (user) {
+      await supabase.from('user_activity').insert({
+        user_id: user.id,
+        action: 'delete_spot',
+        detail: JSON.stringify({ spot_id: id, spot_name: before?.spot_name, address: before?.spot_address, original_submitter: before?.submitted_by }),
+      })
+    }
     await fetchSpots()
-  }, [fetchSpots])
+  }, [user, fetchSpots])
 
   return { userSpots, addSpot, removeSpot }
 }
