@@ -41,6 +41,21 @@ export type MyEntry = {
   sourceUrl?: string
 }
 
+type DbEventJoin = {
+  id: string
+  tag: string | null
+  event_title: string | null
+  sub_event_title: string | null
+  start_date: string | null
+  end_date: string | null
+  spot_name: string | null
+  spot_address: string | null
+  image_url: string | null
+  source_url: string | null
+  notes: string | null
+  status: string | null
+}
+
 type DbMyEntry = {
   id: string
   user_id: string
@@ -52,6 +67,8 @@ type DbMyEntry = {
   sub_event_title: string | null
   start_date: string | null
   end_date: string | null
+  user_start_date: string | null
+  user_end_date: string | null
   spot_name: string | null
   spot_address: string | null
   image_url: string | null
@@ -63,6 +80,7 @@ type DbMyEntry = {
   memo: string | null
   created_at: string
   updated_at: string
+  event?: DbEventJoin | null
 }
 
 /** image_urlフィールドをパース: JSON配列 or 単一URL → string[] */
@@ -75,27 +93,49 @@ function parseImageField(val: string | null): string[] {
 }
 
 function toApp(row: DbMyEntry): MyEntry {
+  // 表示ロジック:
+  // - event が live （event_id 有 & status != 'deleted'）→ event の最新値を優先
+  // - start/end 時刻は user_start_date/user_end_date があればそちらを優先
+  // - fallback: my_entries 自身のスナップショット値
+  const liveEvent = row.event && row.event.status !== 'deleted' ? row.event : null
+
+  const start = row.user_start_date ?? liveEvent?.start_date ?? row.start_date
+  const end = row.user_end_date ?? liveEvent?.end_date ?? row.end_date
+  const title = liveEvent?.event_title ?? row.event_title ?? ''
+  const subTitle = liveEvent?.sub_event_title ?? row.sub_event_title ?? undefined
+  const tag = liveEvent?.tag ?? row.tag ?? ''
+  const venue = liveEvent?.spot_name ?? row.spot_name ?? undefined
+  const city = liveEvent?.spot_address ?? row.spot_address ?? undefined
+  const sourceUrl = liveEvent?.source_url ?? row.source_url ?? undefined
+  const notes = liveEvent?.notes ?? row.notes ?? undefined
+  // image_url: my_entries 側には user 画像を JSON 配列で保持、event 側は単一 URL
+  // → event 画像があれば images 配列の先頭に追加（表示優先）
+  const userImages = parseImageField(row.image_url)
+  const images = liveEvent?.image_url
+    ? [liveEvent.image_url, ...userImages.filter(u => u !== liveEvent.image_url)]
+    : userImages
+
   return {
     id: row.id,
     eventId: row.event_id ?? undefined,
-    title: row.event_title ?? '',
-    subTitle: row.sub_event_title ?? undefined,
-    type: row.tag ?? '',
-    tags: row.tag ? [row.tag] : [],
+    title,
+    subTitle,
+    type: tag,
+    tags: tag ? [tag] : [],
     color: '',
-    date: row.start_date?.slice(0, 10) ?? '',
-    dateEnd: row.end_date?.slice(0, 10) ?? undefined,
-    time: row.start_date?.slice(11, 16) ?? undefined,
-    venue: row.spot_name ?? undefined,
-    city: row.spot_address ?? undefined,
+    date: start?.slice(0, 10) ?? '',
+    dateEnd: end?.slice(0, 10) ?? undefined,
+    time: start?.slice(11, 16) ?? undefined,
+    venue,
+    city,
     ticketImages: parseImageField(row.ticket_image_url),
     seatInfo: row.seat_info ?? undefined,
-    notes: row.notes ?? undefined,
+    notes,
     memo: row.memo ?? '',
-    images: parseImageField(row.image_url),
+    images,
     viewImages: parseImageField(row.view_image_url),
     createdAt: row.created_at,
-    sourceUrl: row.source_url ?? undefined,
+    sourceUrl,
   }
 }
 
@@ -107,11 +147,11 @@ export function useMyEntries() {
     if (!user) { setEntries([]); return }
     const { data } = await supabase
       .from('my_entries')
-      .select('*')
+      .select('*, event:events!my_entries_event_id_fkey(id, tag, event_title, sub_event_title, start_date, end_date, spot_name, spot_address, image_url, source_url, notes, status)')
       .eq('user_id', user.id)
       .is('deleted_at', null)
       .order('created_at', { ascending: false })
-    if (data) setEntries(data.map(toApp))
+    if (data) setEntries(data.map((d: unknown) => toApp(d as DbMyEntry)))
   }, [user])
 
   useEffect(() => { fetchEntries() }, [fetchEntries])
@@ -149,11 +189,12 @@ export function useMyEntries() {
     if (updates.ticketImages !== undefined) dbUpdates.ticket_image_url = updates.ticketImages?.length ? JSON.stringify(updates.ticketImages) : null
     if (updates.images !== undefined) dbUpdates.image_url = updates.images?.length ? JSON.stringify(updates.images) : null
     if (updates.viewImages !== undefined) dbUpdates.view_image_url = updates.viewImages?.length ? JSON.stringify(updates.viewImages) : null
+    // 時刻変更は user_start_date / user_end_date に保存（event 最新値を上書き）
     if (updates.date !== undefined) {
       const time = updates.time ?? updates.customTime ?? '00:00'
-      dbUpdates.start_date = `${updates.date}T${time}:00`
+      dbUpdates.user_start_date = `${updates.date}T${time}:00`
     }
-    if (updates.dateEnd !== undefined) dbUpdates.end_date = updates.dateEnd ? `${updates.dateEnd}T00:00:00` : null
+    if (updates.dateEnd !== undefined) dbUpdates.user_end_date = updates.dateEnd ? `${updates.dateEnd}T00:00:00` : null
     await supabase.from('my_entries').update(dbUpdates).eq('id', id)
     await fetchEntries()
   }, [user, fetchEntries])
