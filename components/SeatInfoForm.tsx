@@ -57,11 +57,13 @@ export default function SeatInfoForm({
   onChange,
   ticketImages,
   autoAnalyzeTrigger,  // ticketImagesが増えたときに外から呼ぶ用
+  isAdmin = false,
 }: {
   value: SeatInfo
   onChange: (v: SeatInfo) => void
   ticketImages?: string[]
   autoAnalyzeTrigger?: number  // incrementするとanalyze発火
+  isAdmin?: boolean
 }) {
   const t = useTranslations()
   const [analyzing, setAnalyzing] = useState(false)
@@ -265,10 +267,10 @@ export default function SeatInfoForm({
         </div>
       )}
 
-      {/* 地図で位置を設定 — 現状非表示 (機能要検証) */}
-      {/* {fields.some((f) => f.value.trim()) && (
+      {/* 地図で位置を設定 — admin のみ (検証中) */}
+      {isAdmin && fields.some((f) => f.value.trim()) && (
         <PositionSection value={value} onChange={onChange} fields={fields} />
-      )} */}
+      )}
     </div>
   )
 }

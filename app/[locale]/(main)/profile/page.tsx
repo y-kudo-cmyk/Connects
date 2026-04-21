@@ -687,6 +687,7 @@ export default function ProfilePage() {
       {editHistoryEntry && (
         <ConcertHistoryModal
           entry={editHistoryEntry}
+          isAdmin={profile.role === 'admin'}
           onClose={() => setEditHistoryEntry(null)}
           onUpdate={(updates) => updateEntry(editHistoryEntry.id, updates)}
           onSave={(updates) => {
@@ -1327,11 +1328,12 @@ export default function ProfilePage() {
 }
 
 // --- Concert History Photo Modal ---
-function ConcertHistoryModal({ entry, onClose, onSave, onUpdate }: {
+function ConcertHistoryModal({ entry, onClose, onSave, onUpdate, isAdmin = false }: {
   entry: MyEntry
   onClose: () => void
   onSave: (updates: Partial<MyEntry>) => void
   onUpdate: (updates: Partial<MyEntry>) => void
+  isAdmin?: boolean
 }) {
   const t = useTranslations()
   const ticketRef = useRef<HTMLInputElement>(null)
@@ -1585,6 +1587,7 @@ function ConcertHistoryModal({ entry, onClose, onSave, onUpdate }: {
                 onChange={handleSeatInfoChange}
                 ticketImages={ticketImages}
                 autoAnalyzeTrigger={autoAnalyzeTrigger}
+                isAdmin={isAdmin}
               />
             </div>
           )}
