@@ -87,6 +87,9 @@ export default function CardDetailModal({ card, owned, userId, isBetaUser = fals
   const [mounted, setMounted] = useState(false)
   const [cropSrc, setCropSrc] = useState<string | null>(null)
   const [cropSide, setCropSide] = useState<'front' | 'back' | null>(null)
+  // 裏面は折りたたみ。既に裏画像（master or user）があれば自動展開。
+  const initialBackOpen = !!(owned?.back_image_url || card.back_image_url)
+  const [backOpen, setBackOpen] = useState(initialBackOpen)
   const frontRef = useRef<HTMLInputElement>(null)
   const backRef = useRef<HTMLInputElement>(null)
 
@@ -288,9 +291,9 @@ export default function CardDetailModal({ card, owned, userId, isBetaUser = fals
             const bgRepeat = bgSize === 'contain' ? 'no-repeat' : 'no-repeat'
             const bgFill = 'rgba(243,180,227,0.1)'
             return (
-          <div className="grid grid-cols-2 gap-3 mb-4">
-            {/* Front */}
-            <div>
+          <div className="mb-4">
+            {/* Front (メイン大きく表示) */}
+            <div className="mx-auto" style={{ maxWidth: 220 }}>
               <label className="text-[10px] font-bold mb-1 block" style={{ color: '#636366' }}>{t('frontImage')}</label>
               <div className="relative w-full rounded-xl overflow-hidden"
                 style={{
@@ -313,14 +316,12 @@ export default function CardDetailModal({ card, owned, userId, isBetaUser = fals
                     </div>
                   )}
                 </button>
-                {/* 台紙 (マスター画像のみ) のときはアップロード促すヒント */}
                 {frontPreview && !owned?.front_image_url && (
                   <div className="absolute bottom-0 left-0 right-0 px-2 py-1.5 text-center pointer-events-none"
                     style={{ background: 'rgba(0,0,0,0.65)', color: '#FFFFFF', fontSize: 9, fontWeight: 700 }}>
                     ご自身のトレカの<br/>画像をアップしてください
                   </div>
                 )}
-                {/* 自分のトレカがアップ済みの場合のみ再トリミング可能 */}
                 {frontPreview && owned?.front_image_url && (
                   <button
                     onClick={(e) => { e.stopPropagation(); handleRetrim('front') }}
@@ -333,49 +334,60 @@ export default function CardDetailModal({ card, owned, userId, isBetaUser = fals
               </div>
               <input ref={frontRef} type="file" accept="image/*" className="hidden" onChange={handleImageSelect('front')} />
             </div>
-            {/* Back */}
-            <div>
-              <label className="text-[10px] font-bold mb-1 block" style={{ color: '#636366' }}>{t('backImage')}</label>
-              <div className="relative w-full rounded-xl overflow-hidden"
-                style={{
-                  aspectRatio: aspect,
-                  background: backPreview ? `${bgFill} url(${backPreview}) center / ${bgSize} ${bgRepeat}` : bgFill,
-                  border: '2px dashed #E5E5EA',
-                }}>
-                <button
-                  onClick={() => backRef.current?.click()}
-                  className="absolute inset-0 flex items-center justify-center"
-                >
-                  {!backPreview && (
-                    <div className="flex flex-col items-center gap-1 px-1 text-center">
-                      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#F3B4E3" strokeWidth="1.5">
-                        <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
-                        <polyline points="17 8 12 3 7 8" />
-                        <line x1="12" y1="3" x2="12" y2="15" />
-                      </svg>
-                      <span className="text-[9px] font-semibold leading-tight" style={{ color: '#636366' }}>
-                        裏面画像の投稿に<br/>ご協力ください
-                      </span>
-                    </div>
-                  )}
-                </button>
-                {backPreview && !owned?.back_image_url && (
-                  <div className="absolute bottom-0 left-0 right-0 px-2 py-1.5 text-center pointer-events-none"
-                    style={{ background: 'rgba(0,0,0,0.65)', color: '#FFFFFF', fontSize: 9, fontWeight: 700 }}>
-                    ご自身のトレカの<br/>画像をアップしてください
+
+            {/* Back (折りたたみ、既に裏画像あれば自動展開) */}
+            <div className="mt-3 mx-auto" style={{ maxWidth: 220 }}>
+              <button
+                onClick={() => setBackOpen(v => !v)}
+                className="w-full flex items-center justify-center gap-1 text-[10px] font-bold px-2 py-2 rounded-lg"
+                style={{ background: 'rgba(243,180,227,0.1)', color: '#C97AB8' }}
+              >
+                {backOpen ? '▲ 裏面を閉じる' : '▼ 裏面を登録する（判別用）'}
+              </button>
+              {backOpen && (
+                <div className="mt-2">
+                  <div className="relative w-full rounded-xl overflow-hidden"
+                    style={{
+                      aspectRatio: aspect,
+                      background: backPreview ? `${bgFill} url(${backPreview}) center / ${bgSize} ${bgRepeat}` : bgFill,
+                      border: '2px dashed #E5E5EA',
+                    }}>
+                    <button
+                      onClick={() => backRef.current?.click()}
+                      className="absolute inset-0 flex items-center justify-center"
+                    >
+                      {!backPreview && (
+                        <div className="flex flex-col items-center gap-1 px-1 text-center">
+                          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#F3B4E3" strokeWidth="1.5">
+                            <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
+                            <polyline points="17 8 12 3 7 8" />
+                            <line x1="12" y1="3" x2="12" y2="15" />
+                          </svg>
+                          <span className="text-[9px] font-semibold leading-tight" style={{ color: '#636366' }}>
+                            裏面画像の投稿にご協力ください
+                          </span>
+                        </div>
+                      )}
+                    </button>
+                    {backPreview && !owned?.back_image_url && (
+                      <div className="absolute bottom-0 left-0 right-0 px-2 py-1.5 text-center pointer-events-none"
+                        style={{ background: 'rgba(0,0,0,0.65)', color: '#FFFFFF', fontSize: 9, fontWeight: 700 }}>
+                        ご自身のトレカの<br/>画像をアップしてください
+                      </div>
+                    )}
+                    {backPreview && owned?.back_image_url && (
+                      <button
+                        onClick={(e) => { e.stopPropagation(); handleRetrim('back') }}
+                        className="absolute top-1.5 right-1.5 text-[10px] font-bold px-2 py-1 rounded-full"
+                        style={{ background: 'rgba(0,0,0,0.6)', color: '#FFF' }}
+                      >
+                        ✂️ {t('retrim')}
+                      </button>
+                    )}
                   </div>
-                )}
-                {backPreview && owned?.back_image_url && (
-                  <button
-                    onClick={(e) => { e.stopPropagation(); handleRetrim('back') }}
-                    className="absolute top-1.5 right-1.5 text-[10px] font-bold px-2 py-1 rounded-full"
-                    style={{ background: 'rgba(0,0,0,0.6)', color: '#FFF' }}
-                  >
-                    ✂️ {t('retrim')}
-                  </button>
-                )}
-              </div>
-              <input ref={backRef} type="file" accept="image/*" className="hidden" onChange={handleImageSelect('back')} />
+                  <input ref={backRef} type="file" accept="image/*" className="hidden" onChange={handleImageSelect('back')} />
+                </div>
+              )}
             </div>
           </div>
             )
