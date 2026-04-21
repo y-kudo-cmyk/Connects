@@ -73,8 +73,11 @@ export function getCardAspect(cardType: string | null | undefined): string {
   // 比率は画像のネイティブに合わせ、col-span で高さを揃える (8-col grid想定)
   if (t === 'id_card') return '8 / 5'
   if (t === 'scratch_card') return '2 / 1'
+  if (t === 'postcard') return '3 / 2'           // 横長 葉書
   if (t === 'tear-off_poster') return '3 / 4'
   if (t === 'binder') return '4 / 5'
+  if (t === 'clear_file') return '5 / 7'          // A5 縦
+  if (t === 'coaster') return '1 / 1'
   if (t === 'magnet_sheet' || t === 'mega_jacket' || t === 'photobook') return '1 / 1'
   if (t === 'puzzle' || t === 'sticker') return '1 / 1'
   // default: trading card
@@ -88,8 +91,11 @@ export function getCardColSpan(cardType: string | null | undefined): number {
   const t = (cardType || '').toLowerCase()
   if (t === 'id_card') return 5       // 5/8=62.5%, h=62.5%×5/8=39% ≈37.5
   if (t === 'scratch_card') return 6  // 6/8=75%, h=37.5%
+  if (t === 'postcard') return 5      // 5/8=62.5%, h=62.5%×2/3=42% 近似
   if (t === 'magnet_sheet' || t === 'mega_jacket' || t === 'photobook') return 3 // 3/8=37.5%, h=37.5% ✓
+  if (t === 'coaster') return 3
   if (t === 'puzzle' || t === 'sticker') return 3
+  if (t === 'clear_file') return 2    // 25% × 7/5 = 35%
   if (t === 'tear-off_poster') return 2 // 25% × 4/3 = 33%
   if (t === 'binder') return 2          // 25% × 5/4 = 31%
   // default photocard: 2/8 = 25%, h = 37.5% 基準
@@ -107,10 +113,10 @@ export function isWideCard(cardType: string | null | undefined): boolean {
   return getCardColSpan(cardType) > 2
 }
 
-// 裏面が存在するタイプ。非トレカ (magnet_sheet/mega_jacket) は裏なし。
+// 裏面が存在するタイプ。非トレカ系は裏なし扱い。
 export function hasBackSide(cardType: string | null | undefined): boolean {
   const t = (cardType || '').toLowerCase()
-  return !(t === 'magnet_sheet' || t === 'mega_jacket')
+  return !(t === 'magnet_sheet' || t === 'mega_jacket' || t === 'coaster' || t === 'sticker' || t === 'clear_file')
 }
 
 // True "trading card" types: use object-fit: cover (full-bleed frame).
