@@ -394,6 +394,10 @@ export default function AlbumDetail({ product, userCards, onBack, onCardTap }: A
     const totalOwned = subs.reduce((acc, s) => acc + s.cards.filter(c => isActuallyOwned(c.id)).length, 0)
     const totalCards = subs.reduce((acc, s) => acc + s.cards.length, 0)
     const displayBase = isStore ? shortStoreName(base) : base
+    // この VER 全体で裏面画像があれば最初の1枚を判別用に表示
+    const baseBackImage = subs
+      .flatMap(s => s.cards.map(c => ownedMap.get(c.id)?.back_image_url || c.back_image_url))
+      .find(u => !!u)
     return (
                 <div key={base || 'no-base'}>
                   <div className="flex items-center gap-2 mb-2" style={{ minHeight: 20 }}>
@@ -405,10 +409,26 @@ export default function AlbumDetail({ product, userCards, onBack, onCardTap }: A
                     <span className="text-[10px] whitespace-nowrap flex-shrink-0" style={{ color: '#8E8E93' }}>
                       {totalOwned}/{totalCards}
                     </span>
+                    {baseBackImage && (
+                      <span
+                        title="裏面（判別用）"
+                        className="rounded flex-shrink-0"
+                        style={{
+                          width: 18, height: 25,
+                          background: `url(${baseBackImage}) center / cover no-repeat`,
+                          border: '1px solid #E5E5EA',
+                          marginLeft: 'auto',
+                        }}
+                      />
+                    )}
                   </div>
-                  <div className={isStore ? 'grid grid-cols-3 gap-2' : ''}>
+                  <div>
                   {subs.map(({ store, versionId, cards: versionCards }) => {
                     const ownedInVersion = versionCards.filter(c => isActuallyOwned(c.id)).length
+                    // この version で裏面画像があるカードの所持ユーザー画像（判別用）
+                    const backImage = versionCards
+                      .map(c => ownedMap.get(c.id)?.back_image_url || c.back_image_url)
+                      .find(u => !!u)
                     return (
                       <div key={versionId} className="mb-3">
                         {store ? (
@@ -424,6 +444,30 @@ export default function AlbumDetail({ product, userCards, onBack, onCardTap }: A
                             <span className="text-[9px] whitespace-nowrap" style={{ color: '#8E8E93' }}>
                               {ownedInVersion}/{versionCards.length}
                             </span>
+                            {backImage && (
+                              <span
+                                title="裏面（判別用）"
+                                className="rounded flex-shrink-0"
+                                style={{
+                                  width: 20, height: 28,
+                                  background: `url(${backImage}) center / cover no-repeat`,
+                                  border: '1px solid #E5E5EA',
+                                  marginLeft: 'auto',
+                                }}
+                              />
+                            )}
+                          </div>
+                        ) : backImage ? (
+                          <div className="mb-1.5 pl-2.5 flex items-center justify-end" style={{ minHeight: 22 }}>
+                            <span
+                              title="裏面（判別用）"
+                              className="rounded flex-shrink-0"
+                              style={{
+                                width: 20, height: 28,
+                                background: `url(${backImage}) center / cover no-repeat`,
+                                border: '1px solid #E5E5EA',
+                              }}
+                            />
                           </div>
                         ) : (
                           <div className="mb-1.5" style={{ minHeight: 22 }} />
