@@ -34,7 +34,7 @@ export default function GoodsPage() {
 
   if (!user || !roleLoaded) return null
 
-  const allowed = role === 'admin' || EXTRA_GOODS_USER_IDS.includes(user.id)
+  const allowed = role === 'admin' || role === 'fam' || EXTRA_GOODS_USER_IDS.includes(user.id)
   if (!allowed) {
     return (
       <div className="flex flex-col items-center justify-center" style={{ minHeight: '100vh', background: '#F8F9FA' }}>

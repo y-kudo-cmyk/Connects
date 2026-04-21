@@ -30,8 +30,9 @@ type User = {
 }
 
 export function UsersTable({ users }: { users: User[] }) {
-  async function handleRoleChange(userId: string, role: "user" | "admin" | "banned") {
+  async function handleRoleChange(userId: string, role: "user" | "fam" | "admin" | "banned") {
     if (role === "admin" && !confirm("このユーザーをadminに昇格しますか？")) return
+    if (role === "fam" && !confirm("このユーザーを FAM に設定しますか？（拡張表示アクセス許可）")) return
     if (role === "banned" && !confirm("このユーザーをBANしますか？")) return
     await updateUserRole(userId, role)
   }
@@ -66,7 +67,7 @@ export function UsersTable({ users }: { users: User[] }) {
                 </TableCell>
                 <TableCell className="text-sm">{user.mail || "—"}</TableCell>
                 <TableCell>
-                  <Badge variant={user.role === "admin" ? "default" : user.role === "banned" ? "destructive" : "secondary"}>
+                  <Badge variant={user.role === "admin" ? "default" : user.role === "banned" ? "destructive" : user.role === "fam" ? "outline" : "secondary"}>
                     {user.role}
                   </Badge>
                 </TableCell>
@@ -86,7 +87,7 @@ export function UsersTable({ users }: { users: User[] }) {
                   <Select
                     defaultValue={user.role}
                     onValueChange={(v) =>
-                      handleRoleChange(user.id, v as "user" | "admin" | "banned")
+                      handleRoleChange(user.id, v as "user" | "fam" | "admin" | "banned")
                     }
                   >
                     <SelectTrigger className="h-8 w-[110px]">
@@ -94,6 +95,7 @@ export function UsersTable({ users }: { users: User[] }) {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="user">user</SelectItem>
+                      <SelectItem value="fam">fam</SelectItem>
                       <SelectItem value="admin">admin</SelectItem>
                       <SelectItem value="banned">banned</SelectItem>
                     </SelectContent>

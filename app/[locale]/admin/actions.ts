@@ -78,7 +78,7 @@ export async function deleteEvent(eventId: string) {
 
 export async function updateUserRole(
   userId: string,
-  role: "user" | "admin" | "banned"
+  role: "user" | "fam" | "admin" | "banned"
 ) {
   const supabase = await requireAdmin()
   const { error } = await supabase

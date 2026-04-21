@@ -96,8 +96,8 @@ async function loadShareData(userId: string, searchParams: Record<string, string
     .eq('id', userId)
     .maybeSingle()
   if (!profile) return null
-  // ベータ機能: admin のみ share page を公開
-  if (profile.role !== 'admin') return null
+  // ベータ機能: admin と fam のみ share page を公開
+  if (profile.role !== 'admin' && profile.role !== 'fam') return null
 
   const { data: allCards } = await sb
     .from('user_cards')
