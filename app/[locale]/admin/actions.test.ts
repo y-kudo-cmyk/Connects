@@ -36,6 +36,13 @@ vi.mock('@/lib/supabase/server', () => ({
   createClient: vi.fn().mockResolvedValue(mockSupabase),
 }))
 
+// actions.ts は requireAdmin チェック後に service role client を返す仕様のため、
+// service client の mock も用意。(mockSupabase と同じインスタンスを返して操作を
+// 拾えるようにする)
+vi.mock('@supabase/supabase-js', () => ({
+  createClient: vi.fn().mockReturnValue(mockSupabase),
+}))
+
 vi.mock('next/cache', () => ({
   revalidatePath: vi.fn(),
 }))
@@ -66,8 +73,13 @@ function setupUnauthenticated() {
   })
 }
 
-beforeEach(() => {
+beforeEach(async () => {
   vi.clearAllMocks()
+  // restoreMocks/clearMocks で implementation が消えるので毎テスト再設定
+  const supaSrv = await import('@/lib/supabase/server')
+  ;(supaSrv.createClient as ReturnType<typeof vi.fn>).mockResolvedValue(mockSupabase)
+  const supaJs = await import('@supabase/supabase-js')
+  ;(supaJs.createClient as ReturnType<typeof vi.fn>).mockReturnValue(mockSupabase)
 })
 
 describe('requireAdmin (via actions)', () => {
@@ -112,7 +124,7 @@ describe('updateEventStatus', () => {
 })
 
 describe('deleteEvent', () => {
-  it('admin ユーザーはイベントを削除できる', async () => {
+  it('admin ユーザーはイベントを soft delete できる', async () => {
     setupAdminUser()
     const chain = createChain({ data: null, error: null })
     mockFrom.mockReturnValueOnce(chain)
@@ -121,7 +133,8 @@ describe('deleteEvent', () => {
     await deleteEvent('event-1')
 
     expect(mockFrom).toHaveBeenCalledWith('events')
-    expect(chain.delete).toHaveBeenCalled()
+    // soft delete = update status='deleted' (物理削除ではない)
+    expect(chain.update).toHaveBeenCalledWith({ status: 'deleted' })
   })
 })
 
@@ -167,7 +180,7 @@ describe('createAnnouncement', () => {
 })
 
 describe('deleteAnnouncement', () => {
-  it('admin ユーザーはお知らせを削除できる', async () => {
+  it('admin ユーザーはお知らせを非公開化できる (soft delete)', async () => {
     setupAdminUser()
     const chain = createChain({ data: null, error: null })
     mockFrom.mockReturnValueOnce(chain)
@@ -176,6 +189,7 @@ describe('deleteAnnouncement', () => {
     await deleteAnnouncement('ann-1')
 
     expect(mockFrom).toHaveBeenCalledWith('announcements')
-    expect(chain.delete).toHaveBeenCalled()
+    // soft delete = published=false
+    expect(chain.update).toHaveBeenCalledWith({ published: false })
   })
 })

@@ -1,0 +1,4 @@
+#!/usr/bin/env sh
+# プッシュ前に vitest を走らせる。失敗したら push をブロック。
+echo "🧪 Running tests before push..."
+npm test -- --run
