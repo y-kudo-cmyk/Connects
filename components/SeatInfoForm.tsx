@@ -21,16 +21,33 @@ function resolvePresetLabels(keys: string[], t: (key: string) => string): string
   return keys.map((key) => t(key))
 }
 
-async function callAnalyzeAPI(dataUrl: string): Promise<SeatField[]> {
-  const [header, base64] = dataUrl.split(',')
-  const mimeMatch = header.match(/:(.*?);/)
-  const mimeType = mimeMatch ? mimeMatch[1] : 'image/jpeg'
+async function callAnalyzeAPI(imageUrl: string): Promise<SeatField[]> {
+  let base64 = ''
+  let mimeType = 'image/jpeg'
+  if (imageUrl.startsWith('data:')) {
+    // data URL 形式: data:image/jpeg;base64,xxxxx
+    const [header, b64] = imageUrl.split(',')
+    base64 = b64
+    const mimeMatch = header.match(/:(.*?);/)
+    if (mimeMatch) mimeType = mimeMatch[1]
+  } else {
+    // 通常のURL (Supabase公開URL等) → fetch して base64 化
+    const res = await fetch(imageUrl)
+    if (!res.ok) throw new Error(`image fetch failed: ${res.status}`)
+    const blob = await res.blob()
+    mimeType = blob.type || 'image/jpeg'
+    const buf = await blob.arrayBuffer()
+    const bytes = new Uint8Array(buf)
+    let bin = ''
+    for (let i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i])
+    base64 = btoa(bin)
+  }
   const res = await fetch('/api/analyze-ticket', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ imageBase64: base64, mimeType }),
   })
-  if (!res.ok) throw new Error('failed')
+  if (!res.ok) throw new Error('analyze failed: ' + res.status)
   const data = await res.json()
   return data.fields ?? []
 }
