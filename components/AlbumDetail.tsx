@@ -490,7 +490,10 @@ export default function AlbumDetail({ product, userCards, onBack, onCardTap }: A
                                 )}
                               </div>
                             ) : null
-                            const frontTiles = sub.cards.map(card => {
+                            // 表タイル並び: col-span小(photocard等 2:3)を先、幅広(photobook/magnet等)を後ろに
+                            // → 幅広アイテムが自然と下の段に押し出される
+                            const sortedCards = [...sub.cards].sort((a, b) => getCardColSpan(a.card_type) - getCardColSpan(b.card_type))
+                            const frontTiles = sortedCards.map(card => {
                       const owned = ownedMap.get(card.id) || null
                       const hasQty = (owned?.quantity ?? 0) > 0
                       const displayImage = owned?.front_image_url || card.front_image_url || ''
