@@ -67,8 +67,11 @@ async function uploadImage(file: File, path: string): Promise<string> {
 
 export default function CardDetailModal({ card, owned, userId, isBetaUser = false, favMemberIds = [], onClose, onSave, onDelete }: CardDetailModalProps) {
   const t = useTranslations('Goods')
-  // 未登録カードの所持デフォルトは 0 (持ってるものだけ +で増やす)
-  const [quantity, setQuantity] = useState(owned?.quantity ?? 0)
+  // 所持枚数デフォルト: 画像登録あり(master or user)=1, それ以外=0
+  // 既存値があれば常に優先（2以上を上書きしない）
+  const hasImageForCard = !!(owned?.front_image_url || card.front_image_url)
+  const defaultQuantity = hasImageForCard ? 1 : 0
+  const [quantity, setQuantity] = useState(owned?.quantity ?? defaultQuantity)
   // 欲しい枚数デフォルト: 推しメンバー=1, 推し外=0. 既存値があれば優先
   const isOshi = favMemberIds.includes(card.member_id)
   const defaultWanted = isOshi ? 1 : 0
