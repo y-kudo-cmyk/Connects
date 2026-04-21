@@ -70,14 +70,11 @@ export interface UserCard {
 //   SQUARE (1:1):     puzzle / sticker
 export function getCardAspect(cardType: string | null | undefined): string {
   const t = (cardType || '').toLowerCase()
-  if (t === 'puzzle' || t === 'sticker') return '1 / 1'
-  if (t === 'magnet_sheet' || t === 'mega_jacket' || t === 'photobook') return '1 / 1'
+  // 真に横長 (wallet/ticket) のみ別aspect、それ以外は全て 2:3 で統一
   if (t === 'id_card') return '8 / 5'
   if (t === 'scratch_card') return '2 / 1'
-  if (t === 'tear-off_poster') return '3 / 4'
-  if (t === 'binder') return '4 / 5'
-  if (t === 'xmas_card' || t === 'greeting_card') return '2 / 3'
-  // default: trading card
+  // 正方形系 (magnet/mega_jacket/photobook/puzzle/sticker) も 2:3 セルで contain表示し高さを統一
+  // → 結果、photocard と 正方形アイテムの 行高さが揃う
   return '2 / 3'
 }
 
@@ -87,10 +84,16 @@ export function isLandscapeCard(cardType: string | null | undefined): boolean {
   return t === 'id_card' || t === 'scratch_card'
 }
 
-// Wide/square types (1:1 or similar) should span 2 columns in 4-col grid.
+// 真の横長タイプのみ col-span-2 (wallet/ticket)。他は col-span-1 で統一感。
 export function isWideCard(cardType: string | null | undefined): boolean {
   const t = (cardType || '').toLowerCase()
-  return t === 'magnet_sheet' || t === 'mega_jacket' || t === 'puzzle' || t === 'sticker' || t === 'photobook'
+  return t === 'id_card' || t === 'scratch_card'
+}
+
+// 裏面が存在するタイプ。非トレカ (magnet_sheet/mega_jacket) は裏なし。
+export function hasBackSide(cardType: string | null | undefined): boolean {
+  const t = (cardType || '').toLowerCase()
+  return !(t === 'magnet_sheet' || t === 'mega_jacket')
 }
 
 // True "trading card" types: use object-fit: cover (full-bleed frame).

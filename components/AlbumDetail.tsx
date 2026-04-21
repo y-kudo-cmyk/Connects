@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useEffect, Fragment } from 'react'
 import { useTranslations } from 'next-intl'
-import { useCardVersions, useCardMaster, type CardProduct, type CardMaster, type UserCard, productTypeLabels, getCardAspect, isTradingCardFit, isWideCard } from '@/lib/useCardData'
+import { useCardVersions, useCardMaster, type CardProduct, type CardMaster, type UserCard, productTypeLabels, getCardAspect, isTradingCardFit, isWideCard, hasBackSide } from '@/lib/useCardData'
 import { seventeenMembers } from '@/lib/config/constants'
 import { createClient } from '@/lib/supabase/client'
 
@@ -453,11 +453,13 @@ export default function AlbumDetail({ product, userCards, onBack, onCardTap }: A
                         {!showSubBadge && <div className="mb-1.5" style={{ minHeight: 22 }} />}
                         <div className="grid grid-cols-4 gap-2">
                           {paraSubs.flatMap(sub => {
+                            // 裏面不要なタイプ (magnet_sheet/mega_jacket) は裏タイル省略
+                            const subHasBack = sub.cards.some(c => hasBackSide(c.card_type))
                             // 1 shared back thumb per sub (if any back image exists in this sub)
                             const subBack = sub.cards
                               .map(c => ownedMap.get(c.id)?.back_image_url || c.back_image_url)
                               .find(u => !!u) || ''
-                            const backTile = (
+                            const backTile = subHasBack ? (
                               <div
                                 key={`${sub.versionId}-back`}
                                 title="裏面（判別用）"
@@ -483,7 +485,7 @@ export default function AlbumDetail({ product, userCards, onBack, onCardTap }: A
                                   </div>
                                 )}
                               </div>
-                            )
+                            ) : null
                             const frontTiles = sub.cards.map(card => {
                       const owned = ownedMap.get(card.id) || null
                       const hasQty = (owned?.quantity ?? 0) > 0
@@ -558,7 +560,7 @@ export default function AlbumDetail({ product, userCards, onBack, onCardTap }: A
                         </button>
                       )
                             })
-                            return [backTile, ...frontTiles]
+                            return backTile ? [backTile, ...frontTiles] : frontTiles
                           })}
                         </div>
                       </div>
