@@ -57,6 +57,7 @@ export default function EventDetailModal({
   const [editStartDate, setEditStartDate] = useState(event.date)
   const [editStartTime, setEditStartTime] = useState(event.time !== '00:00' ? event.time : '')
   const [editEndDate, setEditEndDate] = useState(event.dateEnd ?? '')
+  const [editEndTime, setEditEndTime] = useState(event.timeEnd && event.timeEnd !== '00:00' ? event.timeEnd : '')
   const [editSourceUrl, setEditSourceUrl] = useState(event.sourceUrl ?? '')
   const [editImageUrl, setEditImageUrl] = useState(event.image ?? '')
   const [editMembers, setEditMembers] = useState<string[]>(
@@ -128,7 +129,7 @@ export default function EventDetailModal({
       ? `${editStartDate}T${editStartTime}:00`
       : editStartDate ? `${editStartDate}T00:00:00` : null
     const newEndDate = editEndDate
-      ? `${editEndDate}T00:00:00`
+      ? (editEndTime ? `${editEndDate}T${editEndTime}:00` : `${editEndDate}T00:00:00`)
       : null
 
     if (isConfirmed && !isAdmin) {
@@ -436,6 +437,9 @@ export default function EventDetailModal({
                       <span className="text-xs" style={{ color: '#8E8E93' }}>〜</span>
                       <input type="date" value={editEndDate} onChange={(e) => setEditEndDate(e.target.value)}
                         className="flex-1 px-3 py-2 rounded-xl text-sm outline-none"
+                        style={{ background: '#FFFFFF', border: '1.5px solid #E5E5EA', color: '#1C1C1E' }} />
+                      <input type="time" value={editEndTime} onChange={(e) => setEditEndTime(e.target.value)}
+                        className="w-28 px-3 py-2 rounded-xl text-sm outline-none"
                         style={{ background: '#FFFFFF', border: '1.5px solid #E5E5EA', color: '#1C1C1E' }} />
                     </div>
                   </div>
