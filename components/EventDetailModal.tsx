@@ -140,8 +140,11 @@ export default function EventDetailModal({
       if (editNotes !== (event.notes ?? '')) changes.push({ field_name: 'notes', old_value: event.notes ?? '', new_value: editNotes })
       if (editSourceUrl !== (event.sourceUrl ?? '')) changes.push({ field_name: 'source_url', old_value: event.sourceUrl ?? '', new_value: editSourceUrl })
       if (editImageUrl !== (event.image ?? '')) changes.push({ field_name: 'image_url', old_value: event.image ?? '', new_value: editImageUrl })
-      if (newStartDate && editStartDate !== event.date) changes.push({ field_name: 'start_date', old_value: event.date, new_value: newStartDate })
-      if (editEndDate !== (event.dateEnd ?? '')) changes.push({ field_name: 'end_date', old_value: event.dateEnd ?? '', new_value: newEndDate ?? '' })
+      // 日付 OR 時刻が変わってたら start_date 変更として記録
+      const oldStartIso = event.date + (event.time !== '00:00' ? `T${event.time}:00` : '')
+      if (newStartDate && newStartDate !== oldStartIso) changes.push({ field_name: 'start_date', old_value: oldStartIso, new_value: newStartDate })
+      const oldEndIso = event.dateEnd ? event.dateEnd + (event.timeEnd && event.timeEnd !== '00:00' ? `T${event.timeEnd}:00` : '') : ''
+      if ((newEndDate ?? '') !== oldEndIso) changes.push({ field_name: 'end_date', old_value: oldEndIso, new_value: newEndDate ?? '' })
 
       if (changes.length > 0) {
         for (const c of changes) {
