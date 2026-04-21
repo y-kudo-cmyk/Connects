@@ -568,7 +568,7 @@ export default function AlbumDetail({ product, userCards, onBack, onCardTap }: A
                         </button>
                       )
                             })
-                            return backTile ? [backTile, ...frontTiles] : frontTiles
+                            return backTile ? [...frontTiles, backTile] : frontTiles
                           })}
                         </div>
                       </div>

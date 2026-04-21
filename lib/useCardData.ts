@@ -72,10 +72,13 @@ export function getCardAspect(cardType: string | null | undefined): string {
   const t = (cardType || '').toLowerCase()
   // 比率は画像のネイティブに合わせ、col-span で高さを揃える (8-col grid想定)
   if (t === 'id_card') return '8 / 5'
-  if (t === 'scratch_card') return '2 / 1'
+  if (t === 'scratch_card') return '1 / 2'       // HB は縦長narrow
+  if (t === 'fotocard') return '1 / 1'           // HB のfotocardは正方形近い
   if (t === 'postcard') return '3 / 2'           // 横長 葉書
   if (t === 'tear-off_poster') return '3 / 4'
   if (t === 'binder') return '4 / 5'
+  if (t === 'folding_card') return '10 / 3'       // 横長 二つ折りカード
+  if (t === 'layer_card') return '1 / 1'          // 正方形ぽい
   if (t === 'clear_file') return '5 / 7'          // A5 縦
   if (t === 'coaster') return '1 / 1'
   if (t === 'magnet_sheet' || t === 'mega_jacket' || t === 'photobook') return '1 / 1'
@@ -90,11 +93,14 @@ export function getCardAspect(cardType: string | null | undefined): string {
 export function getCardColSpan(cardType: string | null | undefined): number {
   const t = (cardType || '').toLowerCase()
   if (t === 'id_card') return 5       // 5/8=62.5%, h=62.5%×5/8=39% ≈37.5
-  if (t === 'scratch_card') return 6  // 6/8=75%, h=37.5%
+  if (t === 'scratch_card') return 2  // 2/8=25%, h=25%×2=50% (少し高めだが許容)
+  if (t === 'fotocard') return 3      // 1:1 正方形 → span 3 で高さ揃え
   if (t === 'postcard') return 5      // 5/8=62.5%, h=62.5%×2/3=42% 近似
   if (t === 'magnet_sheet' || t === 'mega_jacket' || t === 'photobook') return 3 // 3/8=37.5%, h=37.5% ✓
   if (t === 'coaster') return 3
   if (t === 'puzzle' || t === 'sticker') return 3
+  if (t === 'folding_card') return 6  // 6/8=75%, h=22.5% (横長のため高さ小)
+  if (t === 'layer_card') return 3    // 1:1 → span-3
   if (t === 'clear_file') return 2    // 25% × 7/5 = 35%
   if (t === 'tear-off_poster') return 2 // 25% × 4/3 = 33%
   if (t === 'binder') return 2          // 25% × 5/4 = 31%
