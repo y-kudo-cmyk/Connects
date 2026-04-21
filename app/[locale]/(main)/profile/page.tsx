@@ -600,11 +600,14 @@ export default function ProfilePage() {
         {editingOshi && (
           // Edit view: full 13-member grid
           <div className="mt-3">
-            <p className="text-[10px] mb-2" style={{ color: '#8E8E93' }}>推しメンバー（複数選択できます）</p>
+            <p className="text-[10px] mb-1" style={{ color: '#8E8E93' }}>推しメンバー（複数選択できます）</p>
+            <p className="text-[10px] mb-2" style={{ color: '#8E8E93' }}>タップした順に 1番推し, 2番推し…として登録されます</p>
             <div className="flex flex-wrap gap-2">
               {seventeenMembers.map((m, i) => {
                 const memberId = `A${String(i + 1).padStart(6, '0')}`
-                const selected = favMemberIds.includes(memberId)
+                const favIndex = favMemberIds.indexOf(memberId)
+                const selected = favIndex >= 0
+                const rank = selected ? favIndex + 1 : 0
                 return (
                   <button
                     key={memberId}
@@ -620,12 +623,10 @@ export default function ProfilePage() {
                   >
                     {selected && (
                       <div
-                        className="absolute top-0.5 right-0.5 w-5 h-5 rounded-full flex items-center justify-center"
-                        style={{ background: m.color, border: '2px solid #FFFFFF' }}
+                        className="absolute top-0.5 right-0.5 min-w-[20px] h-5 px-1 rounded-full flex items-center justify-center text-[10px] font-black"
+                        style={{ background: m.color, border: '2px solid #FFFFFF', color: '#FFFFFF' }}
                       >
-                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-                          <polyline points="20 6 9 17 4 12" />
-                        </svg>
+                        {rank}
                       </div>
                     )}
                     <div
