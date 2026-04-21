@@ -70,12 +70,30 @@ export interface UserCard {
 //   SQUARE (1:1):     puzzle / sticker
 export function getCardAspect(cardType: string | null | undefined): string {
   const t = (cardType || '').toLowerCase()
-  // 真に横長 (wallet/ticket) のみ別aspect、それ以外は全て 2:3 で統一
+  // 比率は画像のネイティブに合わせ、col-span で高さを揃える (8-col grid想定)
   if (t === 'id_card') return '8 / 5'
   if (t === 'scratch_card') return '2 / 1'
-  // 正方形系 (magnet/mega_jacket/photobook/puzzle/sticker) も 2:3 セルで contain表示し高さを統一
-  // → 結果、photocard と 正方形アイテムの 行高さが揃う
+  if (t === 'tear-off_poster') return '3 / 4'
+  if (t === 'binder') return '4 / 5'
+  if (t === 'magnet_sheet' || t === 'mega_jacket' || t === 'photobook') return '1 / 1'
+  if (t === 'puzzle' || t === 'sticker') return '1 / 1'
+  // default: trading card
   return '2 / 3'
+}
+
+// 8-col grid 内で何列幅を取るか (高さを photocard に揃えるため比率逆算)
+// 基準: photocard 2/8幅 = 25%、高さ = 25% × 3/2 = 37.5%
+// 他タイプは高さ 37.5% 前後になるよう span 決定
+export function getCardColSpan(cardType: string | null | undefined): number {
+  const t = (cardType || '').toLowerCase()
+  if (t === 'id_card') return 5       // 5/8=62.5%, h=62.5%×5/8=39% ≈37.5
+  if (t === 'scratch_card') return 6  // 6/8=75%, h=37.5%
+  if (t === 'magnet_sheet' || t === 'mega_jacket' || t === 'photobook') return 3 // 3/8=37.5%, h=37.5% ✓
+  if (t === 'puzzle' || t === 'sticker') return 3
+  if (t === 'tear-off_poster') return 2 // 25% × 4/3 = 33%
+  if (t === 'binder') return 2          // 25% × 5/4 = 31%
+  // default photocard: 2/8 = 25%, h = 37.5% 基準
+  return 2
 }
 
 // Landscape-oriented types span 2 columns so the frame isn't cramped.
@@ -84,10 +102,9 @@ export function isLandscapeCard(cardType: string | null | undefined): boolean {
   return t === 'id_card' || t === 'scratch_card'
 }
 
-// 真の横長タイプのみ col-span-2 (wallet/ticket)。他は col-span-1 で統一感。
+// 旧API (互換のため残すがgetCardColSpanに置換推奨)
 export function isWideCard(cardType: string | null | undefined): boolean {
-  const t = (cardType || '').toLowerCase()
-  return t === 'id_card' || t === 'scratch_card'
+  return getCardColSpan(cardType) > 2
 }
 
 // 裏面が存在するタイプ。非トレカ (magnet_sheet/mega_jacket) は裏なし。

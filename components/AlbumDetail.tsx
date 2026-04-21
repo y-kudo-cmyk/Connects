@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useEffect, Fragment } from 'react'
 import { useTranslations } from 'next-intl'
-import { useCardVersions, useCardMaster, type CardProduct, type CardMaster, type UserCard, productTypeLabels, getCardAspect, isTradingCardFit, isWideCard, hasBackSide } from '@/lib/useCardData'
+import { useCardVersions, useCardMaster, type CardProduct, type CardMaster, type UserCard, productTypeLabels, getCardAspect, isTradingCardFit, getCardColSpan, hasBackSide } from '@/lib/useCardData'
 import { seventeenMembers } from '@/lib/config/constants'
 import { createClient } from '@/lib/supabase/client'
 
@@ -378,29 +378,28 @@ export default function AlbumDetail({ product, userCards, onBack, onCardTap }: A
     </div>
   )
 
-  // Pack subs into paragraphs where total TILES ≤ 4 per paragraph.
-  // tiles(sub) = (裏要るタイプが含まれる ? 1 : 0) + cards.length
-  // - tiles ≥ 4 → そのsub単独段落 (4超は自然折返し)
-  // - 他は 合計tilesが4までになる範囲で貪欲に結合
-  function subTiles(sub: { cards: CardMaster[] }) {
+  // 8-col baseline: 各sub の占有列数を合算し、段落≤8列で貪欲パック。
+  // 裏タイルは必要なら col-span-2 (photocard同等) を追加。
+  function subCols(sub: { cards: CardMaster[] }) {
     const hasBack = sub.cards.some(c => hasBackSide(c.card_type))
-    return (hasBack ? 1 : 0) + sub.cards.length
+    const cardsCols = sub.cards.reduce((n, c) => n + getCardColSpan(c.card_type), 0)
+    return (hasBack ? 2 : 0) + cardsCols
   }
   function groupSubsToParagraphs(subs: { store: string; versionId: string; cards: CardMaster[] }[]) {
     const paragraphs: typeof subs[] = []
     let current: typeof subs = []
-    let currentTiles = 0
+    let currentCols = 0
     for (const sub of subs) {
-      const t = subTiles(sub)
-      if (t >= 4) {
-        if (current.length > 0) { paragraphs.push(current); current = []; currentTiles = 0 }
+      const c = subCols(sub)
+      if (c >= 8) {
+        if (current.length > 0) { paragraphs.push(current); current = []; currentCols = 0 }
         paragraphs.push([sub])
         continue
       }
-      if (currentTiles + t <= 4) {
-        current.push(sub); currentTiles += t
+      if (currentCols + c <= 8) {
+        current.push(sub); currentCols += c
       } else {
-        paragraphs.push(current); current = [sub]; currentTiles = t
+        paragraphs.push(current); current = [sub]; currentCols = c
       }
     }
     if (current.length > 0) paragraphs.push(current)
@@ -456,7 +455,7 @@ export default function AlbumDetail({ product, userCards, onBack, onCardTap }: A
                           </div>
                         )}
                         {!showSubBadge && <div className="mb-1.5" style={{ minHeight: 22 }} />}
-                        <div className="grid grid-cols-4 gap-2">
+                        <div className="grid grid-cols-8 gap-2">
                           {paraSubs.flatMap(sub => {
                             // 裏面不要なタイプ (magnet_sheet/mega_jacket) は裏タイル省略
                             const subHasBack = sub.cards.some(c => hasBackSide(c.card_type))
@@ -468,7 +467,7 @@ export default function AlbumDetail({ product, userCards, onBack, onCardTap }: A
                               <div
                                 key={`${sub.versionId}-back`}
                                 title="裏面（判別用）"
-                                className="relative rounded-lg overflow-hidden"
+                                className="relative rounded-lg overflow-hidden col-span-2"
                                 style={{
                                   width: '100%',
                                   aspectRatio: '2 / 3',
@@ -505,10 +504,11 @@ export default function AlbumDetail({ product, userCards, onBack, onCardTap }: A
                       const bgStyle = hasImage
                         ? `rgba(243,180,227,0.15) url(${displayImage}) center / ${bgSize} no-repeat`
                         : hasQty ? 'rgba(243,180,227,0.15)' : '#E5E5EA'
-                      // 横長/正方形タイプ（id_card/scratch_card/magnet/mega_jacket/puzzle/sticker）は 2列分にする
-                      const isLandscape = card.card_type === 'id_card' || card.card_type === 'scratch_card'
-                      const isWide = isWideCard(card.card_type)
-                      const spanClass = (isLandscape || isWide) ? 'col-span-2' : ''
+                      // 8-col grid 内での占有列 (高さ揃えのため比率逆算)
+                      // Tailwind JIT 用 静的マップ: col-span-2 col-span-3 col-span-4 col-span-5 col-span-6
+                      const colSpan = getCardColSpan(card.card_type)
+                      const SPAN_CLASS: Record<number, string> = { 2: 'col-span-2', 3: 'col-span-3', 4: 'col-span-4', 5: 'col-span-5', 6: 'col-span-6' }
+                      const spanClass = SPAN_CLASS[colSpan] || 'col-span-2'
                       return (
                         <button
                           key={card.id}
