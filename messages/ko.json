@@ -316,7 +316,14 @@
     "seatViewBinoNo": "✓ 쌍안경 불필요",
     "cropIcon": "아이콘 조정",
     "cropBanner": "배너 조정",
-    "cropHint": "드래그하여 이동 · 핀치하여 줌"
+    "cropHint": "드래그하여 이동 · 핀치하여 줌",
+    "presetStandArea": "스탠드/구역",
+    "presetBlock": "블록",
+    "presetRow": "열",
+    "presetSeatNumber": "좌석 번호",
+    "presetGate": "게이트",
+    "presetArea": "구역",
+    "presetSeatNo": "좌석 번호"
   },
   "My": {
     "myTitle": "MY",
@@ -579,14 +586,5 @@
     "alreadyRegistered": "모든 LIVE가 이미 등록되어 있습니다",
     "doneHint": "MY 캘린더에서 각 공연의 티켓 사진·좌석 정보·전망 사진을 추가하세요!",
     "confirmButton": "확인"
-  },
-  "Seat": {
-    "presetStandArea": "스탠드/구역",
-    "presetBlock": "블록",
-    "presetRow": "열",
-    "presetSeatNumber": "좌석 번호",
-    "presetGate": "게이트",
-    "presetArea": "구역",
-    "presetSeatNo": "좌석 번호"
   }
 }

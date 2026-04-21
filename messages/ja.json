@@ -316,7 +316,14 @@
     "seatViewBinoNo": "✓ 双眼鏡不要",
     "cropIcon": "アイコンを調整",
     "cropBanner": "バナーを調整",
-    "cropHint": "ドラッグで移動 · ピンチでズーム"
+    "cropHint": "ドラッグで移動 · ピンチでズーム",
+    "presetStandArea": "スタンド/エリア",
+    "presetBlock": "ブロック",
+    "presetRow": "列",
+    "presetSeatNumber": "座席番号",
+    "presetGate": "ゲート",
+    "presetArea": "エリア",
+    "presetSeatNo": "席番号"
   },
   "My": {
     "myTitle": "MY",
@@ -579,14 +586,5 @@
     "alreadyRegistered": "すべてのLIVEが登録済みです",
     "doneHint": "MYカレンダーで各公演のチケット写真・座席情報・眺め写真を追加しましょう！",
     "confirmButton": "確認"
-  },
-  "Seat": {
-    "presetStandArea": "スタンド/エリア",
-    "presetBlock": "ブロック",
-    "presetRow": "列",
-    "presetSeatNumber": "座席番号",
-    "presetGate": "ゲート",
-    "presetArea": "エリア",
-    "presetSeatNo": "席番号"
   }
 }

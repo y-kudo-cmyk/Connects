@@ -316,7 +316,14 @@
     "seatViewBinoNo": "✓ No binoculars needed",
     "cropIcon": "Adjust icon",
     "cropBanner": "Adjust banner",
-    "cropHint": "Drag to move · Pinch to zoom"
+    "cropHint": "Drag to move · Pinch to zoom",
+    "presetStandArea": "Stand/Area",
+    "presetBlock": "Block",
+    "presetRow": "Row",
+    "presetSeatNumber": "Seat No.",
+    "presetGate": "Gate",
+    "presetArea": "Area",
+    "presetSeatNo": "Seat No."
   },
   "My": {
     "myTitle": "MY",
@@ -579,14 +586,5 @@
     "alreadyRegistered": "All LIVEs are already registered",
     "doneHint": "Add ticket photos, seat info, and view photos for each concert in MY calendar!",
     "confirmButton": "Confirm"
-  },
-  "Seat": {
-    "presetStandArea": "Stand/Area",
-    "presetBlock": "Block",
-    "presetRow": "Row",
-    "presetSeatNumber": "Seat No.",
-    "presetGate": "Gate",
-    "presetArea": "Area",
-    "presetSeatNo": "Seat No."
   }
 }
