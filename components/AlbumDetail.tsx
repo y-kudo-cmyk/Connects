@@ -410,18 +410,6 @@ export default function AlbumDetail({ product, userCards, onBack, onCardTap }: A
                     <span className="text-[10px] whitespace-nowrap flex-shrink-0" style={{ color: '#8E8E93' }}>
                       {totalOwned}/{totalCards}
                     </span>
-                    {baseBackImage && (
-                      <span
-                        title="裏面（判別用）"
-                        className="rounded flex-shrink-0"
-                        style={{
-                          width: 36, height: 50,
-                          background: `url(${baseBackImage}) center / cover no-repeat`,
-                          border: '1px solid #E5E5EA',
-                          marginLeft: 'auto',
-                        }}
-                      />
-                    )}
                   </div>
                   <div>
                   {subs.map(({ store, versionId, cards: versionCards }) => {
@@ -446,6 +434,31 @@ export default function AlbumDetail({ product, userCards, onBack, onCardTap }: A
                           <div className="mb-1.5" style={{ minHeight: 22 }} />
                         )}
                         <div className="grid grid-cols-4 gap-2">
+                          {(() => {
+                            // この version の中で最初に見つかった裏面画像を先頭に置く
+                            const back = versionCards
+                              .map(c => ownedMap.get(c.id)?.back_image_url || c.back_image_url)
+                              .find(u => !!u)
+                            return back ? (
+                              <div
+                                title="裏面（判別用）"
+                                className="relative rounded-lg overflow-hidden"
+                                style={{
+                                  width: '100%',
+                                  aspectRatio: '2 / 3',
+                                  background: `rgba(142,142,147,0.08) url(${back}) center / cover no-repeat`,
+                                  border: '2px dotted #8E8E93',
+                                }}
+                              >
+                                <span
+                                  className="absolute left-1 top-1 px-1.5 rounded-full text-[9px] font-bold"
+                                  style={{ background: 'rgba(0,0,0,0.55)', color: '#FFFFFF' }}
+                                >
+                                  裏
+                                </span>
+                              </div>
+                            ) : null
+                          })()}
                           {versionCards.map(card => {
                       const owned = ownedMap.get(card.id) || null
                       const hasQty = (owned?.quantity ?? 0) > 0
