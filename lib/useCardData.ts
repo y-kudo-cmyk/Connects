@@ -71,12 +71,11 @@ export interface UserCard {
 export function getCardAspect(cardType: string | null | undefined): string {
   const t = (cardType || '').toLowerCase()
   if (t === 'puzzle' || t === 'sticker') return '1 / 1'
-  if (t === 'magnet_sheet' || t === 'mega_jacket') return '1 / 1'
+  if (t === 'magnet_sheet' || t === 'mega_jacket' || t === 'photobook') return '1 / 1'
   if (t === 'id_card') return '8 / 5'
   if (t === 'scratch_card') return '2 / 1'
   if (t === 'tear-off_poster') return '3 / 4'
   if (t === 'binder') return '4 / 5'
-  if (t === 'photobook') return '5 / 7'
   if (t === 'xmas_card' || t === 'greeting_card') return '2 / 3'
   // default: trading card
   return '2 / 3'
@@ -91,7 +90,7 @@ export function isLandscapeCard(cardType: string | null | undefined): boolean {
 // Wide/square types (1:1 or similar) should span 2 columns in 4-col grid.
 export function isWideCard(cardType: string | null | undefined): boolean {
   const t = (cardType || '').toLowerCase()
-  return t === 'magnet_sheet' || t === 'mega_jacket' || t === 'puzzle' || t === 'sticker'
+  return t === 'magnet_sheet' || t === 'mega_jacket' || t === 'puzzle' || t === 'sticker' || t === 'photobook'
 }
 
 // True "trading card" types: use object-fit: cover (full-bleed frame).
