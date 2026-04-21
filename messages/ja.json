@@ -357,7 +357,7 @@
     "notifMorning": "朝の通知（今日の予定）",
     "notifEvening": "夜の通知（明日の予定）",
     "notifTime": "時刻",
-    "notifReminder": "MYイベント開始1時間前",
+    "notifReminder": "MYイベント",
     "linkLine": "LINE連携",
     "linkX": "X（Twitter）連携",
     "linked": "解除",

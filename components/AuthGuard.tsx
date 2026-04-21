@@ -5,6 +5,7 @@ import { useState, useEffect, useRef } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useTranslations } from 'next-intl'
 import NicknameSetupOverlay from './NicknameSetupOverlay'
+import NotificationSetupOverlay from './NotificationSetupOverlay'
 
 const supabase = createClient()
 
@@ -13,6 +14,7 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
   const t = useTranslations()
   const [banned, setBanned] = useState(false)
   const [needNickname, setNeedNickname] = useState(false)
+  const [needNotifSetup, setNeedNotifSetup] = useState(false)
   const checkedRef = useRef(false)
 
   useEffect(() => {
@@ -23,7 +25,7 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
       try {
         const { data: profile } = await supabase
           .from('profiles')
-          .select('id, role, mail, nickname')
+          .select('id, role, mail, nickname, notif_setup_done')
           .eq('id', user.id)
           .maybeSingle()
 
@@ -32,8 +34,9 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
           })
-          // 新規 profile は nickname 空なので必ず設定画面
+          // 新規 profile は nickname も notif 設定も未済
           setNeedNickname(true)
+          setNeedNotifSetup(true)
         } else if (profile.role === 'banned') {
           setBanned(true)
           return
@@ -47,6 +50,10 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
           // nickname 未設定なら設定画面
           if (!profile.nickname || profile.nickname.trim() === '') {
             setNeedNickname(true)
+          }
+          // 通知設定を選ばせる
+          if (!profile.notif_setup_done) {
+            setNeedNotifSetup(true)
           }
         }
 
@@ -107,8 +114,12 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
   return (
     <>
       {children}
+      {/* 先に nickname、nickname 設定済なら通知設定の順で表示 */}
       {needNickname && user && (
         <NicknameSetupOverlay userId={user.id} onDone={() => setNeedNickname(false)} />
+      )}
+      {!needNickname && needNotifSetup && user && (
+        <NotificationSetupOverlay userId={user.id} onDone={() => setNeedNotifSetup(false)} />
       )}
     </>
   )

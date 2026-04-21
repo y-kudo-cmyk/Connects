@@ -357,7 +357,7 @@
     "notifMorning": "Morning (today's events)",
     "notifEvening": "Evening (tomorrow's events)",
     "notifTime": "Time",
-    "notifReminder": "1 hour before MY event",
+    "notifReminder": "MY events",
     "linkLine": "LINE Link",
     "linkX": "X (Twitter) Link",
     "linked": "Unlink",
