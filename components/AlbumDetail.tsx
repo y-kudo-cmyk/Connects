@@ -414,7 +414,7 @@ export default function AlbumDetail({ product, userCards, onBack, onCardTap }: A
                         title="裏面（判別用）"
                         className="rounded flex-shrink-0"
                         style={{
-                          width: 18, height: 25,
+                          width: 36, height: 50,
                           background: `url(${baseBackImage}) center / cover no-repeat`,
                           border: '1px solid #E5E5EA',
                           marginLeft: 'auto',
@@ -449,7 +449,7 @@ export default function AlbumDetail({ product, userCards, onBack, onCardTap }: A
                                 title="裏面（判別用）"
                                 className="rounded flex-shrink-0"
                                 style={{
-                                  width: 20, height: 28,
+                                  width: 36, height: 50,
                                   background: `url(${backImage}) center / cover no-repeat`,
                                   border: '1px solid #E5E5EA',
                                   marginLeft: 'auto',
@@ -458,12 +458,12 @@ export default function AlbumDetail({ product, userCards, onBack, onCardTap }: A
                             )}
                           </div>
                         ) : backImage ? (
-                          <div className="mb-1.5 pl-2.5 flex items-center justify-end" style={{ minHeight: 22 }}>
+                          <div className="mb-1.5 pl-2.5 flex items-center justify-end" style={{ minHeight: 50 }}>
                             <span
                               title="裏面（判別用）"
                               className="rounded flex-shrink-0"
                               style={{
-                                width: 20, height: 28,
+                                width: 36, height: 50,
                                 background: `url(${backImage}) center / cover no-repeat`,
                                 border: '1px solid #E5E5EA',
                               }}
