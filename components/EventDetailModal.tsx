@@ -352,17 +352,18 @@ export default function EventDetailModal({
           {/* タグ */}
           {editing && isAdmin ? (
             <div className="mb-2">
-              <p className="text-[10px] mb-1 font-bold" style={{ color: '#8E8E93' }}>タグ (admin編集可 / 複数選択)</p>
+              <p className="text-[10px] mb-1 font-bold" style={{ color: '#8E8E93' }}>タグ (admin編集可 / 1つ選択)</p>
               <div className="flex items-center gap-1.5 flex-wrap">
                 {(Object.keys(scheduleTagConfig) as ScheduleTag[]).map((tag) => {
                   const tc = scheduleTagConfig[tag]
-                  const active = editTags.includes(tag)
+                  const active = editTags[0] === tag
                   return (
                     <button
                       key={tag}
                       type="button"
                       onClick={() => {
-                        setEditTags(active ? editTags.filter(t => t !== tag) : [...editTags, tag])
+                        // 単一選択: クリックしたタグが既に選択中なら解除、そうでなければ置き換え
+                        setEditTags(active ? [] : [tag])
                       }}
                       className="text-[11px] font-bold px-2 py-1 rounded-lg transition-opacity"
                       style={{
