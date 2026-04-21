@@ -265,10 +265,10 @@ export default function SeatInfoForm({
         </div>
       )}
 
-      {/* 地図で位置を設定 */}
-      {fields.some((f) => f.value.trim()) && (
+      {/* 地図で位置を設定 — 現状非表示 (機能要検証) */}
+      {/* {fields.some((f) => f.value.trim()) && (
         <PositionSection value={value} onChange={onChange} fields={fields} />
-      )}
+      )} */}
     </div>
   )
 }
