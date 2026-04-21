@@ -131,8 +131,8 @@ export default function EventDetailModal({
       ? `${editEndDate}T00:00:00`
       : null
 
-    if (isConfirmed) {
-      // 承認済み → 修正依頼として投稿
+    if (isConfirmed && !isAdmin) {
+      // 承認済み かつ 非admin → 修正依頼として投稿 (3票で反映)
       const changes: { field_name: string; old_value: string; new_value: string }[] = []
       if (editTitle !== event.title) changes.push({ field_name: 'event_title', old_value: event.title, new_value: editTitle })
       if (editVenue !== (event.venue ?? '')) changes.push({ field_name: 'spot_name', old_value: event.venue ?? '', new_value: editVenue })
@@ -164,13 +164,17 @@ export default function EventDetailModal({
         source_url: editSourceUrl,
         image_url: editImageUrl,
         related_artists: relatedArtists,
-        verified_count: 0,
-        status: 'pending',
+      }
+      // admin 編集の場合、承認済みstatusを維持するため verified_count/status は触らない
+      // 非adminの直接編集は pending に戻す (従来通り)
+      if (!isAdmin) {
+        updates.verified_count = 0
+        updates.status = 'pending'
       }
       if (newStartDate) updates.start_date = newStartDate
       if (newEndDate !== null) updates.end_date = newEndDate || null
-      // admin のみ tags 編集可能
-      if (isAdmin) updates.tags = editTags
+      // admin のみ tag 編集可能 (DB は単一 tag カラム)
+      if (isAdmin) updates.tag = editTags[0] || 'EVENT'
       await fetch('/api/update-spot', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
