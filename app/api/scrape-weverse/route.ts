@@ -115,7 +115,19 @@ export async function GET(request: NextRequest) {
       '  } catch(e) {}',
       '  await page.waitForTimeout(12000);',
       '  const text = await page.evaluate(() => document.body.innerText);',
-      '  return { url: request.url, text };',
+      // ★ デバッグ: refreshチェック用に weverse.io の Cookie を取得',
+      '  let cookiesAfter = [];',
+      '  try {',
+      '    const ctx = page.context();',
+      '    const all = await ctx.cookies();',
+      '    cookiesAfter = all.filter(c => c.name.startsWith("we2_")).map(c => ({',
+      '      name: c.name,',
+      '      valuePreview: c.value ? c.value.slice(0, 30) + "..." : "",',
+      '      valueLength: c.value ? c.value.length : 0,',
+      '      expires: c.expires,',
+      '    }));',
+      '  } catch(e) {}',
+      '  return { url: request.url, text, cookiesAfter };',
       '}',
     ].join('\n'),
     proxyConfiguration: { useApifyProxy: true },
@@ -169,6 +181,16 @@ export async function GET(request: NextRequest) {
   log.push(`Dataset items: ${items?.length}`)
   log.push(`Text length: ${items?.[0]?.text?.length || 0}`)
   log.push(`Text preview: ${items?.[0]?.text?.slice(0, 200) || 'empty'}`)
+  // ★ Cookie デバッグ情報 — refresh 動作確認用
+  if (items?.[0]?.cookiesAfter) {
+    log.push('cookiesAfter: ' + JSON.stringify(items[0].cookiesAfter))
+    const accessAfter = items[0].cookiesAfter.find((c: any) => c.name === 'we2_access_token')
+    if (accessAfter && WEVERSE_ACCESS_TOKEN) {
+      const envPreview = WEVERSE_ACCESS_TOKEN.slice(0, 30) + '...'
+      const afterPreview = accessAfter.valuePreview
+      log.push(`access_token env vs after: ${envPreview === afterPreview ? 'SAME (no refresh)' : 'DIFFERENT (refresh happened!)'}`)
+    }
+  }
 
   if (!items?.[0]?.text) {
     log.push('No text content from Weverse')
