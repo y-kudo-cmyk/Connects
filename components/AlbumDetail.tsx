@@ -428,7 +428,7 @@ export default function AlbumDetail({ product, userCards, onBack, onCardTap }: A
                         ) : (
                           <div className="mb-1.5" style={{ minHeight: 22 }} />
                         )}
-                        <div className="flex flex-wrap gap-2">
+                        <div className="grid grid-cols-4 gap-2">
                           {versionCards.map(card => {
                       const owned = ownedMap.get(card.id) || null
                       const hasQty = (owned?.quantity ?? 0) > 0
@@ -443,13 +443,15 @@ export default function AlbumDetail({ product, userCards, onBack, onCardTap }: A
                       const bgStyle = hasImage
                         ? `rgba(243,180,227,0.15) url(${displayImage}) center / ${bgSize} no-repeat`
                         : hasQty ? 'rgba(243,180,227,0.15)' : '#E5E5EA'
+                      // 横長タイプ（id_card, scratch_card）は 2列分にする
+                      const isLandscape = card.card_type === 'id_card' || card.card_type === 'scratch_card'
                       return (
                         <button
                           key={card.id}
                           onClick={() => onCardTap(card, owned)}
-                          className="relative rounded-lg overflow-hidden transition-transform active:scale-95 flex-shrink-0"
+                          className={`relative rounded-lg overflow-hidden transition-transform active:scale-95 ${isLandscape ? 'col-span-2' : ''}`}
                           style={{
-                            height: 128,
+                            width: '100%',
                             aspectRatio: cardAspect,
                             background: bgStyle,
                             border: hasQty ? `2px solid ${accent}` : wantedOnly ? '2px dashed #60A5FA' : '2px solid transparent',
