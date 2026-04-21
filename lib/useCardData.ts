@@ -55,33 +55,47 @@ export interface UserCard {
   created_at: string
 }
 
-// ── Card display ratios (photocard=2:3, puzzle=1:1, etc.) ─────
-// Frame aspect ratio per card type. Actual SEVENTEEN goods shapes:
-//   photocard/luckydraw/fotocard/minicard = 2:3 vertical trading card
-//   binder = 4:5 vertical hardcover binder (~82×105mm)
-//   id_card = 8:5 landscape (wallet / credit-card size)
-//   scratch_card = 2:1 landscape (lottery ticket style)
-//   puzzle = 1:1 square
-//   sticker = 1:1 square (typical album sticker)
-//   tear-off_poster = 3:4 vertical poster page
-// Non-trading types use 'contain' so uploaded images aren't cropped.
+// ── Card display ratios ──────────────────────────────────────────
+// Each physical goods type has its own frame aspect (width / height).
+// Trading cards (photocard family) use cover-fit crop; others use contain.
+//   TRADING (2:3): photocard / luckydraw / fotocard / minicard
+//   PORTRAIT CARD (2:3): xmas_card / greeting_card  (same shape as photocard)
+//   PHOTOBOOK (5:7 = ~0.714):  photobook — slightly taller than a photocard
+//   BINDER (4:5):     binder — hardcover ~82×105mm
+//   POSTER (3:4):     tear-off_poster — magazine page
+//   ID CARD (8:5 landscape):  id_card — wallet size
+//   SCRATCH (2:1 landscape):  scratch_card — lottery ticket
+//   MAGNET (1:1):     magnet_sheet — square sheet
+//   MEGA JACKET (1:1 big): mega_jacket — square LP-size jacket
+//   SQUARE (1:1):     puzzle / sticker
 export function getCardAspect(cardType: string | null | undefined): string {
   const t = (cardType || '').toLowerCase()
-  if (t === 'puzzle') return '1 / 1'
-  if (t === 'sticker') return '1 / 1'
+  if (t === 'puzzle' || t === 'sticker') return '1 / 1'
+  if (t === 'magnet_sheet' || t === 'mega_jacket') return '1 / 1'
   if (t === 'id_card') return '8 / 5'
   if (t === 'scratch_card') return '2 / 1'
   if (t === 'tear-off_poster') return '3 / 4'
   if (t === 'binder') return '4 / 5'
+  if (t === 'photobook') return '5 / 7'
+  if (t === 'xmas_card' || t === 'greeting_card') return '2 / 3'
+  // default: trading card
   return '2 / 3'
 }
 
-// Landscape-oriented types should span more grid width to avoid tiny frames
+// Landscape-oriented types span 2 columns so the frame isn't cramped.
 export function isLandscapeCard(cardType: string | null | undefined): boolean {
   const t = (cardType || '').toLowerCase()
   return t === 'id_card' || t === 'scratch_card'
 }
 
+// Wide/square types (1:1 or similar) should span 2 columns in 4-col grid.
+export function isWideCard(cardType: string | null | undefined): boolean {
+  const t = (cardType || '').toLowerCase()
+  return t === 'magnet_sheet' || t === 'mega_jacket' || t === 'puzzle' || t === 'sticker'
+}
+
+// True "trading card" types: use object-fit: cover (full-bleed frame).
+// Non-trading types (photobook, magnet, mega_jacket, etc.) use object-fit: contain.
 export function isTradingCardFit(cardType: string | null | undefined): boolean {
   const t = (cardType || '').toLowerCase()
   return t === 'photocard' || t === 'luckydraw' || t === 'fotocard' || t === 'minicard'

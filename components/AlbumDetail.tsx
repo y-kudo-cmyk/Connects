@@ -1,8 +1,8 @@
 'use client'
 
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useMemo, useEffect, Fragment } from 'react'
 import { useTranslations } from 'next-intl'
-import { useCardVersions, useCardMaster, type CardProduct, type CardMaster, type UserCard, productTypeLabels, getCardAspect, isTradingCardFit } from '@/lib/useCardData'
+import { useCardVersions, useCardMaster, type CardProduct, type CardMaster, type UserCard, productTypeLabels, getCardAspect, isTradingCardFit, isWideCard } from '@/lib/useCardData'
 import { seventeenMembers } from '@/lib/config/constants'
 import { createClient } from '@/lib/supabase/client'
 
@@ -354,23 +354,12 @@ export default function AlbumDetail({ product, userCards, onBack, onCardTap }: A
                   </div>
 
                   {(() => {
+                    // 枠サイズは全VER統一 (full幅 + grid-cols-4 固定)。
+                    // B+C の sub結合は renderBaseBlock 内の groupSubsToParagraphs で行う。
                     const entries = Array.from(tierMap.entries())
-                    // 小さめ (cards 合計 4 枚以下) の VER は 2 カラムで横並び、
-                    // それ以上は全幅 1 行。STORE tier は常に全幅。
-                    const isCompact = ([, subs]: [string, { cards: CardMaster[] }[]]) =>
-                      subs.reduce((n, s) => n + s.cards.length, 0) <= 4 && subs.length === 1
-                    const compact = entries.filter(isCompact)
-                    const wide = entries.filter((e) => !isCompact(e))
-                    const storeTier = STORE_TIERS.has(tier)
                     return (
                       <div className="space-y-4">
-                        {wide.map(([base, subs]) => renderBaseBlock(base, subs, tier, false))}
-                        {compact.length > 0 && !storeTier && (
-                          <div className="grid grid-cols-2 gap-3">
-                            {compact.map(([base, subs]) => renderBaseBlock(base, subs, tier, true))}
-                          </div>
-                        )}
-                        {compact.length > 0 && storeTier && compact.map(([base, subs]) => renderBaseBlock(base, subs, tier, false))}
+                        {entries.map(([base, subs]) => renderBaseBlock(base, subs, tier, false))}
                       </div>
                     )
                   })()}
@@ -389,16 +378,38 @@ export default function AlbumDetail({ product, userCards, onBack, onCardTap }: A
     </div>
   )
 
+  // Pack subs into paragraphs:
+  // - sub with ≥3 cards takes its own paragraph (wraps naturally in grid)
+  // - subs with 1-2 cards combine until total fronts > 2, then new paragraph
+  function groupSubsToParagraphs(subs: { store: string; versionId: string; cards: CardMaster[] }[]) {
+    const paragraphs: typeof subs[] = []
+    let current: typeof subs = []
+    let currentCount = 0
+    for (const sub of subs) {
+      const n = sub.cards.length
+      if (n >= 3) {
+        if (current.length > 0) { paragraphs.push(current); current = []; currentCount = 0 }
+        paragraphs.push([sub])
+        continue
+      }
+      if (currentCount + n <= 2) {
+        current.push(sub); currentCount += n
+      } else {
+        paragraphs.push(current); current = [sub]; currentCount = n
+      }
+    }
+    if (current.length > 0) paragraphs.push(current)
+    return paragraphs
+  }
+
   function renderBaseBlock(base: string, subs: { store: string; versionId: string; cards: CardMaster[] }[], tier: string, compact = false) {
     const isStore = STORE_TIERS.has(tier)
-    // カードは固定高さで flex-wrap: 幅はタイプ別アスペクト比で決まる
     const totalOwned = subs.reduce((acc, s) => acc + s.cards.filter(c => isActuallyOwned(c.id)).length, 0)
     const totalCards = subs.reduce((acc, s) => acc + s.cards.length, 0)
     const displayBase = isStore ? shortStoreName(base) : base
-    // この VER 全体で裏面画像があれば最初の1枚を判別用に表示
-    const baseBackImage = subs
-      .flatMap(s => s.cards.map(c => ownedMap.get(c.id)?.back_image_url || c.back_image_url))
-      .find(u => !!u)
+
+    const paragraphs = groupSubsToParagraphs(subs)
+
     return (
                 <div key={base || 'no-base'}>
                   <div className="flex items-center gap-2 mb-2" style={{ minHeight: 20 }}>
@@ -412,42 +423,52 @@ export default function AlbumDetail({ product, userCards, onBack, onCardTap }: A
                     </span>
                   </div>
                   <div>
-                  {subs.map(({ store, versionId, cards: versionCards }) => {
-                    const ownedInVersion = versionCards.filter(c => isActuallyOwned(c.id)).length
+                  {paragraphs.map((paraSubs, pi) => {
+                    const showSubBadge = paraSubs.length > 1 || (paraSubs[0]?.store && paraSubs[0].store !== '通常')
                     return (
-                      <div key={versionId} className="mb-3">
-                        {store ? (
-                          <div className="flex items-center gap-2 mb-1.5 pl-2.5" style={{ minHeight: 22 }}>
-                            {store !== '通常' && (
-                              <span
-                                className="text-[10px] font-bold px-2 py-0.5 rounded-full whitespace-nowrap overflow-hidden text-ellipsis max-w-full"
-                                style={{ background: 'rgba(28,28,30,0.06)', color: '#636366' }}
-                              >
-                                {store}
-                              </span>
-                            )}
-                            <span className="text-[9px] whitespace-nowrap" style={{ color: '#8E8E93' }}>
-                              {ownedInVersion}/{versionCards.length}
-                            </span>
+                      <div key={pi} className="mb-3">
+                        {showSubBadge && (
+                          <div className="flex items-center gap-2 flex-wrap mb-1.5 pl-2.5" style={{ minHeight: 22 }}>
+                            {paraSubs.map(({ store, versionId, cards: vcs }) => {
+                              const ownedInVersion = vcs.filter(c => isActuallyOwned(c.id)).length
+                              const label = store || (versionNameMap.get(versionId) ?? '')
+                              return (
+                                <span key={versionId} className="flex items-center gap-1">
+                                  {label && label !== '通常' && (
+                                    <span
+                                      className="text-[10px] font-bold px-2 py-0.5 rounded-full whitespace-nowrap overflow-hidden text-ellipsis max-w-full"
+                                      style={{ background: 'rgba(28,28,30,0.06)', color: '#636366' }}
+                                    >
+                                      {label}
+                                    </span>
+                                  )}
+                                  <span className="text-[9px] whitespace-nowrap" style={{ color: '#8E8E93' }}>
+                                    {ownedInVersion}/{vcs.length}
+                                  </span>
+                                </span>
+                              )
+                            })}
                           </div>
-                        ) : (
-                          <div className="mb-1.5" style={{ minHeight: 22 }} />
                         )}
+                        {!showSubBadge && <div className="mb-1.5" style={{ minHeight: 22 }} />}
                         <div className="grid grid-cols-4 gap-2">
-                          {(() => {
-                            // この version の中で最初に見つかった裏面画像を先頭に置く
-                            const back = versionCards
+                          {paraSubs.flatMap(sub => {
+                            // 1 shared back thumb per sub (if any back image exists in this sub)
+                            const subBack = sub.cards
                               .map(c => ownedMap.get(c.id)?.back_image_url || c.back_image_url)
-                              .find(u => !!u)
-                            return back ? (
+                              .find(u => !!u) || ''
+                            const backTile = (
                               <div
+                                key={`${sub.versionId}-back`}
                                 title="裏面（判別用）"
                                 className="relative rounded-lg overflow-hidden"
                                 style={{
                                   width: '100%',
                                   aspectRatio: '2 / 3',
-                                  background: `rgba(142,142,147,0.08) url(${back}) center / cover no-repeat`,
-                                  border: '2px dotted #8E8E93',
+                                  background: subBack
+                                    ? `rgba(142,142,147,0.08) url(${subBack}) center / cover no-repeat`
+                                    : 'rgba(142,142,147,0.08)',
+                                  border: '2px dotted #C7C7CC',
                                 }}
                               >
                                 <span
@@ -456,10 +477,14 @@ export default function AlbumDetail({ product, userCards, onBack, onCardTap }: A
                                 >
                                   裏
                                 </span>
+                                {!subBack && (
+                                  <div className="absolute inset-0 flex items-center justify-center">
+                                    <span className="text-[10px]" style={{ color: '#8E8E93' }}>未登録</span>
+                                  </div>
+                                )}
                               </div>
-                            ) : null
-                          })()}
-                          {versionCards.map(card => {
+                            )
+                            const frontTiles = sub.cards.map(card => {
                       const owned = ownedMap.get(card.id) || null
                       const hasQty = (owned?.quantity ?? 0) > 0
                       const displayImage = owned?.front_image_url || card.front_image_url || ''
@@ -473,13 +498,15 @@ export default function AlbumDetail({ product, userCards, onBack, onCardTap }: A
                       const bgStyle = hasImage
                         ? `rgba(243,180,227,0.15) url(${displayImage}) center / ${bgSize} no-repeat`
                         : hasQty ? 'rgba(243,180,227,0.15)' : '#E5E5EA'
-                      // 横長タイプ（id_card, scratch_card）は 2列分にする
+                      // 横長/正方形タイプ（id_card/scratch_card/magnet/mega_jacket/puzzle/sticker）は 2列分にする
                       const isLandscape = card.card_type === 'id_card' || card.card_type === 'scratch_card'
+                      const isWide = isWideCard(card.card_type)
+                      const spanClass = (isLandscape || isWide) ? 'col-span-2' : ''
                       return (
                         <button
                           key={card.id}
                           onClick={() => onCardTap(card, owned)}
-                          className={`relative rounded-lg overflow-hidden transition-transform active:scale-95 ${isLandscape ? 'col-span-2' : ''}`}
+                          className={`relative rounded-lg overflow-hidden transition-transform active:scale-95 ${spanClass}`}
                           style={{
                             width: '100%',
                             aspectRatio: cardAspect,
@@ -530,6 +557,8 @@ export default function AlbumDetail({ product, userCards, onBack, onCardTap }: A
                           )}
                         </button>
                       )
+                            })
+                            return [backTile, ...frontTiles]
                           })}
                         </div>
                       </div>
