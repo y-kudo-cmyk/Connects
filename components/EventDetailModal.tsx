@@ -62,6 +62,7 @@ export default function EventDetailModal({
   const [editMembers, setEditMembers] = useState<string[]>(
     (event.relatedArtists || '').split('#').map(s => s.trim()).filter(s => s && s !== 'SEVENTEEN')
   )
+  const [editTags, setEditTags] = useState<ScheduleTag[]>((event.tags ?? []) as ScheduleTag[])
   const [editSaving, setEditSaving] = useState(false)
   const [editRequestSent, setEditRequestSent] = useState(false)
   const imageFileRef = useRef<HTMLInputElement>(null)
@@ -168,6 +169,8 @@ export default function EventDetailModal({
       }
       if (newStartDate) updates.start_date = newStartDate
       if (newEndDate !== null) updates.end_date = newEndDate || null
+      // admin のみ tags 編集可能
+      if (isAdmin) updates.tags = editTags
       await fetch('/api/update-spot', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -339,21 +342,51 @@ export default function EventDetailModal({
           )}
 
           {/* タグ */}
-          <div className="flex items-center gap-1.5 flex-wrap mb-2">
-            {(event.tags ?? []).map((tag) => {
-              const tc = scheduleTagConfig[tag as ScheduleTag] ?? { label: tag, icon: '📌', color: '#8E8E93', bg: 'rgba(142,142,147,0.15)' }
-              return (
-                <span key={tag} className="text-[11px] font-bold px-2 py-1 rounded-lg"
-                  style={{ background: tc.bg, color: tc.color }}>
-                  {tc.icon} {tc.label}
-                </span>
-              )
-            })}
-            {isPeriod && (
-              <span className="text-[11px] font-bold px-2 py-1 rounded-lg"
-                style={{ background: 'rgba(0,0,0,0.06)', color: '#8E8E93' }}>{t('Common.period')}</span>
-            )}
-          </div>
+          {editing && isAdmin ? (
+            <div className="mb-2">
+              <p className="text-[10px] mb-1 font-bold" style={{ color: '#8E8E93' }}>タグ (admin編集可 / 複数選択)</p>
+              <div className="flex items-center gap-1.5 flex-wrap">
+                {(Object.keys(scheduleTagConfig) as ScheduleTag[]).map((tag) => {
+                  const tc = scheduleTagConfig[tag]
+                  const active = editTags.includes(tag)
+                  return (
+                    <button
+                      key={tag}
+                      type="button"
+                      onClick={() => {
+                        setEditTags(active ? editTags.filter(t => t !== tag) : [...editTags, tag])
+                      }}
+                      className="text-[11px] font-bold px-2 py-1 rounded-lg transition-opacity"
+                      style={{
+                        background: active ? tc.bg : 'rgba(0,0,0,0.04)',
+                        color: active ? tc.color : '#8E8E93',
+                        opacity: active ? 1 : 0.6,
+                        border: active ? `1.5px solid ${tc.color}` : '1.5px solid transparent',
+                      }}
+                    >
+                      {tc.icon} {tc.label}
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+          ) : (
+            <div className="flex items-center gap-1.5 flex-wrap mb-2">
+              {(event.tags ?? []).map((tag) => {
+                const tc = scheduleTagConfig[tag as ScheduleTag] ?? { label: tag, icon: '📌', color: '#8E8E93', bg: 'rgba(142,142,147,0.15)' }
+                return (
+                  <span key={tag} className="text-[11px] font-bold px-2 py-1 rounded-lg"
+                    style={{ background: tc.bg, color: tc.color }}>
+                    {tc.icon} {tc.label}
+                  </span>
+                )
+              })}
+              {isPeriod && (
+                <span className="text-[11px] font-bold px-2 py-1 rounded-lg"
+                  style={{ background: 'rgba(0,0,0,0.06)', color: '#8E8E93' }}>{t('Common.period')}</span>
+              )}
+            </div>
+          )}
 
           {/* タイトル（編集可能） */}
           {editing ? (
