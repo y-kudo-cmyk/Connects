@@ -83,7 +83,7 @@ for (const mid of MEMBER_IDS) {
     }
   }
 
-  // For this member, fetch all cards per version (ordered by card_detail)
+  // For this member, fetch all cards per version
   const memberCardsByVersion = new Map()
   for (const vid of boxesByVersion.keys()) {
     const { data: rows } = await s
@@ -92,22 +92,27 @@ for (const mid of MEMBER_IDS) {
       .eq('product_id', PID)
       .eq('version_id', vid)
       .eq('member_id', mid)
-      .order('card_detail')
     memberCardsByVersion.set(vid, rows ?? [])
   }
 
   let ok = 0
+  const usedCardIds = new Set()
   for (const c of template.cards) {
     const boxes = boxesByVersion.get(c.versionId)
-    const boxIdx = boxes.findIndex(b => b._tplIdx === c._tplIdx !== undefined ? b._tplIdx === c._tplIdx : false)
-    // find position of this box within its version (by _tplIdx)
     const positionInVersion = boxes.findIndex(b => b._tplIdx === template.cards.indexOf(c))
     const memberCards = memberCardsByVersion.get(c.versionId) ?? []
-    const row = memberCards[positionInVersion]
+    // Priority: 1) exact card_detail match (not already used), 2) positional fallback
+    let row = memberCards.find(r => r.card_detail === c.detail && !usedCardIds.has(r.id))
     if (!row) {
-      console.log(`    skip ${c.versionId} #${positionInVersion}: no card_master row for ${mid} (member has ${memberCards.length} cards)`)
+      // positional fallback (member has fewer cards than template, use by position)
+      const unused = memberCards.filter(r => !usedCardIds.has(r.id))
+      row = unused[positionInVersion] ?? unused[0]
+    }
+    if (!row) {
+      console.log(`    skip ${c.versionId} [${c.detail}]: no card_master row for ${mid}`)
       continue
     }
+    usedCardIds.add(row.id)
     const cmId = row.id
 
     try {

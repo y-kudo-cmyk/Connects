@@ -1,0 +1,59 @@
+{
+  "productId": "P_KR023",
+  "albumName": "Happy Burstday",
+  "imageSize": { "width": 1448, "height": 2048 },
+  "cards": [
+    { "section":"INCLUDED","versionId":"V_KR023_01","detail":"Photocard 1","cardType":"photocard","left":60,"top":535,"width":93,"height":134 },
+    { "section":"INCLUDED","versionId":"V_KR023_01","detail":"Photocard 2","cardType":"photocard","left":156,"top":534,"width":92,"height":139 },
+    { "section":"INCLUDED","versionId":"V_KR023_01","detail":"Photocard 3","cardType":"photocard","left":251,"top":540,"width":97,"height":132 },
+    { "section":"INCLUDED","versionId":"V_KR023_01","detail":"Photocard 4","cardType":"photocard","left":355,"top":535,"width":93,"height":142 },
+    { "section":"INCLUDED","versionId":"V_KR023_01","detail":"Tear-off Poster","cardType":"tear-off_poster","left":481,"top":527,"width":136,"height":163 },
+
+    { "section":"INCLUDED","versionId":"V_KR023_02","detail":"Photocard 1","cardType":"photocard","left":60,"top":752,"width":99,"height":142 },
+    { "section":"INCLUDED","versionId":"V_KR023_02","detail":"Photocard 2","cardType":"photocard","left":159,"top":754,"width":87,"height":148 },
+    { "section":"INCLUDED","versionId":"V_KR023_02","detail":"Photocard 3","cardType":"photocard","left":252,"top":746,"width":88,"height":156 },
+    { "section":"INCLUDED","versionId":"V_KR023_02","detail":"Photocard 4","cardType":"photocard","left":347,"top":759,"width":103,"height":130 },
+    { "section":"INCLUDED","versionId":"V_KR023_02","detail":"Puzzle","cardType":"puzzle","left":478,"top":783,"width":116,"height":122 },
+    { "section":"INCLUDED","versionId":"V_KR023_02","detail":"Scratch Card","cardType":"scratch_card","left":611,"top":764,"width":72,"height":159 },
+
+    { "section":"INCLUDED","versionId":"V_KR023_03","detail":"Photocard 1","cardType":"photocard","left":55,"top":984,"width":98,"height":133 },
+    { "section":"INCLUDED","versionId":"V_KR023_03","detail":"Photocard 2","cardType":"photocard","left":163,"top":987,"width":90,"height":138 },
+    { "section":"INCLUDED","versionId":"V_KR023_03","detail":"Photocard 3","cardType":"photocard","left":261,"top":992,"width":97,"height":133 },
+    { "section":"INCLUDED","versionId":"V_KR023_03","detail":"Photocard 4","cardType":"photocard","left":367,"top":991,"width":99,"height":139 },
+    { "section":"INCLUDED","versionId":"V_KR023_03","detail":"ID Card","cardType":"id_card","left":483,"top":1019,"width":157,"height":93 },
+
+    { "section":"INCLUDED","versionId":"V_KR023_04","detail":"Photocard 1","cardType":"photocard","left":778,"top":725,"width":96,"height":134 },
+    { "section":"INCLUDED","versionId":"V_KR023_04","detail":"Photocard 2","cardType":"photocard","left":884,"top":729,"width":100,"height":135 },
+    { "section":"INCLUDED","versionId":"V_KR023_04","detail":"Photocard 3","cardType":"photocard","left":989,"top":721,"width":85,"height":145 },
+    { "section":"INCLUDED","versionId":"V_KR023_04","detail":"Photocard 4","cardType":"photocard","left":1083,"top":722,"width":89,"height":152 },
+    { "section":"INCLUDED","versionId":"V_KR023_04","detail":"Fotocard","cardType":"fotocard","left":1208,"top":737,"width":145,"height":132 },
+    { "section":"INCLUDED","versionId":"V_KR023_04","detail":"PostCard","cardType":"postcard","left":789,"top":480,"width":170,"height":210 },
+
+    { "section":"INCLUDED","versionId":"V_KR023_05","detail":"Photocard 1","cardType":"photocard","left":769,"top":987,"width":100,"height":135 },
+    { "section":"INCLUDED","versionId":"V_KR023_05","detail":"Photocard 2","cardType":"photocard","left":885,"top":979,"width":99,"height":158 },
+    { "section":"INCLUDED","versionId":"V_KR023_05","detail":"Photocard 3","cardType":"photocard","left":985,"top":981,"width":102,"height":151 },
+
+    { "section":"INCLUDED","versionId":"V_KR023_06","detail":"GREEN","cardType":"green","left":1132,"top":991,"width":93,"height":139 },
+    { "section":"INCLUDED","versionId":"V_KR023_06","detail":"WHITE","cardType":"white","left":1240,"top":991,"width":103,"height":141 },
+
+    { "section":"STORE_JP","versionId":"V_KR023_BEN_WEVERSEJP_NEWESCAPEVerNEWMYSEL","detail":"ホログラム入りフォトカード 1","cardType":"photocard","left":76,"top":1305,"width":103,"height":160 },
+    { "section":"STORE_JP","versionId":"V_KR023_BEN_WEVERSEJP_DAREDEVIL","detail":"DAREDEVIL Photocard","cardType":"photocard","left":182,"top":1315,"width":99,"height":142 },
+    { "section":"STORE_JP","versionId":"V_KR023_BEN_WEVERSE_NEWESCAPEVerNEWMYSEL","detail":"フォトカード 1","cardType":"photocard","left":299,"top":1314,"width":90,"height":146 },
+    { "section":"STORE_JP","versionId":"V_KR023_BEN_UMS_NEWESCAPEVerNEWMYSEL","detail":"フォトカード 1","cardType":"photocard","left":519,"top":1326,"width":91,"height":140 },
+    { "section":"STORE_JP","versionId":"V_KR023_BEN_HMV_NEWESCAPEVerNEWMYSEL","detail":"フォトカード 1","cardType":"photocard","left":727,"top":1320,"width":89,"height":141 },
+    { "section":"STORE_JP","versionId":"V_KR023_BEN_TOWER_NEWESCAPEVerNEWMYSEL","detail":"フォトカード 1","cardType":"photocard","left":947,"top":1313,"width":92,"height":148 },
+    { "section":"STORE_JP","versionId":"V_KR023_BEN_TSUTAYA_NEWESCAPEVerNEWMYSEL","detail":"フォトカード 1","cardType":"photocard","left":1174,"top":1321,"width":85,"height":142 },
+
+    { "section":"STORE_JP","versionId":"V_KR023_BEN_WEVERSE_DAREDEVIL","detail":"DAREDEVIL Photocard (S.COUPS)","cardType":"photocard","left":412,"top":1317,"width":89,"height":145 },
+    { "section":"STORE_JP","versionId":"V_KR023_BEN_UMS_DAREDEVIL","detail":"DAREDEVIL Photocard (S.COUPS)","cardType":"photocard","left":617,"top":1321,"width":94,"height":145 },
+    { "section":"STORE_JP","versionId":"V_KR023_BEN_HMV_DAREDEVIL","detail":"DAREDEVIL Photocard (S.COUPS)","cardType":"photocard","left":834,"top":1313,"width":85,"height":150 },
+    { "section":"STORE_JP","versionId":"V_KR023_BEN_TOWER_DAREDEVIL","detail":"DAREDEVIL Photocard (S.COUPS)","cardType":"photocard","left":1049,"top":1318,"width":95,"height":145 },
+    { "section":"STORE_JP","versionId":"V_KR023_BEN_TSUTAYA_DAREDEVIL","detail":"DAREDEVIL Photocard (S.COUPS)","cardType":"photocard","left":1274,"top":1313,"width":92,"height":153 },
+
+    { "section":"STORE_JP","versionId":"V_KR023_BEN_WEVERSE_LUCKY","detail":"ラキドロ","cardType":"luckydraw","left":440,"top":1649,"width":90,"height":131 },
+    { "section":"STORE_JP","versionId":"V_KR023_BEN_UMS_LUCKY","detail":"ラキドロ","cardType":"luckydraw","left":560,"top":1646,"width":87,"height":140 },
+    { "section":"STORE_JP","versionId":"V_KR023_BEN_HMV_LUCKY","detail":"ラキドロ","cardType":"luckydraw","left":677,"top":1643,"width":93,"height":145 },
+    { "section":"STORE_JP","versionId":"V_KR023_BEN_TOWER_LUCKY","detail":"ラキドロ","cardType":"luckydraw","left":794,"top":1648,"width":91,"height":149 },
+    { "section":"STORE_JP","versionId":"V_KR023_BEN_TSUTAYA_LUCKY","detail":"ラキドロ","cardType":"luckydraw","left":914,"top":1650,"width":99,"height":142 }
+  ]
+}
