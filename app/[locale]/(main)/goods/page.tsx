@@ -75,8 +75,8 @@ function GoodsContent({ userId, isAdmin }: { userId: string; isAdmin: boolean })
   const [modalCard, setModalCard] = useState<{ card: CardMaster; owned: UserCard | null } | null>(null)
   const [shareModal, setShareModal] = useState<{ initialProductId?: string } | null>(null)
   const [favMemberIds, setFavMemberIds] = useState<string[]>([])
-  // ベータ機能（譲・求シェア、欲しい枚数）は admin のみ
-  const isBetaUser = isAdmin
+  // 譲・求シェア / 欲しい枚数 は全ユーザー利用可
+  const isBetaUser = true
 
   useEffect(() => {
     const supabase = createClient()
