@@ -378,24 +378,29 @@ export default function AlbumDetail({ product, userCards, onBack, onCardTap }: A
     </div>
   )
 
-  // Pack subs into paragraphs:
-  // - sub with ≥3 cards takes its own paragraph (wraps naturally in grid)
-  // - subs with 1-2 cards combine until total fronts > 2, then new paragraph
+  // Pack subs into paragraphs where total TILES ≤ 4 per paragraph.
+  // tiles(sub) = (裏要るタイプが含まれる ? 1 : 0) + cards.length
+  // - tiles ≥ 4 → そのsub単独段落 (4超は自然折返し)
+  // - 他は 合計tilesが4までになる範囲で貪欲に結合
+  function subTiles(sub: { cards: CardMaster[] }) {
+    const hasBack = sub.cards.some(c => hasBackSide(c.card_type))
+    return (hasBack ? 1 : 0) + sub.cards.length
+  }
   function groupSubsToParagraphs(subs: { store: string; versionId: string; cards: CardMaster[] }[]) {
     const paragraphs: typeof subs[] = []
     let current: typeof subs = []
-    let currentCount = 0
+    let currentTiles = 0
     for (const sub of subs) {
-      const n = sub.cards.length
-      if (n >= 3) {
-        if (current.length > 0) { paragraphs.push(current); current = []; currentCount = 0 }
+      const t = subTiles(sub)
+      if (t >= 4) {
+        if (current.length > 0) { paragraphs.push(current); current = []; currentTiles = 0 }
         paragraphs.push([sub])
         continue
       }
-      if (currentCount + n <= 2) {
-        current.push(sub); currentCount += n
+      if (currentTiles + t <= 4) {
+        current.push(sub); currentTiles += t
       } else {
-        paragraphs.push(current); current = [sub]; currentCount = n
+        paragraphs.push(current); current = [sub]; currentTiles = t
       }
     }
     if (current.length > 0) paragraphs.push(current)
