@@ -479,6 +479,7 @@ $$ language plpgsql;
 -- avatars        (プロフィール画像)
 -- banners        (プロフィールバナー)
 -- event-images   (スケジュール画像) ✅ 作成済み（public）
+-- notice-images  (fam/admin 手動投稿の Weverse notice スクショ) ※public バケットを作成
 -- spot-photos    (聖地写真)
 -- screenshots    (スクリーンショット)
 -- tickets        (チケット画像) ※private
@@ -499,6 +500,24 @@ create policy "Authenticated can view banners"
 create policy "Authenticated users can upload event images"
   on storage.objects for insert
   with check (bucket_id = 'event-images' and auth.role() = 'authenticated');
+
+-- notice-images: fam/admin による Weverse お知らせ手動投稿のスクショ保存
+-- バケットを public 作成後に以下のポリシーを有効化
+create policy "Anyone can view notice images"
+  on storage.objects for select to authenticated
+  using (bucket_id = 'notice-images');
+
+create policy "Fam and admin can upload notice images"
+  on storage.objects for insert
+  with check (
+    bucket_id = 'notice-images'
+    and auth.role() = 'authenticated'
+    and exists (
+      select 1 from profiles
+      where profiles.id = auth.uid()
+        and profiles.role in ('fam', 'admin')
+    )
+  );
 
 -- ============================================================
 -- 初期データ: タグマスタ

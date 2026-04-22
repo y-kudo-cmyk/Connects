@@ -981,6 +981,22 @@ export default function ProfilePage() {
 
               <div className="mx-4 my-4" style={{ height: 1, background: '#E5E5EA' }} />
 
+              {/* fam / admin 限定メニュー */}
+              {(profile.role === 'fam' || profile.role === 'admin') && (
+                <div className="px-4 pb-4">
+                  <button
+                    onClick={() => { setShowSettings(false); router.push('/submit-notice') }}
+                    className="w-full py-3.5 rounded-xl text-sm font-semibold flex items-center justify-center gap-2"
+                    style={{ background: 'rgba(243,180,227,0.12)', color: '#C06BA8' }}
+                  >
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" />
+                    </svg>
+                    {t('SubmitNotice.title')}
+                  </button>
+                </div>
+              )}
+
               {/* Feedback, sign out, delete */}
               <div className="px-4 flex flex-col gap-3">
                 <button
