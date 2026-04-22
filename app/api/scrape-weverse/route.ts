@@ -157,8 +157,9 @@ export async function GET(request: NextRequest) {
       'async function pageFunction(context) {',
       '  const { page, request } = context;',
       '  const cookieErrors = (request.userData && request.userData.cookieErrors) || [];',
-      // ── console / requestfailed リスナーを「最先頭」で登録して取りこぼし防止
+      // ── console / requestfailed / (★NEW) 全request リスナーを最先頭で登録
       '  const consoleLogs = [];',
+      '  const allRequests = [];',
       '  const failedRequests = [];',
       '  try {',
       '    page.on("console", (msg) => {',
@@ -178,6 +179,15 @@ export async function GET(request: NextRequest) {
       '      try {',
       '        const entry = { type: "pageerror", text: String(err && err.message || err).slice(0, 500) };',
       '        if (consoleLogs.length < 200) consoleLogs.push(entry);',
+      '      } catch(e) {}',
+      '    });',
+      // ★NEW: 全requestをログ (主に xhr/fetch/script を識別)
+      '    page.on("request", (req) => {',
+      '      try {',
+      '        const rt = req.resourceType();',
+      '        if (["xhr","fetch","script","document"].includes(rt) && allRequests.length < 300) {',
+      '          allRequests.push({ url: req.url().slice(0, 300), method: req.method(), rt });',
+      '        }',
       '      } catch(e) {}',
       '    });',
       '  } catch(e) {}',
@@ -232,7 +242,7 @@ export async function GET(request: NextRequest) {
       '      expires: c.expires,',
       '    }));',
       '  } catch(e) {}',
-      '  return { url: request.url, text, htmlLen, pageTitle, currentUrl, hasLoginForm, bodyHtml, rootHtml, webdriver, userAgent, cookiesAfter, cookieErrors, rootMounted, consoleLogs, failedRequests };',
+      '  return { url: request.url, text, htmlLen, pageTitle, currentUrl, hasLoginForm, bodyHtml, rootHtml, webdriver, userAgent, cookiesAfter, cookieErrors, rootMounted, consoleLogs, failedRequests, allRequests };',
       '}',
     ].join('\n'),
     proxyConfiguration: { useApifyProxy: true },
@@ -350,6 +360,27 @@ export async function GET(request: NextRequest) {
     }
   } else {
     log.push('failedRequests: (none)')
+  }
+  // ★ 全 XHR/fetch/script/document リクエスト (内部APIエンドポイント特定用)
+  const allRequests = items?.[0]?.allRequests as Array<{url: string; method: string; rt: string}> | undefined
+  if (allRequests?.length) {
+    log.push(`allRequests count: ${allRequests.length}`)
+    // xhr/fetch のみ抜粋 (主要エンドポイント特定)
+    const apiReqs = allRequests.filter(r => r.rt === 'xhr' || r.rt === 'fetch')
+    log.push(`  xhr/fetch count: ${apiReqs.length}`)
+    for (const r of apiReqs.slice(0, 30)) {
+      log.push(`  [${r.rt}] ${r.method} ${r.url}`)
+    }
+    // script のドメイン一覧 (バンドルが別ドメインにある場合の特定)
+    const scriptDomains = new Set<string>()
+    for (const r of allRequests) {
+      if (r.rt === 'script') {
+        try { scriptDomains.add(new URL(r.url).host) } catch {}
+      }
+    }
+    log.push(`  script domains: ${[...scriptDomains].join(', ')}`)
+  } else {
+    log.push('allRequests: (none)')
   }
   // ★ Cookie デバッグ情報 — refresh 動作確認用
   if (items?.[0]?.cookiesAfter) {
