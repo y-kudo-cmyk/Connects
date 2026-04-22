@@ -179,7 +179,7 @@
     "addPrivateSchedule": "Add schedule",
     "addSchedule": "Post schedule",
     "addScheduleShort": "Post",
-    "schedulePosted": "Schedule posted (pending approval)",
+    "schedulePosted": "Schedule posted",
     "postFailed": "Failed to post. Please try again.",
     "titlePlaceholder": "Title",
     "private": "Private",

@@ -179,7 +179,7 @@
     "addPrivateSchedule": "予定を追加",
     "addSchedule": "スケジュールを投稿",
     "addScheduleShort": "投稿",
-    "schedulePosted": "スケジュールを投稿しました（承認後に反映）",
+    "schedulePosted": "スケジュールを投稿しました",
     "postFailed": "投稿に失敗しました。もう一度お試しください",
     "titlePlaceholder": "タイトル",
     "private": "プライベート",
