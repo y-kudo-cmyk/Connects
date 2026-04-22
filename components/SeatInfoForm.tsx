@@ -58,12 +58,14 @@ export default function SeatInfoForm({
   ticketImages,
   autoAnalyzeTrigger,  // ticketImagesが増えたときに外から呼ぶ用
   isAdmin = false,
+  venue,
 }: {
   value: SeatInfo
   onChange: (v: SeatInfo) => void
   ticketImages?: string[]
   autoAnalyzeTrigger?: number  // incrementするとanalyze発火
   isAdmin?: boolean
+  venue?: string
 }) {
   const t = useTranslations()
   const [analyzing, setAnalyzing] = useState(false)
@@ -269,18 +271,19 @@ export default function SeatInfoForm({
 
       {/* 地図で位置を設定 — admin のみ (検証中) */}
       {isAdmin && fields.some((f) => f.value.trim()) && (
-        <PositionSection value={value} onChange={onChange} fields={fields} />
+        <PositionSection value={value} onChange={onChange} fields={fields} venue={venue} />
       )}
     </div>
   )
 }
 
 function PositionSection({
-  value, onChange, fields,
+  value, onChange, fields, venue,
 }: {
   value: SeatInfo
   onChange: (v: SeatInfo) => void
   fields: SeatField[]
+  venue?: string
 }) {
   const t = useTranslations()
   const [open, setOpen] = useState(false)
@@ -309,7 +312,7 @@ function PositionSection({
           <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/>
           </svg>
-          {value.position ? detectSection(value.position) || t('Seat.seatMapSet') : t('Seat.seatMapSetPosition')}
+          {value.position ? detectSection(value.position, venue) || t('Seat.seatMapSet') : t('Seat.seatMapSetPosition')}
         </button>
       </div>
 
@@ -318,6 +321,7 @@ function PositionSection({
         <ArenaPositionPicker
           value={value.position}
           onChange={(pos) => onChange({ ...value, position: pos })}
+          venueName={venue}
         />
       )}
     </div>

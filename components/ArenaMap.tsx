@@ -1,57 +1,126 @@
 'use client'
 
-import { useRef, useState } from 'react'
-import { ArenaPosition, SeatView, arenaDistance, distanceToColor, distanceToLabel } from '@/lib/useSeatViews'
+import { useMemo, useRef, useState } from 'react'
+import { ArenaPosition, SeatView, arenaDistance, distanceToColor } from '@/lib/useSeatViews'
 import { useTranslations } from 'next-intl'
+import {
+  GENERIC_ARENA,
+  VenueLayout,
+  VenueSection,
+  resolveVenueLayout,
+} from '@/lib/venueLayouts'
 
 // SVG viewBox サイズ
 const W = 300
 const H = 260
 
-// アリーナ各エリアの定義（正規化座標）— labelKey で翻訳
-const SECTIONS_BASE = [
-  { id: 'stage',  labelKey: '', staticLabel: 'STAGE',  x1: 0.28, y1: 0.00, x2: 0.72, y2: 0.15, fill: '#1C1C1E', textColor: '#FFFFFF', fontSize: 10 },
-  { id: 'floor',  labelKey: 'Seat.arenaFloor', staticLabel: '', x1: 0.18, y1: 0.15, x2: 0.82, y2: 0.58, fill: '#EEF0F5', textColor: '#636366', fontSize: 9 },
-  { id: 'standA', labelKey: 'Seat.arenaStand', staticLabel: '\nA', x1: 0.00, y1: 0.15, x2: 0.18, y2: 0.78, fill: '#F3B4E312', textColor: '#C97AB8', fontSize: 8 },
-  { id: 'standC', labelKey: 'Seat.arenaStand', staticLabel: '\nC', x1: 0.82, y1: 0.15, x2: 1.00, y2: 0.78, fill: '#3B82F612', textColor: '#2563EB', fontSize: 8 },
-  { id: 'standB', labelKey: 'Seat.arenaStand', staticLabel: ' B', x1: 0.18, y1: 0.58, x2: 0.82, y2: 0.78, fill: '#34D39912', textColor: '#059669', fontSize: 9 },
-  { id: 'standD', labelKey: 'Seat.arenaStand', staticLabel: ' D / 2F', x1: 0.18, y1: 0.78, x2: 0.82, y2: 1.00, fill: '#A78BFA12', textColor: '#7C3AED', fontSize: 9 },
-  { id: 'standA2', labelKey: '', staticLabel: '2F\nA', x1: 0.00, y1: 0.78, x2: 0.18, y2: 1.00, fill: '#F3B4E312', textColor: '#C97AB8', fontSize: 7 },
-  { id: 'standC2', labelKey: '', staticLabel: '2F\nC', x1: 0.82, y1: 0.78, x2: 1.00, y2: 1.00, fill: '#3B82F612', textColor: '#2563EB', fontSize: 7 },
-] as const
+function px(norm: number, total: number) { return norm * total }
 
-function useSections() {
-  const t = useTranslations()
-  return SECTIONS_BASE.map((s) => ({
-    ...s,
-    label: s.labelKey ? t(s.labelKey) + s.staticLabel : s.staticLabel,
-  }))
+// ─── ジオメトリユーティリティ ──────────────────────────────
+type BBox = { x: number; y: number; w: number; h: number; cx: number; cy: number }
+
+function sectionBBox(section: VenueSection): BBox {
+  if (section.shape.kind === 'rect') {
+    const { x1, y1, x2, y2 } = section.shape
+    const x = Math.min(x1, x2)
+    const y = Math.min(y1, y2)
+    const w = Math.abs(x2 - x1)
+    const h = Math.abs(y2 - y1)
+    return { x, y, w, h, cx: x + w / 2, cy: y + h / 2 }
+  }
+  // polygon
+  const pts = section.shape.points
+  let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity
+  for (const [x, y] of pts) {
+    if (x < minX) minX = x
+    if (y < minY) minY = y
+    if (x > maxX) maxX = x
+    if (y > maxY) maxY = y
+  }
+  const w = maxX - minX
+  const h = maxY - minY
+  return { x: minX, y: minY, w, h, cx: minX + w / 2, cy: minY + h / 2 }
 }
 
-/** 位置からエリア名を推定 */
-export function detectSection(pos: ArenaPosition): string {
-  for (const s of SECTIONS_BASE) {
-    if (pos.x >= s.x1 && pos.x <= s.x2 && pos.y >= s.y1 && pos.y <= s.y2) {
-      const label = s.labelKey ? s.staticLabel.replace('\n', ' ').trim() : s.staticLabel.replace('\n', ' ')
-      return label
+function pointInRect(
+  px_: number, py_: number,
+  x1: number, y1: number, x2: number, y2: number,
+): boolean {
+  const xMin = Math.min(x1, x2), xMax = Math.max(x1, x2)
+  const yMin = Math.min(y1, y2), yMax = Math.max(y1, y2)
+  return px_ >= xMin && px_ <= xMax && py_ >= yMin && py_ <= yMax
+}
+
+/** Ray-casting による多角形含有判定 (正規化座標) */
+function pointInPolygon(px_: number, py_: number, points: Array<[number, number]>): boolean {
+  let inside = false
+  const n = points.length
+  for (let i = 0, j = n - 1; i < n; j = i++) {
+    const [xi, yi] = points[i]
+    const [xj, yj] = points[j]
+    const intersect = ((yi > py_) !== (yj > py_)) &&
+      (px_ < ((xj - xi) * (py_ - yi)) / ((yj - yi) || 1e-9) + xi)
+    if (intersect) inside = !inside
+  }
+  return inside
+}
+
+function pointInSection(pos: ArenaPosition, section: VenueSection): boolean {
+  if (section.shape.kind === 'rect') {
+    const { x1, y1, x2, y2 } = section.shape
+    return pointInRect(pos.x, pos.y, x1, y1, x2, y2)
+  }
+  return pointInPolygon(pos.x, pos.y, section.shape.points)
+}
+
+// ─── detectSection (会場レイアウト対応) ───────────────────
+/**
+ * 位置からエリア名を推定。
+ * - 第2引数に VenueLayout を渡せばそのレイアウトで判定
+ * - venueName (string) を渡せば resolveVenueLayout で解決 (なければ GENERIC_ARENA)
+ * - 省略時は GENERIC_ARENA
+ */
+export function detectSection(
+  pos: ArenaPosition,
+  layoutOrVenueName?: VenueLayout | string | null,
+): string {
+  const layout: VenueLayout =
+    !layoutOrVenueName
+      ? GENERIC_ARENA
+      : typeof layoutOrVenueName === 'string'
+        ? (resolveVenueLayout(layoutOrVenueName) ?? GENERIC_ARENA)
+        : layoutOrVenueName
+
+  for (const s of layout.sections) {
+    if (s.isStage) continue
+    if (pointInSection(pos, s)) {
+      if (s.label) {
+        return s.label.replace('\n', ' ').trim()
+      }
+      // labelKey は翻訳せず、id を返す (翻訳はUI側で行う)
+      return s.id
     }
   }
   return ''
 }
-
-function px(norm: number, total: number) { return norm * total }
 
 // ─── ArenaPositionPicker ───────────────────────────────────
 /** 席位置を指定するインタラクティブな俯瞰図 */
 export function ArenaPositionPicker({
   value,
   onChange,
+  venueName,
 }: {
   value?: ArenaPosition
   onChange: (pos: ArenaPosition) => void
+  venueName?: string
 }) {
   const t = useTranslations()
   const svgRef = useRef<SVGSVGElement>(null)
+
+  const layout = useMemo<VenueLayout>(() => {
+    return resolveVenueLayout(venueName) ?? GENERIC_ARENA
+  }, [venueName])
 
   const handlePointer = (e: React.PointerEvent<SVGSVGElement>) => {
     if (!svgRef.current) return
@@ -59,7 +128,10 @@ export function ArenaPositionPicker({
     const x = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width))
     const y = Math.max(0, Math.min(1, (e.clientY - rect.top) / rect.height))
     // stage エリアは選択不可
-    if (y < 0.15 && x > 0.28 && x < 0.72) return
+    for (const s of layout.sections) {
+      if (!s.isStage) continue
+      if (pointInSection({ x, y }, s)) return
+    }
     onChange({ x, y })
   }
 
@@ -69,7 +141,7 @@ export function ArenaPositionPicker({
         {t('Map.arenaTapSeat')}
         {value && (
           <span className="ml-2 font-bold" style={{ color: '#3B82F6' }}>
-            → {detectSection(value)}
+            → {detectSection(value, layout)}
           </span>
         )}
       </p>
@@ -80,7 +152,7 @@ export function ArenaPositionPicker({
         style={{ border: '1.5px solid #E5E5EA', touchAction: 'none' }}
         onPointerDown={handlePointer}
       >
-        <ArenaSVGBase />
+        <ArenaSVGBase layout={layout} />
         {value && <PinMarker pos={value} color="#3B82F6" label={t('Map.arenaYourSeat')} isMe />}
       </svg>
     </div>
@@ -93,13 +165,19 @@ export default function ArenaMap({
   myPosition,
   views,
   onPinTap,
+  venueName,
 }: {
   myPosition?: ArenaPosition
   views: SeatView[]
   onPinTap: (view: SeatView) => void
+  venueName?: string
 }) {
   const t = useTranslations()
   const [selected, setSelected] = useState<SeatView | null>(null)
+
+  const layout = useMemo<VenueLayout>(() => {
+    return resolveVenueLayout(venueName) ?? GENERIC_ARENA
+  }, [venueName])
 
   const viewsWithPos = views.filter((v) => v.position)
   const viewsNoPos = views.filter((v) => !v.position)
@@ -111,7 +189,7 @@ export default function ArenaMap({
         className="w-full rounded-xl"
         style={{ border: '1.5px solid #E5E5EA' }}
       >
-        <ArenaSVGBase />
+        <ArenaSVGBase layout={layout} />
 
         {/* 投稿ピン */}
         {viewsWithPos.map((v) => {
@@ -175,33 +253,78 @@ export default function ArenaMap({
 }
 
 // ─── 共通 SVG パーツ ──────────────────────────────────────
-function ArenaSVGBase() {
-  const sections = useSections()
+function ArenaSVGBase({ layout }: { layout: VenueLayout }) {
+  const t = useTranslations()
   return (
     <>
       <rect width={W} height={H} fill="#F8F9FA" rx="10" />
-      {sections.map((s) => {
-        const x = px(s.x1, W)
-        const y = px(s.y1, H)
-        const w = px(s.x2 - s.x1, W)
-        const h = px(s.y2 - s.y1, H)
-        const cx = x + w / 2
-        const cy = y + h / 2
-        const lines = s.label.split('\n')
+
+      {/* 会場外形 (他のセクションより下) */}
+      {layout.outline && layout.outline.kind === 'ellipse' && (
+        <ellipse
+          cx={px(layout.outline.cx, W)}
+          cy={px(layout.outline.cy, H)}
+          rx={px(layout.outline.rx, W)}
+          ry={px(layout.outline.ry, H)}
+          fill="#FFFFFF"
+          stroke="#D1D5DB"
+          strokeWidth="1"
+          opacity="0.6"
+        />
+      )}
+      {layout.outline && layout.outline.kind === 'polygon' && (
+        <polygon
+          points={layout.outline.points.map(([x, y]) => `${px(x, W)},${px(y, H)}`).join(' ')}
+          fill="#FFFFFF"
+          stroke="#D1D5DB"
+          strokeWidth="1"
+          opacity="0.6"
+        />
+      )}
+
+      {/* 各セクション */}
+      {layout.sections.map((s) => {
+        const bb = sectionBBox(s)
+        const cx = s.labelX !== undefined ? px(s.labelX, W) : px(bb.cx, W)
+        const cy = s.labelY !== undefined ? px(s.labelY, H) : px(bb.cy, H)
+        const fontSize = s.fontSize ?? 9
+        const rawLabel = s.labelKey
+          ? t(s.labelKey) + (s.label ?? '')
+          : (s.label ?? '')
+        const lines = rawLabel.split('\n')
+        const strokeColor = s.isStage ? '#3E3E44' : '#E5E5EA'
+
         return (
           <g key={s.id}>
-            <rect x={x} y={y} width={w} height={h} fill={s.fill}
-              stroke={s.id === 'stage' ? '#3E3E44' : '#E5E5EA'} strokeWidth="0.5" rx="3" />
+            {s.shape.kind === 'rect' ? (
+              <rect
+                x={px(bb.x, W)}
+                y={px(bb.y, H)}
+                width={px(bb.w, W)}
+                height={px(bb.h, H)}
+                fill={s.fill}
+                stroke={strokeColor}
+                strokeWidth="0.5"
+                rx="3"
+              />
+            ) : (
+              <polygon
+                points={s.shape.points.map(([x, y]) => `${px(x, W)},${px(y, H)}`).join(' ')}
+                fill={s.fill}
+                stroke={strokeColor}
+                strokeWidth="0.5"
+              />
+            )}
             {lines.map((line, i) => (
               <text
                 key={i}
                 x={cx}
-                y={cy + (i - (lines.length - 1) / 2) * (s.fontSize! + 2)}
+                y={cy + (i - (lines.length - 1) / 2) * (fontSize + 2)}
                 textAnchor="middle"
                 dominantBaseline="middle"
-                fontSize={s.fontSize}
+                fontSize={fontSize}
                 fill={s.textColor}
-                fontWeight={s.id === 'stage' ? 'bold' : 'normal'}
+                fontWeight={s.isStage ? 'bold' : 'normal'}
               >
                 {line}
               </text>
@@ -209,6 +332,19 @@ function ArenaSVGBase() {
           </g>
         )
       })}
+
+      {/* 会場名表示 (左下、GENERIC 以外のみ) */}
+      {layout.id !== 'generic' && (
+        <text
+          x={6}
+          y={H - 6}
+          fontSize="8"
+          fill="#8E8E93"
+          fontWeight="normal"
+        >
+          {layout.displayName}
+        </text>
+      )}
     </>
   )
 }

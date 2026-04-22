@@ -1588,6 +1588,7 @@ function ConcertHistoryModal({ entry, onClose, onSave, onUpdate, isAdmin = false
                 ticketImages={ticketImages}
                 autoAnalyzeTrigger={autoAnalyzeTrigger}
                 isAdmin={isAdmin}
+                venue={entry.venue}
               />
             </div>
           )}
