@@ -258,10 +258,20 @@ export async function GET(request: NextRequest) {
       '      if (u.failedRequests.length < 200) u.failedRequests.push({ url: req.url().slice(0, 300), method: req.method(), resourceType: req.resourceType(), errorText: f ? f.errorText : "" });',
       '    } catch(e) {}',
       '  });',
-      // ★ navigator.userAgentData をオーバーライド (Weverse init の convertVersion クラッシュ対策)
-      // Linux Chromium 138 の Client Hints が Weverse の想定形式と違い TypeError が出ていた
+      // ★ UA 文字列 + navigator.userAgentData を完全に Chrome Windows に偽装
+      // Weverse init の convertVersion が Client Hints のversion文字列に .replace() を呼びクラッシュ
+      // Linux Chromium の値ではエラーのため、fullVersionList を同期アクセス可能にした上でWindowsに偽装
+      '  try {',
+      '    await page.context().setExtraHTTPHeaders({',
+      '      "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36",',
+      '      "Sec-CH-UA": "\\"Chromium\\";v=\\"138\\", \\"Google Chrome\\";v=\\"138\\", \\"Not)A;Brand\\";v=\\"99\\"",',
+      '      "Sec-CH-UA-Mobile": "?0",',
+      '      "Sec-CH-UA-Platform": "\\"Windows\\"",',
+      '    });',
+      '  } catch(e) {}',
       '  try {',
       '    await page.addInitScript(() => {',
+      '      console.log("[UA-OVERRIDE] installing");',
       '      const brands = [',
       '        { brand: "Chromium", version: "138" },',
       '        { brand: "Google Chrome", version: "138" },',
@@ -272,10 +282,18 @@ export async function GET(request: NextRequest) {
       '        { brand: "Google Chrome", version: "138.0.7204.92" },',
       '        { brand: "Not)A;Brand", version: "99.0.0.0" },',
       '      ];',
+      // ★ fullVersionList/uaFullVersion を sync トップレベルに配置 (Weverse が同期アクセスする可能性対策)
       '      const uaData = {',
       '        brands,',
+      '        fullVersionList,',
+      '        uaFullVersion: "138.0.7204.92",',
       '        mobile: false,',
       '        platform: "Windows",',
+      '        platformVersion: "15.0.0",',
+      '        architecture: "x86",',
+      '        bitness: "64",',
+      '        model: "",',
+      '        wow64: false,',
       '        getHighEntropyValues: async () => ({',
       '          architecture: "x86",',
       '          bitness: "64",',
@@ -290,7 +308,15 @@ export async function GET(request: NextRequest) {
       '        }),',
       '        toJSON: () => ({ brands, mobile: false, platform: "Windows" }),',
       '      };',
-      '      try { Object.defineProperty(navigator, "userAgentData", { get: () => uaData, configurable: true }); } catch(e) {}',
+      '      try {',
+      '        Object.defineProperty(navigator, "userAgentData", { get: () => uaData, configurable: true });',
+      '        console.log("[UA-OVERRIDE] userAgentData installed, brands=" + JSON.stringify(navigator.userAgentData.brands));',
+      '      } catch(e) { console.log("[UA-OVERRIDE] failed: " + e.message); }',
+      // UA 文字列も上書き (Linux と一致しないように)
+      '      try {',
+      '        Object.defineProperty(navigator, "userAgent", { get: () => "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36", configurable: true });',
+      '        Object.defineProperty(navigator, "platform", { get: () => "Win32", configurable: true });',
+      '      } catch(e) {}',
       '    });',
       '  } catch(e) {}',
       // Cookie 登録 (個別 try/catch で失敗 Cookie 名を残す)
