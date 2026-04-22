@@ -1,5 +1,28 @@
 export const maxDuration = 300  // Apify 同期待ちで 60 秒だと不足 (Vercel Pro は 300 まで)
 
+// ============================================================================
+// TODO (次手の方針) — React SPA が mount しない問題が本実装でも解決しない場合:
+//
+// B. 内部API直叩き (本命候補)
+//    Weverse の notice 画面は SPA なので、HTML パースではなく内部 JSON API を
+//    直接叩く方が安定。候補エンドポイント:
+//      - https://global.apis.naver.com/weverse/wevweb/v2.0/community/{communityId}/notices
+//      - https://weverse.io/wapi/v2/notices?communityId={id}&hl=ja&appId=...
+//    SEVENTEEN の communityId は要特定 (たぶん 14 or 10, wes_artistId=7 と対応)。
+//    pageFunction 内で page.evaluate(async () => fetch(url, {credentials: 'include'}))
+//    で JSON を取得する。
+//    本実装 (A) で収集する consoleLogs / failedRequests / networkキャプチャ から
+//    正しいエンドポイントを特定してから B に進むのが効率的。
+//
+// C. モバイル UA (軽量 SPA) 案
+//    m.weverse.io/seventeen/notice?hl=ja に切り替える or
+//    preNavigationHooks で iPhone Safari UA をセット:
+//      await page.context().setExtraHTTPHeaders({
+//        'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) ...'
+//      })
+//    モバイル版は Next.js バンドルが分離されていて、描画成功する可能性がある。
+// ============================================================================
+
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 
@@ -134,7 +157,31 @@ export async function GET(request: NextRequest) {
       'async function pageFunction(context) {',
       '  const { page, request } = context;',
       '  const cookieErrors = (request.userData && request.userData.cookieErrors) || [];',
-      '  await page.waitForTimeout(2000);',
+      // ── console / requestfailed リスナーを「最先頭」で登録して取りこぼし防止
+      '  const consoleLogs = [];',
+      '  const failedRequests = [];',
+      '  try {',
+      '    page.on("console", (msg) => {',
+      '      try {',
+      '        const entry = { type: msg.type(), text: String(msg.text()).slice(0, 500) };',
+      '        if (consoleLogs.length < 200) consoleLogs.push(entry);',
+      '      } catch(e) {}',
+      '    });',
+      '    page.on("requestfailed", (req) => {',
+      '      try {',
+      '        const f = req.failure();',
+      '        const entry = { url: req.url().slice(0, 300), method: req.method(), resourceType: req.resourceType(), errorText: f ? f.errorText : "" };',
+      '        if (failedRequests.length < 200) failedRequests.push(entry);',
+      '      } catch(e) {}',
+      '    });',
+      '    page.on("pageerror", (err) => {',
+      '      try {',
+      '        const entry = { type: "pageerror", text: String(err && err.message || err).slice(0, 500) };',
+      '        if (consoleLogs.length < 200) consoleLogs.push(entry);',
+      '      } catch(e) {}',
+      '    });',
+      '  } catch(e) {}',
+      '  await page.waitForTimeout(5000);',
       '  try {',
       '    const buttons = await page.locator("button");',
       '    const count = await buttons.count();',
@@ -146,10 +193,23 @@ export async function GET(request: NextRequest) {
       '      }',
       '    }',
       '  } catch(e) {}',
-      '  try { await page.waitForLoadState("networkidle", { timeout: 20000 }); } catch(e) {}',
-      '  await page.waitForTimeout(5000);',
+      '  try { await page.waitForLoadState("networkidle", { timeout: 30000 }); } catch(e) {}',
+      // ── React SPA の mount を明示的に待つ: #root の children が増えるまで
+      '  let rootMounted = false;',
+      '  try {',
+      '    await page.waitForFunction(',
+      '      () => {',
+      '        const el = document.querySelector("#__next, #root, #app");',
+      '        return !!(el && el.children && el.children.length > 0);',
+      '      },',
+      '      { timeout: 30000 }',
+      '    );',
+      '    rootMounted = true;',
+      '  } catch(e) {}',
       // NOTICE の記事要素を待つ (Weverse のSPA構造に依存)
       '  try { await page.waitForSelector("text=NOTICE", { timeout: 15000 }); } catch(e) {}',
+      // ── SPA fallback: mount しない場合でも 15秒 粘る
+      '  await page.waitForTimeout(15000);',
       '  const text = await page.evaluate(() => document.body.innerText);',
       '  const htmlLen = await page.evaluate(() => document.documentElement.outerHTML.length);',
       '  const pageTitle = await page.title();',
@@ -172,10 +232,12 @@ export async function GET(request: NextRequest) {
       '      expires: c.expires,',
       '    }));',
       '  } catch(e) {}',
-      '  return { url: request.url, text, htmlLen, pageTitle, currentUrl, hasLoginForm, bodyHtml, rootHtml, webdriver, userAgent, cookiesAfter, cookieErrors };',
+      '  return { url: request.url, text, htmlLen, pageTitle, currentUrl, hasLoginForm, bodyHtml, rootHtml, webdriver, userAgent, cookiesAfter, cookieErrors, rootMounted, consoleLogs, failedRequests };',
       '}',
     ].join('\n'),
     proxyConfiguration: { useApifyProxy: true },
+    // ページ遷移は 'load' イベントまで待つ (domcontentloaded だと script 読み込み中で返ってくる)
+    gotoOptions: { waitUntil: 'load', timeout: 60000 },
     // preNavigationHooks: 個別に addCookies して失敗した Cookie 名をrequest.userData に残す
     // これで「どの Cookie が Invalid cookie fields で弾かれたか」が判明する
     preNavigationHooks: [
@@ -248,9 +310,30 @@ export async function GET(request: NextRequest) {
   log.push(`userAgent: ${items?.[0]?.userAgent}`)
   log.push(`rootHtml: ${items?.[0]?.rootHtml || ''}`)
   log.push(`bodyHtml preview: ${items?.[0]?.bodyHtml || ''}`)
+  log.push(`rootMounted: ${items?.[0]?.rootMounted}`)
   // ★ preNavigationHooks で addCookies が個別に失敗した場合のエラー
   if (items?.[0]?.cookieErrors?.length) {
     log.push('cookieErrors: ' + JSON.stringify(items[0].cookieErrors).slice(0, 800))
+  }
+  // ★ ページ内 console 出力 (React / Weverse SDK のエラー追跡)
+  const consoleLogs = items?.[0]?.consoleLogs as Array<{type: string; text: string}> | undefined
+  if (consoleLogs?.length) {
+    log.push(`consoleLogs count: ${consoleLogs.length}`)
+    for (const c of consoleLogs.slice(0, 50)) {
+      log.push(`  [${c.type}] ${c.text}`)
+    }
+  } else {
+    log.push('consoleLogs: (none)')
+  }
+  // ★ リソース読み込み失敗 (CSP / プロキシブロック / SW による reject 等の切り分け)
+  const failedRequests = items?.[0]?.failedRequests as Array<{url: string; method: string; resourceType: string; errorText: string}> | undefined
+  if (failedRequests?.length) {
+    log.push(`failedRequests count: ${failedRequests.length}`)
+    for (const f of failedRequests.slice(0, 50)) {
+      log.push(`  [${f.resourceType}] ${f.method} ${f.url} -> ${f.errorText}`)
+    }
+  } else {
+    log.push('failedRequests: (none)')
   }
   // ★ Cookie デバッグ情報 — refresh 動作確認用
   if (items?.[0]?.cookiesAfter) {
