@@ -3,7 +3,6 @@
 import { useState, useRef, useEffect, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
 import { useSearchParams } from 'next/navigation'
-import { useRouter } from '@/i18n/navigation'
 import { useMyEntries, MyEntry, compressImage, SeatInfo } from '@/lib/useMyEntries'
 import { eventTypeConfig } from '@/lib/config/constants'
 import { scheduleTagConfig, type ScheduleTag } from '@/lib/config/tags'
@@ -74,7 +73,6 @@ export default function MyPage() {
   const gridRef = useRef<HTMLDivElement>(null)
 
   const searchParams = useSearchParams()
-  const router = useRouter()
   const { entries, addEntry, updateEntry, removeEntry } = useMyEntries()
   const [showAddModal, setShowAddModal] = useState(false)
   const t = useTranslations()
@@ -116,7 +114,7 @@ export default function MyPage() {
       url.searchParams.delete('entry')
       window.history.replaceState(window.history.state, '', url.toString())
     }
-  }, [searchParams, entries, editEntry, router])
+  }, [searchParams, entries, editEntry])
 
   // 週/日ビューに切り替えたとき現在時刻にスクロール
   useEffect(() => {

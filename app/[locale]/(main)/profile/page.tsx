@@ -10,9 +10,7 @@ import { useProfile, FanClubMembership, NotifSettings } from '@/lib/useProfile'
 import { uploadDataUrl } from '@/lib/supabase/uploadImage'
 import { COUNTRIES, countryFlag } from '@/lib/countryUtils'
 import ImageCropModal from '@/components/ImageCropModal'
-import FreeCropModal from '@/components/FreeCropModal'
-import SeatInfoForm from '@/components/SeatInfoForm'
-import { useMyEntries, MyEntry, SeatInfo } from '@/lib/useMyEntries'
+import { useMyEntries, MyEntry } from '@/lib/useMyEntries'
 import { useReferral } from '@/lib/useReferral'
 import { createClient } from '@/lib/supabase/client'
 import { seventeenMembers } from '@/lib/config/constants'
@@ -216,9 +214,8 @@ export default function ProfilePage() {
   useEffect(() => { setPortalMounted(true) }, [])
 
   // Concert history: LIVE entries from my_entries
-  const { entries, updateEntry, removeEntry } = useMyEntries()
+  const { entries, removeEntry } = useMyEntries()
   const liveEntries = entries.filter((e) => e.tags?.includes('CONCERT') || e.type === 'CONCERT')
-  const [editHistoryEntry, setEditHistoryEntry] = useState<MyEntry | null>(null)
   const [showConcerts, setShowConcerts] = useState(false)
 
   const updateNotif = (patch: Partial<NotifSettings>) =>
@@ -675,26 +672,16 @@ export default function ProfilePage() {
                 <SwipeableConcertRow
                   key={e.id}
                   entry={e}
-                  onOpen={() => setEditHistoryEntry(e)}
+                  onOpen={() => {
+                    setShowConcerts(false)
+                    router.push(`/my?entry=${e.id}`)
+                  }}
                   onDelete={() => removeEntry(e.id)}
                 />
               ))}
           </div>
         </div>,
         document.body
-      )}
-
-      {editHistoryEntry && (
-        <ConcertHistoryModal
-          entry={editHistoryEntry}
-          isAdmin={profile.role === 'admin'}
-          onClose={() => setEditHistoryEntry(null)}
-          onUpdate={(updates) => updateEntry(editHistoryEntry.id, updates)}
-          onSave={(updates) => {
-            updateEntry(editHistoryEntry.id, updates)
-            setEditHistoryEntry(null)
-          }}
-        />
       )}
 
       {/* --- Fan club membership --- */}
@@ -1343,332 +1330,6 @@ export default function ProfilePage() {
   )
 }
 
-// --- Concert History Photo Modal ---
-function ConcertHistoryModal({ entry, onClose, onSave, onUpdate, isAdmin = false }: {
-  entry: MyEntry
-  onClose: () => void
-  onSave: (updates: Partial<MyEntry>) => void
-  onUpdate: (updates: Partial<MyEntry>) => void
-  isAdmin?: boolean
-}) {
-  const t = useTranslations()
-  const ticketRef = useRef<HTMLInputElement>(null)
-  const viewRef = useRef<HTMLInputElement>(null)
-  const memory1Ref = useRef<HTMLInputElement>(null)
-  const memory2Ref = useRef<HTMLInputElement>(null)
-
-  const [ticketImages, setTicketImages] = useState<string[]>(entry.ticketImages ?? [])
-  const [viewImages, setViewImages] = useState<string[]>(entry.viewImages ?? [])
-  const [images, setImages] = useState<string[]>(entry.images ?? [])
-  const [seatInfo, setSeatInfo] = useState<SeatInfo>(entry.seatInfo ?? { fields: [] })
-  const [autoAnalyzeTrigger, setAutoAnalyzeTrigger] = useState(0)
-  const [uploading, setUploading] = useState(false)
-  const [uploadError, setUploadError] = useState<string>('')
-  const [cropState, setCropState] = useState<{ src: string; slot: 'ticket' | 'view' | 'memory1' | 'memory2' } | null>(null)
-
-  const openCrop = (file: File, slot: 'ticket' | 'view' | 'memory1' | 'memory2') => {
-    // 昨日まで動いていたオリジナル: FileReader で直接 dataUrl を作ってクロップ画面へ
-    setUploadError('')
-    const reader = new FileReader()
-    reader.onload = () => setCropState({ src: reader.result as string, slot })
-    reader.onerror = () => setUploadError('画像の読み込みに失敗しました (FileReader)')
-    reader.readAsDataURL(file)
-  }
-
-  const handleCropConfirm = async (dataUrl: string) => {
-    const slot = cropState?.slot
-    console.log('[CropConfirm] slot=', slot, 'dataUrl length=', dataUrl?.length)
-    setCropState(null)
-    if (!slot) return
-
-    // Optimistic: 画像をまずそのまま表示（アップロード完了を待たない）
-    let optimisticTicket: string[] | null = null
-    let optimisticView: string[] | null = null
-    let optimisticImages: string[] | null = null
-    if (slot === 'ticket') {
-      optimisticTicket = [...ticketImages, dataUrl]
-      setTicketImages(optimisticTicket)
-    } else if (slot === 'view') {
-      optimisticView = [...viewImages, dataUrl]
-      setViewImages(optimisticView)
-    } else if (slot === 'memory1') {
-      const next = [...images]
-      while (next.length < 2) next.push('')
-      next[1] = dataUrl
-      optimisticImages = next
-      setImages(next)
-    } else if (slot === 'memory2') {
-      const next = [...images]
-      while (next.length < 3) next.push('')
-      next[2] = dataUrl
-      optimisticImages = next
-      setImages(next)
-    }
-    console.log('[CropConfirm] state set, starting upload')
-
-    setUploading(true)
-    setUploadError('')
-    try {
-      const url = await uploadDataUrl('event-images', dataUrl)
-      console.log('[CropConfirm] upload result:', url)
-      if (!url) {
-        setUploadError('アップロードに失敗しました（公開URLが取得できません）。ログアウト→再ログインを試してください。')
-        return
-      }
-      // dataUrl を Supabase 公開URLに差し替えて永続化
-      if (optimisticTicket) {
-        const final = optimisticTicket.map((u) => (u === dataUrl ? url : u))
-        setTicketImages(final)
-        onUpdate({ ticketImages: final })
-        // チケット追加時に Gemini OCR を自動トリガー
-        setAutoAnalyzeTrigger((v) => v + 1)
-      } else if (optimisticView) {
-        const final = optimisticView.map((u) => (u === dataUrl ? url : u))
-        setViewImages(final)
-        onUpdate({ viewImages: final })
-      } else if (optimisticImages) {
-        const final = optimisticImages.map((u) => (u === dataUrl ? url : u))
-        setImages(final)
-        onUpdate({ images: final })
-      }
-    } catch (e) {
-      console.error('[CropConfirm] error:', e)
-      const msg = e instanceof Error ? e.message : String(e)
-      setUploadError(`アップロード中にエラー: ${msg}`)
-    } finally {
-      setUploading(false)
-    }
-  }
-
-  const handleSave = () => {
-    onSave({ ticketImages, viewImages, images, seatInfo })
-  }
-
-  // seatInfo が変わったら即保存（SeatInfoForm の Gemini 解析結果や編集を永続化）
-  const handleSeatInfoChange = (next: SeatInfo) => {
-    setSeatInfo(next)
-    onUpdate({ seatInfo: next })
-  }
-
-  const slots: {
-    label: string
-    image: string | undefined
-    onUpload: () => void
-    onRemove: () => void
-  }[] = [
-    {
-      label: t('ProfilePage.ticketPhoto'),
-      image: ticketImages[0],
-      onUpload: () => ticketRef.current?.click(),
-      onRemove: () => { setTicketImages([]); onUpdate({ ticketImages: [] }) },
-    },
-    {
-      label: t('ProfilePage.seatViewPhoto'),
-      image: viewImages[0],
-      onUpload: () => viewRef.current?.click(),
-      onRemove: () => { setViewImages([]); onUpdate({ viewImages: [] }) },
-    },
-    {
-      label: t('ProfilePage.memoryPhoto1'),
-      image: images[1],
-      onUpload: () => memory1Ref.current?.click(),
-      onRemove: () => {
-        const next = [...images]
-        next[1] = ''
-        setImages(next)
-        onUpdate({ images: next })
-      },
-    },
-    {
-      label: t('ProfilePage.memoryPhoto2'),
-      image: images[2],
-      onUpload: () => memory2Ref.current?.click(),
-      onRemove: () => {
-        const next = [...images]
-        next[2] = ''
-        setImages(next)
-        onUpdate({ images: next })
-      },
-    },
-  ]
-
-  const posterImage = images[0]
-
-  return createPortal(
-    <div className="fixed inset-0 flex flex-col justify-end" style={{ zIndex: 100000 }}>
-      <div className="absolute inset-0" style={{ background: 'rgba(0,0,0,0.55)' }} onClick={onClose} />
-      <div className="relative flex flex-col rounded-t-2xl overflow-hidden"
-        style={{ background: '#F8F9FA', maxHeight: '85vh' }}>
-        <div className="flex justify-center pt-3 pb-1 flex-shrink-0">
-          <div className="w-10 h-1 rounded-full" style={{ background: '#C7C7CC' }} />
-        </div>
-
-        {/* Header */}
-        <div className="flex items-center gap-3 px-4 py-2 flex-shrink-0"
-          style={{ borderBottom: '1px solid #E5E5EA' }}>
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-1.5 mb-0.5">
-              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full"
-                style={{ background: '#EF4444', color: '#F8F9FA' }}>
-                {'\uD83C\uDFB5'} LIVE
-              </span>
-            </div>
-            <p className="text-sm font-bold truncate" style={{ color: '#1C1C1E' }}>
-              {entry.subTitle || entry.title}
-            </p>
-            <div className="flex items-center gap-2">
-              <p className="text-xs" style={{ color: '#F3B4E3' }}>{md(entry.date)}</p>
-              {entry.venue && (
-                <p className="text-xs truncate" style={{ color: '#8E8E93' }}>{entry.venue}</p>
-              )}
-            </div>
-          </div>
-          <div className="flex items-center gap-2 flex-shrink-0">
-            <button onClick={handleSave}
-              className="px-4 py-2 rounded-xl text-sm font-bold"
-              style={{ background: '#F3B4E3', color: '#FFFFFF' }}>
-              {t('Common.save')}
-            </button>
-            <button onClick={onClose} className="w-11 h-11 flex items-center justify-center">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#636366" strokeWidth="2">
-                <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
-              </svg>
-            </button>
-          </div>
-        </div>
-
-        {/* Photo slots */}
-        <div className="flex-1 overflow-y-auto px-4 py-4">
-          {uploading && (
-            <div className="flex items-center justify-center gap-2 mb-3 py-2 rounded-xl"
-              style={{ background: 'rgba(243,180,227,0.1)' }}>
-              <div className="w-4 h-4 border-2 border-t-transparent rounded-full animate-spin" style={{ borderColor: '#F3B4E3', borderTopColor: 'transparent' }} />
-              <span className="text-xs font-bold" style={{ color: '#F3B4E3' }}>{t('Schedule.imageUploading')}</span>
-            </div>
-          )}
-          {uploadError && (
-            <div className="mb-3 px-3 py-2 rounded-xl text-xs"
-              style={{ background: 'rgba(248,113,113,0.12)', color: '#B91C1C', border: '1px solid rgba(248,113,113,0.3)' }}>
-              ⚠️ {uploadError}
-            </div>
-          )}
-
-          {posterImage && (
-            <div className="mb-4">
-              <p className="text-[11px] font-bold mb-1.5" style={{ color: '#636366' }}>公演ポスター</p>
-              <div className="relative rounded-xl overflow-hidden" style={{ aspectRatio: '16/9', background: '#E5E5EA' }}>
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={posterImage} alt="" className="w-full h-full object-cover" />
-              </div>
-            </div>
-          )}
-
-          {/* チケット画像: 横長なので全幅 + landscape 比で表示 */}
-          {(() => {
-            const ticketSlot = slots[0]
-            return (
-              <div className="mb-3">
-                <p className="text-[11px] font-bold mb-1.5" style={{ color: '#636366' }}>{ticketSlot.label}</p>
-                {ticketSlot.image ? (
-                  <div className="relative rounded-xl overflow-hidden w-full" style={{ aspectRatio: '16/9', background: '#E5E5EA' }}>
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={ticketSlot.image} alt="" className="w-full h-full object-contain" />
-                    <button onClick={ticketSlot.onRemove}
-                      className="absolute top-2 right-2 w-7 h-7 rounded-full flex items-center justify-center"
-                      style={{ background: 'rgba(0,0,0,0.6)' }}>
-                      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" strokeWidth="3">
-                        <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
-                      </svg>
-                    </button>
-                  </div>
-                ) : (
-                  <button onClick={ticketSlot.onUpload}
-                    className="w-full rounded-xl flex flex-col items-center justify-center gap-2"
-                    style={{ aspectRatio: '16/9', border: '2px dashed #E5E5EA', background: '#FFFFFF', color: '#8E8E93' }}>
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                      <rect x="3" y="3" width="18" height="18" rx="2" />
-                      <circle cx="8.5" cy="8.5" r="1.5" />
-                      <polyline points="21 15 16 10 5 21" />
-                    </svg>
-                    <span className="text-[10px]">{t('ProfilePage.tapToUpload')}</span>
-                  </button>
-                )}
-              </div>
-            )
-          })()}
-
-          {/* 残りの画像スロット (視野 + 思い出2枚) */}
-          <div className="grid grid-cols-2 gap-3 mb-4">
-            {slots.slice(1).map((slot, idx) => (
-              <div key={idx}>
-                <p className="text-[11px] font-bold mb-1.5" style={{ color: '#636366' }}>{slot.label}</p>
-                {slot.image ? (
-                  <div className="relative rounded-xl overflow-hidden" style={{ aspectRatio: '3/4' }}>
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={slot.image} alt="" className="w-full h-full object-cover" />
-                    <button onClick={slot.onRemove}
-                      className="absolute top-2 right-2 w-7 h-7 rounded-full flex items-center justify-center"
-                      style={{ background: 'rgba(0,0,0,0.6)' }}>
-                      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" strokeWidth="3">
-                        <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
-                      </svg>
-                    </button>
-                  </div>
-                ) : (
-                  <button onClick={slot.onUpload}
-                    className="w-full rounded-xl flex flex-col items-center justify-center gap-2"
-                    style={{ aspectRatio: '3/4', border: '2px dashed #E5E5EA', background: '#FFFFFF', color: '#8E8E93' }}>
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                      <rect x="3" y="3" width="18" height="18" rx="2" />
-                      <circle cx="8.5" cy="8.5" r="1.5" />
-                      <polyline points="21 15 16 10 5 21" />
-                    </svg>
-                    <span className="text-[10px]">{t('ProfilePage.tapToUpload')}</span>
-                  </button>
-                )}
-              </div>
-            ))}
-          </div>
-
-          {/* 座席情報（チケット画像アップで自動OCR→編集可）*/}
-          {ticketImages.length > 0 && (
-            <div className="rounded-xl px-3 py-3" style={{ background: '#FFFFFF', border: '1px solid #E5E5EA' }}>
-              <SeatInfoForm
-                value={seatInfo}
-                onChange={handleSeatInfoChange}
-                ticketImages={ticketImages}
-                autoAnalyzeTrigger={autoAnalyzeTrigger}
-                isAdmin={isAdmin}
-                venue={entry.venue}
-              />
-            </div>
-          )}
-        </div>
-
-        <div style={{ height: 'calc(80px + env(safe-area-inset-bottom, 0px))' }} />
-
-        {/* Hidden file inputs */}
-        <input ref={ticketRef} type="file" accept="image/*" className="hidden"
-          onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ''; if (f) openCrop(f, 'ticket') }} />
-        <input ref={viewRef} type="file" accept="image/*" className="hidden"
-          onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ''; if (f) openCrop(f, 'view') }} />
-        <input ref={memory1Ref} type="file" accept="image/*" className="hidden"
-          onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ''; if (f) openCrop(f, 'memory1') }} />
-        <input ref={memory2Ref} type="file" accept="image/*" className="hidden"
-          onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ''; if (f) openCrop(f, 'memory2') }} />
-      </div>
-
-      {cropState && (
-        <FreeCropModal
-          src={cropState.src}
-          onCancel={() => setCropState(null)}
-          onConfirm={handleCropConfirm}
-        />
-      )}
-    </div>,
-    document.body
-  )
-}
 
 function Toggle({ on, onChange }: { on: boolean; onChange: (v: boolean) => void }) {
   return (
