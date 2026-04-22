@@ -32,6 +32,9 @@ const TOKYO_DOME_PRESETS: Preset[] = [
   { label: 'S05 1列1番 (通路側)', blockId: 'S05', row: 1, seat: 1 },
   { label: 'G25 10列6番', blockId: 'G25', row: 10, seat: 6 },
   { label: 'E23 6列10番', blockId: 'E23', row: 6, seat: 10 },
+  { label: 'ARENA-A 1列15番 (ステージ最前)', blockId: 'ARENA-A', row: 1, seat: 15 },
+  { label: 'ARENA-C 5列10番 (中央)', blockId: 'ARENA-C', row: 5, seat: 10 },
+  { label: 'ARENA-E 15列1番 (通路側)', blockId: 'ARENA-E', row: 15, seat: 1 },
 ]
 
 function TokyoDomePreciseCard() {

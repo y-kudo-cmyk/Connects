@@ -10,12 +10,14 @@ import { useMemo, useState, useEffect } from 'react'
 import {
   TOKYO_DOME_BLOCKS,
   blocksByRing,
-  type DomeBlock,
+  type TokyoDomeBlock,
+  type TokyoDomeRing,
 } from '@/lib/tokyoDomeData'
 import {
   seatToPosition,
   blockCenter,
   blockSectorPath,
+  isArenaBlock,
   type SeatPosition,
 } from '@/lib/tokyoDomeSeat'
 import { TOKYO_DOME } from '@/lib/venueLayouts'
@@ -24,9 +26,13 @@ import { TOKYO_DOME } from '@/lib/venueLayouts'
 const W = 300
 const H = 260
 
-const RING_ORDER: Array<DomeBlock['ring']> = ['A', 'B', 'S', 'P', 'T', 'C', 'D', 'E', 'F', 'G']
+const RING_ORDER: Array<TokyoDomeRing> = [
+  'ARENA',
+  'A', 'B', 'S', 'P', 'T', 'C', 'D', 'E', 'F', 'G',
+]
 
-const RING_LABEL: Record<DomeBlock['ring'], string> = {
+const RING_LABEL: Record<TokyoDomeRing, string> = {
+  ARENA: 'アリーナ (フィールド)',
   A: 'A (1階内側)',
   B: 'B (1階外側)',
   S: 'S (バックネット裏)',
@@ -39,7 +45,8 @@ const RING_LABEL: Record<DomeBlock['ring'], string> = {
   G: 'G (外野)',
 }
 
-const RING_COLOR: Record<DomeBlock['ring'], string> = {
+const RING_COLOR: Record<TokyoDomeRing, string> = {
+  ARENA: '#EEF0F5',
   A: '#F3B4E3',
   B: '#EC4899',
   S: '#FB923C',
@@ -73,7 +80,7 @@ export default function TokyoDomeSeatPicker({
   const [row, setRow] = useState<number>(initial?.row ?? 1)
   const [seat, setSeat] = useState<number>(initial?.seat ?? 1)
 
-  const block = useMemo<DomeBlock | undefined>(
+  const block = useMemo<TokyoDomeBlock | undefined>(
     () => TOKYO_DOME_BLOCKS.find((b) => b.id === blockId),
     [blockId],
   )
@@ -177,13 +184,26 @@ export default function TokyoDomeSeatPicker({
         <DomeBaseSVG />
 
         {/* 選択ブロックをハイライト */}
-        {blockPath && block && (
+        {blockPath && block && !isArenaBlock(block) && (
           <path
             d={scalePath(blockPath, W, H)}
             fill={RING_COLOR[block.ring]}
             fillOpacity={0.35}
             stroke={RING_COLOR[block.ring]}
             strokeWidth={1.5}
+          />
+        )}
+        {block && isArenaBlock(block) && (
+          <rect
+            x={block.x1 * W}
+            y={block.y1 * H}
+            width={(block.x2 - block.x1) * W}
+            height={(block.y2 - block.y1) * H}
+            fill="#FCD34D"
+            fillOpacity={0.45}
+            stroke="#B45309"
+            strokeWidth={1.5}
+            rx={3}
           />
         )}
 
@@ -284,9 +304,18 @@ export default function TokyoDomeSeatPicker({
           </p>
           <p className="mt-0.5">
             <span className="font-bold">ブロック範囲:</span>{' '}
-            {block.rows}列 × {block.seats}席 /
-            角度 {block.angleStart.toFixed(0)}°–{block.angleEnd.toFixed(0)}° /
-            半径 {block.rInner.toFixed(2)}–{block.rOuter.toFixed(2)}
+            {block.rows}列 × {block.seats}席
+            {isArenaBlock(block) ? (
+              <>
+                {' '}/ 矩形 x {block.x1.toFixed(2)}–{block.x2.toFixed(2)} /
+                y {block.y1.toFixed(2)}–{block.y2.toFixed(2)}
+              </>
+            ) : (
+              <>
+                {' '}/ 角度 {block.angleStart.toFixed(0)}°–{block.angleEnd.toFixed(0)}° /
+                半径 {block.rInner.toFixed(2)}–{block.rOuter.toFixed(2)}
+              </>
+            )}
           </p>
           <p className="mt-0.5">
             <span className="font-bold">pos:</span> ({pin.x.toFixed(3)}, {pin.y.toFixed(3)})
@@ -329,6 +358,32 @@ function DomeBaseSVG() {
           strokeWidth={0.4}
           strokeDasharray="2 2"
         />
+      ))}
+      {/* ARENA ブロック背景 (薄く全ブロック表示) */}
+      {TOKYO_DOME_BLOCKS.filter(isArenaBlock).map((b) => (
+        <g key={b.id}>
+          <rect
+            x={b.x1 * W}
+            y={b.y1 * H}
+            width={(b.x2 - b.x1) * W}
+            height={(b.y2 - b.y1) * H}
+            fill="#EEF0F5"
+            stroke="#C7C7CC"
+            strokeWidth={0.6}
+            rx={2}
+          />
+          <text
+            x={((b.x1 + b.x2) / 2) * W}
+            y={((b.y1 + b.y2) / 2) * H + 1}
+            textAnchor="middle"
+            dominantBaseline="middle"
+            fontSize={7}
+            fill="#636366"
+            fontWeight="bold"
+          >
+            {b.id.replace('ARENA-', '')}
+          </text>
+        </g>
       ))}
       {/* HOME 表示 (下) */}
       <text

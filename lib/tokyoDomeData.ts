@@ -45,6 +45,39 @@ export type DomeBlock = {
 }
 
 // ─────────────────────────────────────────────────────────────
+// アリーナ席 (コンサート時のフィールド中央)
+// ------------------------------------------------------------
+// 極座標ではなく デカルト矩形 で定義する。
+// ステージはセンター (外野側) = SVG 上辺 (y 小) 固定想定、
+// アリーナはその正面 (下方向) に広がる長方形群。
+//
+// 座標系: viewBox 0-1 正規化 (DomeBlock と共通の座標空間)
+//   x=0.0 左, x=1.0 右 / y=0.0 上 (ステージ側), y=1.0 下 (ホーム側)
+// ─────────────────────────────────────────────────────────────
+
+export type ArenaBlock = {
+  id: string
+  ring: 'ARENA'
+  /** 矩形左上 x (0-1) */
+  x1: number
+  /** 矩形左上 y (0-1) */
+  y1: number
+  /** 矩形右下 x (0-1) */
+  x2: number
+  /** 矩形右下 y (0-1) */
+  y2: number
+  /** 列数 (row 1 = ステージ側 y1 寄り) */
+  rows: number
+  /** 席数 (seat 1 = seatOrder に応じて左端 or 右端) */
+  seats: number
+  /** 席番が左→右に増えるか右→左に増えるか */
+  seatOrder: 'ltr' | 'rtl'
+}
+
+/** DomeBlock (扇形) と ArenaBlock (矩形) の union */
+export type TokyoDomeBlock = DomeBlock | ArenaBlock
+
+// ─────────────────────────────────────────────────────────────
 // ブロック生成ユーティリティ
 // 番号付け方針:
 //   - 各リングは「3塁寄りホーム付近で始まり、外野を回って1塁寄りホーム付近で終わる」
@@ -256,8 +289,26 @@ const G_BLOCKS: DomeBlock[] = (() => {
 })()
 
 // ─────────────────────────────────────────────────────────────
+// ARENA ブロック (コンサート時のアリーナ席)
+// ステージ=上 (y 小)、ホーム=下 (y 大)。正面 (y 方向) に A→B→C→D→E と並ぶ。
+// 座標は近似値。参考画像入ったら微調整前提。
+// ─────────────────────────────────────────────────────────────
+const ARENA_BLOCKS: ArenaBlock[] = [
+  // ARENA-A: ステージ最前 (センターステージ直下)
+  { id: 'ARENA-A', ring: 'ARENA', x1: 0.30, y1: 0.18, x2: 0.70, y2: 0.28, rows: 10, seats: 30, seatOrder: 'ltr' },
+  // ARENA-B: A の後ろ
+  { id: 'ARENA-B', ring: 'ARENA', x1: 0.31, y1: 0.29, x2: 0.69, y2: 0.38, rows: 12, seats: 28, seatOrder: 'ltr' },
+  // ARENA-C: 中央
+  { id: 'ARENA-C', ring: 'ARENA', x1: 0.32, y1: 0.39, x2: 0.68, y2: 0.48, rows: 14, seats: 26, seatOrder: 'ltr' },
+  // ARENA-D: ホーム寄り
+  { id: 'ARENA-D', ring: 'ARENA', x1: 0.33, y1: 0.49, x2: 0.67, y2: 0.58, rows: 14, seats: 24, seatOrder: 'ltr' },
+  // ARENA-E: ホーム最寄 (1-3塁ベース間付近)
+  { id: 'ARENA-E', ring: 'ARENA', x1: 0.34, y1: 0.59, x2: 0.66, y2: 0.68, rows: 16, seats: 22, seatOrder: 'ltr' },
+]
+
+// ─────────────────────────────────────────────────────────────
 // 公開: 全ブロック配列
-export const TOKYO_DOME_BLOCKS: DomeBlock[] = [
+export const TOKYO_DOME_BLOCKS: TokyoDomeBlock[] = [
   ...A_BLOCKS, // 48
   ...B_BLOCKS, // 48
   ...S_BLOCKS, // 10
@@ -268,21 +319,25 @@ export const TOKYO_DOME_BLOCKS: DomeBlock[] = [
   ...E_BLOCKS, // 46
   ...F_BLOCKS, // 19
   ...G_BLOCKS, // 45
+  ...ARENA_BLOCKS, // 5
 ]
 
+export type TokyoDomeRing = DomeBlock['ring'] | ArenaBlock['ring']
+
 /** リングごとにブロックを取得 (UI のドロップダウン生成用) */
-export function blocksByRing(): Record<DomeBlock['ring'], DomeBlock[]> {
-  const result = {
-    A: [] as DomeBlock[],
-    B: [] as DomeBlock[],
-    S: [] as DomeBlock[],
-    P: [] as DomeBlock[],
-    T: [] as DomeBlock[],
-    C: [] as DomeBlock[],
-    D: [] as DomeBlock[],
-    E: [] as DomeBlock[],
-    F: [] as DomeBlock[],
-    G: [] as DomeBlock[],
+export function blocksByRing(): Record<TokyoDomeRing, TokyoDomeBlock[]> {
+  const result: Record<TokyoDomeRing, TokyoDomeBlock[]> = {
+    ARENA: [],
+    A: [],
+    B: [],
+    S: [],
+    P: [],
+    T: [],
+    C: [],
+    D: [],
+    E: [],
+    F: [],
+    G: [],
   }
   for (const b of TOKYO_DOME_BLOCKS) result[b.ring].push(b)
   return result
