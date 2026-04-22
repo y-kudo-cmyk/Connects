@@ -5,6 +5,7 @@ import { useTranslations } from 'next-intl'
 import { useAuth } from '@/lib/supabase/useAuth'
 import { createClient } from '@/lib/supabase/client'
 import { uploadImage } from '@/lib/supabase/uploadImage'
+import { compressImage } from '@/lib/useMyEntries'
 import { Link } from '@/i18n/navigation'
 
 type Step = 'input' | 'analyzing' | 'preview' | 'submitting' | 'done'
@@ -120,8 +121,18 @@ export default function SubmitNoticePage() {
   const handleImageChoose = async (file: File | null) => {
     if (!file) return
     setImageFile(file)
-    const url = await readFileAsDataURL(file)
-    setImagePreview(url)
+    // 解析用に段階的に圧縮 (Vercel 4.5MB body 制限対策)
+    // 3MB 以内に収める。base64 ≒ バイナリ × 1.33 なので 3MB バイナリ → 4MB base64
+    const targetBytes = 3 * 1024 * 1024
+    const steps: Array<[number, number]> = [[1600, 0.8], [1280, 0.75], [1024, 0.72], [800, 0.65]]
+    let dataUrl = ''
+    for (const [px, q] of steps) {
+      dataUrl = await compressImage(file, px, q)
+      // data URL から概算バイナリサイズ (base64 は 4/3 倍)
+      const approxBytes = Math.floor((dataUrl.length - dataUrl.indexOf(',') - 1) * 3 / 4)
+      if (approxBytes <= targetBytes) break
+    }
+    setImagePreview(dataUrl)
     setError('')
   }
 
