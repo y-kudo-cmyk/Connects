@@ -72,7 +72,7 @@ function GoodsContent({ userId, isAdmin }: { userId: string; isAdmin: boolean })
   const { userCards, refresh: refreshUserCards, deleteCard } = useUserCards(userId)
 
   const [selectedProduct, setSelectedProduct] = useState<CardProduct | null>(null)
-  const [modalCard, setModalCard] = useState<{ card: CardMaster; owned: UserCard | null } | null>(null)
+  const [modalCard, setModalCard] = useState<{ card: CardMaster; owned: UserCard | null; focusBack?: boolean } | null>(null)
   const [shareModal, setShareModal] = useState<{ initialProductId?: string } | null>(null)
   const [favMemberIds, setFavMemberIds] = useState<string[]>([])
   // 譲・求シェア / 欲しい枚数 は全ユーザー利用可
@@ -105,6 +105,10 @@ function GoodsContent({ userId, isAdmin }: { userId: string; isAdmin: boolean })
 
   const handleCardTap = useCallback((card: CardMaster, owned: UserCard | null) => {
     setModalCard({ card, owned })
+  }, [])
+
+  const handleBackTileTap = useCallback((card: CardMaster, owned: UserCard | null) => {
+    setModalCard({ card, owned, focusBack: true })
   }, [])
 
   const handleDeleteCard = useCallback(async (id: string) => {
@@ -160,6 +164,7 @@ function GoodsContent({ userId, isAdmin }: { userId: string; isAdmin: boolean })
           userCards={userCards}
           onBack={() => setSelectedProduct(null)}
           onCardTap={handleCardTap}
+          onBackTileTap={handleBackTileTap}
         />
       ) : (
         <AlbumList
@@ -177,6 +182,7 @@ function GoodsContent({ userId, isAdmin }: { userId: string; isAdmin: boolean })
           userId={userId}
           isBetaUser={isBetaUser}
           favMemberIds={favMemberIds}
+          initialBackOpen={modalCard.focusBack}
           onClose={() => setModalCard(null)}
           onSave={refreshUserCards}
           onDelete={handleDeleteCard}

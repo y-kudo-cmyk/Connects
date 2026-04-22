@@ -37,6 +37,7 @@ interface CardDetailModalProps {
   userId: string
   isBetaUser?: boolean  // 譲・求シェア、欲しい枚数 UIの表示フラグ (admin用)
   favMemberIds?: string[]  // 推しメンバーIDリスト (欲しい枚数のデフォルト算出用)
+  initialBackOpen?: boolean  // 裏面セクションを初期展開 (裏タイルタップから開く場合)
   onClose: () => void
   onSave: () => void
   onDelete: (id: string) => void
@@ -65,7 +66,7 @@ async function uploadImage(file: File, path: string): Promise<string> {
   return urlData.publicUrl
 }
 
-export default function CardDetailModal({ card, owned, userId, isBetaUser = false, favMemberIds = [], onClose, onSave, onDelete }: CardDetailModalProps) {
+export default function CardDetailModal({ card, owned, userId, isBetaUser = false, favMemberIds = [], initialBackOpen: forceBackOpen, onClose, onSave, onDelete }: CardDetailModalProps) {
   const t = useTranslations('Goods')
   // 所持枚数デフォルト: 画像登録あり(master or user)=1, それ以外=0
   // 既存値があれば常に優先（2以上を上書きしない）
@@ -87,9 +88,9 @@ export default function CardDetailModal({ card, owned, userId, isBetaUser = fals
   const [mounted, setMounted] = useState(false)
   const [cropSrc, setCropSrc] = useState<string | null>(null)
   const [cropSide, setCropSide] = useState<'front' | 'back' | null>(null)
-  // 裏面は折りたたみ。既に裏画像（master or user）があれば自動展開。
-  const initialBackOpen = !!(owned?.back_image_url || card.back_image_url)
-  const [backOpen, setBackOpen] = useState(initialBackOpen)
+  // 裏面は折りたたみ。裏タイルから開いた場合(forceBackOpen) or 既に裏画像があれば自動展開。
+  const autoBackOpen = !!(owned?.back_image_url || card.back_image_url)
+  const [backOpen, setBackOpen] = useState(forceBackOpen ?? autoBackOpen)
   const frontRef = useRef<HTMLInputElement>(null)
   const backRef = useRef<HTMLInputElement>(null)
 

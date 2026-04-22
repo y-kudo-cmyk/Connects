@@ -11,6 +11,7 @@ interface AlbumDetailProps {
   userCards: UserCard[]
   onBack: () => void
   onCardTap: (card: CardMaster, owned: UserCard | null) => void
+  onBackTileTap?: (card: CardMaster, owned: UserCard | null) => void
 }
 
 interface MemberEntry {
@@ -35,7 +36,7 @@ function formatDate(d: string | null) {
   return `${date.getFullYear()}.${String(date.getMonth() + 1).padStart(2, '0')}.${String(date.getDate()).padStart(2, '0')}`
 }
 
-export default function AlbumDetail({ product, userCards, onBack, onCardTap }: AlbumDetailProps) {
+export default function AlbumDetail({ product, userCards, onBack, onCardTap, onBackTileTap }: AlbumDetailProps) {
   const t = useTranslations('Goods')
   const { versions, loading: versionsLoading } = useCardVersions(product.product_id)
   const { cards, loading: cardsLoading } = useCardMaster(product.product_id)
@@ -464,10 +465,16 @@ export default function AlbumDetail({ product, userCards, onBack, onCardTap }: A
                               .map(c => ownedMap.get(c.id)?.back_image_url || c.back_image_url)
                               .find(u => !!u) || ''
                             const backTile = subHasBack ? (
-                              <div
+                              <button
                                 key={`${sub.versionId}-back`}
-                                title="裏面（判別用）"
-                                className="relative rounded-lg overflow-hidden col-span-2"
+                                title="裏面画像を登録"
+                                onClick={() => {
+                                  if (!onBackTileTap) return
+                                  // 登録対象カード: 所持しているカードを優先、なければ先頭
+                                  const rep = sub.cards.find(c => ownedMap.get(c.id)) || sub.cards[0]
+                                  onBackTileTap(rep, ownedMap.get(rep.id) || null)
+                                }}
+                                className="relative rounded-lg overflow-hidden col-span-2 transition-transform active:scale-95"
                                 style={{
                                   width: '100%',
                                   aspectRatio: '2 / 3',
@@ -483,12 +490,22 @@ export default function AlbumDetail({ product, userCards, onBack, onCardTap }: A
                                 >
                                   裏
                                 </span>
-                                {!subBack && (
-                                  <div className="absolute inset-0 flex items-center justify-center">
-                                    <span className="text-[10px]" style={{ color: '#8E8E93' }}>未登録</span>
+                                {!subBack ? (
+                                  <div className="absolute inset-0 flex flex-col items-center justify-center gap-1">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#8E8E93" strokeWidth="2">
+                                      <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+                                    </svg>
+                                    <span className="text-[10px] font-bold" style={{ color: '#636366' }}>裏面を登録</span>
                                   </div>
+                                ) : (
+                                  <span
+                                    className="absolute bottom-1 right-1 px-1.5 py-0.5 rounded-full text-[9px] font-bold"
+                                    style={{ background: 'rgba(243,180,227,0.92)', color: '#FFFFFF' }}
+                                  >
+                                    編集
+                                  </span>
                                 )}
-                              </div>
+                              </button>
                             ) : null
                             // 表タイル並び: col-span小(photocard等 2:3)を先、幅広(photobook/magnet等)を後ろに
                             // → 幅広アイテムが自然と下の段に押し出される
