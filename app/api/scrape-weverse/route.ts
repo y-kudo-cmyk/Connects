@@ -154,8 +154,13 @@ export async function GET(request: NextRequest) {
       '  const htmlLen = await page.evaluate(() => document.documentElement.outerHTML.length);',
       '  const pageTitle = await page.title();',
       '  const currentUrl = page.url();',
-      // ログインページへリダイレクトされていないか確認
       '  const hasLoginForm = await page.evaluate(() => !!document.querySelector("input[type=password], [class*=Login]"));',
+      // HTMLダンプ: React が描画を諦めた理由を調べる
+      '  const bodyHtml = await page.evaluate(() => document.body.outerHTML.slice(0, 1500));',
+      '  const rootHtml = await page.evaluate(() => { const el = document.querySelector("#__next, #root, #app"); return el ? el.outerHTML.slice(0, 800) : "NO_ROOT"; });',
+      // navigator.webdriver の値を確認 (ヘッドレス検知)
+      '  const webdriver = await page.evaluate(() => navigator.webdriver);',
+      '  const userAgent = await page.evaluate(() => navigator.userAgent);',
       '  let cookiesAfter = [];',
       '  try {',
       '    const ctx = page.context();',
@@ -167,7 +172,7 @@ export async function GET(request: NextRequest) {
       '      expires: c.expires,',
       '    }));',
       '  } catch(e) {}',
-      '  return { url: request.url, text, htmlLen, pageTitle, currentUrl, hasLoginForm, cookiesAfter, cookieErrors };',
+      '  return { url: request.url, text, htmlLen, pageTitle, currentUrl, hasLoginForm, bodyHtml, rootHtml, webdriver, userAgent, cookiesAfter, cookieErrors };',
       '}',
     ].join('\n'),
     proxyConfiguration: { useApifyProxy: true },
@@ -239,6 +244,10 @@ export async function GET(request: NextRequest) {
   log.push(`Page title: ${items?.[0]?.pageTitle || ''}`)
   log.push(`Current URL: ${items?.[0]?.currentUrl || ''}`)
   log.push(`Has login form: ${items?.[0]?.hasLoginForm}`)
+  log.push(`webdriver: ${items?.[0]?.webdriver}`)
+  log.push(`userAgent: ${items?.[0]?.userAgent}`)
+  log.push(`rootHtml: ${items?.[0]?.rootHtml || ''}`)
+  log.push(`bodyHtml preview: ${items?.[0]?.bodyHtml || ''}`)
   // ★ preNavigationHooks で addCookies が個別に失敗した場合のエラー
   if (items?.[0]?.cookieErrors?.length) {
     log.push('cookieErrors: ' + JSON.stringify(items[0].cookieErrors).slice(0, 800))
