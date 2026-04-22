@@ -4,11 +4,9 @@ import { useState, useEffect } from 'react'
 import { Announcement, useAnnouncements } from '@/lib/useAnnouncements'
 import { useTranslations, useLocale } from 'next-intl'
 import { useAuth } from '@/lib/supabase/useAuth'
+import { createClient } from '@/lib/supabase/client'
 import ConcertCampaignModal from '@/components/ConcertCampaignModal'
 import Link from 'next/link'
-
-// キャンペーンを表示する管理者ID（非公開テスト用）
-const CAMPAIGN_ADMIN_IDS = ['86c91b90-0060-4a3d-bf10-d5c846604882', '65ba4bc6-917d-4689-aeaf-8d4b5b01a004', 'a68ad766-e229-40b6-8d3b-5a45216b491d']
 
 const TYPE_CONFIG = {
   important: { bg: '#FFF0F8', border: '#F3B4E3', color: '#C97AB8' },
@@ -24,20 +22,28 @@ export default function AnnouncementsSection({ announcements }: { announcements:
   const { user } = useAuth()
   const [campaignDone, setCampaignDone] = useState(true) // default hidden until checked
   const [campaignModalOpen, setCampaignModalOpen] = useState(false)
+  const [userRole, setUserRole] = useState<string | null>(null)
 
   useEffect(() => {
     setCampaignDone(localStorage.getItem('cp-campaign-concert-done') === 'true')
   }, [])
+
+  useEffect(() => {
+    if (!user) return
+    const supabase = createClient()
+    supabase.from('profiles').select('role').eq('id', user.id).maybeSingle()
+      .then(({ data }) => { if (data?.role) setUserRole(data.role) })
+  }, [user?.id])
 
   const handleCampaignComplete = () => {
     localStorage.setItem('cp-campaign-concert-done', 'true')
     setCampaignDone(true)
   }
 
-  // 管理者のみキャンペーン表示（公開時にこのチェックを外す）
-  // admin は完了フラグに関わらず常時表示（再テストしやすいように）
-  const isAdmin = user && CAMPAIGN_ADMIN_IDS.includes(user.id)
-  const showCampaign = isAdmin && (!campaignDone || isAdmin)
+  // admin / fam に参戦記録キャンペーン表示 (admin は再テスト用に常時表示)
+  const isAdmin = userRole === 'admin'
+  const isFam = userRole === 'fam'
+  const showCampaign = (isAdmin || isFam) && (!campaignDone || isAdmin)
   const totalCount = visible.length + (showCampaign ? 1 : 0)
 
   if (totalCount === 0) return null
