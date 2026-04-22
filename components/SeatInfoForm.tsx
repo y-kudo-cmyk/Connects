@@ -77,6 +77,17 @@ export default function SeatInfoForm({
 
   const fields = value.fields ?? []
 
+  // 編集モード state: 値があれば初期 collapsed、無ければ編集開始
+  const hasValues = fields.some((f) => f.value.trim() !== '')
+  const [editing, setEditing] = useState(!hasValues)
+
+  // 自動解析後は editing 状態になる (ユーザーが確認できるように)
+  // collapsed で表示する時の1行サマリ
+  const summary = fields
+    .filter((f) => f.value.trim() !== '')
+    .map((f) => `${f.label}${f.label ? ': ' : ''}${f.value}`)
+    .join(' / ')
+
   // autoAnalyzeTrigger が増えたら自動解析
   useEffect(() => {
     if (
@@ -99,6 +110,7 @@ export default function SeatInfoForm({
       if (result.length > 0) {
         onChange({ fields: result })
         setAnalyzed(true)
+        setEditing(true) // 解析結果確認のため編集モード
       } else {
         setError(t('Seat.seatAnalyzeFailed'))
       }
@@ -130,6 +142,28 @@ export default function SeatInfoForm({
       value: fields[i]?.value ?? '',
     }))
     onChange({ fields: next })
+  }
+
+  // 確定済み (collapsed) 表示: 1行サマリ + タップで再編集
+  if (!editing && hasValues) {
+    return (
+      <button
+        onClick={() => setEditing(true)}
+        className="w-full flex items-center gap-2 px-3 py-2.5 rounded-xl text-left"
+        style={{ background: 'rgba(59,130,246,0.08)', border: '1px solid rgba(59,130,246,0.2)' }}
+      >
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#3B82F6" strokeWidth="2.5" className="flex-shrink-0">
+          <path d="M20 9V7a2 2 0 00-2-2H4a2 2 0 00-2 2v2"/>
+          <path d="M2 9l10 6 10-6"/><path d="M12 15v6"/>
+        </svg>
+        <span className="text-sm font-bold flex-1 min-w-0 truncate" style={{ color: '#1C1C1E' }}>
+          {summary}
+        </span>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#8E8E93" strokeWidth="2" className="flex-shrink-0">
+          <path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/>
+        </svg>
+      </button>
+    )
   }
 
   return (
@@ -282,6 +316,17 @@ export default function SeatInfoForm({
         isAdmin && fields.some((f) => f.value.trim()) && (
           <PositionSection value={value} onChange={onChange} fields={fields} venue={venue} />
         )
+      )}
+
+      {/* 確定ボタン: 入力値がある時のみ表示、押すと 1行サマリ表示にcollapsed */}
+      {hasValues && (
+        <button
+          onClick={() => setEditing(false)}
+          className="w-full py-3 rounded-xl text-sm font-bold"
+          style={{ background: '#F3B4E3', color: '#FFFFFF' }}
+        >
+          {t('Common.confirm')}
+        </button>
       )}
     </div>
   )
