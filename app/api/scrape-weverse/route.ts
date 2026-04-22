@@ -208,6 +208,19 @@ export async function GET(request: NextRequest) {
       '    await page.waitForTimeout(3000);',
       '  }',
       '  const text = await page.evaluate(() => document.body.innerText);',
+      // ★ 記事個別URLを抽出 (anchor tag の href から notice ID を取得してタイトル毎にマッピング)
+      '  const noticeLinks = await page.evaluate(() => {',
+      '    const out = [];',
+      '    document.querySelectorAll(\'a[href*="/notice/"]\').forEach((a) => {',
+      '      const href = a.getAttribute("href") || "";',
+      '      const m = /\\/notice\\/(\\d+)/.exec(href);',
+      '      if (!m) return;',
+      '      const txt = (a.innerText || a.textContent || "").trim().slice(0, 300);',
+      '      if (!txt) return;',
+      '      out.push({ id: m[1], href, text: txt });',
+      '    });',
+      '    return out;',
+      '  });',
       '  const htmlLen = await page.evaluate(() => document.documentElement.outerHTML.length);',
       '  const pageTitle = await page.title();',
       '  const currentUrl = page.url();',
@@ -229,7 +242,7 @@ export async function GET(request: NextRequest) {
       '      expires: c.expires,',
       '    }));',
       '  } catch(e) {}',
-      '  return { url: request.url, text, htmlLen, pageTitle, currentUrl, hasLoginForm, bodyHtml, rootHtml, webdriver, userAgent, cookiesAfter, cookieErrors, rootMounted, consoleLogs, failedRequests, allRequests };',
+      '  return { url: request.url, text, htmlLen, pageTitle, currentUrl, hasLoginForm, bodyHtml, rootHtml, webdriver, userAgent, cookiesAfter, cookieErrors, rootMounted, consoleLogs, failedRequests, allRequests, noticeLinks };',
       '}',
     ].join('\n'),
     proxyConfiguration: { useApifyProxy: true },
@@ -504,14 +517,37 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ log, inserted: 0 })
   }
 
+  // 3b. 記事個別URL (DOMから抽出した anchor タグのリスト)
+  type NoticeLink = { id: string; href: string; text: string }
+  const noticeLinks: NoticeLink[] = items[0].noticeLinks || []
+  log.push(`Anchor noticeLinks: ${noticeLinks.length}`)
+
+  // タイトルに対応する記事URLを検索する関数
+  // anchor.text には [NOTICE] タグ+タイトル+日付など複数行が入っている可能性あり
+  function findNoticeUrl(cleanTitle: string): string {
+    // 正規化した空白比較で一番長い substring 一致を優先
+    const normT = cleanTitle.replace(/\s+/g, '').toLowerCase()
+    let best: NoticeLink | null = null
+    for (const nl of noticeLinks) {
+      const normL = nl.text.replace(/\s+/g, '').toLowerCase()
+      if (normL.includes(normT.slice(0, 30))) {  // タイトル先頭30文字一致
+        if (!best || nl.text.length < best.text.length) best = nl
+      }
+    }
+    if (best) {
+      return `https://weverse.io/seventeen/notice/${best.id}?hl=ja`
+    }
+    return 'https://weverse.io/seventeen/notice'
+  }
+
   // 4. 既存イベントと重複チェック (今日以外のパース済み記事も対象に)
-  //    Weverse notice 一覧に出てる記事全てを DB と突き合わせ、
-  //    未登録のものを拾い上げる (拾い漏れ解消)
   const { data: existing } = await supabase.from('events').select('event_title, start_date, source_url')
   const existingKeys = new Set<string>()
+  const existingUrls = new Set<string>()
   for (const e of existing || []) {
     const d = e.start_date ? e.start_date.slice(0, 10) : ''
     existingKeys.add(`${normalize(e.event_title)}::${d}`)
+    if (e.source_url && e.source_url.includes('/notice/')) existingUrls.add(e.source_url)
   }
 
   // 5. 新規イベントを挿入 (全パース記事を対象)
@@ -520,11 +556,13 @@ export async function GET(request: NextRequest) {
   for (const notice of notices) {
     const cleanTitle = notice.title.replace(/\[NOTICE\]\s*/i, '').replace(/\[EVENT\]\s*/i, '').trim()
     const key = `${normalize(cleanTitle)}::${notice.date}`
-    if (existingKeys.has(key)) {
+    const articleUrl = findNoticeUrl(cleanTitle)
+    if (existingKeys.has(key) || (articleUrl.includes('/notice/') && existingUrls.has(articleUrl))) {
       skipped.push(`${notice.date} ${cleanTitle}`)
       continue
     }
     existingKeys.add(key)
+    if (articleUrl.includes('/notice/')) existingUrls.add(articleUrl)
 
     newEvents.push({
       tag: noticeToTag(notice.title),
@@ -536,9 +574,10 @@ export async function GET(request: NextRequest) {
       spot_name: '',
       country: 'KR',
       image_url: '',
-      source_url: 'https://weverse.io/seventeen/notice',
-      status: 'confirmed',
-      verified_count: 3,
+      source_url: articleUrl,
+      // 承認フローに載せる (以前は自動 confirmed だったが、内容解析が粗いため admin で確認を経由)
+      status: 'pending',
+      verified_count: 0,
       related_artists: '',
       submitted_by: SCRAPE_SUBMITTER,
     })
