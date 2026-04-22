@@ -156,6 +156,19 @@ export function useMyEntries() {
 
   useEffect(() => { fetchEntries() }, [fetchEntries])
 
+  // タブ表示復帰 / ウィンドウフォーカス時に再取得 (他画面で更新されたデータを反映)
+  useEffect(() => {
+    const refetchIfVisible = () => {
+      if (document.visibilityState === 'visible') fetchEntries()
+    }
+    document.addEventListener('visibilitychange', refetchIfVisible)
+    window.addEventListener('focus', fetchEntries)
+    return () => {
+      document.removeEventListener('visibilitychange', refetchIfVisible)
+      window.removeEventListener('focus', fetchEntries)
+    }
+  }, [fetchEntries])
+
   const addEntry = useCallback(async (entry: MyEntry) => {
     if (!user) return
     supabase.from('user_activity').insert({ user_id: user.id, action: 'add_my', detail: entry.title }).then(() => {})
