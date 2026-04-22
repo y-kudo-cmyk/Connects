@@ -21,6 +21,7 @@ const pageTitles: Record<string, string> = {
   "/admin/tags": "タグ管理",
   "/admin/artists": "アーティスト管理",
   "/admin/feedback": "フィードバック",
+  "/admin/venue-preview": "会場プレビュー",
 }
 
 export function AdminHeader() {

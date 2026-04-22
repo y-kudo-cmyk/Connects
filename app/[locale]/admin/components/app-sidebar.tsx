@@ -10,6 +10,7 @@ import {
   LayoutDashboard,
   ArrowLeft,
   MessageSquare,
+  MapPin,
 } from "lucide-react"
 import { Link, usePathname } from "@/i18n/navigation"
 
@@ -66,6 +67,11 @@ const navItems = [
     title: "フィードバック",
     url: "/admin/feedback",
     icon: MessageSquare,
+  },
+  {
+    title: "会場プレビュー",
+    url: "/admin/venue-preview",
+    icon: MapPin,
   },
 ]
 

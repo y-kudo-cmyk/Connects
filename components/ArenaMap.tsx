@@ -266,19 +266,17 @@ function ArenaSVGBase({ layout }: { layout: VenueLayout }) {
           cy={px(layout.outline.cy, H)}
           rx={px(layout.outline.rx, W)}
           ry={px(layout.outline.ry, H)}
-          fill="#FFFFFF"
-          stroke="#D1D5DB"
+          fill={layout.outline.fill ?? '#F8F9FA'}
+          stroke={layout.outline.stroke ?? '#D1D5DB'}
           strokeWidth="1"
-          opacity="0.6"
         />
       )}
       {layout.outline && layout.outline.kind === 'polygon' && (
         <polygon
           points={layout.outline.points.map(([x, y]) => `${px(x, W)},${px(y, H)}`).join(' ')}
-          fill="#FFFFFF"
-          stroke="#D1D5DB"
+          fill={layout.outline.fill ?? '#F8F9FA'}
+          stroke={layout.outline.stroke ?? '#D1D5DB'}
           strokeWidth="1"
-          opacity="0.6"
         />
       )}
 

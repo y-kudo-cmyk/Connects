@@ -134,7 +134,7 @@ function UploadModal({
               {t('Seat.seatViewPosition')}
               <span className="ml-1 font-normal" style={{ color: '#8E8E93' }}>（{t('Seat.seatViewPositionSub')}）</span>
             </p>
-            <ArenaPositionPicker value={position} onChange={setPosition} />
+            <ArenaPositionPicker value={position} onChange={setPosition} venueName={venue} />
           </div>
 
           {/* 双眼鏡 */}
@@ -269,6 +269,7 @@ export default function SeatViewPreview({
               myPosition={myPos}
               views={matched}
               onPinTap={(v) => setSelectedView(v === selectedView ? null : v)}
+              venueName={venue}
             />
 
             {/* 選択中の写真 */}
