@@ -134,13 +134,26 @@ export default function SchedulePage() {
     }
   }
 
-  // 選択日のイベント（期間イベントは範囲内の日付にも表示）
-  // Sort: LIVE first, then today-only, then period
-  const dayEvents = filteredAll.filter((e) =>
-    e.dateEnd
+  // 表示イベント:
+  //   tagFilter = ALL → 選択日の予定のみ (従来)
+  //   tagFilter = タグ指定 → その月全体でマッチするものをリスト
+  const isTagFilterActive = tagFilter !== 'ALL'
+  const monthStart = `${year}-${String(month + 1).padStart(2, '0')}-01`
+  const monthEnd = `${year}-${String(month + 1).padStart(2, '0')}-${String(daysCount).padStart(2, '0')}`
+  const dayEvents = filteredAll.filter((e) => {
+    if (isTagFilterActive) {
+      // 月内: 単日 or 期間が当該月にかかる
+      const de = e.dateEnd ?? e.date
+      return de >= monthStart && e.date <= monthEnd
+    }
+    // 従来: 選択日のみ
+    return e.dateEnd
       ? e.date <= selectedDate && selectedDate <= e.dateEnd
       : e.date === selectedDate
-  ).sort((a, b) => {
+  }).sort((a, b) => {
+    if (isTagFilterActive) {
+      return a.date.localeCompare(b.date)
+    }
     const order: Record<string, number> = { LIVE: 0, TICKET: 1, MERCH: 2 }
     const aOrder = order[a.tags?.[0] || ''] ?? 3
     const bOrder = order[b.tags?.[0] || ''] ?? 3
@@ -298,10 +311,13 @@ export default function SchedulePage() {
         </div>
       </div>
 
-      {/* 選択日のイベントリスト */}
+      {/* イベントリスト (タグフィルター時は月全体、それ以外は選択日) */}
       <div ref={eventsRef} className="px-4 pb-28">
         <p className="text-xs font-semibold mb-3" style={{ color: '#8E8E93' }}>
-          {MONTH_SHORT[parseInt(selectedDate.split('-')[1]) - 1]} {parseInt(selectedDate.split('-')[2])} · {dayEvents.length} {t('Common.items')}
+          {isTagFilterActive
+            ? `${MONTH_SHORT[month]} ${year} · ${dayEvents.length} ${t('Common.items')}`
+            : `${MONTH_SHORT[parseInt(selectedDate.split('-')[1]) - 1]} ${parseInt(selectedDate.split('-')[2])} · ${dayEvents.length} ${t('Common.items')}`
+          }
         </p>
 
         {dayEvents.length === 0 ? (

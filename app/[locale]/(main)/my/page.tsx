@@ -165,22 +165,43 @@ export default function MyPage() {
     }
   }
 
-  // 選択日のエントリ (LIVE→TICKET→MERCH→other→period)
-  const dayEntries = filteredEntries.filter((e) => {
-    if (e.dateEnd) return e.date <= selectedDate && selectedDate <= e.dateEnd
-    return (e.customDate ?? e.date) === selectedDate
-  }).sort((a, b) => {
-    function sortKey(e: typeof a): number {
-      const tag = e.tags?.[0] || ''
-      const isPeriod = !!e.dateEnd
-      if (tag === 'CONCERT') return 0
-      if (tag === 'TICKET') return 1
-      if (tag === 'MERCH') return 2
-      if (!isPeriod) return 3
-      return 4
-    }
-    return sortKey(a) - sortKey(b)
-  })
+  // 表示エントリ:
+  //   tagFilter = ALL → 選択日の予定のみ (従来)
+  //   tagFilter = タグ指定 → その月全体でマッチするものをリスト (日またぎを考慮)
+  const isTagFilterActive = tagFilter !== 'ALL'
+  const dayEntries = (() => {
+    const monthStart = `${year}-${String(month + 1).padStart(2, '0')}-01`
+    const monthEnd = `${year}-${String(month + 1).padStart(2, '0')}-${String(daysCount).padStart(2, '0')}`
+    const base = filteredEntries.filter((e) => {
+      if (isTagFilterActive) {
+        // 月全体: エントリ日 or 期間が当該月にかかる
+        const ds = e.customDate ?? e.date
+        const de = e.dateEnd ?? ds
+        return de >= monthStart && ds <= monthEnd
+      }
+      // 従来: 選択日のみ
+      if (e.dateEnd) return e.date <= selectedDate && selectedDate <= e.dateEnd
+      return (e.customDate ?? e.date) === selectedDate
+    })
+    return base.sort((a, b) => {
+      // タグフィルター時は日付昇順、通常はタグ優先ソート
+      if (isTagFilterActive) {
+        const aDate = a.customDate ?? a.date
+        const bDate = b.customDate ?? b.date
+        return aDate.localeCompare(bDate)
+      }
+      function sortKey(e: typeof a): number {
+        const tag = e.tags?.[0] || ''
+        const isPeriod = !!e.dateEnd
+        if (tag === 'CONCERT') return 0
+        if (tag === 'TICKET') return 1
+        if (tag === 'MERCH') return 2
+        if (!isPeriod) return 3
+        return 4
+      }
+      return sortKey(a) - sortKey(b)
+    })
+  })()
 
   return (
     <div style={{ minHeight: '100vh', background: '#F8F9FA' }}>
@@ -323,10 +344,13 @@ export default function MyPage() {
                 </div>
               </div>
 
-              {/* 選択日のエントリ */}
+              {/* エントリ一覧 (タグフィルター時は月全体、それ以外は選択日) */}
               <div className="pb-28">
                 <p className="text-xs font-semibold mb-3" style={{ color: '#8E8E93' }}>
-                  {md(selectedDate)} · {dayEntries.length}{t('Common.items')}
+                  {isTagFilterActive
+                    ? `${FULL_MONTH[month]} ${year} · ${dayEntries.length}${t('Common.items')}`
+                    : `${md(selectedDate)} · ${dayEntries.length}${t('Common.items')}`
+                  }
                 </p>
                 {dayEntries.length === 0 ? (
                   <div className="flex flex-col items-center justify-center py-10" style={{ color: '#8E8E93' }}>
