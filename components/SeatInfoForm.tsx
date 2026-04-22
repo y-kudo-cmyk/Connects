@@ -4,6 +4,8 @@ import { useEffect, useRef, useState } from 'react'
 import { SeatField, SeatInfo } from '@/lib/useMyEntries'
 import { useTranslations } from 'next-intl'
 import { ArenaPositionPicker, detectSection } from '@/components/ArenaMap'
+import TokyoDomeSeatPicker, { type TokyoDomeSeatPick } from '@/components/TokyoDomeSeatPicker'
+import { resolveVenueLayout } from '@/lib/venueLayouts'
 
 // 会場タイプ別のプリセットラベルキー
 const PRESET_LABEL_KEYS: Record<string, string[]> = {
@@ -269,9 +271,83 @@ export default function SeatInfoForm({
         </div>
       )}
 
-      {/* 地図で位置を設定 — admin のみ (検証中) */}
-      {isAdmin && fields.some((f) => f.value.trim()) && (
-        <PositionSection value={value} onChange={onChange} fields={fields} venue={venue} />
+      {/* 地図で位置を設定
+          - 東京ドーム: 精密版 TokyoDomeSeatPicker (全員開放)
+          - それ以外: 既存 ArenaPositionPicker (admin 限定) */}
+      {isTokyoDomeVenue(venue) ? (
+        fields.some((f) => f.value.trim()) && (
+          <TokyoDomePositionSection value={value} onChange={onChange} fields={fields} />
+        )
+      ) : (
+        isAdmin && fields.some((f) => f.value.trim()) && (
+          <PositionSection value={value} onChange={onChange} fields={fields} venue={venue} />
+        )
+      )}
+    </div>
+  )
+}
+
+/** venue が東京ドームか判定 */
+function isTokyoDomeVenue(venue?: string): boolean {
+  if (!venue) return false
+  const layout = resolveVenueLayout(venue)
+  return layout?.id === 'tokyoDome'
+}
+
+function TokyoDomePositionSection({
+  value, onChange, fields,
+}: {
+  value: SeatInfo
+  onChange: (v: SeatInfo) => void
+  fields: SeatField[]
+}) {
+  const [open, setOpen] = useState(false)
+
+  // 既存 fields から ブロック/列/席番を推測 (プリセット: エリア/ブロック/列/席番)
+  const guessBlock = (fields[1]?.value || fields[0]?.value || '').trim().toUpperCase()
+  const guessRow = Number((fields[2]?.value || '').replace(/[^0-9]/g, '')) || undefined
+  const guessSeat = Number((fields[3]?.value || '').replace(/[^0-9]/g, '')) || undefined
+
+  return (
+    <div className="flex flex-col gap-2">
+      <div className="flex items-center justify-between gap-2">
+        <div className="flex items-center gap-1.5 flex-1 min-w-0 px-3 py-2 rounded-lg text-xs font-semibold"
+          style={{ background: 'rgba(59,130,246,0.08)', color: '#3B82F6' }}>
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+            <path d="M20 9V7a2 2 0 00-2-2H4a2 2 0 00-2 2v2"/>
+            <path d="M2 9l10 6 10-6"/><path d="M12 15v6"/>
+          </svg>
+          <span className="truncate">
+            {fields.filter((f) => f.value.trim()).map((f) => f.value).join(' / ')}
+          </span>
+        </div>
+        <button
+          onClick={() => setOpen((v) => !v)}
+          className="flex items-center gap-1 px-2.5 py-2 rounded-lg text-[11px] font-bold flex-shrink-0"
+          style={
+            value.position
+              ? { background: 'rgba(59,130,246,0.15)', color: '#3B82F6' }
+              : { background: '#F0F0F5', color: '#636366', border: '1px solid #E5E5EA' }
+          }
+        >
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/>
+          </svg>
+          {value.position ? '地図設定済 (東京ドーム)' : '東京ドームで位置を設定'}
+        </button>
+      </div>
+
+      {open && (
+        <TokyoDomeSeatPicker
+          initial={{ blockId: guessBlock, row: guessRow, seat: guessSeat }}
+          onChange={(pick: TokyoDomeSeatPick | null) => {
+            if (pick) {
+              onChange({ ...value, position: { x: pick.position.x, y: pick.position.y } })
+            } else {
+              onChange({ ...value, position: undefined })
+            }
+          }}
+        />
       )}
     </div>
   )
