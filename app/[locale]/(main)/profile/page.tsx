@@ -1563,8 +1563,43 @@ function ConcertHistoryModal({ entry, onClose, onSave, onUpdate, isAdmin = false
             </div>
           )}
 
+          {/* チケット画像: 横長なので全幅 + landscape 比で表示 */}
+          {(() => {
+            const ticketSlot = slots[0]
+            return (
+              <div className="mb-3">
+                <p className="text-[11px] font-bold mb-1.5" style={{ color: '#636366' }}>{ticketSlot.label}</p>
+                {ticketSlot.image ? (
+                  <div className="relative rounded-xl overflow-hidden w-full" style={{ aspectRatio: '16/9', background: '#E5E5EA' }}>
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={ticketSlot.image} alt="" className="w-full h-full object-contain" />
+                    <button onClick={ticketSlot.onRemove}
+                      className="absolute top-2 right-2 w-7 h-7 rounded-full flex items-center justify-center"
+                      style={{ background: 'rgba(0,0,0,0.6)' }}>
+                      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" strokeWidth="3">
+                        <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+                      </svg>
+                    </button>
+                  </div>
+                ) : (
+                  <button onClick={ticketSlot.onUpload}
+                    className="w-full rounded-xl flex flex-col items-center justify-center gap-2"
+                    style={{ aspectRatio: '16/9', border: '2px dashed #E5E5EA', background: '#FFFFFF', color: '#8E8E93' }}>
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                      <rect x="3" y="3" width="18" height="18" rx="2" />
+                      <circle cx="8.5" cy="8.5" r="1.5" />
+                      <polyline points="21 15 16 10 5 21" />
+                    </svg>
+                    <span className="text-[10px]">{t('ProfilePage.tapToUpload')}</span>
+                  </button>
+                )}
+              </div>
+            )
+          })()}
+
+          {/* 残りの画像スロット (視野 + 思い出2枚) */}
           <div className="grid grid-cols-2 gap-3 mb-4">
-            {slots.map((slot, idx) => (
+            {slots.slice(1).map((slot, idx) => (
               <div key={idx}>
                 <p className="text-[11px] font-bold mb-1.5" style={{ color: '#636366' }}>{slot.label}</p>
                 {slot.image ? (
