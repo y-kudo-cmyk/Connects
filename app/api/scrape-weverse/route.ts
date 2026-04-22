@@ -146,8 +146,16 @@ export async function GET(request: NextRequest) {
       '      }',
       '    }',
       '  } catch(e) {}',
-      '  await page.waitForTimeout(8000);',
+      '  try { await page.waitForLoadState("networkidle", { timeout: 20000 }); } catch(e) {}',
+      '  await page.waitForTimeout(5000);',
+      // NOTICE の記事要素を待つ (Weverse のSPA構造に依存)
+      '  try { await page.waitForSelector("text=NOTICE", { timeout: 15000 }); } catch(e) {}',
       '  const text = await page.evaluate(() => document.body.innerText);',
+      '  const htmlLen = await page.evaluate(() => document.documentElement.outerHTML.length);',
+      '  const pageTitle = await page.title();',
+      '  const currentUrl = page.url();',
+      // ログインページへリダイレクトされていないか確認
+      '  const hasLoginForm = await page.evaluate(() => !!document.querySelector("input[type=password], [class*=Login]"));',
       '  let cookiesAfter = [];',
       '  try {',
       '    const ctx = page.context();',
@@ -159,7 +167,7 @@ export async function GET(request: NextRequest) {
       '      expires: c.expires,',
       '    }));',
       '  } catch(e) {}',
-      '  return { url: request.url, text, cookiesAfter, cookieErrors };',
+      '  return { url: request.url, text, htmlLen, pageTitle, currentUrl, hasLoginForm, cookiesAfter, cookieErrors };',
       '}',
     ].join('\n'),
     proxyConfiguration: { useApifyProxy: true },
@@ -227,6 +235,10 @@ export async function GET(request: NextRequest) {
   log.push(`Dataset items: ${items?.length}`)
   log.push(`Text length: ${items?.[0]?.text?.length || 0}`)
   log.push(`Text preview: ${items?.[0]?.text?.slice(0, 200) || 'empty'}`)
+  log.push(`HTML length: ${items?.[0]?.htmlLen || 0}`)
+  log.push(`Page title: ${items?.[0]?.pageTitle || ''}`)
+  log.push(`Current URL: ${items?.[0]?.currentUrl || ''}`)
+  log.push(`Has login form: ${items?.[0]?.hasLoginForm}`)
   // ★ preNavigationHooks で addCookies が個別に失敗した場合のエラー
   if (items?.[0]?.cookieErrors?.length) {
     log.push('cookieErrors: ' + JSON.stringify(items[0].cookieErrors).slice(0, 800))
