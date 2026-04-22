@@ -267,8 +267,9 @@ export async function GET(request: NextRequest) {
   log.push(`REFRESH_TOKEN: ${WEVERSE_REFRESH_TOKEN ? 'set (' + WEVERSE_REFRESH_TOKEN.slice(0, 20) + '...)' : 'MISSING'}`)
   log.push(`Cookie B64 length: ${cookieData.length}`)
 
-  // Apify実行
-  const apifyUrl = `https://api.apify.com/v2/acts/apify~playwright-scraper/runs?token=${APIFY_TOKEN}&waitForFinish=240`
+  // Apify実行 — waitForFinish は仕様上 MAX 60 秒強で打ち切られるケースがあるため、
+  // 短めで投げて "RUNNING/READY" なら手動ポーリングに切り替える。
+  const apifyUrl = `https://api.apify.com/v2/acts/apify~playwright-scraper/runs?token=${APIFY_TOKEN}&waitForFinish=60`
   log.push(`Apify URL: ${apifyUrl.replace(APIFY_TOKEN, 'xxx')}`)
 
   const runRes = await fetch(apifyUrl, {
@@ -276,10 +277,25 @@ export async function GET(request: NextRequest) {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(config),
   })
-  const runData = await runRes.json()
-
-  log.push(`Apify status: ${runData.data?.status}`)
+  let runData = await runRes.json()
+  log.push(`Apify initial status: ${runData.data?.status}`)
   log.push(`Apify run ID: ${runData.data?.id}`)
+
+  // ポーリング: 終端ステータスになるまで最大 180 秒待つ (maxDuration=300 に収まる範囲)
+  const TERMINAL = ['SUCCEEDED', 'FAILED', 'ABORTED', 'TIMED-OUT', 'TIMING-OUT']
+  const POLL_DEADLINE = Date.now() + 180_000
+  let pollCount = 0
+  while (runData.data?.id && !TERMINAL.includes(runData.data?.status) && Date.now() < POLL_DEADLINE) {
+    await new Promise(r => setTimeout(r, 5000))
+    pollCount++
+    const pollRes = await fetch(`https://api.apify.com/v2/actor-runs/${runData.data.id}?token=${APIFY_TOKEN}`)
+    const pollData = await pollRes.json()
+    if (pollData?.data) {
+      runData = pollData
+    }
+  }
+  log.push(`Apify poll count: ${pollCount}`)
+  log.push(`Apify final status: ${runData.data?.status}`)
   log.push(`Apify statusMessage: ${runData.data?.statusMessage || 'none'}`)
 
   if (runData.data?.status !== 'SUCCEEDED') {
