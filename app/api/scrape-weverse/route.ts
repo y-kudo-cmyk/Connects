@@ -25,6 +25,7 @@ export const maxDuration = 300  // Apify 同期待ちで 60 秒だと不足 (Ver
 
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import { getLatestTokens } from '@/lib/weverseTokens'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -34,9 +35,8 @@ const supabase = createClient(
 // Scrape投稿者: 環境変数 SCRAPE_SUBMITTER_USER_ID（未設定ならadmin YUTAのIDにfallback）
 const SCRAPE_SUBMITTER = process.env.SCRAPE_SUBMITTER_USER_ID || '86c91b90-0060-4a3d-bf10-d5c846604882'
 const APIFY_TOKEN = process.env.APIFY_API_TOKEN!
-const WEVERSE_ACCESS_TOKEN = process.env.WEVERSE_ACCESS_TOKEN || ''
-const WEVERSE_REFRESH_TOKEN = process.env.WEVERSE_REFRESH_TOKEN!
-const WEVERSE_DEVICE_ID = process.env.WEVERSE_DEVICE_ID || '0b8011ed-b279-4a31-9b30-c5883ab154fd'
+// Weverse トークンは DB (weverse_tokens) 優先、env フォールバック。
+// 実行時に getLatestTokens() で解決する (quick モードは env 参照のまま残す)
 
 // ── 重複チェック用 ──────────────────────────────────────────
 function normalize(s: string): string {
@@ -102,39 +102,54 @@ export async function GET(request: NextRequest) {
 
   // quick モード: 環境変数の有無だけ確認して即返す
   if (quickMode) {
+    const envAccess = process.env.WEVERSE_ACCESS_TOKEN || ''
+    const envRefresh = process.env.WEVERSE_REFRESH_TOKEN || ''
+    const envDevice = process.env.WEVERSE_DEVICE_ID || ''
     return NextResponse.json({
       quick: true,
       env: {
         APIFY_TOKEN: APIFY_TOKEN ? `set (len=${APIFY_TOKEN.length}, ${APIFY_TOKEN.slice(0, 12)}...)` : 'MISSING',
-        WEVERSE_ACCESS_TOKEN: WEVERSE_ACCESS_TOKEN ? `set (len=${WEVERSE_ACCESS_TOKEN.length}, ${WEVERSE_ACCESS_TOKEN.slice(0, 12)}...)` : 'MISSING',
-        WEVERSE_REFRESH_TOKEN: WEVERSE_REFRESH_TOKEN ? `set (len=${WEVERSE_REFRESH_TOKEN.length}, ${WEVERSE_REFRESH_TOKEN.slice(0, 12)}...)` : 'MISSING',
-        WEVERSE_DEVICE_ID: WEVERSE_DEVICE_ID || 'default',
+        WEVERSE_ACCESS_TOKEN: envAccess ? `set (len=${envAccess.length}, ${envAccess.slice(0, 12)}...)` : 'MISSING',
+        WEVERSE_REFRESH_TOKEN: envRefresh ? `set (len=${envRefresh.length}, ${envRefresh.slice(0, 12)}...)` : 'MISSING',
+        WEVERSE_DEVICE_ID: envDevice || 'default',
         CRON_SECRET: process.env.CRON_SECRET ? `set (len=${process.env.CRON_SECRET.length})` : 'MISSING',
       },
       note: 'Apify scrape はスキップ。本実行は ?debug=... のみ (quickパラメータ無し) で',
     })
   }
 
-  if (!APIFY_TOKEN || !WEVERSE_REFRESH_TOKEN) {
+  const log: string[] = []
+
+  // ── Weverse トークン解決: DB 優先、env フォールバック ───────────────
+  const dbTokens = await getLatestTokens(supabase)
+  const WEVERSE_ACCESS_TOKEN_RESOLVED =
+    dbTokens?.access_token || process.env.WEVERSE_ACCESS_TOKEN || ''
+  const WEVERSE_REFRESH_TOKEN_RESOLVED =
+    dbTokens?.refresh_token || process.env.WEVERSE_REFRESH_TOKEN || ''
+  const WEVERSE_DEVICE_ID_RESOLVED =
+    dbTokens?.device_id ||
+    process.env.WEVERSE_DEVICE_ID ||
+    '0b8011ed-b279-4a31-9b30-c5883ab154fd'
+  log.push(`Token source: ${dbTokens ? 'DB' : 'env'}`)
+
+  if (!APIFY_TOKEN || !WEVERSE_REFRESH_TOKEN_RESOLVED) {
     return NextResponse.json({ error: 'Missing APIFY_API_TOKEN or WEVERSE_REFRESH_TOKEN' }, { status: 500 })
   }
-
-  const log: string[] = []
 
   // 1. Apify Playwright Scraper を実行
   // CookieをBase64エンコードしてpageFunction内でデコード → addCookies
   const cookieData = Buffer.from(JSON.stringify([
-    {name: 'we2_access_token', value: WEVERSE_ACCESS_TOKEN, domain: '.weverse.io', path: '/', sameSite: 'None', secure: true},
-    {name: 'we2_refresh_token', value: WEVERSE_REFRESH_TOKEN, domain: '.weverse.io', path: '/', sameSite: 'None', secure: true},
-    {name: 'we2_device_id', value: WEVERSE_DEVICE_ID, domain: '.weverse.io', path: '/', sameSite: 'None', secure: true},
+    {name: 'we2_access_token', value: WEVERSE_ACCESS_TOKEN_RESOLVED, domain: '.weverse.io', path: '/', sameSite: 'None', secure: true},
+    {name: 'we2_refresh_token', value: WEVERSE_REFRESH_TOKEN_RESOLVED, domain: '.weverse.io', path: '/', sameSite: 'None', secure: true},
+    {name: 'we2_device_id', value: WEVERSE_DEVICE_ID_RESOLVED, domain: '.weverse.io', path: '/', sameSite: 'None', secure: true},
     {name: 'wes_artistId', value: '7', domain: '.weverse.io', path: '/', sameSite: 'None', secure: true},
   ])).toString('base64')
 
   // 値のサニタイズ: 改行/タブ/制御文字 (Vercel 環境変数で混入しやすい)
   const sanitize = (v: string) => v.replace(/[\r\n\t\x00-\x1f\x7f]/g, '').trim()
-  const ACCESS = sanitize(WEVERSE_ACCESS_TOKEN)
-  const REFRESH = sanitize(WEVERSE_REFRESH_TOKEN)
-  const DEVICE = sanitize(WEVERSE_DEVICE_ID)
+  const ACCESS = sanitize(WEVERSE_ACCESS_TOKEN_RESOLVED)
+  const REFRESH = sanitize(WEVERSE_REFRESH_TOKEN_RESOLVED)
+  const DEVICE = sanitize(WEVERSE_DEVICE_ID_RESOLVED)
   log.push(`Sanitized lengths: access=${ACCESS.length} refresh=${REFRESH.length} device=${DEVICE.length}`)
 
   // url 形式で addCookies に渡す (domain/path ペアより Chrome DevTools との相性が良い)
@@ -339,8 +354,8 @@ export async function GET(request: NextRequest) {
   log.push(`Full config JSON length: ${JSON.stringify(config).length}`)
   // デバッグ: 設定内容をログ
   log.push(`APIFY_TOKEN: ${APIFY_TOKEN ? 'set (' + APIFY_TOKEN.slice(0, 10) + '...)' : 'MISSING'}`)
-  log.push(`ACCESS_TOKEN: ${WEVERSE_ACCESS_TOKEN ? 'set (' + WEVERSE_ACCESS_TOKEN.slice(0, 20) + '...)' : 'MISSING'}`)
-  log.push(`REFRESH_TOKEN: ${WEVERSE_REFRESH_TOKEN ? 'set (' + WEVERSE_REFRESH_TOKEN.slice(0, 20) + '...)' : 'MISSING'}`)
+  log.push(`ACCESS_TOKEN: ${WEVERSE_ACCESS_TOKEN_RESOLVED ? 'set (' + WEVERSE_ACCESS_TOKEN_RESOLVED.slice(0, 20) + '...)' : 'MISSING'}`)
+  log.push(`REFRESH_TOKEN: ${WEVERSE_REFRESH_TOKEN_RESOLVED ? 'set (' + WEVERSE_REFRESH_TOKEN_RESOLVED.slice(0, 20) + '...)' : 'MISSING'}`)
   log.push(`Cookie B64 length: ${cookieData.length}`)
 
   // Apify実行 — waitForFinish は仕様上 MAX 60 秒強で打ち切られるケースがあるため、
@@ -452,8 +467,8 @@ export async function GET(request: NextRequest) {
   if (items?.[0]?.cookiesAfter) {
     log.push('cookiesAfter: ' + JSON.stringify(items[0].cookiesAfter))
     const accessAfter = items[0].cookiesAfter.find((c: any) => c.name === 'we2_access_token')
-    if (accessAfter && WEVERSE_ACCESS_TOKEN) {
-      const envPreview = WEVERSE_ACCESS_TOKEN.slice(0, 30) + '...'
+    if (accessAfter && WEVERSE_ACCESS_TOKEN_RESOLVED) {
+      const envPreview = WEVERSE_ACCESS_TOKEN_RESOLVED.slice(0, 30) + '...'
       const afterPreview = accessAfter.valuePreview
       log.push(`access_token env vs after: ${envPreview === afterPreview ? 'SAME (no refresh)' : 'DIFFERENT (refresh happened!)'}`)
     }

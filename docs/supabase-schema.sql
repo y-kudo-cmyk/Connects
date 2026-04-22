@@ -519,6 +519,29 @@ insert into schedule_tags (id, label, icon, color, bg, sort_order) values
   ('RADIO',      'RADIO',     '📻', '#4ADE80', 'rgba(74,222,128,0.15)',  13);
 
 -- ============================================================
+-- Weverse スクレイピング用トークン
+-- 運用手順は docs/weverse-token-setup.md 参照
+-- ============================================================
+-- access_token (3日) / refresh_token (90日) を DB で管理。
+-- Cron (/api/refresh-weverse-tokens) が 12 時間ごとに自動更新。
+-- 最新1行だけ保持する運用 (DELETE → INSERT)。
+-- service role からのみアクセス (RLS で全拒否)。
+create table if not exists weverse_tokens (
+  id                 uuid primary key default gen_random_uuid(),
+  access_token       text not null,
+  refresh_token      text not null,
+  device_id          text not null,
+  access_expires_at  timestamptz not null,
+  refresh_expires_at timestamptz not null,
+  updated_at         timestamptz not null default now(),
+  created_at         timestamptz not null default now()
+);
+
+alter table weverse_tokens enable row level security;
+-- ポリシー無し = anon/authenticated からは全拒否。
+-- service role は RLS をバイパスするので Cron からは問題なく読み書き可。
+
+-- ============================================================
 -- トレカデジタルアルバム
 -- ============================================================
 

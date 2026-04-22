@@ -29,6 +29,10 @@
       "schedule": "10 * * * *"
     },
     {
+      "path": "/api/refresh-weverse-tokens",
+      "schedule": "0 */12 * * *"
+    },
+    {
       "path": "/api/check-duplicates",
       "schedule": "0 23 * * *"
     }
