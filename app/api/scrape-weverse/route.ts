@@ -181,7 +181,7 @@ export async function GET(request: NextRequest) {
       '      } catch(e) {}',
       '    });',
       '  } catch(e) {}',
-      '  await page.waitForTimeout(5000);',
+      '  await page.waitForTimeout(2000);',
       '  try {',
       '    const buttons = await page.locator("button");',
       '    const count = await buttons.count();',
@@ -193,8 +193,7 @@ export async function GET(request: NextRequest) {
       '      }',
       '    }',
       '  } catch(e) {}',
-      '  try { await page.waitForLoadState("networkidle", { timeout: 30000 }); } catch(e) {}',
-      // ── React SPA の mount を明示的に待つ: #root の children が増えるまで
+      // ── React SPA の mount を短時間で見切る: #root に children が出るまで最大15秒
       '  let rootMounted = false;',
       '  try {',
       '    await page.waitForFunction(',
@@ -202,14 +201,15 @@ export async function GET(request: NextRequest) {
       '        const el = document.querySelector("#__next, #root, #app");',
       '        return !!(el && el.children && el.children.length > 0);',
       '      },',
-      '      { timeout: 30000 }',
+      '      { timeout: 15000 }',
       '    );',
       '    rootMounted = true;',
       '  } catch(e) {}',
-      // NOTICE の記事要素を待つ (Weverse のSPA構造に依存)
-      '  try { await page.waitForSelector("text=NOTICE", { timeout: 15000 }); } catch(e) {}',
-      // ── SPA fallback: mount しない場合でも 15秒 粘る
-      '  await page.waitForTimeout(15000);',
+      // mount したら本文描画を 5 秒待つ。しなかったら即診断フェーズへ (粘らない)
+      '  if (rootMounted) {',
+      '    try { await page.waitForSelector("text=NOTICE", { timeout: 8000 }); } catch(e) {}',
+      '    await page.waitForTimeout(3000);',
+      '  }',
       '  const text = await page.evaluate(() => document.body.innerText);',
       '  const htmlLen = await page.evaluate(() => document.documentElement.outerHTML.length);',
       '  const pageTitle = await page.title();',
