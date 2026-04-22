@@ -215,6 +215,23 @@ export async function GET(request: NextRequest) {
 
   if (!items?.[0]?.text) {
     log.push('No text content from Weverse')
+    // デバッグ: 個別リクエストが失敗した場合の Apify ログを取得
+    try {
+      const logRes = await fetch(`https://api.apify.com/v2/actor-runs/${runData.data.id}/log?token=${APIFY_TOKEN}`)
+      const apifyLog = await logRes.text()
+      log.push(`Apify log (last 1500): ${apifyLog.slice(-1500)}`)
+    } catch (e) {
+      log.push('Failed to fetch Apify log: ' + (e as Error).message)
+    }
+    // リクエストキューからエラー詳細
+    try {
+      const rqRes = await fetch(`https://api.apify.com/v2/actor-runs/${runData.data.id}/request-queue/requests?token=${APIFY_TOKEN}`)
+      const rqData = await rqRes.json()
+      const first = rqData?.data?.items?.[0]
+      if (first) {
+        log.push(`Request errorMessages: ${JSON.stringify(first.errorMessages || []).slice(0, 800)}`)
+      }
+    } catch {}
     return NextResponse.json({ log, inserted: 0 })
   }
 
