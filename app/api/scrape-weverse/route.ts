@@ -68,12 +68,28 @@ function parseNotices(text: string): { title: string; date: string }[] {
 export async function GET(request: NextRequest) {
   const authHeader = request.headers.get('authorization')
   const debugKey = request.nextUrl.searchParams.get('debug')
+  const quickMode = request.nextUrl.searchParams.get('quick') === '1'
   const DEBUG_KEY = 'TEMP_DEBUG_WEVERSE_2026_0422'  // 検証後削除
   const authorized =
     (process.env.CRON_SECRET && authHeader === `Bearer ${process.env.CRON_SECRET}`) ||
     debugKey === DEBUG_KEY
   if (!authorized) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
+  // quick モード: 環境変数の有無だけ確認して即返す
+  if (quickMode) {
+    return NextResponse.json({
+      quick: true,
+      env: {
+        APIFY_TOKEN: APIFY_TOKEN ? `set (len=${APIFY_TOKEN.length}, ${APIFY_TOKEN.slice(0, 12)}...)` : 'MISSING',
+        WEVERSE_ACCESS_TOKEN: WEVERSE_ACCESS_TOKEN ? `set (len=${WEVERSE_ACCESS_TOKEN.length}, ${WEVERSE_ACCESS_TOKEN.slice(0, 12)}...)` : 'MISSING',
+        WEVERSE_REFRESH_TOKEN: WEVERSE_REFRESH_TOKEN ? `set (len=${WEVERSE_REFRESH_TOKEN.length}, ${WEVERSE_REFRESH_TOKEN.slice(0, 12)}...)` : 'MISSING',
+        WEVERSE_DEVICE_ID: WEVERSE_DEVICE_ID || 'default',
+        CRON_SECRET: process.env.CRON_SECRET ? `set (len=${process.env.CRON_SECRET.length})` : 'MISSING',
+      },
+      note: 'Apify scrape はスキップ。本実行は ?debug=... のみ (quickパラメータ無し) で',
+    })
   }
 
   if (!APIFY_TOKEN || !WEVERSE_REFRESH_TOKEN) {
