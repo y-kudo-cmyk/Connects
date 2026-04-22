@@ -1,4 +1,4 @@
-export const maxDuration = 60
+export const maxDuration = 300  // Apify 同期待ちで 60 秒だと不足 (Vercel Pro は 300 まで)
 
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
@@ -134,7 +134,7 @@ export async function GET(request: NextRequest) {
       'async function pageFunction(context) {',
       '  const { page, request } = context;',
       '  const cookieErrors = (request.userData && request.userData.cookieErrors) || [];',
-      '  await page.waitForTimeout(3000);',
+      '  await page.waitForTimeout(2000);',
       '  try {',
       '    const buttons = await page.locator("button");',
       '    const count = await buttons.count();',
@@ -146,7 +146,7 @@ export async function GET(request: NextRequest) {
       '      }',
       '    }',
       '  } catch(e) {}',
-      '  await page.waitForTimeout(12000);',
+      '  await page.waitForTimeout(8000);',
       '  const text = await page.evaluate(() => document.body.innerText);',
       '  let cookiesAfter = [];',
       '  try {',
@@ -193,7 +193,7 @@ export async function GET(request: NextRequest) {
   log.push(`Cookie B64 length: ${cookieData.length}`)
 
   // Apify実行
-  const apifyUrl = `https://api.apify.com/v2/acts/apify~playwright-scraper/runs?token=${APIFY_TOKEN}&waitForFinish=180`
+  const apifyUrl = `https://api.apify.com/v2/acts/apify~playwright-scraper/runs?token=${APIFY_TOKEN}&waitForFinish=240`
   log.push(`Apify URL: ${apifyUrl.replace(APIFY_TOKEN, 'xxx')}`)
 
   const runRes = await fetch(apifyUrl, {
