@@ -108,11 +108,14 @@ export async function GET(request: NextRequest) {
   ])).toString('base64')
 
   // Cookieを安全にエスケープしてpreNavigationHooksに埋め込む
-  const cookieArr: {name: string; value: string; domain: string; path: string}[] = []
-  if (WEVERSE_ACCESS_TOKEN) cookieArr.push({name: 'we2_access_token', value: WEVERSE_ACCESS_TOKEN, domain: '.weverse.io', path: '/'})
-  if (WEVERSE_REFRESH_TOKEN) cookieArr.push({name: 'we2_refresh_token', value: WEVERSE_REFRESH_TOKEN, domain: '.weverse.io', path: '/'})
-  cookieArr.push({name: 'we2_device_id', value: WEVERSE_DEVICE_ID, domain: '.weverse.io', path: '/'})
-  cookieArr.push({name: 'wes_artistId', value: '7', domain: '.weverse.io', path: '/'})
+  // Playwright の addCookies は Chrome DevTools 経由: SameSite=None には secure:true 必須
+  type CookieArrItem = {name: string; value: string; domain: string; path: string; secure: boolean; sameSite: 'Lax' | 'Strict' | 'None'}
+  const cookieArr: CookieArrItem[] = []
+  const baseFields = { domain: '.weverse.io', path: '/', secure: true, sameSite: 'Lax' as const }
+  if (WEVERSE_ACCESS_TOKEN) cookieArr.push({name: 'we2_access_token', value: WEVERSE_ACCESS_TOKEN, ...baseFields})
+  if (WEVERSE_REFRESH_TOKEN) cookieArr.push({name: 'we2_refresh_token', value: WEVERSE_REFRESH_TOKEN, ...baseFields})
+  cookieArr.push({name: 'we2_device_id', value: WEVERSE_DEVICE_ID, ...baseFields})
+  cookieArr.push({name: 'wes_artistId', value: '7', ...baseFields})
   const escapedCookies = JSON.stringify(cookieArr).replace(/\\/g, '\\\\').replace(/"/g, '\\"')
   log.push('Cookie count: ' + cookieArr.length)
   log.push('Cookie values check: ' + cookieArr.map(c => c.name + '=' + (c.value ? c.value.length + 'chars' : 'EMPTY')).join(', '))
