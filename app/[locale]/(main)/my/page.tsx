@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
 import { useSearchParams } from 'next/navigation'
+import { useRouter } from '@/i18n/navigation'
 import { useMyEntries, MyEntry, compressImage, SeatInfo } from '@/lib/useMyEntries'
 import { eventTypeConfig } from '@/lib/config/constants'
 import { scheduleTagConfig, type ScheduleTag } from '@/lib/config/tags'
@@ -73,19 +74,49 @@ export default function MyPage() {
   const gridRef = useRef<HTMLDivElement>(null)
 
   const searchParams = useSearchParams()
+  const router = useRouter()
   const { entries, addEntry, updateEntry, removeEntry } = useMyEntries()
   const [showAddModal, setShowAddModal] = useState(false)
   const t = useTranslations()
   const DAY_SHORT = t.raw('Calendar.dayNames') as string[]
 
-  // クエリパラメータ ?entry=<id> でエントリ編集モーダルを自動オープン
+  // クエリパラメータ ?entry=<id> でエントリ編集モーダルを自動オープン + 該当カードまでスクロール
   useEffect(() => {
     const entryId = searchParams.get('entry')
-    if (entryId && entries.length > 0 && !editEntry) {
-      const target = entries.find((e) => e.id === entryId)
-      if (target) setEditEntry(target)
+    if (!entryId) return
+    if (entries.length === 0) return
+    if (editEntry) return
+    const target = entries.find((e) => e.id === entryId)
+    if (!target) return
+
+    // カレンダー/タグフィルターを合わせて対象エントリが表示される状態にする
+    setTagFilter('ALL')
+    const ds = target.customDate ?? target.date
+    if (ds) {
+      setSelectedDate(ds)
+      const d = new Date(ds)
+      if (!Number.isNaN(d.getTime())) {
+        setYear(d.getFullYear())
+        setMonth(d.getMonth())
+      }
     }
-  }, [searchParams, entries])
+
+    // 編集モードに展開
+    setEditEntry(target)
+
+    // カードへスクロール (DOM 反映を待つ)
+    requestAnimationFrame(() => {
+      const el = document.getElementById(`entry-${entryId}`)
+      el?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    })
+
+    // クエリパラメータを消す (戻るループ防止)
+    if (typeof window !== 'undefined') {
+      const url = new URL(window.location.href)
+      url.searchParams.delete('entry')
+      window.history.replaceState(window.history.state, '', url.toString())
+    }
+  }, [searchParams, entries, editEntry, router])
 
   // 週/日ビューに切り替えたとき現在時刻にスクロール
   useEffect(() => {
@@ -672,7 +703,7 @@ function EntryCard({ entry, onEdit, onRemove }: {
 
   return (
     <>
-      <button onClick={onEdit} className="rounded-2xl overflow-hidden flex text-left w-full"
+      <button id={`entry-${entry.id}`} onClick={onEdit} className="rounded-2xl overflow-hidden flex text-left w-full"
         style={{ background: '#FFFFFF', minHeight: 104 }}>
 
         {/* 左：画像 */}
@@ -1027,15 +1058,14 @@ function EditModal({ entry, onClose, onSave, onRemove }: {
               style={{ background: '#FFFFFF', border: '1px solid #E5E5EA', color: '#1C1C1E' }} />
           </EditSection>
 
-          {/* チケット画像（LIVE/TICKET/EVENT/POPUPのみ） */}
+          {/* チケット画像 + 座席情報（LIVE/TICKET/EVENT/POPUPのみ） */}
           {showTicketSection && (
             <EditSection label={t('My.ticketImage')}>
               <div className="flex flex-col gap-2">
                 {ticketImages.map((img, i) => (
-                  <div key={i} className="relative rounded-xl overflow-hidden w-full"
-                    style={{ aspectRatio: '16/9', background: '#E5E5EA' }}>
+                  <div key={i} className="relative rounded-xl overflow-hidden w-full" style={{ background: '#E5E5EA' }}>
                     {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={img} alt="" className="w-full h-full object-contain" />
+                    <img src={img} alt="" className="w-full h-auto block" />
                     <button onClick={() => setTicketImages((p) => p.filter((_, j) => j !== i))}
                       className="absolute top-2 right-2 w-7 h-7 rounded-full flex items-center justify-center"
                       style={{ background: 'rgba(0,0,0,0.65)' }}>
@@ -1058,6 +1088,19 @@ function EditModal({ entry, onClose, onSave, onRemove }: {
               </div>
               <input ref={ticketFileRef} type="file" accept="image/*" multiple className="hidden"
                 onChange={(e) => handleTicketUpload(e.target.files)} />
+
+              {/* 座席情報（チケット画像アップで自動OCR→編集可） */}
+              {ticketImages.length > 0 && (
+                <div className="mt-3 rounded-xl px-3 py-3" style={{ background: '#FFFFFF', border: '1px solid #E5E5EA' }}>
+                  <SeatInfoForm
+                    value={seatInfo}
+                    onChange={setSeatInfo}
+                    ticketImages={ticketImages}
+                    autoAnalyzeTrigger={autoAnalyzeTrigger}
+                    venue={entry.venue}
+                  />
+                </div>
+              )}
             </EditSection>
           )}
 
