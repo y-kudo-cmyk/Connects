@@ -485,18 +485,13 @@ export async function GET(request: NextRequest) {
   const notices = parseNotices(items[0].text)
   log.push(`Parsed ${notices.length} notices from Weverse`)
 
-  // 4. 今日の記事だけフィルター
-  const now = new Date()
-  const jst = new Date(now.getTime() + 9 * 60 * 60 * 1000)
-  const today = jst.toISOString().slice(0, 10)
-  const todayNotices = notices.filter(n => n.date === today)
-  log.push(`Today (${today}): ${todayNotices.length} notices`)
-
-  if (todayNotices.length === 0) {
+  if (notices.length === 0) {
     return NextResponse.json({ log, inserted: 0 })
   }
 
-  // 5. 既存イベントと重複チェック
+  // 4. 既存イベントと重複チェック (今日以外のパース済み記事も対象に)
+  //    Weverse notice 一覧に出てる記事全てを DB と突き合わせ、
+  //    未登録のものを拾い上げる (拾い漏れ解消)
   const { data: existing } = await supabase.from('events').select('event_title, start_date, source_url')
   const existingKeys = new Set<string>()
   for (const e of existing || []) {
@@ -504,12 +499,16 @@ export async function GET(request: NextRequest) {
     existingKeys.add(`${normalize(e.event_title)}::${d}`)
   }
 
-  // 6. 新規イベントを挿入
+  // 5. 新規イベントを挿入 (全パース記事を対象)
   const newEvents: Record<string, unknown>[] = []
-  for (const notice of todayNotices) {
+  const skipped: string[] = []
+  for (const notice of notices) {
     const cleanTitle = notice.title.replace(/\[NOTICE\]\s*/i, '').replace(/\[EVENT\]\s*/i, '').trim()
     const key = `${normalize(cleanTitle)}::${notice.date}`
-    if (existingKeys.has(key)) continue
+    if (existingKeys.has(key)) {
+      skipped.push(`${notice.date} ${cleanTitle}`)
+      continue
+    }
     existingKeys.add(key)
 
     newEvents.push({
@@ -528,6 +527,15 @@ export async function GET(request: NextRequest) {
       related_artists: '',
       submitted_by: SCRAPE_SUBMITTER,
     })
+  }
+
+  log.push(`New (to insert): ${newEvents.length}`)
+  log.push(`Skipped (already in DB): ${skipped.length}`)
+  for (const title of newEvents.slice(0, 20)) {
+    log.push(`  + ${title.start_date} ${title.event_title}`)
+  }
+  for (const s of skipped.slice(0, 10)) {
+    log.push(`  = ${s}`)
   }
 
   let inserted = 0
