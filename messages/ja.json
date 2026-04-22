@@ -588,7 +588,7 @@
     "confirmButton": "確認"
   },
   "SubmitNotice": {
-    "title": "お知らせ投稿",
+    "title": "WEVERSEの投稿",
     "subtitle": "Weverseのスクショから解析してスケジュール候補を作成",
     "forbidden": "この機能は fam / admin ロールのみ利用できます。",
     "stepInput": "入力",

@@ -588,7 +588,7 @@
     "confirmButton": "Confirm"
   },
   "SubmitNotice": {
-    "title": "Submit Notice",
+    "title": "Submit from Weverse",
     "subtitle": "Parse a Weverse screenshot into schedule candidates",
     "forbidden": "This feature is available to fam / admin roles only.",
     "stepInput": "Input",

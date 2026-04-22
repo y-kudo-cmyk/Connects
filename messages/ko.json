@@ -588,7 +588,7 @@
     "confirmButton": "확인"
   },
   "SubmitNotice": {
-    "title": "공지 투고",
+    "title": "Weverse 게시",
     "subtitle": "Weverse 스크린샷을 AI로 분석해 스케줄 후보 생성",
     "forbidden": "이 기능은 fam / admin 역할만 사용할 수 있습니다.",
     "stepInput": "입력",
