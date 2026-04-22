@@ -609,6 +609,7 @@
     "fieldStartDate": "Start date",
     "fieldStartTime": "Start time",
     "fieldEndDate": "End date",
+    "fieldEndTime": "End time",
     "fieldTag": "Tag",
     "fieldCountry": "Country",
     "fieldSpot": "Venue",

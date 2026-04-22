@@ -31,6 +31,7 @@ type InputEvent = {
   start_date?: unknown
   end_date?: unknown
   start_time?: unknown
+  end_time?: unknown
   tag?: unknown
   country?: unknown
   spot_name?: unknown
@@ -50,9 +51,14 @@ function buildStartTimestamp(dateStr: string, timeStr: string): string | null {
   return `${dateStr}T00:00:00`
 }
 
-function buildEndTimestamp(dateStr: string): string | null {
+function buildEndTimestamp(dateStr: string, timeStr?: string): string | null {
   if (!dateStr) return null
   if (!/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) return null
+  if (timeStr && /^\d{1,2}:\d{2}$/.test(timeStr)) {
+    const [h, m] = timeStr.split(':')
+    const hh = h.padStart(2, '0')
+    return `${dateStr}T${hh}:${m}:00`
+  }
   return `${dateStr}T23:59:59`
 }
 
@@ -100,6 +106,9 @@ export async function POST(req: NextRequest) {
       const startDate = str(e.start_date)
       const endDate = str(e.end_date)
       const startTime = str(e.start_time)
+      const endTime = str(e.end_time)
+      // end_date 未指定で end_time だけある場合: 同日の end_time として扱う
+      const effectiveEndDate = endDate || (endTime ? startDate : '')
 
       if (startDate && !/^\d{4}-\d{2}-\d{2}$/.test(startDate)) {
         errors.push(`#${i + 1}: start_date 形式不正 (${startDate})`)
@@ -123,7 +132,7 @@ export async function POST(req: NextRequest) {
         event_title: title,
         sub_event_title: str(e.sub_event_title),
         start_date: buildStartTimestamp(startDate, startTime),
-        end_date: endDate ? buildEndTimestamp(endDate) : null,
+        end_date: effectiveEndDate ? buildEndTimestamp(effectiveEndDate, endTime) : null,
         spot_name: str(e.spot_name),
         country,
         image_url: imageUrl,

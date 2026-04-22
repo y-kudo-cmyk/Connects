@@ -609,6 +609,7 @@
     "fieldStartDate": "開始日",
     "fieldStartTime": "開始時刻",
     "fieldEndDate": "終了日",
+    "fieldEndTime": "終了時刻",
     "fieldTag": "タグ",
     "fieldCountry": "国",
     "fieldSpot": "会場",

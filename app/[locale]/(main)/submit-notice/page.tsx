@@ -16,6 +16,7 @@ type AnalyzedEvent = {
   start_date: string
   end_date: string | null
   start_time: string
+  end_time: string
   tag: string
   country: string
   spot_name: string
@@ -206,6 +207,7 @@ export default function SubmitNoticePage() {
         start_date: '',
         end_date: null,
         start_time: '',
+        end_time: '',
         tag: 'INFO',
         country: '',
         spot_name: '',
@@ -460,14 +462,24 @@ export default function SubmitNoticePage() {
                   </Field>
                 </div>
 
-                <Field label={t('fieldEndDate')}>
-                  <input
-                    type="date"
-                    value={e.end_date ?? ''}
-                    onChange={(ev) => updateEvent(idx, { end_date: ev.target.value || null })}
-                    className="field-input"
-                  />
-                </Field>
+                <div className="grid grid-cols-2 gap-2">
+                  <Field label={t('fieldEndDate')}>
+                    <input
+                      type="date"
+                      value={e.end_date ?? ''}
+                      onChange={(ev) => updateEvent(idx, { end_date: ev.target.value || null })}
+                      className="field-input"
+                    />
+                  </Field>
+                  <Field label={t('fieldEndTime')}>
+                    <input
+                      type="time"
+                      value={e.end_time}
+                      onChange={(ev) => updateEvent(idx, { end_time: ev.target.value })}
+                      className="field-input"
+                    />
+                  </Field>
+                </div>
 
                 <div className="grid grid-cols-2 gap-2">
                   <Field label={t('fieldTag')}>

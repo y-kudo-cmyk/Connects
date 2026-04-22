@@ -34,6 +34,7 @@ type AnalyzedEvent = {
   start_date: string
   end_date: string | null
   start_time: string
+  end_time: string
   tag: string
   country: string
   spot_name: string
@@ -71,6 +72,9 @@ function sanitizeEvent(raw: unknown, fallbackSourceUrl: string): AnalyzedEvent |
   const startTimeRaw = str(r.start_time)
   const start_time = startTimeRaw.match(/^\d{1,2}:\d{2}$/) ? startTimeRaw : ''
 
+  const endTimeRaw = str(r.end_time)
+  const end_time = endTimeRaw.match(/^\d{1,2}:\d{2}$/) ? endTimeRaw : ''
+
   let confidence = 0
   if (typeof r.confidence === 'number') confidence = Math.max(0, Math.min(100, Math.round(r.confidence)))
   else if (typeof r.confidence === 'string') {
@@ -84,6 +88,7 @@ function sanitizeEvent(raw: unknown, fallbackSourceUrl: string): AnalyzedEvent |
     start_date,
     end_date,
     start_time,
+    end_time,
     tag,
     country,
     spot_name: str(r.spot_name),
@@ -156,7 +161,10 @@ export async function POST(req: NextRequest) {
    - ライブビューイング/映画館上映: LIVEVIEWING
    - 判別不能な汎用お知らせ: INFO
 5. country は ISO-3166 alpha-2 (JP/KR/TW/MO/CN/US/HK/TH/SG/PH 等)
-6. 日付は YYYY-MM-DD (時刻含む場合 start_time=HH:MM を別途)
+6. 日付は YYYY-MM-DD。開始時刻は start_time=HH:MM、終了時刻は end_time=HH:MM を別途
+   - 公演時間が「18:00〜21:00」等記載なら start_time="18:00" end_time="21:00"
+   - 開場時間 (OPEN) と 開演時間 (START) が両方あれば start_time=開演、OPEN は notes に記載
+   - 終了時刻が未記載なら end_time=""
 7. sub_event_title は補足 (会場名 + 回数 + 先行種別 等)
 8. confidence は 0-100 (推定信頼度)
 9. 不明項目は空文字。絶対に事実を創作しない
@@ -171,6 +179,7 @@ export async function POST(req: NextRequest) {
       "start_date": "2026-05-30",
       "end_date": null,
       "start_time": "18:00",
+      "end_time": "21:00",
       "tag": "CONCERT",
       "country": "KR",
       "spot_name": "...",

@@ -609,6 +609,7 @@
     "fieldStartDate": "시작일",
     "fieldStartTime": "시작 시각",
     "fieldEndDate": "종료일",
+    "fieldEndTime": "종료 시각",
     "fieldTag": "태그",
     "fieldCountry": "국가",
     "fieldSpot": "장소",
