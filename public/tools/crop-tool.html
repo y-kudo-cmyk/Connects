@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+  <meta name="robots" content="noindex,nofollow" />
+  <title>Connects+ トレカ座標ツール</title>
+  <style>
+    * { box-sizing: border-box; font-family: -apple-system, "Hiragino Kaku Gothic ProN", sans-serif; -webkit-tap-highlight-color: transparent; }
+    body { margin: 0; padding: 10px; background: #f4f4f7; color: #1c1c1e; overscroll-behavior: contain; }
+    h1 { font-size: 14px; margin: 0 0 8px; color: #1c1c1e; }
+    .bar { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; flex-wrap: wrap; }
+    .bar label { font-size: 12px; }
+    button { padding: 8px 14px; border: 0; border-radius: 8px; background: #3b82f6; color: white; cursor: pointer; font-weight: 700; font-size: 13px; touch-action: manipulation; }
+    button.danger { background: #ef4444; }
+    button.secondary { background: #9a9a9f; }
+    button.ok { background: #10b981; }
+    input[type=file] { font-size: 12px; }
+    select, input[type=text] { padding: 6px 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 13px; }
+    .wrap { display: grid; grid-template-columns: 1fr 380px; gap: 12px; align-items: start; }
+    @media (max-width: 900px) { .wrap { grid-template-columns: 1fr; } .panel { max-height: none !important; } }
+    canvas { border: 1px solid #ccc; cursor: default; max-width: 100%; height: auto; display: block; touch-action: none; }
+    .panel { background: white; border-radius: 12px; padding: 10px; max-height: 90vh; overflow-y: auto; }
+    .box-row { padding: 6px; border-bottom: 1px solid #eee; display: grid; grid-template-columns: 20px 1fr auto; gap: 4px; align-items: center; }
+    .box-row.sel { background: #fffbeb; }
+    .box-row input { padding: 4px 6px; border: 1px solid #ccc; border-radius: 4px; font-size: 12px; width: 100%; }
+    .field-line { display: grid; grid-template-columns: 1fr 1fr 80px; gap: 4px; }
+    @media (max-width: 900px) { .field-line { grid-template-columns: 1fr; } }
+    .coord-chip { font-family: monospace; font-size: 10px; color: #636366; white-space: nowrap; }
+    .box-row button.del { padding: 3px 8px; font-size: 11px; background: #ef4444; }
+    #jsonOut { width: 100%; height: 220px; font-family: monospace; font-size: 10px; padding: 6px; border: 1px solid #ccc; border-radius: 6px; }
+    .hint { font-size: 11px; color: #636366; line-height: 1.5; margin: 4px 0 6px; background: #fffbeb; padding: 8px; border-radius: 6px; }
+    .current { background: #fef3c7; padding: 4px 8px; border-radius: 6px; font-size: 11px; font-family: monospace; margin-bottom: 4px; }
+    .mobile-actions { display: none; }
+    @media (max-width: 900px) {
+      .mobile-actions { display: flex; gap: 6px; margin: 6px 0; }
+      .mobile-actions button { flex: 1; font-size: 12px; padding: 10px; }
+    }
+  </style>
+</head>
+<body>
+  <h1>🎴 Connects+ トレカ座標ツール</h1>
+  <p class="hint">
+    ① 画像を選択 → ② <strong>枠をドラッグ</strong>で追加 / 四隅を引っ張って調整 / タップで選択 →
+    ③ 右パネルで <strong>versionId / detail / cardType</strong> を入力 →
+    ④ <strong>📋 JSONコピー</strong>で工藤さんに送る
+  </p>
+  <div class="bar">
+    <label><strong>画像:</strong> <input id="fileInput" type="file" accept="image/*" /></label>
+    <span style="border-left: 1px solid #ccc; padding-left: 8px;">
+      <strong>プリセット:</strong>
+      <select id="preset">
+        <option value="">— 選択 —</option>
+        <option value="BLANK">空で開始</option>
+        <option value="GRID_5_5_3">5+5+3 グリッド (13枠)</option>
+      </select>
+      <button id="applyPreset">適用</button>
+    </span>
+  </div>
+  <div class="bar">
+    <button id="addBox" class="ok">+ 新規枠</button>
+    <button id="dupBox">複製</button>
+    <button id="undoBox">↩ 戻す</button>
+    <button class="danger" id="clearAll">全削除</button>
+    <span style="flex: 1"></span>
+    <button id="copyJson">📋 JSONコピー</button>
+  </div>
+  <div class="mobile-actions">
+    <button id="mvLeft" class="secondary">◀ 選択枠 移動</button>
+    <button id="mvRight" class="secondary">▶</button>
+    <button id="mvUp" class="secondary">▲</button>
+    <button id="mvDown" class="secondary">▼</button>
+  </div>
+
+  <div class="wrap">
+    <div>
+      <div id="current" class="current">画像を選択してください</div>
+      <canvas id="canvas" width="800" height="800"></canvas>
+    </div>
+    <div class="panel">
+      <h3 style="margin-top:0">枠一覧 (<span id="count">0</span>)</h3>
+      <div id="boxes"></div>
+      <h4 style="margin-top:12px">JSON出力</h4>
+      <textarea id="jsonOut" readonly></textarea>
+      <p class="hint" style="margin-top:8px">
+        productId / albumName は工藤さん側で編集します。座標だけ正確に取れればOK。
+      </p>
+    </div>
+  </div>
+
+<script>
+const canvas = document.getElementById('canvas')
+const ctx = canvas.getContext('2d')
+let img = null, imgW = 0, imgH = 0
+let boxes = []
+let selectedIdx = -1
+let drag = null
+let prodId = ''
+
+const PRESETS = {
+  BLANK: { productId: '', cards: [] },
+  GRID_5_5_3: { productId: '', cards: (() => {
+    const out = []
+    const firstX = 230, firstY = 620, cardW = 230, cardH = 315, stepX = 280, stepY = 420
+    for (let r = 0; r < 2; r++) for (let c = 0; c < 5; c++) {
+      out.push({ detail: `Card ${r*5+c+1}`, cardType: 'photocard', versionId: '', left: firstX + c*stepX, top: firstY + r*stepY, width: cardW, height: cardH })
+    }
+    for (let c = 0; c < 3; c++) {
+      out.push({ detail: `Card ${10+c+1}`, cardType: 'photocard', versionId: '', left: firstX + c*stepX, top: firstY + 2*stepY, width: cardW, height: cardH })
+    }
+    return out
+  })()},
+}
+
+function loadImage(src) {
+  const im = new Image()
+  im.onload = () => {
+    img = im; imgW = im.naturalWidth; imgH = im.naturalHeight
+    fitCanvas()
+    render()
+  }
+  im.src = src
+}
+function fitCanvas() {
+  if (!img) return
+  const isMobile = window.innerWidth < 900
+  const maxW = isMobile ? window.innerWidth - 30 : Math.min(window.innerWidth - 420, 1000)
+  const maxH = isMobile ? window.innerHeight * 0.55 : 800
+  const scale = Math.min(1, maxW / imgW, maxH / imgH)
+  canvas.width = Math.round(imgW * scale)
+  canvas.height = Math.round(imgH * scale)
+}
+window.addEventListener('resize', () => { fitCanvas(); render() })
+
+document.getElementById('fileInput').onchange = e => {
+  const f = e.target.files[0]; if (!f) return
+  const r = new FileReader(); r.onload = () => loadImage(r.result); r.readAsDataURL(f)
+}
+
+document.getElementById('applyPreset').onclick = () => {
+  const k = document.getElementById('preset').value
+  if (!k || !PRESETS[k]) return
+  const p = PRESETS[k]
+  prodId = p.productId || prodId
+  boxes = p.cards.map(c => ({ ...c }))
+  selectedIdx = -1
+  render()
+}
+document.getElementById('copyJson').onclick = () => {
+  const txt = document.getElementById('jsonOut').value
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(txt).then(
+      () => alert('コピーしました。工藤さんに貼り付けて送ってください'),
+      () => fallbackCopy(txt)
+    )
+  } else {
+    fallbackCopy(txt)
+  }
+}
+function fallbackCopy(txt) {
+  const ta = document.getElementById('jsonOut')
+  ta.select(); ta.setSelectionRange(0, 99999)
+  try { document.execCommand('copy'); alert('コピーしました') } catch { alert('コピー失敗。テキストを手動選択してコピーしてください') }
+}
+
+function sc() { return canvas.width / imgW || 1 }
+function canvasToImg(cx, cy) { const s = sc(); return { x: Math.round(cx / s), y: Math.round(cy / s) } }
+
+const HANDLE_SIZE = 14
+function handleAt(box, x, y, s) {
+  const hs = HANDLE_SIZE / s
+  const xs = [box.left, box.left + box.width]
+  const ys = [box.top, box.top + box.height]
+  const names = [['nw','ne'],['sw','se']]
+  for (let r = 0; r < 2; r++) for (let c = 0; c < 2; c++) {
+    if (Math.abs(x - xs[c]) < hs && Math.abs(y - ys[r]) < hs) return names[r][c]
+  }
+  return null
+}
+function inBox(box, x, y) {
+  return x >= box.left && x <= box.left + box.width && y >= box.top && y <= box.top + box.height
+}
+function pick(x, y) {
+  for (let i = boxes.length - 1; i >= 0; i--) {
+    const h = handleAt(boxes[i], x, y, sc())
+    if (h) return { idx: i, handle: h }
+    if (inBox(boxes[i], x, y)) return { idx: i, handle: null }
+  }
+  return null
+}
+
+// --- pointer (mouse + touch 統合) ---
+function getPointerPos(e) {
+  const r = canvas.getBoundingClientRect()
+  return canvasToImg(e.clientX - r.left, e.clientY - r.top)
+}
+canvas.addEventListener('pointerdown', e => {
+  if (!img) return
+  e.preventDefault()
+  canvas.setPointerCapture(e.pointerId)
+  const { x, y } = getPointerPos(e)
+  const p = pick(x, y)
+  if (p) {
+    selectedIdx = p.idx
+    if (p.handle) {
+      drag = { mode: 'resize', handle: p.handle, init: { ...boxes[p.idx] }, startX: x, startY: y }
+    } else {
+      drag = { mode: 'move', dx: x - boxes[p.idx].left, dy: y - boxes[p.idx].top }
+    }
+  } else {
+    selectedIdx = -1
+    drag = { mode: 'draw', x0: x, y0: y, x1: x, y1: y }
+  }
+  render()
+})
+canvas.addEventListener('pointermove', e => {
+  if (!img) return
+  const { x, y } = getPointerPos(e)
+  document.getElementById('current').textContent = `cursor: (${x}, ${y})` + (selectedIdx >= 0 ? ` | 選択 #${selectedIdx+1} [${boxes[selectedIdx].detail||''}]` : '')
+  if (!drag) { updateCursor(x, y); return }
+  e.preventDefault()
+  if (drag.mode === 'draw') { drag.x1 = x; drag.y1 = y }
+  else if (drag.mode === 'move') {
+    const b = boxes[selectedIdx]
+    b.left = Math.max(0, Math.min(imgW - b.width, x - drag.dx))
+    b.top = Math.max(0, Math.min(imgH - b.height, y - drag.dy))
+  }
+  else if (drag.mode === 'resize') {
+    const b = boxes[selectedIdx]; const h = drag.handle; const i = drag.init
+    let l = i.left, t = i.top, rR = i.left + i.width, bB = i.top + i.height
+    if (h.includes('w')) l = Math.min(x, rR - 10); if (h.includes('e')) rR = Math.max(x, l + 10)
+    if (h.includes('n')) t = Math.min(y, bB - 10); if (h.includes('s')) bB = Math.max(y, t + 10)
+    b.left = Math.round(l); b.top = Math.round(t); b.width = Math.round(rR - l); b.height = Math.round(bB - t)
+  }
+  render()
+})
+canvas.addEventListener('pointerup', e => {
+  if (!drag) return
+  if (drag.mode === 'draw') {
+    const l = Math.min(drag.x0, drag.x1), t = Math.min(drag.y0, drag.y1)
+    const w = Math.abs(drag.x1 - drag.x0), h = Math.abs(drag.y1 - drag.y0)
+    if (w > 10 && h > 10) { boxes.push({ left: l, top: t, width: w, height: h, detail: '', cardType: 'photocard', versionId: '' }); selectedIdx = boxes.length - 1 }
+  }
+  drag = null
+  try { canvas.releasePointerCapture(e.pointerId) } catch {}
+  render()
+})
+canvas.addEventListener('pointercancel', () => { drag = null; render() })
+
+function updateCursor(x, y) {
+  if (!img) { canvas.style.cursor = 'default'; return }
+  const p = pick(x, y)
+  if (p?.handle) {
+    const h = p.handle
+    canvas.style.cursor = (h === 'nw' || h === 'se') ? 'nwse-resize' : 'nesw-resize'
+  } else if (p) canvas.style.cursor = 'move'
+  else canvas.style.cursor = 'crosshair'
+}
+
+document.addEventListener('keydown', e => {
+  if (document.activeElement && document.activeElement.tagName === 'INPUT') return
+  if ((e.key === 'Delete' || e.key === 'Backspace') && selectedIdx >= 0) {
+    boxes.splice(selectedIdx, 1); selectedIdx = -1; render()
+  }
+  if (e.key === 'Escape') { selectedIdx = -1; render() }
+  if (selectedIdx >= 0 && ['ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].includes(e.key)) {
+    e.preventDefault()
+    const step = e.shiftKey ? 10 : 1
+    const b = boxes[selectedIdx]
+    if (e.key === 'ArrowLeft') b.left -= step
+    if (e.key === 'ArrowRight') b.left += step
+    if (e.key === 'ArrowUp') b.top -= step
+    if (e.key === 'ArrowDown') b.top += step
+    render()
+  }
+})
+
+function moveSel(dx, dy) {
+  if (selectedIdx < 0) return
+  const b = boxes[selectedIdx]
+  b.left = Math.max(0, Math.min(imgW - b.width, b.left + dx))
+  b.top = Math.max(0, Math.min(imgH - b.height, b.top + dy))
+  render()
+}
+document.getElementById('mvLeft').onclick = () => moveSel(-5, 0)
+document.getElementById('mvRight').onclick = () => moveSel(5, 0)
+document.getElementById('mvUp').onclick = () => moveSel(0, -5)
+document.getElementById('mvDown').onclick = () => moveSel(0, 5)
+
+document.getElementById('addBox').onclick = () => {
+  if (!img) { alert('画像を選択してください'); return }
+  boxes.push({ left: 100, top: 100, width: 200, height: 300, detail: '', cardType: 'photocard', versionId: '' })
+  selectedIdx = boxes.length - 1; render()
+}
+document.getElementById('undoBox').onclick = () => { boxes.pop(); selectedIdx = -1; render() }
+document.getElementById('dupBox').onclick = () => {
+  if (selectedIdx < 0) return
+  const b = boxes[selectedIdx]
+  boxes.push({ ...b, left: b.left + 40, top: b.top + 40 })
+  selectedIdx = boxes.length - 1; render()
+}
+document.getElementById('clearAll').onclick = () => { if (confirm('全枠を削除しますか？')) { boxes = []; selectedIdx = -1; render() } }
+
+function render() {
+  if (img) {
+    ctx.clearRect(0, 0, canvas.width, canvas.height)
+    ctx.drawImage(img, 0, 0, canvas.width, canvas.height)
+  } else {
+    ctx.fillStyle = '#e5e5ea'; ctx.fillRect(0,0,canvas.width,canvas.height)
+    ctx.fillStyle = '#8e8e93'; ctx.font = '16px sans-serif'; ctx.textAlign = 'center'
+    ctx.fillText('画像を選択してください', canvas.width/2, canvas.height/2)
+    ctx.textAlign = 'start'
+  }
+  const s = sc()
+  for (let i = 0; i < boxes.length; i++) {
+    const b = boxes[i]
+    const isSel = i === selectedIdx
+    ctx.strokeStyle = isSel ? '#ff6b00' : '#ff0000'
+    ctx.lineWidth = isSel ? 3 : 2
+    ctx.strokeRect(b.left * s, b.top * s, b.width * s, b.height * s)
+    ctx.fillStyle = isSel ? '#ff6b00' : 'rgba(255,0,0,0.85)'
+    ctx.font = 'bold 13px sans-serif'
+    ctx.fillText(`${i+1}: ${b.detail||''}`, b.left * s + 4, b.top * s + 14)
+    if (isSel) {
+      const pts = [[b.left, b.top], [b.left+b.width, b.top], [b.left, b.top+b.height], [b.left+b.width, b.top+b.height]]
+      ctx.fillStyle = '#ffffff'
+      for (const [x, y] of pts) {
+        ctx.fillRect(x*s - HANDLE_SIZE/2, y*s - HANDLE_SIZE/2, HANDLE_SIZE, HANDLE_SIZE)
+        ctx.strokeStyle = '#ff6b00'; ctx.lineWidth = 2
+        ctx.strokeRect(x*s - HANDLE_SIZE/2, y*s - HANDLE_SIZE/2, HANDLE_SIZE, HANDLE_SIZE)
+      }
+    }
+  }
+  if (drag && drag.mode === 'draw') {
+    const l = Math.min(drag.x0, drag.x1), t = Math.min(drag.y0, drag.y1)
+    const w = Math.abs(drag.x1 - drag.x0), h = Math.abs(drag.y1 - drag.y0)
+    ctx.strokeStyle = 'blue'; ctx.lineWidth = 2
+    ctx.strokeRect(l*s, t*s, w*s, h*s)
+  }
+  renderPanel(); renderJson()
+}
+
+function renderPanel() {
+  const container = document.getElementById('boxes'); container.innerHTML = ''
+  document.getElementById('count').textContent = boxes.length
+  boxes.forEach((b, i) => {
+    const row = document.createElement('div')
+    row.className = 'box-row' + (i === selectedIdx ? ' sel' : '')
+    row.innerHTML = `
+      <span>${i+1}</span>
+      <div class="field-line">
+        <input placeholder="versionId" value="${b.versionId||''}" data-i="${i}" data-k="versionId" />
+        <input placeholder="detail" value="${b.detail||''}" data-i="${i}" data-k="detail" />
+        <input placeholder="cardType" value="${b.cardType||''}" data-i="${i}" data-k="cardType" />
+      </div>
+      <button class="del" data-del="${i}">×</button>
+    `
+    row.onclick = e => { if (e.target.tagName === 'INPUT' || e.target.tagName === 'BUTTON') return; selectedIdx = i; render() }
+    container.appendChild(row)
+    const coord = document.createElement('div')
+    coord.className = 'coord-chip'
+    coord.style.gridColumn = '2/3'
+    coord.textContent = `${b.left},${b.top} ${b.width}×${b.height}`
+    row.appendChild(coord)
+  })
+  container.querySelectorAll('input').forEach(inp => {
+    inp.oninput = () => { const i = +inp.dataset.i, k = inp.dataset.k; boxes[i][k] = inp.value; renderJson() }
+  })
+  container.querySelectorAll('button[data-del]').forEach(btn => {
+    btn.onclick = e => { e.stopPropagation(); boxes.splice(+btn.dataset.del, 1); selectedIdx = -1; render() }
+  })
+}
+
+function renderJson() {
+  const cards = boxes.map(b => ({
+    section: (b.versionId||'').includes('_BEN_') ? 'STORE_JP' : 'INCLUDED',
+    versionId: b.versionId || '',
+    detail: b.detail || '',
+    cardType: b.cardType || 'photocard',
+    left: b.left, top: b.top, width: b.width, height: b.height,
+  }))
+  const out = { productId: prodId, albumName: '', imageSize: { width: imgW, height: imgH }, cards }
+  document.getElementById('jsonOut').value = JSON.stringify(out, null, 2)
+}
+render()
+</script>
+</body>
+</html>
