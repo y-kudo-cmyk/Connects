@@ -14,8 +14,9 @@ import MilCountdown from '@/components/MilCountdown'
 import { useTodos } from '@/lib/useTodos'
 import { useTranslations } from 'next-intl'
 import { useToday } from '@/lib/useToday'
+import dynamic from 'next/dynamic'
 import AddScheduleModal from '@/components/AddScheduleModal'
-import EventDetailModal from '@/components/EventDetailModal'
+const EventDetailModal = dynamic(() => import('@/components/EventDetailModal'), { ssr: false })
 
 function getDaysInMonth(y: number, m: number) { return new Date(y, m + 1, 0).getDate() }
 function getFirstDay(y: number, m: number) { return new Date(y, m, 1).getDay() }

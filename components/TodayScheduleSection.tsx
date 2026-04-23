@@ -1,11 +1,12 @@
 'use client'
 
 import { useMemo, useState } from 'react'
+import dynamic from 'next/dynamic'
 import { Link } from '@/i18n/navigation'
 import { scheduleTagConfig, type ScheduleTag } from '@/lib/config/tags'
 import { useSupabaseData } from './SupabaseDataProvider'
 import type { AppEvent } from '@/lib/supabase/adapters'
-import EventDetailModal from './EventDetailModal'
+const EventDetailModal = dynamic(() => import('./EventDetailModal'), { ssr: false })
 import { useTranslations } from 'next-intl'
 import { useToday } from '@/lib/useToday'
 import { usePageView } from '@/lib/useActivityLog'

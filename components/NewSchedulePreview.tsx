@@ -1,12 +1,13 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import dynamic from 'next/dynamic'
 import { scheduleTagConfig, type ScheduleTag } from '@/lib/config/tags'
 import { useSupabaseData } from './SupabaseDataProvider'
 import type { AppEvent } from '@/lib/supabase/adapters'
 import { useMyEntries } from '@/lib/useMyEntries'
 import { useAuth } from '@/lib/supabase/useAuth'
-import EventDetailModal from './EventDetailModal'
+const EventDetailModal = dynamic(() => import('./EventDetailModal'), { ssr: false })
 import { useTranslations } from 'next-intl'
 import { useToday } from '@/lib/useToday'
 import { countryFlag, cityToCountryCode } from '@/lib/countryUtils'

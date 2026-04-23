@@ -14,9 +14,19 @@ export default function OneSignalInit() {
   const { user } = useAuth()
   const prevUserId = useRef<string | null>(null)
 
-  // SDK 初期化（1回だけ）
+  // SDK 初期化（1回だけ）— TTI 後に defer して初回描画をブロックしない
   useEffect(() => {
-    initOneSignal()
+    const run = () => initOneSignal()
+    type IdleWindow = Window & {
+      requestIdleCallback?: (cb: () => void, opts?: { timeout: number }) => number
+    }
+    const w = window as IdleWindow
+    if (typeof w.requestIdleCallback === 'function') {
+      w.requestIdleCallback(run, { timeout: 3000 })
+    } else {
+      // iOS Safari 等 requestIdleCallback 未対応環境は setTimeout 2s fallback
+      setTimeout(run, 2000)
+    }
   }, [])
 
   // ユーザー変更に応じて login / logout

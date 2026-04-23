@@ -6,8 +6,9 @@ import { useRouter } from '@/i18n/navigation'
 import { useSupabaseData } from '@/components/SupabaseDataProvider'
 import { scheduleTagConfig, type ScheduleTag } from '@/lib/config/tags'
 import { useToday } from '@/lib/useToday'
+import dynamic from 'next/dynamic'
 import type { AppEvent } from '@/lib/supabase/adapters'
-import EventDetailModal from '@/components/EventDetailModal'
+const EventDetailModal = dynamic(() => import('@/components/EventDetailModal'), { ssr: false })
 import { countryFlag, cityToCountryCode } from '@/lib/countryUtils'
 import { useTranslations } from 'next-intl'
 
