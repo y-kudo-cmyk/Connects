@@ -40,6 +40,44 @@ export const seventeenMembers = [
   { id: 'dino',     name: 'DINO',      color: '#FB923C', photo: '/dino.jpg'     },
 ]
 
+// SEVENTEEN 3ユニット構成 (ユニット共通カード = M∞CARD 等の判定に使用)
+// member_id は A000001〜A000013 (seventeenMembers の index + 1)
+export const SEVENTEEN_UNITS = {
+  HIPHOP:      ['A000001', 'A000006', 'A000009', 'A000012'],              // S.Coups, Wonwoo, Mingyu, Vernon
+  PERFORMANCE: ['A000005', 'A000004', 'A000008', 'A000013'],              // Hoshi, Jun, The8, Dino
+  VOCAL:       ['A000002', 'A000003', 'A000007', 'A000010', 'A000011'],   // Jeonghan, Joshua, Woozi, DK, Seungkwan
+} as const
+
+// 各ユニットのリーダー (ユニット共通カードの member_id として使用)
+export const UNIT_LEADERS = {
+  HIPHOP:      'A000001', // S.Coups
+  PERFORMANCE: 'A000005', // Hoshi
+  VOCAL:       'A000007', // Woozi
+} as const
+
+export type SeventeenUnit = keyof typeof SEVENTEEN_UNITS
+
+/** 指定 memberId が所属するユニットを返す (なければ null) */
+export function getMemberUnit(memberId: string): SeventeenUnit | null {
+  for (const [unit, members] of Object.entries(SEVENTEEN_UNITS)) {
+    if ((members as readonly string[]).includes(memberId)) return unit as SeventeenUnit
+  }
+  return null
+}
+
+/** 指定 memberId と同じユニットの「ユニット共通カード」の代表 member_id (リーダー) を返す */
+export function getUnitLeaderForMember(memberId: string): string | null {
+  const unit = getMemberUnit(memberId)
+  return unit ? UNIT_LEADERS[unit] : null
+}
+
+/** カードがユニット共通カードかどうか (card_detail で判定) */
+export function isUnitSharedCard(cardDetail?: string | null): boolean {
+  if (!cardDetail) return false
+  const d = cardDetail.toUpperCase()
+  return d.includes('M∞CARD') || d.includes('MCARD')
+}
+
 export type EventType = 'concert' | 'fanmeet' | 'release' | 'broadcast' | 'birthday' | 'variety'
 
 export const eventTypeConfig: Record<EventType, { label: string; color: string; bg: string }> = {

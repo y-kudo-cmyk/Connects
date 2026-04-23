@@ -3,7 +3,7 @@
 import { useState, useMemo, useEffect, Fragment } from 'react'
 import { useTranslations } from 'next-intl'
 import { useCardVersions, useCardMaster, type CardProduct, type CardMaster, type UserCard, productTypeLabels, getCardAspect, isTradingCardFit, getCardColSpan, hasBackSide } from '@/lib/useCardData'
-import { seventeenMembers } from '@/lib/config/constants'
+import { seventeenMembers, getUnitLeaderForMember, isUnitSharedCard } from '@/lib/config/constants'
 import { createClient } from '@/lib/supabase/client'
 
 interface AlbumDetailProps {
@@ -114,7 +114,15 @@ export default function AlbumDetail({ product, userCards, onBack, onCardTap, onB
 
   const memberCards = useMemo(() => {
     if (!activeMemberId) return []
-    return cards.filter(c => c.member_id === activeMemberId)
+    // そのメンバーのカード + ユニット共通カード (M∞CARD等、所属ユニットのリーダー member_id で格納) を含める
+    const unitLeader = getUnitLeaderForMember(activeMemberId)
+    return cards.filter(c => {
+      if (c.member_id === activeMemberId) return true
+      // ユニット共通カード: 代表 (リーダー) member_id に保存されているので、
+      // 同ユニット内の他メンバーにも表示
+      if (unitLeader && c.member_id === unitLeader && isUnitSharedCard(c.card_detail)) return true
+      return false
+    })
   }, [cards, activeMemberId])
 
   const groupedByVersion = useMemo(() => {
