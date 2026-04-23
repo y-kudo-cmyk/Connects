@@ -1459,7 +1459,7 @@ function NewSpotModal({
         : '#SEVENTEEN'
 
       // DBに保存
-      await fetch('/api/update-spot', {
+      const res = await fetch('/api/update-spot', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -1481,7 +1481,23 @@ function NewSpotModal({
           },
         }),
       })
-    } catch {}
+
+      // 409 = 自分が同じ名前+住所で既に登録済
+      if (res.status === 409) {
+        const body = await res.json().catch(() => ({}))
+        alert(body.message || '同じスポットは既に登録済みです')
+        return  // submitted にしない
+      }
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}))
+        alert(`登録に失敗しました: ${body.error || res.statusText}`)
+        return
+      }
+    } catch (e) {
+      console.error('[submit spot]', e)
+      alert('ネットワークエラーが発生しました')
+      return
+    }
     await onRefresh?.()
     setSubmitted(true)
   }

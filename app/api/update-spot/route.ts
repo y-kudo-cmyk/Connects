@@ -33,6 +33,28 @@ export async function POST(req: NextRequest) {
 
   if (_createSpot && updates) {
     const sb = createServiceClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!)
+
+    // ── 重複チェック: 同じユーザーが同じ名前 + 住所で既に登録してないか
+    const normalize = (v: unknown) => String(v ?? '').replace(/[\s　・\-–—]/g, '').toLowerCase().trim()
+    const newName = normalize(updates.spot_name)
+    const newAddr = normalize(updates.spot_address)
+    if (newName && newAddr) {
+      const { data: mine } = await sb
+        .from('spots')
+        .select('id, spot_name, spot_address, status')
+        .eq('submitted_by', user.id)
+        .in('status', ['pending', 'confirmed'])
+      const dup = (mine || []).find((sp) =>
+        normalize(sp.spot_name) === newName && normalize(sp.spot_address) === newAddr
+      )
+      if (dup) {
+        return NextResponse.json(
+          { error: 'duplicate', existingId: dup.id, message: `「${dup.spot_name}」は既に登録済みです (${dup.id})` },
+          { status: 409 },
+        )
+      }
+    }
+
     const { data: lastSpot } = await sb.from('spots').select('id').order('id', { ascending: false }).limit(1)
     const lastNum = lastSpot?.[0]?.id ? parseInt(lastSpot[0].id.replace('SP', '')) : 0
     const newId = 'SP' + String(lastNum + 1).padStart(5, '0')
