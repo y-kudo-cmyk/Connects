@@ -110,7 +110,7 @@ export function useProfile() {
     setProfile({
       membershipNumber: p.membership_number ?? '',
       nickname: p.nickname ?? '',
-      bio: '',
+      bio: p.bio ?? '',
       bannerImage: p.banner_url ?? '',
       avatarImage: p.avatar_url ?? '',
       language: (p.language ?? 'ja') as 'ja' | 'en' | 'ko',
@@ -152,6 +152,7 @@ export function useProfile() {
     if (!user) return
     const dbUpdates: Record<string, unknown> = {}
     if (updates.nickname !== undefined) dbUpdates.nickname = updates.nickname
+    if (updates.bio !== undefined) dbUpdates.bio = updates.bio
     if (updates.avatarImage !== undefined) dbUpdates.avatar_url = updates.avatarImage
     if (updates.bannerImage !== undefined) dbUpdates.banner_url = updates.bannerImage
     if (updates.language !== undefined) dbUpdates.language = updates.language
