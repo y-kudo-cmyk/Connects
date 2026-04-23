@@ -644,8 +644,8 @@ export default function ProfilePage() {
         )}
       </div>
 
-      {/* --- Referral code (4/26 Glide 移行完了後に有効化) --- */}
-      {/* <ReferralSection /> */}
+      {/* --- Referral code (admin / fam のみ) --- */}
+      {(profile.role === 'admin' || profile.role === 'fam') && <ReferralSection />}
 
       {/* 参戦記録 詳細モーダル */}
       {showConcerts && portalMounted && createPortal(
@@ -1456,9 +1456,17 @@ function ReferralSection() {
             <p className="text-xs" style={{ color: '#8E8E93' }}>移行完了後に発行されます</p>
           )}
           {myCode && (
-            <p className="text-[10px] mt-1.5" style={{ color: '#8E8E93' }}>
-              友達にこのコードを教えて Connects+ に登録してもらいましょう
-            </p>
+            <>
+              <div className="mt-2 px-3 py-2 rounded-xl" style={{ background: '#F8F9FA' }}>
+                <p className="text-[9px] font-bold mb-0.5" style={{ color: '#8E8E93' }}>登録URL</p>
+                <a href={APP_URL} target="_blank" rel="noopener noreferrer" className="text-[11px] font-semibold break-all" style={{ color: '#60A5FA' }}>
+                  {APP_URL}
+                </a>
+              </div>
+              <p className="text-[10px] mt-1.5" style={{ color: '#8E8E93' }}>
+                コピーボタンで URL + 紹介コードをまとめて共有できます
+              </p>
+            </>
           )}
         </div>
 
