@@ -407,30 +407,28 @@ export default function ProfilePage() {
           </div>
         ) : (
           <>
-            <button className="flex items-center gap-1.5 mb-1" onClick={startEditNickname}>
-              <span className="text-lg font-bold" style={{ color: '#1C1C1E' }}>{profile.nickname}</span>
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#636366" strokeWidth="2">
-                <path d="M12 20h9" /><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z" />
-              </svg>
-            </button>
+            <div className="flex items-center gap-2 flex-wrap mb-1">
+              <button className="flex items-center gap-1.5" onClick={startEditNickname}>
+                <span className="text-lg font-bold leading-tight" style={{ color: '#1C1C1E' }}>{profile.nickname}</span>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#636366" strokeWidth="2">
+                  <path d="M12 20h9" /><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z" />
+                </svg>
+              </button>
+              {profile.membershipNumber && (
+                <span className="text-[11px] font-mono font-semibold px-1.5 py-0.5 rounded" style={{ color: '#636366', background: '#F0F0F5' }}>
+                  {profile.membershipNumber}
+                </span>
+              )}
+            </div>
             <button
               onClick={startEditNickname}
-              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg mb-2 text-left"
-              style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)' }}
+              className="inline-flex items-center gap-1 px-2 py-1 rounded-md mb-2"
+              style={{ background: 'rgba(239,68,68,0.08)' }}
             >
-              <span className="text-[10px] leading-snug" style={{ color: '#EF4444' }}>
-                ⚠️ ユーザー名は他ユーザーに公開されます
-              </span>
+              <span className="text-[10px] leading-none" style={{ color: '#EF4444' }}>⚠️ ユーザー名は公開されます</span>
             </button>
           </>
         )}
-
-        <div className="flex items-center gap-1.5 mb-3">
-          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#636366" strokeWidth="2">
-            <rect x="2" y="5" width="20" height="14" rx="2" /><line x1="2" y1="10" x2="22" y2="10" />
-          </svg>
-          <span className="text-xs font-mono font-semibold" style={{ color: '#636366' }}>{profile.membershipNumber || ''}</span>
-        </div>
 
         {editingBio ? (
           <div className="mb-3">
@@ -457,77 +455,81 @@ export default function ProfilePage() {
         )}
       </div>
 
-      {/* --- Stats --- */}
-      <div className="mx-4 mb-4">
-        <div className="grid grid-cols-4 rounded-2xl overflow-hidden" style={{ background: '#EFEFEF' }}>
-          {[
-            { label: t('Common.statPosts'), value: stats.posts },
-            { label: t('Common.statApprovals'), value: stats.approvals },
-            { label: t('Common.statEdits'), value: stats.edits },
-            { label: t('Common.statReferrals'), value: stats.referrals },
-          ].map((s) => (
-            <div key={s.label} className="flex flex-col items-center py-3">
-              <span className="text-xl font-black" style={{ color: '#F3B4E3' }}>{s.value}</span>
-              <span className="text-[10px]" style={{ color: '#8E8E93' }}>{s.label}</span>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* --- Member rank --- */}
-      <div className="px-4 mb-4">
-        <p className="text-xs font-semibold mb-2" style={{ color: '#8E8E93' }}>{t('Common.memberRank')}</p>
-        <div className="px-4 py-3 rounded-xl" style={{ background: '#FFFFFF' }}>
-          <div className="flex items-center gap-3 mb-3">
-            <div
-              className="w-10 h-10 rounded-xl flex items-center justify-center text-base font-black flex-shrink-0"
-              style={{ background: rank.bg, color: rank.color, border: `1.5px solid ${rank.color}30` }}
-            >
-              {rank.initial}
-            </div>
-            <div className="flex-1">
-              <p className="text-base font-black" style={{ color: rank.color }}>{rank.label}</p>
-              {nextRank ? (
-                <p className="text-[10px]" style={{ color: '#8E8E93' }}>
-                  {t('Common.nextRank')} {nextRank.min - score} pt
-                </p>
-              ) : (
-                <p className="text-[10px]" style={{ color: '#8E8E93' }}>{t('Common.maxRank')}</p>
-              )}
-            </div>
-            <span className="text-xs font-mono font-bold" style={{ color: '#C7C7CC' }}>{score} pt</span>
-          </div>
-          {nextRank && (
-            <div className="h-1.5 rounded-full overflow-hidden" style={{ background: '#F0F0F5' }}>
+      {/* --- Member rank + Stats (統合カード) --- */}
+      <div className="px-4 mb-3">
+        <div className="rounded-2xl overflow-hidden" style={{ background: '#FFFFFF' }}>
+          {/* Rank header */}
+          <div className="px-4 pt-3 pb-2">
+            <div className="flex items-center gap-3 mb-2">
               <div
-                className="h-full rounded-full"
-                style={{
-                  width: `${Math.min(100, ((score - rank.min) / (nextRank.min - rank.min)) * 100)}%`,
-                  background: rank.color,
-                  transition: 'width 0.4s ease',
-                }}
-              />
+                className="w-9 h-9 rounded-xl flex items-center justify-center text-sm font-black flex-shrink-0"
+                style={{ background: rank.bg, color: rank.color, border: `1.5px solid ${rank.color}30` }}
+              >
+                {rank.initial}
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-black leading-tight" style={{ color: rank.color }}>{rank.label}</p>
+                {nextRank ? (
+                  <p className="text-[10px] leading-tight" style={{ color: '#8E8E93' }}>
+                    {t('Common.nextRank')} {nextRank.min - score} pt
+                  </p>
+                ) : (
+                  <p className="text-[10px] leading-tight" style={{ color: '#8E8E93' }}>{t('Common.maxRank')}</p>
+                )}
+              </div>
+              <span className="text-xs font-mono font-bold" style={{ color: '#C7C7CC' }}>{score} pt</span>
             </div>
-          )}
-          <div className="flex justify-between mt-3">
-            {RANKS.map((r) => (
-              <div key={r.key} className="flex flex-col items-center gap-1">
+            {nextRank && (
+              <div className="h-1.5 rounded-full overflow-hidden" style={{ background: '#F0F0F5' }}>
                 <div
-                  className="w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-black"
+                  className="h-full rounded-full"
                   style={{
-                    background: r.key === rank.key ? r.bg : '#F0F0F5',
-                    color: r.key === rank.key ? r.color : '#C7C7CC',
-                    border: r.key === rank.key ? `1.5px solid ${r.color}40` : '1.5px solid transparent',
+                    width: `${Math.min(100, ((score - rank.min) / (nextRank.min - rank.min)) * 100)}%`,
+                    background: rank.color,
+                    transition: 'width 0.4s ease',
                   }}
-                >
-                  {r.initial}
+                />
+              </div>
+            )}
+            <div className="flex justify-between mt-2">
+              {RANKS.map((r) => (
+                <div key={r.key} className="flex flex-col items-center gap-0.5">
+                  <div
+                    className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-black"
+                    style={{
+                      background: r.key === rank.key ? r.bg : '#F0F0F5',
+                      color: r.key === rank.key ? r.color : '#C7C7CC',
+                      border: r.key === rank.key ? `1.5px solid ${r.color}40` : '1.5px solid transparent',
+                    }}
+                  >
+                    {r.initial}
+                  </div>
+                  <span
+                    className="text-[8px] font-bold"
+                    style={{ color: r.key === rank.key ? r.color : '#C7C7CC' }}
+                  >
+                    {r.label}
+                  </span>
                 </div>
-                <span
-                  className="text-[8px] font-bold"
-                  style={{ color: r.key === rank.key ? r.color : '#C7C7CC' }}
-                >
-                  {r.label}
-                </span>
+              ))}
+            </div>
+          </div>
+
+          {/* Stats 4列 (divider) */}
+          <div className="grid grid-cols-4" style={{ borderTop: '1px solid #F0F0F5' }}>
+            {[
+              { label: t('Common.statPosts'), value: stats.posts },
+              { label: t('Common.statApprovals'), value: stats.approvals },
+              { label: t('Common.statEdits'), value: stats.edits },
+              { label: t('Common.statReferrals'), value: stats.referrals },
+            ].map((s, i) => (
+              <div
+                key={s.label}
+                className="flex flex-col items-center py-2"
+                style={i > 0 ? { borderLeft: '1px solid #F0F0F5' } : undefined}
+              >
+                <span className="text-lg font-black leading-tight" style={{ color: '#F3B4E3' }}>{s.value}</span>
+                <span className="text-[10px]" style={{ color: '#8E8E93' }}>{s.label}</span>
               </div>
             ))}
           </div>
@@ -535,8 +537,8 @@ export default function ProfilePage() {
       </div>
 
       {/* --- Favorite Artist + Oshi Members (統合) --- */}
-      <div className="px-4 mb-4">
-        <div className="flex items-center justify-between mb-2">
+      <div className="px-4 mb-3">
+        <div className="flex items-center justify-between mb-1.5">
           <p className="text-xs font-semibold" style={{ color: '#8E8E93' }}>{t('Common.favArtist')}</p>
           <button
             onClick={() => setEditingOshi(v => !v)}
@@ -547,14 +549,14 @@ export default function ProfilePage() {
           </button>
         </div>
 
-        <div className="px-4 py-3 rounded-xl" style={{ background: '#FFFFFF' }}>
+        <div className="p-4 rounded-2xl" style={{ background: '#FFFFFF' }}>
           {/* SEVENTEEN row */}
           <div className="flex items-center gap-3">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/seventeen.png" alt="SEVENTEEN" className="w-10 h-10 rounded-xl object-cover flex-shrink-0" />
-            <div className="flex-1">
-              <p className="text-sm font-bold" style={{ color: '#1C1C1E' }}>SEVENTEEN</p>
-              <p className="text-xs" style={{ color: '#8E8E93' }}>13 members</p>
+            <img src="/seventeen.png" alt="SEVENTEEN" className="w-9 h-9 rounded-xl object-cover flex-shrink-0" />
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-bold leading-tight" style={{ color: '#1C1C1E' }}>SEVENTEEN</p>
+              <p className="text-[10px]" style={{ color: '#8E8E93' }}>13 members</p>
             </div>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="#3B82F6">
               <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78L12 21.23l8.84-8.84a5.5 5.5 0 000-7.78z" />
@@ -563,8 +565,8 @@ export default function ProfilePage() {
 
           {/* Oshi members row (summary) */}
           {!editingOshi && (
-            <div className="mt-3 pt-3" style={{ borderTop: '1px solid #F0F0F5' }}>
-              <p className="text-[10px] mb-2" style={{ color: '#8E8E93' }}>推しメンバー</p>
+            <div className="mt-2.5 pt-2.5" style={{ borderTop: '1px solid #F0F0F5' }}>
+              <p className="text-[10px] mb-1.5" style={{ color: '#8E8E93' }}>推しメンバー</p>
               {favMemberIds.length === 0 ? (
                 <p className="text-xs" style={{ color: '#8E8E93' }}>未設定（「推し変更」から選択）</p>
               ) : (
@@ -684,9 +686,40 @@ export default function ProfilePage() {
         document.body
       )}
 
+      {/* --- Fan club + 参戦記録 (FC 空 & 参戦記録ありの時は 2 列並列) --- */}
+      {profile.fanClubs.length === 0 && liveEntries.length > 0 ? (
+        <div className="px-4 mb-3">
+          <div className="grid grid-cols-2 gap-2.5">
+            <button
+              onClick={openNewFc}
+              className="flex flex-col items-center justify-center gap-1.5 rounded-2xl"
+              style={{ background: '#FFFFFF', border: '1.5px dashed #E5E5EA', minHeight: 76 }}
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#F3B4E3" strokeWidth="2">
+                <rect x="2" y="5" width="20" height="14" rx="2" /><line x1="2" y1="10" x2="22" y2="10" />
+              </svg>
+              <span className="text-[11px] font-bold" style={{ color: '#F3B4E3' }}>{t('Common.fanClubAdd')}</span>
+            </button>
+            <button
+              onClick={() => setShowConcerts(true)}
+              className="flex flex-col items-center justify-center gap-1 rounded-2xl"
+              style={{ background: '#FFFFFF', minHeight: 76 }}
+            >
+              <div className="flex items-center gap-1.5">
+                <span className="text-base">🎤</span>
+                <span className="text-xs font-bold" style={{ color: '#1C1C1E' }}>参戦記録</span>
+              </div>
+              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full" style={{ background: 'rgba(243,180,227,0.12)', color: '#F3B4E3' }}>
+                {liveEntries.length}件
+              </span>
+            </button>
+          </div>
+        </div>
+      ) : (
+      <>
       {/* --- Fan club membership --- */}
-      <div className="px-4 mb-4">
-        <div className="flex items-center justify-between mb-2">
+      <div className="px-4 mb-3">
+        <div className="flex items-center justify-between mb-1.5">
           <p className="text-xs font-semibold" style={{ color: '#8E8E93' }}>{t('Common.fanClub')}</p>
           <button
             onClick={openNewFc}
@@ -758,6 +791,8 @@ export default function ProfilePage() {
             </svg>
           </button>
         </div>
+      )}
+      </>
       )}
 
       <div style={{ height: 'calc(80px + env(safe-area-inset-bottom, 0px))' }} />
