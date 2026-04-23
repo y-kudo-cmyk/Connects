@@ -1062,8 +1062,9 @@ function EditModal({ entry, onClose, onSave, onRemove }: {
             </div>
           )}
 
-          {/* 来場日（期間イベントのみ） */}
-          {isPeriod && (
+          {/* 来場日 (期間イベントのみ、かつ CONCERT 以外)
+              CONCERT は定刻公演なのでユーザー側での来場日上書き不要 */}
+          {isPeriod && editTag !== 'CONCERT' && (
             <EditSection label={t('My.visitDate')}>
               <input type="date" value={customDate}
                 min={entry.date} max={entry.dateEnd}
@@ -1073,13 +1074,15 @@ function EditModal({ entry, onClose, onSave, onRemove }: {
             </EditSection>
           )}
 
-          {/* 時間 */}
-          <EditSection label={t('My.time')}>
-            <input type="time" value={customTime}
-              onChange={(e) => setCustomTime(e.target.value)}
-              className="w-full px-3 py-2.5 rounded-xl text-sm outline-none"
-              style={{ background: '#FFFFFF', border: '1px solid #E5E5EA', color: '#1C1C1E' }} />
-          </EditSection>
+          {/* 時間 (CONCERT 以外、公演時刻は定刻なのでCONCERTは非表示) */}
+          {editTag !== 'CONCERT' && (
+            <EditSection label={t('My.time')}>
+              <input type="time" value={customTime}
+                onChange={(e) => setCustomTime(e.target.value)}
+                className="w-full px-3 py-2.5 rounded-xl text-sm outline-none"
+                style={{ background: '#FFFFFF', border: '1px solid #E5E5EA', color: '#1C1C1E' }} />
+            </EditSection>
+          )}
 
           {/* 予約番号 */}
           <EditSection label={t('My.reservationNumber')}>

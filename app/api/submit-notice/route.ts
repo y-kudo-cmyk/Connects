@@ -106,7 +106,8 @@ export async function POST(req: NextRequest) {
       const startDate = str(e.start_date)
       const endDate = str(e.end_date)
       const startTime = str(e.start_time)
-      const endTime = str(e.end_time)
+      // CONCERT は終了時刻を保存しない (公演終了は演出により変動するため)
+      const endTime = tag === 'CONCERT' ? '' : str(e.end_time)
       // end_date 未指定で end_time だけある場合: 同日の end_time として扱う
       const effectiveEndDate = endDate || (endTime ? startDate : '')
 

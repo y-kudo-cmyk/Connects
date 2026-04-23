@@ -213,30 +213,6 @@ export default function SeatInfoForm({
         <p className="text-[11px] px-1" style={{ color: '#EF4444' }}>{error}</p>
       )}
 
-      {/* プリセット */}
-      <div>
-        <p className="text-[11px] font-semibold mb-1.5" style={{ color: '#8E8E93' }}>{t('Seat.seatField')}</p>
-        <div className="flex gap-2">
-          {Object.entries(PRESET_LABEL_KEYS).map(([key, keys]) => (
-            <button
-              key={key}
-              onClick={() => applyPreset(resolvePresetLabels(keys, t))}
-              className="flex-1 py-2 rounded-xl text-xs font-bold"
-              style={{ background: '#F0F0F5', color: '#636366', border: '1px solid #E5E5EA' }}
-            >
-              {t(PRESET_KEYS[key as keyof typeof PRESET_KEYS])}
-            </button>
-          ))}
-          <button
-            onClick={() => onChange({ fields: [{ label: '', value: '' }] })}
-            className="flex-1 py-2 rounded-xl text-xs font-bold"
-            style={{ background: '#F0F0F5', color: '#636366', border: '1px solid #E5E5EA' }}
-          >
-            {t('Seat.seatCustom')}
-          </button>
-        </div>
-      </div>
-
       {/* フィールドリスト */}
       {fields.length === 0 ? (
         <button
