@@ -217,13 +217,14 @@ export default function AlbumDetail({ product, userCards, onBack, onCardTap, onB
     return tiers
   }, [groupedByVersion, versionNameMap, versionTierMap])
 
-  const TIER_ORDER = ['INCLUDED', 'STORE_JP', 'STORE_KR', 'LUCKY_DRAW', 'EVENT', 'VENUE', 'MERCH_BONUS']
+  const TIER_ORDER = ['INCLUDED', 'STORE_JP', 'STORE_KR', 'LUCKY_DRAW', 'EVENT', 'TOUR', 'VENUE', 'MERCH_BONUS']
   const TIER_META: Record<string, { icon: string; label: string; bg: string }> = {
     INCLUDED:    { icon: '📀', label: '封入トレカ',       bg: 'rgba(59,130,246,0.06)' },
     STORE_JP:    { icon: '🇯🇵', label: '店舗特典(日本)',  bg: 'rgba(248,113,113,0.06)' },
     STORE_KR:    { icon: '🇰🇷', label: '店舗特典(韓国)',  bg: 'rgba(236,72,153,0.06)' },
     LUCKY_DRAW:  { icon: '🎲', label: 'ラッキードロー',    bg: 'rgba(251,146,60,0.06)' },
     EVENT:       { icon: '🎫', label: 'イベント当選',      bg: 'rgba(167,139,250,0.06)' },
+    TOUR:        { icon: '🎤', label: 'ツアートレカ',      bg: 'rgba(99,102,241,0.06)' },
     VENUE:       { icon: '🏟',  label: '会場限定',          bg: 'rgba(52,211,153,0.06)' },
     MERCH_BONUS: { icon: '🛒', label: 'MERCH付属',         bg: 'rgba(139,92,246,0.06)' },
   }
