@@ -550,50 +550,48 @@ export default function ProfilePage() {
         </div>
 
         <div className="p-4 rounded-2xl" style={{ background: '#FFFFFF' }}>
-          {/* SEVENTEEN row */}
-          <div className="flex items-center gap-3">
+          {/* SEVENTEEN + 推しメンバーチップ を1ブロックに集約 */}
+          <div className="flex items-start gap-3 flex-wrap">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src="/seventeen.png" alt="SEVENTEEN" className="w-9 h-9 rounded-xl object-cover flex-shrink-0" />
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-bold leading-tight" style={{ color: '#1C1C1E' }}>SEVENTEEN</p>
-              <p className="text-[10px]" style={{ color: '#8E8E93' }}>13 members</p>
-            </div>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="#3B82F6">
-              <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78L12 21.23l8.84-8.84a5.5 5.5 0 000-7.78z" />
-            </svg>
-          </div>
-
-          {/* Oshi members row (summary) */}
-          {!editingOshi && (
-            <div className="mt-2.5 pt-2.5" style={{ borderTop: '1px solid #F0F0F5' }}>
-              <p className="text-[10px] mb-1.5" style={{ color: '#8E8E93' }}>推しメンバー</p>
-              {favMemberIds.length === 0 ? (
-                <p className="text-xs" style={{ color: '#8E8E93' }}>未設定（「推し変更」から選択）</p>
-              ) : (
-                <div className="flex flex-wrap gap-1.5">
-                  {seventeenMembers.map((m, i) => {
-                    const memberId = `A${String(i + 1).padStart(6, '0')}`
-                    if (!favMemberIds.includes(memberId)) return null
-                    return (
-                      <div
-                        key={memberId}
-                        className="flex items-center gap-1.5 pl-0.5 pr-2 py-0.5 rounded-full"
-                        style={{ background: `${m.color}1A`, border: `1.5px solid ${m.color}` }}
-                      >
-                        <div
-                          className="w-5 h-5 rounded-full flex-shrink-0"
-                          style={{
-                            background: m.photo ? `url(${m.photo}) center/cover` : m.color,
-                          }}
-                        />
-                        <span className="text-[11px] font-bold" style={{ color: m.color }}>{m.name}</span>
-                      </div>
-                    )
-                  })}
-                </div>
+              <div className="flex items-center gap-2 mb-1">
+                <p className="text-sm font-bold leading-tight" style={{ color: '#1C1C1E' }}>SEVENTEEN</p>
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="#3B82F6">
+                  <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78L12 21.23l8.84-8.84a5.5 5.5 0 000-7.78z" />
+                </svg>
+              </div>
+              {!editingOshi && (
+                <>
+                  {favMemberIds.length === 0 ? (
+                    <p className="text-[11px]" style={{ color: '#8E8E93' }}>推しメンバー未設定（「推し変更」から選択）</p>
+                  ) : (
+                    <div className="flex flex-wrap gap-1.5">
+                      {seventeenMembers.map((m, i) => {
+                        const memberId = `A${String(i + 1).padStart(6, '0')}`
+                        if (!favMemberIds.includes(memberId)) return null
+                        return (
+                          <div
+                            key={memberId}
+                            className="flex items-center gap-1.5 pl-0.5 pr-2 py-0.5 rounded-full"
+                            style={{ background: `${m.color}1A`, border: `1.5px solid ${m.color}` }}
+                          >
+                            <div
+                              className="w-5 h-5 rounded-full flex-shrink-0"
+                              style={{
+                                background: m.photo ? `url(${m.photo}) center/cover` : m.color,
+                              }}
+                            />
+                            <span className="text-[11px] font-bold" style={{ color: m.color }}>{m.name}</span>
+                          </div>
+                        )
+                      })}
+                    </div>
+                  )}
+                </>
               )}
             </div>
-          )}
+          </div>
         </div>
 
         {editingOshi && (
