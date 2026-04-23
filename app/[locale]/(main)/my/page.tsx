@@ -12,6 +12,7 @@ import { usePageView } from '@/lib/useActivityLog'
 import SeatInfoForm from '@/components/SeatInfoForm'
 import SeatViewPreview from '@/components/SeatViewPreview'
 import TodoSection from '@/components/TodoSection'
+import FreeCropModal from '@/components/FreeCropModal'
 import { useToday } from '@/lib/useToday'
 
 // ── 日付ヘルパー ─────────────────────────────────────────────────
@@ -946,6 +947,8 @@ function EditModal({ entry, onClose, onSave, onRemove }: {
   const [viewImages, setViewImages] = useState<string[]>(entry.viewImages ?? [])
   // チケット確定状態: 値があれば初期 confirmed、無ければ編集モード
   const [ticketConfirmed, setTicketConfirmed] = useState<boolean>((entry.ticketImages ?? []).length > 0)
+  // トリミング中: src = 対象画像URL, idx = ticketImages 内の index
+  const [cropState, setCropState] = useState<{ src: string; idx: number } | null>(null)
   const ticketFileRef = useRef<HTMLInputElement>(null)
   const viewFileRef = useRef<HTMLInputElement>(null)
   const photoFileRef = useRef<HTMLInputElement>(null)
@@ -1101,15 +1104,34 @@ function EditModal({ entry, onClose, onSave, onRemove }: {
                   <div key={i} className="relative rounded-xl overflow-hidden w-full" style={{ background: '#E5E5EA' }}>
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img src={img} alt="" className="w-full h-auto block" />
-                    {/* 編集モード中のみ削除ボタン表示 */}
-                    {!ticketConfirmed && (
-                      <button onClick={() => setTicketImages((p) => p.filter((_, j) => j !== i))}
-                        className="absolute top-2 right-2 w-7 h-7 rounded-full flex items-center justify-center"
-                        style={{ background: 'rgba(0,0,0,0.65)' }}>
-                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" strokeWidth="3">
-                          <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+                    {ticketConfirmed ? (
+                      /* 確定状態: 画像内に「編集」オーバーレイボタン */
+                      <button onClick={() => setTicketConfirmed(false)}
+                        className="absolute top-2 right-2 flex items-center gap-1 px-3 py-1.5 rounded-full text-[11px] font-bold"
+                        style={{ background: 'rgba(0,0,0,0.65)', color: '#FFFFFF' }}>
+                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                          <path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/>
                         </svg>
+                        編集
                       </button>
+                    ) : (
+                      /* 編集モード: トリミング & 削除ボタン */
+                      <>
+                        <button onClick={() => setCropState({ src: img, idx: i })}
+                          className="absolute top-2 left-2 w-8 h-8 rounded-full flex items-center justify-center"
+                          style={{ background: 'rgba(0,0,0,0.65)' }} title="トリミング">
+                          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" strokeWidth="2.5">
+                            <path d="M6 2v14a2 2 0 002 2h14"/><path d="M18 22V8a2 2 0 00-2-2H2"/>
+                          </svg>
+                        </button>
+                        <button onClick={() => setTicketImages((p) => p.filter((_, j) => j !== i))}
+                          className="absolute top-2 right-2 w-8 h-8 rounded-full flex items-center justify-center"
+                          style={{ background: 'rgba(0,0,0,0.65)' }} title="削除">
+                          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" strokeWidth="3">
+                            <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+                          </svg>
+                        </button>
+                      </>
                     )}
                   </div>
                 ))}
@@ -1130,18 +1152,14 @@ function EditModal({ entry, onClose, onSave, onRemove }: {
               <input ref={ticketFileRef} type="file" accept="image/*" multiple className="hidden"
                 onChange={(e) => handleTicketUpload(e.target.files)} />
 
-              {/* チケット確定/編集トグル */}
-              {ticketImages.length > 0 && (
+              {/* 確定ボタン (編集モード時のみ) */}
+              {ticketImages.length > 0 && !ticketConfirmed && (
                 <button
-                  onClick={() => setTicketConfirmed(v => !v)}
+                  onClick={() => setTicketConfirmed(true)}
                   className="w-full mt-2 py-2.5 rounded-xl text-xs font-bold"
-                  style={
-                    ticketConfirmed
-                      ? { background: '#F0F0F5', color: '#636366', border: '1px solid #E5E5EA' }
-                      : { background: '#F3B4E3', color: '#FFFFFF' }
-                  }
+                  style={{ background: '#F3B4E3', color: '#FFFFFF' }}
                 >
-                  {ticketConfirmed ? '✏️ チケットを編集' : '✓ チケットを確定'}
+                  ✓ チケットを確定
                 </button>
               )}
 
@@ -1266,6 +1284,30 @@ function EditModal({ entry, onClose, onSave, onRemove }: {
         {/* 下部余白（タブバーに被らないように） */}
         <div style={{ height: 'calc(80px + env(safe-area-inset-bottom, 0px))' }} />
       </div>
+
+      {/* チケット画像のトリミング */}
+      {cropState && (
+        <FreeCropModal
+          src={cropState.src}
+          onCancel={() => setCropState(null)}
+          onConfirm={async (dataUrl) => {
+            try {
+              // dataUrl → blob → File → Supabase Storage アップ
+              const { uploadImage } = await import('@/lib/supabase/uploadImage')
+              const blob = await (await fetch(dataUrl)).blob()
+              const file = new File([blob], `ticket-${Date.now()}.jpg`, { type: blob.type || 'image/jpeg' })
+              const url = await uploadImage('event-images', file, 1600, 0.85)
+              if (url) {
+                setTicketImages((prev) => prev.map((u, j) => (j === cropState.idx ? url : u)))
+              }
+            } catch (e) {
+              console.error('crop upload failed', e)
+            } finally {
+              setCropState(null)
+            }
+          }}
+        />
+      )}
     </div>,
     document.body
   )
