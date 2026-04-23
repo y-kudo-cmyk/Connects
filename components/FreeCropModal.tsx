@@ -27,7 +27,45 @@ export default function FreeCropModal({ src, onConfirm, onCancel }: Props) {
   const [ready, setReady] = useState(false)
   const [loadError, setLoadError] = useState<string>('')
   const [portalMounted, setPortalMounted] = useState(false)
+  // CORS tainted canvas を完全回避するため、元 src を必ず blob URL に変換して img に渡す
+  const [resolvedSrc, setResolvedSrc] = useState<string>('')
   useEffect(() => { setPortalMounted(true) }, [])
+
+  useEffect(() => {
+    let cancelled = false
+    let createdObjUrl = ''
+    ;(async () => {
+      try {
+        // data: や blob: は同一オリジン扱いなのでそのまま使える
+        if (/^(data:|blob:)/.test(src)) {
+          if (!cancelled) setResolvedSrc(src)
+          return
+        }
+        const res = await fetch(src, { mode: 'cors', cache: 'reload' })
+        if (!res.ok) throw new Error(`fetch ${res.status}`)
+        const blob = await res.blob()
+        createdObjUrl = URL.createObjectURL(blob)
+        if (!cancelled) setResolvedSrc(createdObjUrl)
+      } catch (e) {
+        console.error('[FreeCrop] preload fetch failed', e)
+        if (!cancelled) setLoadError('画像の読み込みに失敗しました。ネットワークをご確認ください。')
+      }
+    })()
+    return () => {
+      cancelled = true
+      if (createdObjUrl) URL.revokeObjectURL(createdObjUrl)
+    }
+  }, [src])
+
+  // resolvedSrc が確定した後、既にキャッシュ済みで onLoad が発火しない iOS/Safari 対策
+  useEffect(() => {
+    if (!resolvedSrc || ready) return
+    const img = imgRef.current
+    if (img && img.complete && img.naturalWidth > 0) {
+      // 既に読み込み完了している → init を手動で呼ぶ
+      init()
+    }
+  }, [resolvedSrc, ready])
 
   // 画像読み込みタイムアウト: ready になるまでに 8 秒待ってもダメなら通知
   useEffect(() => {
@@ -39,12 +77,17 @@ export default function FreeCropModal({ src, onConfirm, onCancel }: Props) {
   }, [ready])
 
   // 画像読み込み完了時に初期矩形を設定
+  // コンテナがまだレイアウト完了していない場合 (cw/ch=0) は rAF で再試行
   const init = () => {
     const c = containerRef.current
     const img = imgRef.current
-    if (!c || !img) return
+    if (!c || !img || !img.naturalWidth) return
     const cw = c.clientWidth
     const ch = c.clientHeight
+    if (cw === 0 || ch === 0) {
+      requestAnimationFrame(init)
+      return
+    }
     const iar = img.naturalWidth / img.naturalHeight
     const car = cw / ch
     let w: number, h: number
@@ -106,6 +149,7 @@ export default function FreeCropModal({ src, onConfirm, onCancel }: Props) {
   const endDrag = () => { dragRef.current = null }
 
   // 確定：クロップ領域を元画像座標に変換してcanvas描画
+  // 画像は常に blob URL (もしくは data:/blob: 初期値) で読み込んでいるため canvas 汚染は起こらない
   const confirm = () => {
     const img = imgRef.current
     if (!img) { console.warn('[FreeCrop] no img ref'); return }
@@ -125,10 +169,15 @@ export default function FreeCropModal({ src, onConfirm, onCancel }: Props) {
     canvas.height = outH
     const ctx = canvas.getContext('2d')
     if (!ctx) return
-    ctx.drawImage(img, sx, sy, sw, sh, 0, 0, outW, outH)
-    const dataUrl = canvas.toDataURL('image/jpeg', 0.9)
-    console.log('[FreeCrop] confirm, dataUrl length=', dataUrl.length, 'size=', outW + 'x' + outH)
-    onConfirm(dataUrl)
+    try {
+      ctx.drawImage(img, sx, sy, sw, sh, 0, 0, outW, outH)
+      const dataUrl = canvas.toDataURL('image/jpeg', 0.9)
+      console.log('[FreeCrop] confirm ok, size=', outW + 'x' + outH)
+      onConfirm(dataUrl)
+    } catch (err) {
+      console.error('[FreeCrop] canvas export failed', err)
+      setLoadError('トリミングに失敗しました。もう一度お試しください。')
+    }
   }
 
   if (!portalMounted) return null
@@ -139,9 +188,17 @@ export default function FreeCropModal({ src, onConfirm, onCancel }: Props) {
         className="flex items-center justify-between px-5 flex-shrink-0"
         style={{ paddingTop: 'calc(14px + env(safe-area-inset-top, 0px))', paddingBottom: 14 }}
       >
-        <button onClick={onCancel} className="text-sm font-semibold" style={{ color: '#8E8E93' }}>{t('Common.cancel')}</button>
+        <button onClick={onCancel} className="text-sm font-semibold px-3 py-2" style={{ color: '#8E8E93' }}>{t('Common.cancel')}</button>
         <p className="text-sm font-bold" style={{ color: '#FFFFFF' }}>トリミング</p>
-        <button onClick={confirm} className="text-sm font-bold" style={{ color: '#F3B4E3' }}>{t('Common.done')}</button>
+        <button
+          type="button"
+          onClick={confirm}
+          disabled={!ready}
+          className="text-sm font-bold px-3 py-2"
+          style={{ color: ready ? '#F3B4E3' : '#555', opacity: ready ? 1 : 0.5, touchAction: 'manipulation' }}
+        >
+          {t('Common.done')}
+        </button>
       </div>
 
       <div
@@ -157,7 +214,7 @@ export default function FreeCropModal({ src, onConfirm, onCancel }: Props) {
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           ref={imgRef}
-          src={src}
+          src={resolvedSrc || undefined}
           alt=""
           onLoad={init}
           onError={() => setLoadError('画像を読み込めませんでした')}

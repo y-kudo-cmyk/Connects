@@ -749,7 +749,7 @@ function EntryCard({ entry, onEdit, onRemove }: {
         <div className="flex-1 min-w-0 px-3 py-2.5 flex flex-col justify-center gap-1">
           <div className="flex items-center gap-1">
             <span className="text-sm flex-shrink-0">{tagCfg?.icon ?? '📌'}</span>
-            <p className="text-[10px] leading-snug truncate" style={{ color: '#8E8E93' }}>
+            <p className="text-xs font-semibold leading-snug break-words" style={{ color: '#1C1C1E' }}>
               {entry.title}
             </p>
             {isPeriod && (
@@ -968,15 +968,12 @@ function EditModal({ entry, onClose, onSave, onRemove }: {
   const showTicketSection = entry.venue || !entry.tags?.length || entry.tags.some((t) => TICKET_TAGS.includes(t))
 
   const handleTicketUpload = async (files: FileList | null) => {
-    if (!files) return
+    if (!files || files.length === 0) return
+    // チケットは1枚のみ。最初のファイルだけ採用し、既存は置き換える。
     const { uploadImage } = await import('@/lib/supabase/uploadImage')
-    const results: string[] = []
-    for (const f of Array.from(files)) {
-      const url = await uploadImage('event-images', f, 800, 0.72)
-      if (url) results.push(url)
-    }
-    const next = [...ticketImages, ...results]
-    setTicketImages(next)
+    const url = await uploadImage('event-images', files[0], 800, 0.72)
+    if (!url) return
+    setTicketImages([url])
     setAutoAnalyzeTrigger((v) => v + 1)
   }
 
@@ -1037,7 +1034,7 @@ function EditModal({ entry, onClose, onSave, onRemove }: {
                 {editTagCfg ? `${editTagCfg.icon} ${editTagCfg.label}` : cfg?.label ?? entry.type}
               </span>
             </div>
-            <p className="text-sm font-bold truncate" style={{ color: '#1C1C1E' }}>{entry.title}</p>
+            <p className="text-sm font-bold leading-snug" style={{ color: '#1C1C1E', whiteSpace: 'normal', wordBreak: 'break-word', overflowWrap: 'anywhere' }}>{entry.title}</p>
             <p className="text-xs" style={{ color }}>{dateStr}</p>
           </div>
           <div className="flex items-center gap-2 flex-shrink-0">
@@ -1135,8 +1132,8 @@ function EditModal({ entry, onClose, onSave, onRemove }: {
                     )}
                   </div>
                 ))}
-                {/* 追加ボタンは編集モード中のみ表示 */}
-                {!ticketConfirmed && (
+                {/* チケットは1枚のみ。まだ未登録かつ編集モード中の時だけ追加ボタン表示 */}
+                {!ticketConfirmed && ticketImages.length === 0 && (
                   <button onClick={() => ticketFileRef.current?.click()}
                     className="w-full rounded-xl flex flex-col items-center justify-center gap-2"
                     style={{ aspectRatio: '16/9', border: '2px dashed #E5E5EA', color: '#8E8E93' }}>
@@ -1149,7 +1146,7 @@ function EditModal({ entry, onClose, onSave, onRemove }: {
                   </button>
                 )}
               </div>
-              <input ref={ticketFileRef} type="file" accept="image/*" multiple className="hidden"
+              <input ref={ticketFileRef} type="file" accept="image/*" className="hidden"
                 onChange={(e) => handleTicketUpload(e.target.files)} />
 
               {/* 確定ボタン (編集モード時のみ) */}
@@ -1290,21 +1287,25 @@ function EditModal({ entry, onClose, onSave, onRemove }: {
         <FreeCropModal
           src={cropState.src}
           onCancel={() => setCropState(null)}
-          onConfirm={async (dataUrl) => {
-            try {
-              // dataUrl → blob → File → Supabase Storage アップ
-              const { uploadImage } = await import('@/lib/supabase/uploadImage')
-              const blob = await (await fetch(dataUrl)).blob()
-              const file = new File([blob], `ticket-${Date.now()}.jpg`, { type: blob.type || 'image/jpeg' })
-              const url = await uploadImage('event-images', file, 1600, 0.85)
-              if (url) {
-                setTicketImages((prev) => prev.map((u, j) => (j === cropState.idx ? url : u)))
+          onConfirm={(dataUrl) => {
+            // UX 重視: モーダルを即閉じ、アップロードはバックグラウンドで実行
+            const idx = cropState.idx
+            // プレビュー即時反映 (アップロード完了後に最終URLに差し替え)
+            setTicketImages((prev) => prev.map((u, j) => (j === idx ? dataUrl : u)))
+            setCropState(null)
+            ;(async () => {
+              try {
+                const { uploadImage } = await import('@/lib/supabase/uploadImage')
+                const blob = await (await fetch(dataUrl)).blob()
+                const file = new File([blob], `ticket-${Date.now()}.jpg`, { type: blob.type || 'image/jpeg' })
+                const url = await uploadImage('event-images', file, 1600, 0.85)
+                if (url) {
+                  setTicketImages((prev) => prev.map((u) => (u === dataUrl ? url : u)))
+                }
+              } catch (e) {
+                console.error('crop upload failed', e)
               }
-            } catch (e) {
-              console.error('crop upload failed', e)
-            } finally {
-              setCropState(null)
-            }
+            })()
           }}
         />
       )}

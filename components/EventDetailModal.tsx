@@ -404,7 +404,7 @@ export default function EventDetailModal({
               className="w-full text-base font-black leading-snug mb-2 px-3 py-2.5 rounded-xl outline-none resize-none"
               style={{ color: '#1C1C1E', background: '#FFFFFF', border: '1.5px solid #F3B4E3' }} />
           ) : (
-            <h2 className="text-lg font-black leading-snug mb-1" style={{ color: '#1C1C1E' }}>
+            <h2 className="text-lg font-black leading-snug mb-1 break-words" style={{ color: '#1C1C1E' }}>
               {event.title}
             </h2>
           )}
