@@ -85,7 +85,8 @@ export default function SupabaseDataProvider({ children }: { children: React.Rea
     const { data, error } = await supabase
       .from('spots')
       .select(SPOT_COLS)
-      .neq('status', 'deleted')
+      // pending/confirmed だけ表示 ('rejected' は非公開、'deleted' は CHECK 制約追加後)
+      .in('status', ['pending', 'confirmed'])
       .order('spot_name')
 
     if (error) {
@@ -100,7 +101,7 @@ export default function SupabaseDataProvider({ children }: { children: React.Rea
       rows.map((s) =>
         toAppSpot(
           s as SupabaseSpot,
-          (s.spot_photos || []).filter((p) => p.status !== 'deleted'),
+          (s.spot_photos || []).filter((p) => p.status === 'pending' || p.status === 'confirmed'),
         ),
       ),
     )
