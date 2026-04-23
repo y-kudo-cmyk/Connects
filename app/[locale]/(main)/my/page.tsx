@@ -1084,14 +1084,16 @@ function EditModal({ entry, onClose, onSave, onRemove }: {
             </EditSection>
           )}
 
-          {/* 予約番号 */}
-          <EditSection label={t('My.reservationNumber')}>
-            <input type="text" value={reservationNote}
-              onChange={(e) => setReservationNote(e.target.value)}
-              placeholder={t('My.reservationPlaceholder')}
-              className="w-full px-3 py-2.5 rounded-xl text-sm outline-none"
-              style={{ background: '#FFFFFF', border: '1px solid #E5E5EA', color: '#1C1C1E' }} />
-          </EditSection>
+          {/* 予約番号 — CONCERT は不要 (チケット画像で管理、予約番号は運営側で発行されない) */}
+          {editTag !== 'CONCERT' && (
+            <EditSection label={t('My.reservationNumber')}>
+              <input type="text" value={reservationNote}
+                onChange={(e) => setReservationNote(e.target.value)}
+                placeholder={t('My.reservationPlaceholder')}
+                className="w-full px-3 py-2.5 rounded-xl text-sm outline-none"
+                style={{ background: '#FFFFFF', border: '1px solid #E5E5EA', color: '#1C1C1E' }} />
+            </EditSection>
+          )}
 
           {/* チケット画像 + 座席情報（LIVE/TICKET/EVENT/POPUPのみ） */}
           {showTicketSection && (
@@ -1162,7 +1164,7 @@ function EditModal({ entry, onClose, onSave, onRemove }: {
 
               {/* 座席情報（チケット画像アップで自動OCR→編集可） */}
               {ticketImages.length > 0 && (
-                <div className="mt-3 rounded-xl px-3 py-3" style={{ background: '#FFFFFF', border: '1px solid #E5E5EA' }}>
+                <div className="mt-3">
                   <SeatInfoForm
                     value={seatInfo}
                     onChange={setSeatInfo}

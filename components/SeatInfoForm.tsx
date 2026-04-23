@@ -152,9 +152,12 @@ export default function SeatInfoForm({
         className="w-full flex items-center gap-2 px-3 py-2.5 rounded-xl text-left"
         style={{ background: 'rgba(59,130,246,0.08)', border: '1px solid rgba(59,130,246,0.2)' }}
       >
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#3B82F6" strokeWidth="2.5" className="flex-shrink-0">
-          <path d="M20 9V7a2 2 0 00-2-2H4a2 2 0 00-2 2v2"/>
-          <path d="M2 9l10 6 10-6"/><path d="M12 15v6"/>
+        {/* 座席アイコン (armchair 風) */}
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#3B82F6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="flex-shrink-0">
+          <path d="M6 11V7a2 2 0 012-2h8a2 2 0 012 2v4"/>
+          <rect x="4" y="11" width="16" height="7" rx="2"/>
+          <line x1="5" y1="21" x2="5" y2="18"/>
+          <line x1="19" y1="21" x2="19" y2="18"/>
         </svg>
         <span className="text-sm font-bold flex-1 min-w-0 truncate" style={{ color: '#1C1C1E' }}>
           {summary}
@@ -327,9 +330,11 @@ function TokyoDomePositionSection({
       <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-1.5 flex-1 min-w-0 px-3 py-2 rounded-lg text-xs font-semibold"
           style={{ background: 'rgba(59,130,246,0.08)', color: '#3B82F6' }}>
-          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-            <path d="M20 9V7a2 2 0 00-2-2H4a2 2 0 00-2 2v2"/>
-            <path d="M2 9l10 6 10-6"/><path d="M12 15v6"/>
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M6 11V7a2 2 0 012-2h8a2 2 0 012 2v4"/>
+            <rect x="4" y="11" width="16" height="7" rx="2"/>
+            <line x1="5" y1="21" x2="5" y2="18"/>
+            <line x1="19" y1="21" x2="19" y2="18"/>
           </svg>
           <span className="truncate">
             {fields.filter((f) => f.value.trim()).map((f) => f.value).join(' / ')}
@@ -384,9 +389,11 @@ function PositionSection({
       <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-1.5 flex-1 min-w-0 px-3 py-2 rounded-lg text-xs font-semibold"
           style={{ background: 'rgba(59,130,246,0.08)', color: '#3B82F6' }}>
-          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-            <path d="M20 9V7a2 2 0 00-2-2H4a2 2 0 00-2 2v2"/>
-            <path d="M2 9l10 6 10-6"/><path d="M12 15v6"/>
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M6 11V7a2 2 0 012-2h8a2 2 0 012 2v4"/>
+            <rect x="4" y="11" width="16" height="7" rx="2"/>
+            <line x1="5" y1="21" x2="5" y2="18"/>
+            <line x1="19" y1="21" x2="19" y2="18"/>
           </svg>
           <span className="truncate">{fields.filter((f) => f.value.trim()).map((f) => f.value).join(' / ')}</span>
         </div>
