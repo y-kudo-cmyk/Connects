@@ -97,6 +97,9 @@ html,
 body {
   height: 100%;
   overscroll-behavior: none;
+  /* 縦スクロール時に横揺れしないように (オーバーフローした要素があっても横スクロールをブロック) */
+  overflow-x: hidden;
+  max-width: 100%;
 }
 
 body {
