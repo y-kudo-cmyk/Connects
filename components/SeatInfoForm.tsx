@@ -168,15 +168,8 @@ export default function SeatInfoForm({
 
   return (
     <div className="flex flex-col gap-3">
-      {/* ヘッダー */}
-      <div className="flex items-center justify-between">
-        <p className="text-xs font-bold flex items-center gap-1.5" style={{ color: '#3B82F6' }}>
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-            <path d="M20 9V7a2 2 0 00-2-2H4a2 2 0 00-2 2v2"/>
-            <path d="M2 9l10 6 10-6"/><path d="M12 15v6"/>
-          </svg>
-          {t('Seat.seatInfo')}
-        </p>
+      {/* ヘッダー (座席情報タイトルは冗長なので削除、解析ボタンのみ) */}
+      <div className="flex items-center justify-end">
         <div className="flex items-center gap-2">
           {ticketImages && ticketImages.length > 0 && (
             <button

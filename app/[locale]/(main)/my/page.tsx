@@ -944,6 +944,8 @@ function EditModal({ entry, onClose, onSave, onRemove }: {
   const [autoAnalyzeTrigger, setAutoAnalyzeTrigger] = useState(0)
   const [showConfirmRemove, setShowConfirmRemove] = useState(false)
   const [viewImages, setViewImages] = useState<string[]>(entry.viewImages ?? [])
+  // チケット確定状態: 値があれば初期 confirmed、無ければ編集モード
+  const [ticketConfirmed, setTicketConfirmed] = useState<boolean>((entry.ticketImages ?? []).length > 0)
   const ticketFileRef = useRef<HTMLInputElement>(null)
   const viewFileRef = useRef<HTMLInputElement>(null)
   const photoFileRef = useRef<HTMLInputElement>(null)
@@ -1096,28 +1098,49 @@ function EditModal({ entry, onClose, onSave, onRemove }: {
                   <div key={i} className="relative rounded-xl overflow-hidden w-full" style={{ background: '#E5E5EA' }}>
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img src={img} alt="" className="w-full h-auto block" />
-                    <button onClick={() => setTicketImages((p) => p.filter((_, j) => j !== i))}
-                      className="absolute top-2 right-2 w-7 h-7 rounded-full flex items-center justify-center"
-                      style={{ background: 'rgba(0,0,0,0.65)' }}>
-                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" strokeWidth="3">
-                        <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
-                      </svg>
-                    </button>
+                    {/* 編集モード中のみ削除ボタン表示 */}
+                    {!ticketConfirmed && (
+                      <button onClick={() => setTicketImages((p) => p.filter((_, j) => j !== i))}
+                        className="absolute top-2 right-2 w-7 h-7 rounded-full flex items-center justify-center"
+                        style={{ background: 'rgba(0,0,0,0.65)' }}>
+                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" strokeWidth="3">
+                          <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+                        </svg>
+                      </button>
+                    )}
                   </div>
                 ))}
-                <button onClick={() => ticketFileRef.current?.click()}
-                  className="w-full rounded-xl flex flex-col items-center justify-center gap-2"
-                  style={{ aspectRatio: '16/9', border: '2px dashed #E5E5EA', color: '#8E8E93' }}>
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                    <rect x="3" y="3" width="18" height="18" rx="2" />
-                    <circle cx="8.5" cy="8.5" r="1.5" />
-                    <polyline points="21 15 16 10 5 21" />
-                  </svg>
-                  <span className="text-[11px]">{t('Common.add')}</span>
-                </button>
+                {/* 追加ボタンは編集モード中のみ表示 */}
+                {!ticketConfirmed && (
+                  <button onClick={() => ticketFileRef.current?.click()}
+                    className="w-full rounded-xl flex flex-col items-center justify-center gap-2"
+                    style={{ aspectRatio: '16/9', border: '2px dashed #E5E5EA', color: '#8E8E93' }}>
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                      <rect x="3" y="3" width="18" height="18" rx="2" />
+                      <circle cx="8.5" cy="8.5" r="1.5" />
+                      <polyline points="21 15 16 10 5 21" />
+                    </svg>
+                    <span className="text-[11px]">{t('Common.add')}</span>
+                  </button>
+                )}
               </div>
               <input ref={ticketFileRef} type="file" accept="image/*" multiple className="hidden"
                 onChange={(e) => handleTicketUpload(e.target.files)} />
+
+              {/* チケット確定/編集トグル */}
+              {ticketImages.length > 0 && (
+                <button
+                  onClick={() => setTicketConfirmed(v => !v)}
+                  className="w-full mt-2 py-2.5 rounded-xl text-xs font-bold"
+                  style={
+                    ticketConfirmed
+                      ? { background: '#F0F0F5', color: '#636366', border: '1px solid #E5E5EA' }
+                      : { background: '#F3B4E3', color: '#FFFFFF' }
+                  }
+                >
+                  {ticketConfirmed ? '✏️ チケットを編集' : '✓ チケットを確定'}
+                </button>
+              )}
 
               {/* 座席情報（チケット画像アップで自動OCR→編集可） */}
               {ticketImages.length > 0 && (
