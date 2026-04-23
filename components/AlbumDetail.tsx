@@ -67,6 +67,12 @@ export default function AlbumDetail({ product, userCards, onBack, onCardTap, onB
   }, [])
 
   const favSet = useMemo(() => new Set(favMemberIds), [favMemberIds])
+  // 推し順位 (0=1番推し, 1=2番推し...) 未指定は Infinity (並びで後ろ)
+  const favRankMap = useMemo(() => {
+    const m = new Map<string, number>()
+    favMemberIds.forEach((id, i) => m.set(id, i))
+    return m
+  }, [favMemberIds])
 
   const ownedMap = useMemo(() => {
     const m = new Map<string, UserCard>()
@@ -93,19 +99,24 @@ export default function AlbumDetail({ product, userCards, onBack, onCardTap, onB
   }, [cards])
 
   const sortedMembers = useMemo(() => {
-    const oshi = availableMembers.filter(m => favSet.has(m.memberId))
+    // 推しは favMemberIds の順 (1番推し→2番推し→…)、その後デフォルト並び
+    const oshi = availableMembers
+      .filter(m => favSet.has(m.memberId))
+      .sort((a, b) => (favRankMap.get(a.memberId) ?? 0) - (favRankMap.get(b.memberId) ?? 0))
     const rest = availableMembers.filter(m => !favSet.has(m.memberId))
     return [...oshi, ...rest]
-  }, [availableMembers, favSet])
+  }, [availableMembers, favSet, favRankMap])
 
   const activeMemberId = useMemo(() => {
     if (selectedMemberId && availableMembers.some(m => m.memberId === selectedMemberId)) {
       return selectedMemberId
     }
-    const firstOshi = availableMembers.find(m => favSet.has(m.memberId))
-    if (firstOshi) return firstOshi.memberId
+    // デフォルト選択は 1番推し (availableMembers にいればそれ)
+    for (const id of favMemberIds) {
+      if (availableMembers.some(m => m.memberId === id)) return id
+    }
     return availableMembers[0]?.memberId ?? null
-  }, [selectedMemberId, availableMembers, favSet])
+  }, [selectedMemberId, availableMembers, favMemberIds])
 
   const activeMember = useMemo(
     () => availableMembers.find(m => m.memberId === activeMemberId) ?? null,
