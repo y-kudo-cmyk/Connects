@@ -1436,34 +1436,43 @@ function ReferralSection() {
       <div className="rounded-2xl p-4" style={{ background: '#FFFFFF' }}>
         {/* 自分のコード */}
         <div className="mb-3">
-          <p className="text-[10px] font-bold mb-1" style={{ color: '#8E8E93' }}>あなたの紹介コード</p>
           {myCode ? (
-            <div className="flex items-center gap-2">
-              <code className="flex-1 px-3 py-2 rounded-xl text-sm font-bold" style={{ background: 'rgba(243,180,227,0.12)', color: '#F3B4E3' }}>
-                {myCode}
-              </code>
-              <button
-                onClick={handleCopy}
-                className="px-3 py-2 rounded-xl text-xs font-bold"
-                style={{ background: copied ? '#22C55E' : '#1C1C1E', color: '#FFFFFF', minWidth: 90 }}
-              >
-                {copied ? 'コピーしました' : 'コピー'}
-              </button>
-            </div>
-          ) : (
-            <p className="text-xs" style={{ color: '#8E8E93' }}>移行完了後に発行されます</p>
-          )}
-          {myCode && (
             <>
-              <div className="mt-2 px-3 py-2 rounded-xl" style={{ background: '#F8F9FA' }}>
-                <p className="text-[9px] font-bold mb-0.5" style={{ color: '#8E8E93' }}>登録URL</p>
-                <a href={APP_URL} target="_blank" rel="noopener noreferrer" className="text-[11px] font-semibold break-all" style={{ color: '#60A5FA' }}>
-                  {APP_URL}
-                </a>
+              {/* 紹介コード */}
+              <p className="text-[10px] font-bold mb-1" style={{ color: '#8E8E93' }}>あなたの紹介コード</p>
+              <div className="flex items-center gap-2">
+                <code className="flex-1 px-3 py-2 rounded-xl text-sm font-bold" style={{ background: 'rgba(243,180,227,0.12)', color: '#F3B4E3' }}>
+                  {myCode}
+                </code>
+                <button
+                  onClick={handleCopy}
+                  className="px-3 py-2 rounded-xl text-xs font-bold"
+                  style={{ background: copied ? '#22C55E' : '#1C1C1E', color: '#FFFFFF', minWidth: 90 }}
+                >
+                  {copied ? 'コピーしました' : 'コピー'}
+                </button>
               </div>
-              <p className="text-[10px] mt-1.5" style={{ color: '#8E8E93' }}>
+
+              {/* 登録URL — 紹介コードと同じレイアウト (ラベル外) */}
+              <p className="text-[10px] font-bold mt-2.5 mb-1" style={{ color: '#8E8E93' }}>登録URL</p>
+              <a
+                href={APP_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="block px-3 py-2 rounded-xl text-sm font-semibold break-all"
+                style={{ background: 'rgba(96,165,250,0.10)', color: '#60A5FA' }}
+              >
+                {APP_URL}
+              </a>
+
+              <p className="text-[10px] mt-2" style={{ color: '#8E8E93' }}>
                 コピーボタンで URL + 紹介コードをまとめて共有できます
               </p>
+            </>
+          ) : (
+            <>
+              <p className="text-[10px] font-bold mb-1" style={{ color: '#8E8E93' }}>あなたの紹介コード</p>
+              <p className="text-xs" style={{ color: '#8E8E93' }}>移行完了後に発行されます</p>
             </>
           )}
         </div>
