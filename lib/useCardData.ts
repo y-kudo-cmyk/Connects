@@ -143,7 +143,14 @@ export const productTypeLabels: Record<string, string> = {
   solo_album: 'Solo Album',
   unit_album: 'Unit Album',
   compilation: 'Compilation',
+  concert: 'コンサート',
+  tour: 'ツアー',
+  fanmeet: 'ファンミーティング',
+  event: 'イベント',
 }
+
+// コンサート/ツアー系は単一日付が意味を持たないため、ヘッダーで日付を出さない
+export const HIDE_DATE_TYPES = new Set(['concert', 'tour', 'fanmeet', 'event'])
 
 // ── Region tab config ───────────────────────────────────────────
 export type RegionTab = 'KR' | 'JP' | 'UNIT' | 'CONCERT'

@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useEffect, Fragment } from 'react'
 import { useTranslations } from 'next-intl'
-import { useCardVersions, useCardMaster, type CardProduct, type CardMaster, type UserCard, productTypeLabels, getCardAspect, isTradingCardFit, getCardColSpan, hasBackSide } from '@/lib/useCardData'
+import { useCardVersions, useCardMaster, type CardProduct, type CardMaster, type UserCard, productTypeLabels, HIDE_DATE_TYPES, getCardAspect, isTradingCardFit, getCardColSpan, hasBackSide } from '@/lib/useCardData'
 import { seventeenMembers, getUnitLeaderForMember, isUnitSharedCard } from '@/lib/config/constants'
 import { createClient } from '@/lib/supabase/client'
 
@@ -278,7 +278,9 @@ export default function AlbumDetail({ product, userCards, onBack, onCardTap, onB
           <div className="flex-1 min-w-0">
             <h2 className="text-base font-black truncate" style={{ color: '#1C1C1E' }}>{product.product_name}</h2>
             <p className="text-[11px] mt-0.5" style={{ color: '#8E8E93' }}>
-              {formatDate(product.release_date)} / {productTypeLabels[product.product_type] || product.product_type}
+              {HIDE_DATE_TYPES.has(product.product_type)
+                ? (productTypeLabels[product.product_type] || product.product_type)
+                : `${formatDate(product.release_date)} / ${productTypeLabels[product.product_type] || product.product_type}`}
             </p>
             <div className="mt-2 flex items-center gap-2">
               <div className="flex-1 h-1.5 rounded-full overflow-hidden" style={{ background: '#E5E5EA' }}>
