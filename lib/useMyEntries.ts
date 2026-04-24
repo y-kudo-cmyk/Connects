@@ -74,6 +74,7 @@ type DbMyEntry = {
   image_url: string | null
   source_url: string | null
   notes: string | null
+  reservation_note: string | null
   ticket_image_url: string | null
   view_image_url: string | null
   seat_info: SeatInfo | null
@@ -130,6 +131,7 @@ function toApp(row: DbMyEntry): MyEntry {
     city,
     ticketImages: parseImageField(row.ticket_image_url),
     seatInfo: row.seat_info ?? undefined,
+    reservationNote: row.reservation_note ?? undefined,
     notes,
     memo: row.memo ?? '',
     images,
@@ -187,6 +189,7 @@ export function useMyEntries() {
       notes: entry.notes || null,
       ticket_image_url: entry.ticketImages?.length ? JSON.stringify(entry.ticketImages) : null,
       seat_info: entry.seatInfo || null,
+      reservation_note: entry.reservationNote || null,
       memo: entry.memo || null,
     })
     await fetchEntries()
@@ -198,16 +201,36 @@ export function useMyEntries() {
     if (updates.title !== undefined) dbUpdates.event_title = updates.title
     if (updates.venue !== undefined) dbUpdates.spot_name = updates.venue || null
     if (updates.memo !== undefined) dbUpdates.memo = updates.memo || null
+    if (updates.notes !== undefined) dbUpdates.notes = updates.notes || null
+    if (updates.reservationNote !== undefined) dbUpdates.reservation_note = updates.reservationNote || null
     if (updates.seatInfo !== undefined) dbUpdates.seat_info = updates.seatInfo || null
     if (updates.ticketImages !== undefined) dbUpdates.ticket_image_url = updates.ticketImages?.length ? JSON.stringify(updates.ticketImages) : null
     if (updates.images !== undefined) dbUpdates.image_url = updates.images?.length ? JSON.stringify(updates.images) : null
     if (updates.viewImages !== undefined) dbUpdates.view_image_url = updates.viewImages?.length ? JSON.stringify(updates.viewImages) : null
-    // 時刻変更は user_start_date / user_end_date に保存（event 最新値を上書き）
-    if (updates.date !== undefined) {
-      const time = updates.time ?? updates.customTime ?? '00:00'
-      dbUpdates.user_start_date = `${updates.date}T${time}:00`
+
+    // 時刻/日付の override: date / time / customDate / customTime 何が来ても user_start_date を組み立てる
+    // 既存値を保持するため、必要なら現在値を読み込む
+    const dateChanged = updates.date !== undefined || updates.customDate !== undefined
+    const timeChanged = updates.time !== undefined || updates.customTime !== undefined
+    if (dateChanged || timeChanged) {
+      // 既存 user_start_date or event.start_date から現在値を取得
+      const { data: cur } = await supabase.from('my_entries')
+        .select('user_start_date, start_date, event:events!my_entries_event_id_fkey(start_date)')
+        .eq('id', id)
+        .maybeSingle()
+      // event join は PostgREST で配列 or オブジェクトどちらも来うるため unknown 経由で受ける
+      const evRaw = cur?.event as unknown
+      const evObj = Array.isArray(evRaw) ? (evRaw[0] as { start_date: string | null } | undefined) : (evRaw as { start_date: string | null } | null)
+      const baseIso = (cur?.user_start_date as string | null) ?? (cur?.start_date as string | null) ?? (evObj?.start_date ?? null)
+      const m = baseIso?.match(/^(\d{4}-\d{2}-\d{2})T(\d{2}:\d{2})/)
+      const curDate = m?.[1] ?? null
+      const curTime = m?.[2] ?? '00:00'
+      const newDate = updates.customDate ?? updates.date ?? curDate
+      const newTime = updates.customTime ?? updates.time ?? curTime
+      if (newDate) dbUpdates.user_start_date = `${newDate}T${newTime}:00`
     }
     if (updates.dateEnd !== undefined) dbUpdates.user_end_date = updates.dateEnd ? `${updates.dateEnd}T00:00:00` : null
+
     await supabase.from('my_entries').update(dbUpdates).eq('id', id)
     await fetchEntries()
   }, [user, fetchEntries])
