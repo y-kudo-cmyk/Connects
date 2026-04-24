@@ -11,7 +11,6 @@ import { useTranslations } from 'next-intl'
 import { usePageView } from '@/lib/useActivityLog'
 import SeatInfoForm from '@/components/SeatInfoForm'
 import SeatViewPreview from '@/components/SeatViewPreview'
-import TodoSection from '@/components/TodoSection'
 import FreeCropModal from '@/components/FreeCropModal'
 import { useToday } from '@/lib/useToday'
 
@@ -63,7 +62,7 @@ export default function MyPage() {
   usePageView('my')
   const TODAY = useToday()
   const now = new Date()
-  const [tab, setTab] = useState<'entries' | 'todos'>('entries')
+  const [tab, setTab] = useState<'entries' | 'live'>('entries')
   const [viewMode, setViewMode] = useState<'month' | 'week' | 'day'>('month')
   const [year, setYear] = useState(now.getFullYear())
   const [month, setMonth] = useState(now.getMonth())
@@ -247,19 +246,19 @@ export default function MyPage() {
             }>
             {t('Schedule.scheduleRecord')}
           </button>
-          <button onClick={() => setTab('todos')}
+          <button onClick={() => setTab('live')}
             className="flex-1 py-2.5 rounded-lg text-sm font-bold transition-all"
-            style={tab === 'todos'
+            style={tab === 'live'
               ? { background: '#FFFFFF', color: '#1C1C1E' }
               : { color: '#8E8E93' }
             }>
-            TODO
+            参戦記録
           </button>
         </div>
       </div>
 
-      {/* ── TODO タブ ── */}
-      {tab === 'todos' && <TodoSection />}
+      {/* ── 参戦記録 タブ (CONCERT の MY エントリをリスト表示) ── */}
+      {tab === 'live' && <LiveHistorySection entries={entries} onEdit={setEditEntry} />}
 
       {/* ── スケジュール記録タブ ── */}
       {tab === 'entries' && (
@@ -682,6 +681,102 @@ export default function MyPage() {
 }
 
 // ── ImageViewer ───────────────────────────────────────────────
+// ── 参戦記録 (LIVE History) セクション ─────────────────────────
+function LiveHistorySection({ entries, onEdit }: {
+  entries: MyEntry[]
+  onEdit: (entry: MyEntry) => void
+}) {
+  const TODAY = useToday()
+  // CONCERT タグ の MY entries を日付降順で並べる (最新が TOP)
+  const lives = entries
+    .filter((e) => e.tags?.includes('CONCERT') || e.type === 'concert' || e.type === 'CONCERT')
+    .sort((a, b) => (b.date || '').localeCompare(a.date || ''))
+
+  const past = lives.filter((e) => e.date < TODAY)
+  const upcoming = lives.filter((e) => e.date >= TODAY)
+
+  if (lives.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center py-20 px-6 text-center">
+        <span className="text-5xl mb-4">🎤</span>
+        <p className="text-sm font-bold mb-2" style={{ color: '#1C1C1E' }}>参戦記録がまだありません</p>
+        <p className="text-[11px] leading-relaxed" style={{ color: '#8E8E93' }}>
+          HOME や スケジュールから<br />参戦したいコンサートを MY に追加すると<br />ここに蓄積されます
+        </p>
+      </div>
+    )
+  }
+
+  return (
+    <div className="px-4 pb-6 flex flex-col gap-2">
+      {/* 統計 */}
+      <div className="flex items-center gap-3 mb-2 px-1">
+        <div className="text-[10px] font-bold tracking-wider" style={{ color: '#8E8E93' }}>
+          全{lives.length}公演 · 参戦済 {past.length} · 予定 {upcoming.length}
+        </div>
+      </div>
+
+      {/* これから */}
+      {upcoming.length > 0 && (
+        <>
+          <p className="text-[10px] font-bold tracking-wider mt-1" style={{ color: '#F3B4E3' }}>📅 これから</p>
+          {upcoming.map((e) => <LiveHistoryRow key={e.id} entry={e} onEdit={onEdit} isFuture />)}
+        </>
+      )}
+
+      {/* 参戦済 */}
+      {past.length > 0 && (
+        <>
+          <p className="text-[10px] font-bold tracking-wider mt-3" style={{ color: '#8E8E93' }}>🎤 参戦済</p>
+          {past.map((e) => <LiveHistoryRow key={e.id} entry={e} onEdit={onEdit} isFuture={false} />)}
+        </>
+      )}
+    </div>
+  )
+}
+
+function LiveHistoryRow({ entry, onEdit, isFuture }: { entry: MyEntry; onEdit: (e: MyEntry) => void; isFuture: boolean }) {
+  const mainImage = entry.images?.[0] ?? entry.ticketImages?.[0] ?? null
+  const ds = entry.customDate ?? entry.date
+  const dstr = ds ? `${ds.slice(5, 7)}/${ds.slice(8, 10)}` : ''
+  const yr = ds ? ds.slice(0, 4) : ''
+  return (
+    <button
+      onClick={() => onEdit(entry)}
+      className="flex items-center gap-3 p-3 rounded-xl text-left"
+      style={{ background: '#FFFFFF' }}
+    >
+      <div className="flex-shrink-0 w-14 h-14 rounded-lg overflow-hidden" style={{ background: '#E5E5EA' }}>
+        {mainImage ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={mainImage} alt="" className="w-full h-full object-cover" loading="lazy" />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center text-xl">🎤</div>
+        )}
+      </div>
+      <div className="flex-1 min-w-0">
+        <div className="flex items-baseline gap-2 mb-0.5">
+          <span className="text-xs font-black flex-shrink-0" style={{ color: isFuture ? '#F3B4E3' : '#636366' }}>
+            {yr}.{dstr}
+          </span>
+          {entry.time && entry.time !== '00:00' && (
+            <span className="text-[10px]" style={{ color: '#8E8E93' }}>{entry.time}</span>
+          )}
+        </div>
+        <p className="text-xs font-bold leading-snug line-clamp-2" style={{ color: '#1C1C1E' }}>
+          {entry.subTitle || entry.title}
+        </p>
+        {entry.venue && (
+          <p className="text-[10px] mt-0.5 truncate" style={{ color: '#8E8E93' }}>📍 {entry.venue}</p>
+        )}
+      </div>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#C7C7CC" strokeWidth="2" className="flex-shrink-0">
+        <path d="M9 18l6-6-6-6" />
+      </svg>
+    </button>
+  )
+}
+
 function ImageViewer({ src, onClose }: { src: string; onClose: () => void }) {
   return createPortal(
     <div className="fixed inset-0 z-[70] flex items-center justify-center"
