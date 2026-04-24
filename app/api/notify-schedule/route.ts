@@ -90,7 +90,7 @@ async function morningNotification(currentTime: string, today: string, testMode 
   const heading = `📅 今日のスケジュール ${todayEvents.length}件`
 
   const userIds = users.map(u => u.id)
-  const result = await sendNotification(userIds, heading, content, 'https://connects-nu.vercel.app/')
+  const result = await sendNotification(userIds, heading, content, 'https://app.connectsplus.net/')
   return { type: 'morning', users: userIds.length, ...result }
 }
 
@@ -160,7 +160,7 @@ async function eveningNotification(currentTime: string, today: string, testMode 
   const content = parts.join(' / ')
 
   const userIds = users.map(u => u.id)
-  const result = await sendNotification(userIds, heading, content, 'https://connects-nu.vercel.app/')
+  const result = await sendNotification(userIds, heading, content, 'https://app.connectsplus.net/')
   return { type: 'evening', users: userIds.length, ...result }
 }
 
@@ -235,12 +235,12 @@ async function myEventReminder(currentTime: string, today: string) {
     // OneSignal
     if (upcomingStart.length > 0) {
       const content = upcomingStart.map(e => `・${e.event_title} ${e.start_date.slice(11, 16)}〜`).join('\n')
-      await sendNotification([user.id], '⏰ まもなく開始', content, 'https://connects-nu.vercel.app/my')
+      await sendNotification([user.id], '⏰ まもなく開始', content, 'https://app.connectsplus.net/my')
       sent++
     }
     if (upcomingEnd.length > 0) {
       const content = upcomingEnd.map(e => `・${e.event_title} ${e.end_date.slice(11, 16)}締切`).join('\n')
-      await sendNotification([user.id], '⏰ まもなく終了', content, 'https://connects-nu.vercel.app/my')
+      await sendNotification([user.id], '⏰ まもなく終了', content, 'https://app.connectsplus.net/my')
       sent++
     }
 
@@ -253,7 +253,7 @@ async function myEventReminder(currentTime: string, today: string) {
         msg += `🕐 ${eventTime}〜\n`
         if (e.spot_name) msg += `📍 ${e.spot_name}\n`
         if (e.source_url) msg += `\n🔗 ${e.source_url}\n`
-        msg += `\n━━━━━━━━━━\nConnect+\nhttps://connects-nu.vercel.app/my`
+        msg += `\n━━━━━━━━━━\nConnect+\nhttps://app.connectsplus.net/my`
         if (await sendLinePush(user.line_user_id, msg)) lineSent++
       }
       for (const e of upcomingEnd) {
@@ -262,7 +262,7 @@ async function myEventReminder(currentTime: string, today: string) {
         if (e.sub_event_title) msg += `　${e.sub_event_title}\n`
         msg += `🕐 ${eventTime} 締切\n`
         if (e.source_url) msg += `\n🔗 ${e.source_url}\n`
-        msg += `\n━━━━━━━━━━\nConnect+\nhttps://connects-nu.vercel.app/my`
+        msg += `\n━━━━━━━━━━\nConnect+\nhttps://app.connectsplus.net/my`
         if (await sendLinePush(user.line_user_id, msg)) lineSent++
       }
     }
@@ -273,13 +273,10 @@ async function myEventReminder(currentTime: string, today: string) {
 
 // ── API Route（毎時 Cron で呼ばれる） ────────────────────────
 export async function GET(request: NextRequest) {
-  // Vercel Cron 認証
+  // Vercel Cron 認証: CRON_SECRET 必須 (未設定環境は拒否。dev でテストしたい場合は env 設定)
   const authHeader = request.headers.get('authorization')
-  if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
-    // ローカルテスト用: CRON_SECRET が未設定なら通す
-    if (process.env.CRON_SECRET) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
+  if (!process.env.CRON_SECRET || authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
   const { date, time } = getJST()

@@ -66,6 +66,10 @@ export async function GET(req: NextRequest) {
     process.env.SUPABASE_SERVICE_ROLE_KEY!,
   )
 
+  // admin のみ全フィードバック閲覧可 (一般ユーザーに他人の feedback が見えてた漏洩を塞ぐ)
+  const { data: profile } = await sb.from('profiles').select('role').eq('id', user.id).maybeSingle()
+  if (profile?.role !== 'admin') return NextResponse.json({ error: 'Admin only' }, { status: 403 })
+
   const { data } = await sb.from('feedback').select('*').order('created_at', { ascending: false })
   return NextResponse.json(data || [])
 }

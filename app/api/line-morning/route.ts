@@ -11,7 +11,7 @@ const supabase = createClient(
 
 const FANDOM = 'CARAT'
 const ARTIST = 'SEVENTEEN'
-const FOOTER = '\n━━━━━━━━━━\nConnect+\nhttps://connects-nu.vercel.app/'
+const FOOTER = '\n━━━━━━━━━━\nConnect+\nhttps://app.connectsplus.net/'
 
 // JST の今日・昨日の YYYY-MM-DD
 function jstDate(offsetDays = 0): string {
@@ -84,7 +84,8 @@ function formatEvent(e: Event, options: { useAlarm?: boolean; warning?: boolean 
 
 export async function GET(request: NextRequest) {
   const authHeader = request.headers.get('authorization')
-  if (process.env.CRON_SECRET && authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+  // CRON_SECRET 必須
+  if (!process.env.CRON_SECRET || authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 

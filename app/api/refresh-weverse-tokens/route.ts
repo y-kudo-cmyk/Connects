@@ -25,7 +25,6 @@ const supabase = createClient(
 )
 
 const ADMIN_LINE_ID = 'Ub88e74f829aeecc9d5fa1cfee7161199'
-const DEBUG_KEY = 'TEMP_DEBUG_WEVERSE_2026_0422'
 
 async function sendLine(text: string): Promise<void> {
   const TOKEN = process.env.LINE_CHANNEL_ACCESS_TOKEN
@@ -49,10 +48,7 @@ async function sendLine(text: string): Promise<void> {
 
 export async function GET(request: NextRequest) {
   const authHeader = request.headers.get('authorization')
-  const debugKey = request.nextUrl.searchParams.get('debug')
-  const authorized =
-    (process.env.CRON_SECRET && authHeader === `Bearer ${process.env.CRON_SECRET}`) ||
-    debugKey === DEBUG_KEY
+  const authorized = !!(process.env.CRON_SECRET && authHeader === `Bearer ${process.env.CRON_SECRET}`)
   if (!authorized) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }

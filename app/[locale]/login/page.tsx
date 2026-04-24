@@ -159,6 +159,40 @@ export default function LoginPage() {
           onBlur={(e) => (e.target.style.borderColor = '#E5E5EA')}
           onKeyDown={(e) => e.key === 'Enter' && handleEmailLogin()}
         />
+        {/* ドメイン候補チップ: 入力中 or @ 以降が無い時に表示 */}
+        {(() => {
+          const atIdx = email.indexOf('@')
+          const localPart = atIdx >= 0 ? email.slice(0, atIdx) : email
+          const typedDomain = atIdx >= 0 ? email.slice(atIdx + 1).toLowerCase() : ''
+          const COMMON_DOMAINS = ['gmail.com', 'icloud.com', 'yahoo.co.jp', 'docomo.ne.jp', 'ezweb.ne.jp', 'i.softbank.jp', 'au.com', 'outlook.com']
+          // typedDomain が既に正確なら表示しない、local 空なら表示しない
+          if (!localPart) return null
+          if (atIdx >= 0 && COMMON_DOMAINS.includes(typedDomain)) return null
+          const suggestions = atIdx >= 0 && typedDomain
+            ? COMMON_DOMAINS.filter(d => d.startsWith(typedDomain))
+            : COMMON_DOMAINS
+          if (suggestions.length === 0) return null
+          return (
+            <div>
+              <p className="text-[10px] text-center mb-1.5" style={{ color: '#8E8E93' }}>
+                @以降を選んでください 💡
+              </p>
+              <div className="flex flex-wrap gap-1.5 justify-center">
+                {suggestions.slice(0, 6).map(d => (
+                  <button
+                    key={d}
+                    type="button"
+                    onClick={() => { setEmail(localPart + '@' + d); setEmailError('') }}
+                    className="text-[11px] px-2.5 py-1 rounded-full"
+                    style={{ background: 'rgba(243,180,227,0.12)', color: '#C97AB8', border: '1px solid rgba(243,180,227,0.35)' }}
+                  >
+                    @{d}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )
+        })()}
         {emailError && (
           <p className="text-xs text-center" style={{ color: '#EF4444' }}>{emailError}</p>
         )}
