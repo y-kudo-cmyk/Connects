@@ -72,7 +72,14 @@ export default function NewSchedulePreview() {
   }
 
   const upcoming = events
-    .filter((e) => e.date >= TODAY && !dismissed.has(e.id) && !e.tags?.includes('BIRTHDAY'))
+    .filter((e) => {
+      if (dismissed.has(e.id)) return false
+      if (e.tags?.includes('BIRTHDAY')) return false
+      // 未来開始 OR 期間中 (開始過去でも end が今日以降なら継続中として表示)
+      if (e.date >= TODAY) return true
+      if (e.dateEnd && e.dateEnd >= TODAY) return true
+      return false
+    })
     .sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''))
     .slice(0, 8)
 
