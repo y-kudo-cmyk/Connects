@@ -330,40 +330,6 @@ export default async function SharePage({
           </div>
         </div>
 
-        {/* Connects+ 宣伝枠 (トップ配置) */}
-        <div className="mx-4 mb-4 rounded-2xl overflow-hidden" style={{ background: 'linear-gradient(135deg, #F3B4E3 0%, #C97AB8 100%)' }}>
-          <div className="p-5 text-center" style={{ color: '#FFFFFF' }}>
-            <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl mb-3" style={{ background: 'rgba(255,255,255,0.2)' }}>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/icon-192.png" alt="Connects+" className="w-10 h-10 rounded-xl" loading="lazy" />
-            </div>
-            <h3 className="text-base font-black mb-1">Connects+ でもっと快適に</h3>
-            <p className="text-xs leading-relaxed opacity-90 mb-4">
-              CARAT が CARAT の為に作った 推し活アプリ
-            </p>
-            <ul className="text-[11px] leading-relaxed opacity-95 text-left inline-block mb-4">
-              <li>🎤 参戦記録を一括管理</li>
-              <li>💿 全アルバム トレカマスタ 6,500+ 種</li>
-              <li>📍 聖地巡礼スポット & 写真共有</li>
-              <li>🔔 LINE で公演リマインド</li>
-            </ul>
-            <div className="flex flex-col gap-2">
-              <Link
-                href={data.refCode ? `/join?ref=${data.refCode}` : '/login'}
-                className="block w-full py-3 rounded-xl text-sm font-black"
-                style={{ background: '#FFFFFF', color: '#C97AB8' }}
-              >
-                {data.refCode ? `${data.nickname}さんの紹介で始める →` : '無料で始める →'}
-              </Link>
-              {data.refCode && (
-                <p className="text-[10px] opacity-80">
-                  紹介コード: <span className="font-mono font-bold">{data.refCode}</span> 自動入力
-                </p>
-              )}
-            </div>
-          </div>
-        </div>
-
         {/* 譲 Section */}
         <Section
           title="譲"
@@ -398,6 +364,27 @@ export default async function SharePage({
         )}
 
         <ShareActions nickname={data.nickname} offerCount={offering.length} seekCount={seeking.length} />
+
+        {/* Connects+ 宣伝枠 (コンパクト / ボトム配置) */}
+        <div className="mx-4 mt-3 mb-2 rounded-xl overflow-hidden" style={{ background: 'linear-gradient(135deg, #F3B4E3 0%, #C97AB8 100%)' }}>
+          <div className="p-3 flex items-center gap-3" style={{ color: '#FFFFFF' }}>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/icon-192.png" alt="Connects+" className="w-10 h-10 rounded-lg flex-shrink-0" loading="lazy" />
+            <div className="flex-1 min-w-0">
+              <h3 className="text-xs font-black leading-tight">Connects+</h3>
+              <p className="text-[10px] leading-tight opacity-90 truncate">
+                CARAT が CARAT の為に作った 推し活アプリ
+              </p>
+            </div>
+            <Link
+              href={data.refCode ? `/join?ref=${data.refCode}` : '/login'}
+              className="px-3 py-1.5 rounded-lg text-[11px] font-black flex-shrink-0"
+              style={{ background: '#FFFFFF', color: '#C97AB8' }}
+            >
+              {data.refCode ? '紹介で始める →' : '無料で始める →'}
+            </Link>
+          </div>
+        </div>
       </div>
     </div>
   )
