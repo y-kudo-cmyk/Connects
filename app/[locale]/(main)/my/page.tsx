@@ -764,8 +764,11 @@ function LiveHistoryRow({ entry, onEdit, isFuture }: { entry: MyEntry; onEdit: (
           )}
         </div>
         <p className="text-xs font-bold leading-snug line-clamp-2" style={{ color: '#1C1C1E' }}>
-          {entry.subTitle || entry.title}
+          {entry.title}
         </p>
+        {entry.subTitle && (
+          <p className="text-[10px] font-bold mt-0.5 truncate" style={{ color: '#636366' }}>{entry.subTitle}</p>
+        )}
         {entry.venue && (
           <p className="text-[10px] mt-0.5 truncate" style={{ color: '#8E8E93' }}>📍 {entry.venue}</p>
         )}

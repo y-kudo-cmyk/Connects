@@ -92,7 +92,7 @@ export default function ConcertCampaignModal({ open, onClose, onComplete }: Prop
     onComplete()
     onClose()
     setStep('intro')
-    router.push('/profile')
+    router.push('/my')
   }
 
   return createPortal(

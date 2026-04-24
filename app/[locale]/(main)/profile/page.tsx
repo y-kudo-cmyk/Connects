@@ -10,7 +10,6 @@ import { useProfile, FanClubMembership, NotifSettings } from '@/lib/useProfile'
 import { uploadDataUrl } from '@/lib/supabase/uploadImage'
 import { COUNTRIES, countryFlag } from '@/lib/countryUtils'
 import ImageCropModal from '@/components/ImageCropModal'
-import { useMyEntries, MyEntry } from '@/lib/useMyEntries'
 import { useReferral } from '@/lib/useReferral'
 import { createClient } from '@/lib/supabase/client'
 import { seventeenMembers } from '@/lib/config/constants'
@@ -40,121 +39,7 @@ function md(s: string) {
   return `${String(d.getMonth() + 1).padStart(2, '0')}/${String(d.getDate()).padStart(2, '0')}`
 }
 
-// ─── スワイプ削除可能な参戦記録行 ─────────────────────────
-function SwipeableConcertRow({
-  entry, onOpen, onDelete,
-}: {
-  entry: MyEntry
-  onOpen: () => void
-  onDelete: () => void
-}) {
-  const [offset, setOffset] = useState(0)
-  const startX = useRef<number | null>(null)
-  const startOffset = useRef(0)
-  const currentOffset = useRef(0)
-  const moved = useRef(false)
-  const DELETE_WIDTH = 72
-  const SWIPE_THRESHOLD = 12
-
-  const onStart = (x: number) => {
-    startX.current = x
-    startOffset.current = offset
-    currentOffset.current = offset
-    moved.current = false
-  }
-  const onMove = (x: number) => {
-    if (startX.current === null) return
-    const dx = x - startX.current
-    if (Math.abs(dx) > SWIPE_THRESHOLD) moved.current = true
-    const next = Math.max(-DELETE_WIDTH, Math.min(0, startOffset.current + dx))
-    currentOffset.current = next
-    setOffset(next)
-  }
-  const onEnd = () => {
-    if (startX.current === null) return
-    startX.current = null
-    const settled = currentOffset.current < -DELETE_WIDTH / 2 ? -DELETE_WIDTH : 0
-    currentOffset.current = settled
-    setOffset(settled)
-  }
-  const onTap = () => {
-    if (moved.current) { moved.current = false; return }
-    if (offset === 0) onOpen()
-  }
-
-  const d = entry.date ? new Date(entry.date) : null
-  const dateStr = d ? `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, '0')}.${String(d.getDate()).padStart(2, '0')}` : ''
-  return (
-    <div
-      style={{ position: 'relative', overflow: 'hidden', borderRadius: 12, marginBottom: 8, background: '#EF4444', touchAction: 'pan-y' }}
-      onTouchStart={(e) => onStart(e.touches[0].clientX)}
-      onTouchMove={(e) => onMove(e.touches[0].clientX)}
-      onTouchEnd={onEnd}
-      onPointerDown={(e) => { if (e.pointerType !== 'touch') onStart(e.clientX) }}
-      onPointerMove={(e) => { if (e.pointerType !== 'touch' && startX.current !== null) onMove(e.clientX) }}
-      onPointerUp={(e) => { if (e.pointerType !== 'touch') onEnd() }}
-    >
-      {/* 削除ボタン（右側に露出） */}
-      <div style={{ position: 'absolute', top: 0, right: 0, bottom: 0, width: DELETE_WIDTH, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#EF4444' }}>
-        <button onClick={() => { onDelete(); setOffset(0) }}
-          style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 2, background: 'transparent', border: 'none', color: '#FFF' }}>
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" strokeWidth="2">
-            <polyline points="3 6 5 6 21 6" />
-            <path d="M19 6l-2 14a2 2 0 01-2 2H9a2 2 0 01-2-2L5 6" />
-            <line x1="10" y1="11" x2="10" y2="17" />
-            <line x1="14" y1="11" x2="14" y2="17" />
-          </svg>
-          <span style={{ fontSize: 10, fontWeight: 700 }}>削除</span>
-        </button>
-      </div>
-
-      {/* コンテンツ */}
-      <button
-        type="button"
-        onClick={onTap}
-        style={{
-          position: 'relative',
-          display: 'flex',
-          alignItems: 'center',
-          gap: 12,
-          padding: '10px 12px',
-          borderRadius: 12,
-          textAlign: 'left',
-          width: '100%',
-          border: 'none',
-          background: '#FFFFFF',
-          transform: `translateX(${offset}px)`,
-          transition: startX.current === null ? 'transform 0.15s' : 'none',
-          cursor: 'pointer',
-        }}
-      >
-        <div
-          style={{
-            width: 56,
-            height: 56,
-            borderRadius: 8,
-            flexShrink: 0,
-            background: entry.images?.[0]
-              ? `url(${entry.images[0]}) center/cover`
-              : 'linear-gradient(135deg, rgba(243,180,227,0.2) 0%, rgba(167,139,250,0.15) 100%)',
-          }}
-        />
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <p style={{ fontSize: 12, fontWeight: 700, color: '#1C1C1E', margin: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{entry.title}</p>
-          {entry.subTitle && (
-            <p style={{ fontSize: 10, color: '#636366', margin: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{entry.subTitle}</p>
-          )}
-          <p style={{ fontSize: 10, color: '#8E8E93', margin: 0, marginTop: 2 }}>
-            {dateStr}{entry.venue ? ` · ${entry.venue}` : ''}
-          </p>
-        </div>
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#C7C7CC" strokeWidth="2">
-          <path d="M9 18l6-6-6-6" />
-        </svg>
-      </button>
-    </div>
-  )
-}
+// 参戦記録表示は MY の CONCERT タブに移行済 (旧 SwipeableConcertRow 削除)
 
 export default function ProfilePage() {
   usePageView('profile')
@@ -214,10 +99,7 @@ export default function ProfilePage() {
   const [portalMounted, setPortalMounted] = useState(false)
   useEffect(() => { setPortalMounted(true) }, [])
 
-  // Concert history: LIVE entries from my_entries
-  const { entries, removeEntry } = useMyEntries()
-  const liveEntries = entries.filter((e) => e.tags?.includes('CONCERT') || e.type === 'CONCERT')
-  const [showConcerts, setShowConcerts] = useState(false)
+  // (参戦記録は MY の CONCERT タブに移行済。useMyEntries は未使用になったので削除)
 
   const updateNotif = (patch: Partial<NotifSettings>) =>
     update({ notif: { ...profile.notif, ...patch } })
@@ -646,76 +528,8 @@ export default function ProfilePage() {
       {/* --- Referral code (admin / fam のみ) --- */}
       {(profile.role === 'admin' || profile.role === 'fam') && <ReferralSection />}
 
-      {/* 参戦記録 詳細モーダル */}
-      {showConcerts && portalMounted && createPortal(
-        <div style={{ position: 'fixed', inset: 0, background: '#F8F9FA', zIndex: 99999, display: 'flex', flexDirection: 'column' }}>
-          <div style={{ flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 16px', borderBottom: '1px solid #E5E5EA', paddingTop: 'calc(14px + env(safe-area-inset-top, 0px))', background: '#FFFFFF' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <span style={{ fontSize: 16 }}>🎤</span>
-              <p style={{ fontSize: 14, fontWeight: 700, color: '#1C1C1E', margin: 0 }}>参戦記録</p>
-              <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 999, background: 'rgba(243,180,227,0.12)', color: '#F3B4E3' }}>
-                {liveEntries.length}件
-              </span>
-            </div>
-            <button onClick={() => setShowConcerts(false)} style={{ width: 44, height: 44, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'transparent', border: 'none' }}>
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#636366" strokeWidth="2">
-                <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
-              </svg>
-            </button>
-          </div>
+      {/* 参戦記録は MY の CONCERT タブへ完全移行 */}
 
-          <div style={{ flex: 1, overflowY: 'auto', padding: '12px 16px', paddingBottom: 'calc(80px + env(safe-area-inset-bottom, 0px))' }}>
-            <p style={{ fontSize: 10, color: '#8E8E93', margin: 0, marginBottom: 8 }}>← 左にスワイプで削除</p>
-            {liveEntries
-              .slice()
-              .sort((a, b) => (b.date || '').localeCompare(a.date || ''))
-              .map((e) => (
-                <SwipeableConcertRow
-                  key={e.id}
-                  entry={e}
-                  onOpen={() => {
-                    setShowConcerts(false)
-                    router.push(`/my?entry=${e.id}`)
-                  }}
-                  onDelete={() => removeEntry(e.id)}
-                />
-              ))}
-          </div>
-        </div>,
-        document.body
-      )}
-
-      {/* --- Fan club + 参戦記録 (FC 空 & 参戦記録ありの時は 2 列並列) --- */}
-      {profile.fanClubs.length === 0 && liveEntries.length > 0 ? (
-        <div className="px-4 mb-3">
-          <div className="grid grid-cols-2 gap-2.5">
-            <button
-              onClick={openNewFc}
-              className="flex flex-col items-center justify-center gap-1.5 rounded-2xl"
-              style={{ background: '#FFFFFF', border: '1.5px dashed #E5E5EA', minHeight: 76 }}
-            >
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#F3B4E3" strokeWidth="2">
-                <rect x="2" y="5" width="20" height="14" rx="2" /><line x1="2" y1="10" x2="22" y2="10" />
-              </svg>
-              <span className="text-[11px] font-bold" style={{ color: '#F3B4E3' }}>{t('Common.fanClubAdd')}</span>
-            </button>
-            <button
-              onClick={() => setShowConcerts(true)}
-              className="flex flex-col items-center justify-center gap-1 rounded-2xl"
-              style={{ background: '#FFFFFF', minHeight: 76 }}
-            >
-              <div className="flex items-center gap-1.5">
-                <span className="text-base">🎤</span>
-                <span className="text-xs font-bold" style={{ color: '#1C1C1E' }}>参戦記録</span>
-              </div>
-              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full" style={{ background: 'rgba(243,180,227,0.12)', color: '#F3B4E3' }}>
-                {liveEntries.length}件
-              </span>
-            </button>
-          </div>
-        </div>
-      ) : (
-      <>
       {/* --- Fan club membership --- */}
       <div className="px-4 mb-3">
         <div className="flex items-center justify-between mb-1.5">
@@ -769,30 +583,6 @@ export default function ProfilePage() {
           </div>
         )}
       </div>
-
-      {/* --- 参戦記録 (LIVE entries) — ボタンのみ、一覧は詳細モーダル --- */}
-      {liveEntries.length > 0 && (
-        <div className="px-4 mb-4">
-          <button
-            onClick={() => setShowConcerts(true)}
-            className="w-full flex items-center justify-between px-4 py-3 rounded-xl"
-            style={{ background: '#FFFFFF' }}
-          >
-            <div className="flex items-center gap-2">
-              <span className="text-base">🎤</span>
-              <span className="text-sm font-bold" style={{ color: '#1C1C1E' }}>参戦記録</span>
-              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full" style={{ background: 'rgba(243,180,227,0.12)', color: '#F3B4E3' }}>
-                {liveEntries.length}件
-              </span>
-            </div>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#C7C7CC" strokeWidth="2">
-              <path d="M9 18l6-6-6-6" />
-            </svg>
-          </button>
-        </div>
-      )}
-      </>
-      )}
 
       <div style={{ height: 'calc(80px + env(safe-area-inset-bottom, 0px))' }} />
 
