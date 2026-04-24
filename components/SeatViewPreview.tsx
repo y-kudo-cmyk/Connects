@@ -103,7 +103,7 @@ function UploadModal({
             {imageUrl ? (
               <div className="relative rounded-xl overflow-hidden" style={{ aspectRatio: '4/3' }}>
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={imageUrl} alt="" className="w-full h-full object-cover" />
+                <img src={imageUrl} alt="" className="w-full h-full object-cover" loading="lazy" />
                 <button onClick={() => setImageUrl('')}
                   className="absolute top-2 right-2 w-8 h-8 rounded-full flex items-center justify-center"
                   style={{ background: 'rgba(0,0,0,0.7)' }}>
@@ -320,7 +320,7 @@ function SeatViewCard({
         style={{ width: 140, border: '1px solid #E5E5EA', background: '#FFFFFF' }}>
         <div className="relative" style={{ aspectRatio: '4/3' }}>
           {view.imageUrl
-            ? <img src={view.imageUrl} alt="" className="w-full h-full object-cover" /> // eslint-disable-line @next/next/no-img-element
+            ? <img src={view.imageUrl} alt="" className="w-full h-full object-cover" loading="lazy" /> // eslint-disable-line @next/next/no-img-element
             : <div className="w-full h-full flex items-center justify-center text-xl" style={{ background: '#F0F0F5' }}>👁</div>
           }
         </div>
@@ -337,7 +337,7 @@ function SeatViewCard({
       {/* 写真 */}
       <div className="relative" style={{ aspectRatio: '4/3' }}>
         {view.imageUrl
-          ? <img src={view.imageUrl} alt="" className="w-full h-full object-cover" /> // eslint-disable-line @next/next/no-img-element
+          ? <img src={view.imageUrl} alt="" className="w-full h-full object-cover" loading="lazy" /> // eslint-disable-line @next/next/no-img-element
           : <div className="w-full h-full flex items-center justify-center text-4xl" style={{ background: '#F0F0F5' }}>👁</div>
         }
         {/* 双眼鏡バッジ */}

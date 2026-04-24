@@ -320,7 +320,7 @@ export default function SubmitNoticePage() {
               {imagePreview ? (
                 <div className="relative rounded-2xl overflow-hidden" style={{ background: '#FFFFFF', border: '1px solid #E5E5EA' }}>
                   {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={imagePreview} alt="preview" className="w-full h-auto max-h-[60vh] object-contain" />
+                  <img src={imagePreview} alt="preview" className="w-full h-auto max-h-[60vh] object-contain" loading="lazy" />
                   <button
                     onClick={() => { setImagePreview(''); setImageFile(null) }}
                     className="absolute top-2 right-2 w-8 h-8 rounded-full flex items-center justify-center"

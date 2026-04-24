@@ -264,8 +264,7 @@ export default function ImageCropModal({ src, aspectRatio = 4, circle = false, o
             userSelect: 'none',
             pointerEvents: 'none',
             opacity: ready ? 1 : 0,
-          }}
-        />
+          }} loading="lazy" />
 
         {/* 読み込み中表示 */}
         {!ready && !loadError && (

@@ -55,7 +55,7 @@ function JoinContent() {
     >
       <div className="w-20 h-20 rounded-3xl overflow-hidden mb-6">
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/icon-192.png" alt="Connects+" className="w-full h-full object-cover" />
+        <img src="/icon-192.png" alt="Connects+" className="w-full h-full object-cover" loading="lazy" />
       </div>
 
       {status === 'checking' && (

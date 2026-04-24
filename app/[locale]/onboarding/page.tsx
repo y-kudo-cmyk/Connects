@@ -85,7 +85,7 @@ export default function OnboardingPage() {
     >
       {/* ロゴ */}
       {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src="/logo.png" alt="Connects+" style={{ width: 64, height: 'auto', marginBottom: 32 }} />
+      <img src="/logo.png" alt="Connects+" style={{ width: 64, height: 'auto', marginBottom: 32 }} loading="lazy" />
 
       {/* ステップ1: 言語 */}
       {step === 'lang' && (

@@ -76,8 +76,7 @@ export default function MilCountdown() {
                       (e.target as HTMLImageElement).style.display = 'none'
                       const parent = (e.target as HTMLImageElement).parentElement
                       if (parent) parent.style.background = m.color + '33'
-                    }}
-                  />
+                    }} loading="lazy" />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center"
                     style={{ background: m.color + '22' }}>

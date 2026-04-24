@@ -228,8 +228,7 @@ export default function FreeCropModal({ src, onConfirm, onCancel }: Props) {
             userSelect: 'none',
             pointerEvents: 'none',
             opacity: ready ? 1 : 0,
-          }}
-        />
+          }} loading="lazy" />
         {!ready && !loadError && (
           <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none' }}>
             <div style={{ color: '#FFF', fontSize: 13, fontWeight: 600 }}>画像読み込み中…</div>

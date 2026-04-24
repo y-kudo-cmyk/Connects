@@ -286,7 +286,7 @@ export default function MapPage() {
                 <div className="w-14 h-14 rounded-xl overflow-hidden flex-shrink-0" style={{ background: '#F0F0F5' }}>
                   {previewSpot.photos?.[0]?.imageUrl ? (
                     // eslint-disable-next-line @next/next/no-img-element
-                    <img src={previewSpot.photos[0].imageUrl} alt="" className="w-full h-full object-cover" />
+                    <img src={previewSpot.photos[0].imageUrl} alt="" className="w-full h-full object-cover" loading="lazy" />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center text-2xl">📍</div>
                   )}
@@ -396,7 +396,7 @@ export default function MapPage() {
                         <div className="w-12 h-12 rounded-xl overflow-hidden flex-shrink-0" style={{ background: '#F0F0F5' }}>
                           {spot.photos?.[0]?.imageUrl ? (
                             // eslint-disable-next-line @next/next/no-img-element
-                            <img src={spot.photos[0].imageUrl} alt="" className="w-full h-full object-cover" />
+                            <img src={spot.photos[0].imageUrl} alt="" className="w-full h-full object-cover" loading="lazy" />
                           ) : (
                             <div className="w-full h-full flex items-center justify-center text-xl">📍</div>
                           )}
@@ -965,7 +965,7 @@ function PhotoCard({
         style={{ cursor: effectiveSourceUrl ? 'pointer' : 'default' }}>
         {photo.imageUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={photo.imageUrl} alt="" className="w-full" style={{ display: 'block' }} />
+          <img src={photo.imageUrl} alt="" className="w-full" style={{ display: 'block' }} loading="lazy" />
         ) : (
           <div className="w-full flex items-center justify-center" style={{ height: 120, background: 'linear-gradient(135deg, #1C1C1F 0%, #252528 100%)' }}>
             <span className="text-3xl opacity-30">📷</span>
@@ -1263,7 +1263,7 @@ function PhotoUploadModal({
               {images.map((img, i) => (
                 <div key={i} className="relative rounded-xl overflow-hidden flex-1" style={{ aspectRatio: '1' }}>
                   {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={img} alt="" className="w-full h-full object-cover" />
+                  <img src={img} alt="" className="w-full h-full object-cover" loading="lazy" />
                   <button onClick={() => removeImage(i)}
                     className="absolute top-1 right-1 w-6 h-6 rounded-full flex items-center justify-center"
                     style={{ background: 'rgba(0,0,0,0.7)' }}>
@@ -1555,7 +1555,7 @@ function NewSpotModal({
             {screenshotUrl ? (
               <div className="relative rounded-xl overflow-hidden">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={screenshotUrl} alt="" className="w-full rounded-xl" style={{ display: 'block' }} />
+                <img src={screenshotUrl} alt="" className="w-full rounded-xl" style={{ display: 'block' }} loading="lazy" />
                 <button onClick={() => setScreenshotUrl(undefined)}
                   className="absolute top-2 right-2 w-8 h-8 rounded-full flex items-center justify-center"
                   style={{ background: 'rgba(0,0,0,0.7)' }}>
@@ -1653,7 +1653,7 @@ function NewSpotModal({
             {imageDataUrl ? (
               <div className="relative rounded-xl overflow-hidden" style={{ aspectRatio: '4/3' }}>
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={imageDataUrl} alt="" className="w-full h-full object-contain" style={{ background: '#000' }} />
+                <img src={imageDataUrl} alt="" className="w-full h-full object-contain" style={{ background: '#000' }} loading="lazy" />
                 <button onClick={() => setImageDataUrl(undefined)}
                   className="absolute top-2 right-2 w-8 h-8 rounded-full flex items-center justify-center"
                   style={{ background: 'rgba(0,0,0,0.7)' }}>

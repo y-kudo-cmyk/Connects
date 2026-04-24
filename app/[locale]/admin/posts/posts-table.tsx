@@ -173,7 +173,7 @@ function EventEditForm({
         {imageUrl && (
           <div className="relative mt-1 mb-2 rounded-md overflow-hidden">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={imageUrl} alt="" className="w-full max-h-40 object-cover rounded-md" />
+            <img src={imageUrl} alt="" className="w-full max-h-40 object-cover rounded-md" loading="lazy" />
             <button
               type="button"
               onClick={() => setImageUrl("")}

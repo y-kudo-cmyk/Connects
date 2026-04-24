@@ -691,7 +691,7 @@ function ImageViewer({ src, onClose }: { src: string; onClose: () => void }) {
       <img src={src} alt=""
         className="max-w-full max-h-full object-contain"
         style={{ maxHeight: '90vh', maxWidth: '100vw' }}
-        onClick={(e) => e.stopPropagation()} />
+        onClick={(e) => e.stopPropagation()} loading="lazy" />
       <button onClick={onClose}
         className="absolute top-4 right-4 w-10 h-10 rounded-full flex items-center justify-center"
         style={{ background: 'rgba(255,255,255,0.15)' }}>
@@ -735,12 +735,12 @@ function EntryCard({ entry, onEdit, onRemove }: {
           {mainImage ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img src={mainImage} alt={entry.title}
-              className="w-full h-full object-cover object-top" />
+              className="w-full h-full object-cover object-top" loading="lazy" />
           ) : (
             <div className="w-full h-full flex items-center justify-center"
               style={{ background: 'linear-gradient(135deg, #E8D5F5 0%, #D5E5F5 50%, #F5D5E8 100%)' }}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/logo.png" alt="" className="w-10 h-10 opacity-40" />
+              <img src="/logo.png" alt="" className="w-10 h-10 opacity-40" loading="lazy" />
             </div>
           )}
           <div className="absolute inset-y-0 right-0 w-0.5" style={{ background: color }} />
@@ -1064,7 +1064,7 @@ function EditModal({ entry, onClose, onSave, onRemove }: {
           {entry.images?.[0] && (
             <div className="rounded-xl overflow-hidden w-full" style={{ background: '#E5E5EA', aspectRatio: '3 / 4' }}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={entry.images[0]} alt={entry.title} className="w-full h-full object-contain" />
+              <img src={entry.images[0]} alt={entry.title} className="w-full h-full object-contain" loading="lazy" />
             </div>
           )}
 
@@ -1115,7 +1115,7 @@ function EditModal({ entry, onClose, onSave, onRemove }: {
                 {ticketImages.map((img, i) => (
                   <div key={i} className="relative rounded-xl overflow-hidden w-full" style={{ background: '#E5E5EA' }}>
                     {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={img} alt="" className="w-full h-auto block" />
+                    <img src={img} alt="" className="w-full h-auto block" loading="lazy" />
                     {ticketConfirmed ? (
                       /* 確定状態: 画像内に「編集」オーバーレイボタン */
                       <button onClick={() => setTicketConfirmed(false)}
@@ -1253,7 +1253,7 @@ function EditModal({ entry, onClose, onSave, onRemove }: {
                   <div key={i} className="relative rounded-xl overflow-hidden"
                     style={{ width: 100, aspectRatio: '16/9' }}>
                     {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={img} alt="" className="w-full h-full object-cover" />
+                    <img src={img} alt="" className="w-full h-full object-cover" loading="lazy" />
                     <button onClick={() => setViewImages((p: string[]) => p.filter((_: string, j: number) => j !== i))}
                       className="absolute top-1 right-1 w-6 h-6 rounded-full flex items-center justify-center"
                       style={{ background: 'rgba(0,0,0,0.65)' }}>
@@ -1308,7 +1308,7 @@ function EditModal({ entry, onClose, onSave, onRemove }: {
                 <div key={i} className="relative rounded-xl overflow-hidden"
                   style={{ width: 80, aspectRatio: '4/5' }}>
                   {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={img} alt="" className="w-full h-full object-cover object-top" />
+                  <img src={img} alt="" className="w-full h-full object-cover object-top" loading="lazy" />
                   <button onClick={() => setImages((p) => p.filter((_, j) => j !== i))}
                     className="absolute top-1 right-1 w-6 h-6 rounded-full flex items-center justify-center"
                     style={{ background: 'rgba(0,0,0,0.65)' }}>

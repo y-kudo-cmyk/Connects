@@ -117,7 +117,7 @@ export default function LoginPage() {
       {/* ロゴ */}
       <div className="flex flex-col items-center mb-10">
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/logo.png" alt="Connects+" className="mb-2" style={{ width: 80, height: 'auto' }} />
+        <img src="/logo.png" alt="Connects+" className="mb-2" style={{ width: 80, height: 'auto' }} loading="lazy" />
       </div>
 
       <div className="w-full max-w-sm flex flex-col gap-3">

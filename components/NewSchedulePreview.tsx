@@ -133,14 +133,13 @@ export default function NewSchedulePreview() {
                         const target = e.currentTarget
                         target.style.display = 'none'
                         target.parentElement!.querySelector('[data-fallback]')!.removeAttribute('hidden')
-                      }}
-                    />
+                      }} loading="lazy" />
                   ) : null}
                   <div data-fallback className="w-full h-full flex items-center justify-center"
                     hidden={!!event.image}
                     style={{ background: 'linear-gradient(135deg, #E8D5F5 0%, #D5E5F5 50%, #F5D5E8 100%)' }}>
                     {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src="/logo.png" alt="" className="w-10 h-10 opacity-40" />
+                    <img src="/logo.png" alt="" className="w-10 h-10 opacity-40" loading="lazy" />
                   </div>
                   {/* 承認バッジ（タグは画像下に移動したため、画像上は承認のみ） */}
                   <span

@@ -144,14 +144,13 @@ export default function TodayScheduleSection() {
                           const target = e.currentTarget
                           target.style.display = 'none'
                           target.parentElement!.querySelector('[data-fallback]')!.removeAttribute('hidden')
-                        }}
-                      />
+                        }} loading="lazy" />
                     ) : null}
                     <div data-fallback className="w-full h-full flex items-center justify-center"
                       hidden={!!event.image}
                       style={{ background: 'linear-gradient(135deg, #E8D5F5 0%, #D5E5F5 50%, #F5D5E8 100%)' }}>
                       {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src="/logo.png" alt="" className="w-8 h-8 opacity-40" />
+                      <img src="/logo.png" alt="" className="w-8 h-8 opacity-40" loading="lazy" />
                     </div>
                     <div className="absolute inset-y-0 right-0 w-0.5" style={{ background: cfg.color }} />
                   </div>

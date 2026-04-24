@@ -116,13 +116,12 @@ export default function EventCard({ event, compact = false }: EventCardProps) {
             src={event.image}
             alt={event.title}
             className="w-full h-full object-cover object-top"
-            onError={() => setImgError(true)}
-          />
+            onError={() => setImgError(true)} loading="lazy" />
         ) : (
           <div className="w-full h-full flex items-center justify-center"
             style={{ background: 'linear-gradient(135deg, #E8D5F5 0%, #D5E5F5 50%, #F5D5E8 100%)' }}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/logo.png" alt="" className="w-10 h-10 opacity-40" />
+            <img src="/logo.png" alt="" className="w-10 h-10 opacity-40" loading="lazy" />
           </div>
         )}
         {/* タイプカラーライン */}

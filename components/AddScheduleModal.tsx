@@ -238,7 +238,7 @@ export default function AddScheduleModal({ onClose, onRefresh }: { onClose: () =
           {imagePreview ? (
             <div className="relative rounded-xl overflow-hidden" style={{ aspectRatio: '16/9' }}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={imagePreview} alt="" className="w-full h-full object-cover" />
+              <img src={imagePreview} alt="" className="w-full h-full object-cover" loading="lazy" />
               <button onClick={() => { setImagePreview(''); setImageFile(null) }}
                 className="absolute top-2 right-2 w-8 h-8 rounded-full flex items-center justify-center"
                 style={{ background: 'rgba(0,0,0,0.7)' }}>

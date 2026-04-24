@@ -142,12 +142,12 @@ export default function NotificationPage() {
                 {event.image ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img src={event.image} alt="" className="w-full h-full object-cover object-top"
-                    onError={(e) => { e.currentTarget.style.display = 'none'; e.currentTarget.nextElementSibling?.removeAttribute('hidden') }} />
+                    onError={(e) => { e.currentTarget.style.display = 'none'; e.currentTarget.nextElementSibling?.removeAttribute('hidden') }} loading="lazy" />
                 ) : null}
                 <div hidden={!!event.image} className="w-full h-full flex items-center justify-center"
                   style={{ background: 'linear-gradient(135deg, #E8D5F5 0%, #D5E5F5 50%, #F5D5E8 100%)' }}>
                   {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src="/logo.png" alt="" className="w-10 h-10 opacity-40" />
+                  <img src="/logo.png" alt="" className="w-10 h-10 opacity-40" loading="lazy" />
                 </div>
               </div>
               <div className="p-4">

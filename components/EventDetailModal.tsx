@@ -293,7 +293,7 @@ export default function EventDetailModal({
                 <div>
                   <div className="rounded-2xl overflow-hidden">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={editImageUrl} alt="" className="w-full" style={{ display: 'block' }} />
+                    <img src={editImageUrl} alt="" className="w-full" style={{ display: 'block' }} loading="lazy" />
                   </div>
                   <div className="flex gap-2 mt-2">
                     <button onClick={() => imageFileRef.current?.click()}
@@ -328,12 +328,11 @@ export default function EventDetailModal({
                   const target = e.currentTarget
                   target.style.display = 'none'
                   target.parentElement!.querySelector('[data-fallback]')!.removeAttribute('hidden')
-                }}
-              />
+                }} loading="lazy" />
               <div data-fallback hidden className="flex items-center justify-center rounded-2xl"
                 style={{ aspectRatio: '16/9', background: 'linear-gradient(135deg, #E8D5F5 0%, #D5E5F5 50%, #F5D5E8 100%)' }}>
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src="/logo.png" alt="" className="w-16 h-16 opacity-40" />
+                <img src="/logo.png" alt="" className="w-16 h-16 opacity-40" loading="lazy" />
               </div>
             </div>
           ) : (

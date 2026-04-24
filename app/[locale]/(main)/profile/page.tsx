@@ -335,7 +335,7 @@ export default function ProfilePage() {
         >
           {profile.bannerImage && (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={profile.bannerImage} alt="" className="w-full h-full object-cover" />
+            <img src={profile.bannerImage} alt="" className="w-full h-full object-cover" loading="lazy" />
           )}
           <button
             onClick={() => bannerRef.current?.click()}
@@ -359,7 +359,7 @@ export default function ProfilePage() {
             >
               {profile.avatarImage ? (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img src={profile.avatarImage} alt="" className="w-full h-full object-cover" />
+                <img src={profile.avatarImage} alt="" className="w-full h-full object-cover" loading="lazy" />
               ) : (
                 <div className="w-full h-full flex items-center justify-center text-2xl font-black text-white">
                   {profile.nickname.slice(0, 1)}
@@ -553,7 +553,7 @@ export default function ProfilePage() {
           {/* SEVENTEEN + 推しメンバーチップ を1ブロックに集約 */}
           <div className="flex items-start gap-3 flex-wrap">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/seventeen.png" alt="SEVENTEEN" className="w-9 h-9 rounded-xl object-cover flex-shrink-0" />
+            <img src="/seventeen.png" alt="SEVENTEEN" className="w-9 h-9 rounded-xl object-cover flex-shrink-0" loading="lazy" />
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 mb-1">
                 <p className="text-sm font-bold leading-tight" style={{ color: '#1C1C1E' }}>SEVENTEEN</p>
@@ -752,7 +752,7 @@ export default function ProfilePage() {
                 style={{ background: '#FFFFFF' }}
               >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src="/seventeen.png" alt="SEVENTEEN" className="w-10 h-10 rounded-xl object-cover flex-shrink-0" />
+                <img src="/seventeen.png" alt="SEVENTEEN" className="w-10 h-10 rounded-xl object-cover flex-shrink-0" loading="lazy" />
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-bold" style={{ color: '#1C1C1E' }}>{fc.clubName}</p>
                   <div className="flex items-center gap-2 mt-0.5 flex-wrap">

@@ -10,8 +10,7 @@ export default function RootLoading() {
         <img
           src="/logo.png"
           alt="Connects+"
-          style={{ width: 96, height: 'auto' }}
-        />
+          style={{ width: 96, height: 'auto' }} loading="lazy" />
         {/* スピナー */}
         <div
           className="w-5 h-5 rounded-full border-2 border-t-transparent animate-spin"

@@ -27,7 +27,7 @@ export default function CountryPage() {
       style={{ background: '#FFFFFF', paddingTop: 'calc(48px + env(safe-area-inset-top, 0px))' }}
     >
       {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src="/logo.png" alt="Connects+" style={{ width: 56, height: 'auto', marginBottom: 28 }} />
+      <img src="/logo.png" alt="Connects+" style={{ width: 56, height: 'auto', marginBottom: 28 }} loading="lazy" />
 
       <div className="text-center mb-6">
         <p className="text-xl font-black mb-1" style={{ color: '#1C1C1E' }}>{t('Onboarding.onboardingCountry')}</p>

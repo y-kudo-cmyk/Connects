@@ -12,7 +12,7 @@ export default function VerifyRequestPage() {
     >
       <div className="flex flex-col items-center gap-6 text-center">
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/logo.png" alt="Connects+" style={{ width: 72, height: 'auto' }} />
+        <img src="/logo.png" alt="Connects+" style={{ width: 72, height: 'auto' }} loading="lazy" />
 
         <div
           className="w-16 h-16 rounded-2xl flex items-center justify-center"
