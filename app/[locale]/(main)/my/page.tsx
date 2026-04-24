@@ -244,7 +244,7 @@ export default function MyPage() {
               ? { background: '#FFFFFF', color: '#1C1C1E' }
               : { color: '#8E8E93' }
             }>
-            {t('Schedule.scheduleRecord')}
+            CALENDAR
           </button>
           <button onClick={() => setTab('live')}
             className="flex-1 py-2.5 rounded-lg text-sm font-bold transition-all"
@@ -252,7 +252,7 @@ export default function MyPage() {
               ? { background: '#FFFFFF', color: '#1C1C1E' }
               : { color: '#8E8E93' }
             }>
-            参戦記録
+            CONCERT
           </button>
         </div>
       </div>
