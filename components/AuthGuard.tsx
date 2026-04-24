@@ -23,38 +23,52 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
 
     ;(async () => {
       try {
-        const { data: profile } = await supabase
+        // 1回目: 通常フェッチ (RLS 経由)
+        let { data: profile } = await supabase
           .from('profiles')
           .select('id, role, mail, nickname, notif_setup_done')
           .eq('id', user.id)
           .maybeSingle()
 
+        // RLS タイミング問題で null の時は create-profile API (service role) を叩いた上で再フェッチ
+        // これで既存 profile が「未読み込み」状態で setup overlay が誤発動するのを防ぐ
         if (!profile) {
           await fetch('/api/create-profile', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-          })
-          // 新規 profile は nickname も notif 設定も未済
+          }).catch(() => {})
+          const retry = await supabase
+            .from('profiles')
+            .select('id, role, mail, nickname, notif_setup_done')
+            .eq('id', user.id)
+            .maybeSingle()
+          profile = retry.data
+        }
+
+        if (!profile) {
+          // 本当に作成できなかった場合だけ setup overlay (RLS 問題ではない真の新規)
           setNeedNickname(true)
           setNeedNotifSetup(true)
-        } else if (profile.role === 'banned') {
+          return
+        }
+        if (profile.role === 'banned') {
           setBanned(true)
           return
-        } else {
-          if ((!profile.mail || profile.mail === '') && user.email) {
-            await fetch('/api/create-profile', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-            }).catch(() => {})
-          }
-          // nickname 未設定なら設定画面
-          if (!profile.nickname || profile.nickname.trim() === '') {
-            setNeedNickname(true)
-          }
-          // 通知設定を選ばせる
-          if (!profile.notif_setup_done) {
-            setNeedNotifSetup(true)
-          }
+        }
+
+        if ((!profile.mail || profile.mail === '') && user.email) {
+          await fetch('/api/create-profile', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+          }).catch(() => {})
+        }
+        // nickname 未設定なら設定画面
+        if (!profile.nickname || profile.nickname.trim() === '') {
+          setNeedNickname(true)
+        }
+        // 通知設定を選ばせる
+        if (!profile.notif_setup_done) {
+          setNeedNotifSetup(true)
         }
 
         // ログイン記録 + 通知（30分に1回まで）
