@@ -446,11 +446,12 @@ export default function MyPage() {
                           {dayADE.map((e) => {
                             const cfg = eventTypeConfig[e.type as keyof typeof eventTypeConfig]
                             const col = cfg?.color ?? e.color
+                            const icon = scheduleTagConfig[(e.tags?.[0] || e.type) as ScheduleTag]?.icon ?? ''
                             return (
                               <button key={e.id} onClick={() => setEditEntry(e)}
                                 className="w-full px-1 py-0.5 rounded text-[9px] font-bold truncate text-left"
                                 style={{ background: col + '25', color: col }}>
-                                {e.title}
+                                {icon} {e.title}
                               </button>
                             )
                           })}
@@ -513,6 +514,7 @@ export default function MyPage() {
                           const col = cfg?.color ?? e.color
                           const t = e.customTime ?? e.time ?? '00:00'
                           const colW = 100 / 7
+                          const icon = scheduleTagConfig[(e.tags?.[0] || e.type) as ScheduleTag]?.icon ?? ''
                           return (
                             <button key={`${ds}-${e.id}`} onClick={() => setEditEntry(e)}
                               className="absolute rounded text-left overflow-hidden leading-tight"
@@ -527,7 +529,7 @@ export default function MyPage() {
                                 padding: '2px 3px',
                                 zIndex: 4,
                               }}>
-                              <span className="block truncate text-[9px] font-bold">{e.title}</span>
+                              <span className="block truncate text-[9px] font-bold">{icon} {e.title}</span>
                               <span className="block text-[9px] opacity-75">{t}</span>
                             </button>
                           )
@@ -585,11 +587,12 @@ export default function MyPage() {
                     {allDayE.map((e) => {
                       const cfg = eventTypeConfig[e.type as keyof typeof eventTypeConfig]
                       const col = cfg?.color ?? e.color
+                      const icon = scheduleTagConfig[(e.tags?.[0] || e.type) as ScheduleTag]?.icon ?? ''
                       return (
                         <button key={e.id} onClick={() => setEditEntry(e)}
                           className="px-2 py-1 rounded text-xs font-bold"
                           style={{ background: col + '25', color: col }}>
-                          {e.title}
+                          {icon} {e.title}
                         </button>
                       )
                     })}
@@ -632,6 +635,7 @@ export default function MyPage() {
                         const cfg = eventTypeConfig[e.type as keyof typeof eventTypeConfig]
                         const col = cfg?.color ?? e.color
                         const t = e.customTime ?? e.time ?? '00:00'
+                        const icon = scheduleTagConfig[(e.tags?.[0] || e.type) as ScheduleTag]?.icon ?? ''
                         return (
                           <button key={e.id} onClick={() => setEditEntry(e)}
                             className="absolute left-1 right-2 rounded-lg text-left overflow-hidden leading-snug"
@@ -644,7 +648,7 @@ export default function MyPage() {
                               padding: '4px 8px',
                               zIndex: 4,
                             }}>
-                            <span className="block truncate text-xs font-bold">{e.title}</span>
+                            <span className="block truncate text-xs font-bold">{icon} {e.title}</span>
                             <span className="block text-[10px] opacity-75">{t}</span>
                           </button>
                         )
@@ -740,6 +744,12 @@ function LiveHistoryRow({ entry, onEdit, isFuture }: { entry: MyEntry; onEdit: (
   const ds = entry.customDate ?? entry.date
   const dstr = ds ? `${ds.slice(5, 7)}/${ds.slice(8, 10)}` : ''
   const yr = ds ? ds.slice(0, 4) : ''
+  const tag = (entry.tags?.[0] || entry.type) as ScheduleTag
+  const tagIcon = scheduleTagConfig[tag]?.icon ?? '🎤'
+  // 会場名が sub_event_title に含まれる場合は重複表示を避ける
+  const venueStr = entry.venue ?? ''
+  const subStr = entry.subTitle ?? ''
+  const hideVenue = !!venueStr && !!subStr && subStr.includes(venueStr)
   return (
     <button
       onClick={() => onEdit(entry)}
@@ -751,7 +761,7 @@ function LiveHistoryRow({ entry, onEdit, isFuture }: { entry: MyEntry; onEdit: (
           // eslint-disable-next-line @next/next/no-img-element
           <img src={mainImage} alt="" className="w-full h-full object-cover" loading="lazy" />
         ) : (
-          <div className="w-full h-full flex items-center justify-center text-xl">🎤</div>
+          <div className="w-full h-full flex items-center justify-center text-xl">{tagIcon}</div>
         )}
       </div>
       <div className="flex-1 min-w-0">
@@ -763,13 +773,16 @@ function LiveHistoryRow({ entry, onEdit, isFuture }: { entry: MyEntry; onEdit: (
             <span className="text-[10px]" style={{ color: '#8E8E93' }}>{entry.time}</span>
           )}
         </div>
-        <p className="text-xs font-bold leading-snug line-clamp-2" style={{ color: '#1C1C1E' }}>
-          {entry.title}
-        </p>
+        <div className="flex items-center gap-1">
+          <span className="text-sm flex-shrink-0">{tagIcon}</span>
+          <p className="text-xs font-bold leading-snug line-clamp-2" style={{ color: '#1C1C1E' }}>
+            {entry.title}
+          </p>
+        </div>
         {entry.subTitle && (
           <p className="text-[10px] font-bold mt-0.5 truncate" style={{ color: '#636366' }}>{entry.subTitle}</p>
         )}
-        {entry.venue && (
+        {entry.venue && !hideVenue && (
           <p className="text-[10px] mt-0.5 truncate" style={{ color: '#8E8E93' }}>📍 {entry.venue}</p>
         )}
       </div>
