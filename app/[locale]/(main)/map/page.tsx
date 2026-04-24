@@ -100,9 +100,11 @@ export default function MapPage() {
 
   const activeScheduleEvents = useMemo(() => {
     const today = TODAY
+    // MAP の「期間限定」は開催中のみ表示 (未来イベントは非表示)
     return events.filter((e) =>
       e.tags?.some((t) => t === 'POPUP' || t === 'EVENT' || t === 'MERCH') &&
-      (e.dateEnd ? e.date <= today && today <= e.dateEnd : e.date >= today)
+      e.date <= today &&
+      (e.dateEnd ? today <= e.dateEnd : e.date === today)
     )
   }, [events, TODAY])
 
