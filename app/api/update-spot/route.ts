@@ -55,6 +55,31 @@ export async function POST(req: NextRequest) {
       }
     }
 
+    // ── 自動 geocode (lat/lng 未指定時のみ): Nominatim で住所 / 店名から座標取得
+    if ((updates.lat == null || updates.lng == null) && (updates.spot_address || updates.spot_name)) {
+      const cleaned = String(updates.spot_address || '')
+        .replace(/^🗺\s*/, '').replace(/^〒\d{3}-?\d{4}\s*/, '').trim() || String(updates.spot_name || '')
+      const candidates: string[] = [cleaned]
+      // フォールバック用に店舗名だけでも試行 (例: 「MARK IS みなとみらい」)
+      if (updates.spot_name && cleaned !== String(updates.spot_name)) candidates.push(String(updates.spot_name))
+      for (const q of candidates) {
+        try {
+          const res = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&limit=1`, {
+            headers: { 'User-Agent': 'connects-plus/1.0 (contact: info@connectsplus.net)' },
+            signal: AbortSignal.timeout(5000),
+          })
+          const hits = await res.json()
+          if (Array.isArray(hits) && hits[0]?.lat && hits[0]?.lon) {
+            ;(updates as Record<string, unknown>).lat = parseFloat(hits[0].lat)
+            ;(updates as Record<string, unknown>).lng = parseFloat(hits[0].lon)
+            break
+          }
+        } catch (e) {
+          console.warn('[update-spot] geocode failed:', e)
+        }
+      }
+    }
+
     const { data: lastSpot } = await sb.from('spots').select('id').order('id', { ascending: false }).limit(1)
     const lastNum = lastSpot?.[0]?.id ? parseInt(lastSpot[0].id.replace('SP', '')) : 0
     const newId = 'SP' + String(lastNum + 1).padStart(5, '0')
