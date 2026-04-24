@@ -718,7 +718,8 @@ function EntryCard({ entry, onEdit, onRemove }: {
   const color = tagCfg?.color ?? cfg?.color ?? entry.color
   const label = tagCfg ? `${tagCfg.icon} ${tagCfg.label}` : cfg?.label ?? entry.type
   // 来場日が登録済みなら期間ではなくその日として扱う
-  const isPeriod = !!entry.dateEnd && !entry.customDate
+  // また end_date が start_date と同日なら期間ではない (event が time 範囲を end_date に乗せてるだけのケース)
+  const isPeriod = !!entry.dateEnd && entry.dateEnd !== entry.date && !entry.customDate
   const dateStr = entry.customDate
     ? fmtDateRange(entry.customDate, entry.customTime ?? entry.time)
     : fmtDateRange(entry.date, entry.time, entry.dateEnd)
@@ -958,7 +959,8 @@ function EditModal({ entry, onClose, onSave, onRemove }: {
   const [portalMounted2, setPortalMounted2] = useState(false)
   useEffect(() => { setPortalMounted2(true) }, [])
 
-  const isPeriod = !!entry.dateEnd
+  // 期間判定: end_date がセットされてて かつ start_date と異なる日なら「期間」扱い
+  const isPeriod = !!entry.dateEnd && entry.dateEnd !== entry.date
   const editTag = (entry.tags?.[0] || entry.type) as ScheduleTag
   const editTagCfg = scheduleTagConfig[editTag]
   const cfg = editTagCfg || eventTypeConfig[entry.type as keyof typeof eventTypeConfig]
