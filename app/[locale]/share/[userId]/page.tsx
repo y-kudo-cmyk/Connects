@@ -42,6 +42,7 @@ interface UserCard {
 
 interface ShareData {
   nickname: string
+  refCode: string
   favMemberIds: string[]
   products: Map<string, CardProduct>
   versions: Map<string, CardVersion>
@@ -92,7 +93,7 @@ async function loadShareData(userId: string, searchParams: Record<string, string
 
   const { data: profile } = await sb
     .from('profiles')
-    .select('id, nickname, fav_member_ids, role')
+    .select('id, nickname, fav_member_ids, role, ref_code')
     .eq('id', userId)
     .maybeSingle()
   if (!profile) return null
@@ -136,6 +137,7 @@ async function loadShareData(userId: string, searchParams: Record<string, string
 
   return {
     nickname: profile.nickname || 'CARAT',
+    refCode: (profile.ref_code as string | null) ?? '',
     favMemberIds: (profile.fav_member_ids as string[] | null) ?? [],
     products: productsMap,
     versions: versionsMap,
@@ -363,14 +365,38 @@ export default async function SharePage({
 
         <ShareActions nickname={data.nickname} offerCount={offering.length} seekCount={seeking.length} />
 
-        <div className="text-center pt-8 pb-4">
-          <Link
-            href="/"
-            className="inline-block text-[10px] font-bold"
-            style={{ color: '#8E8E93' }}
-          >
-            Connects+ を見る →
-          </Link>
+        {/* Connects+ 宣伝枠 */}
+        <div className="mx-4 mt-4 mb-2 rounded-2xl overflow-hidden" style={{ background: 'linear-gradient(135deg, #F3B4E3 0%, #C97AB8 100%)' }}>
+          <div className="p-5 text-center" style={{ color: '#FFFFFF' }}>
+            <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl mb-3" style={{ background: 'rgba(255,255,255,0.2)' }}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/icon-192.png" alt="Connects+" className="w-10 h-10 rounded-xl" loading="lazy" />
+            </div>
+            <h3 className="text-base font-black mb-1">Connects+ でもっと快適に</h3>
+            <p className="text-xs leading-relaxed opacity-90 mb-4">
+              K-POP ファン向け スケジュール & トレカ管理アプリ
+            </p>
+            <ul className="text-[11px] leading-relaxed opacity-95 text-left inline-block mb-4">
+              <li>🎤 参戦記録を一括管理</li>
+              <li>💿 全アルバム トレカマスタ 6,500+ 種</li>
+              <li>📍 聖地巡礼スポット & 写真共有</li>
+              <li>🔔 LINE で公演リマインド</li>
+            </ul>
+            <div className="flex flex-col gap-2">
+              <Link
+                href={data.refCode ? `/join?ref=${data.refCode}` : '/login'}
+                className="block w-full py-3 rounded-xl text-sm font-black"
+                style={{ background: '#FFFFFF', color: '#C97AB8' }}
+              >
+                {data.refCode ? `${data.nickname}さんの紹介で始める →` : '無料で始める →'}
+              </Link>
+              {data.refCode && (
+                <p className="text-[10px] opacity-80">
+                  紹介コード: <span className="font-mono font-bold">{data.refCode}</span> 自動入力
+                </p>
+              )}
+            </div>
+          </div>
         </div>
       </div>
     </div>
