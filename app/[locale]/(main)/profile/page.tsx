@@ -1192,7 +1192,11 @@ function ReferralSection() {
   const [inputCode, setInputCode] = useState('')
   const [submitState, setSubmitState] = useState<{ status: 'idle' | 'saving' | 'ok' | 'err'; msg?: string }>({ status: 'idle' })
 
-  const APP_URL = 'https://app.connectsplus.net'
+  // ドメイン切替前/後/ローカル どれでも動くよう、現在の origin を使用
+  const [APP_URL, setAppUrl] = useState('https://app.connectsplus.net')
+  useEffect(() => {
+    if (typeof window !== 'undefined') setAppUrl(window.location.origin)
+  }, [])
 
   const handleCopy = async () => {
     if (!myCode) return
