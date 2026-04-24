@@ -936,7 +936,8 @@ function EditModal({ entry, onClose, onSave, onRemove }: {
   onRemove: () => void
 }) {
   const [customDate, setCustomDate] = useState(entry.customDate ?? '')
-  const [customTime, setCustomTime] = useState(entry.customTime ?? '')
+  const [customTime, setCustomTime] = useState(entry.customTime ?? entry.time ?? '')
+  const [customTimeEnd, setCustomTimeEnd] = useState(entry.customTimeEnd ?? entry.timeEnd ?? '')
   const [reservationNote, setReservationNote] = useState(entry.reservationNote ?? '')
   const [ticketImages, setTicketImages] = useState<string[]>(entry.ticketImages ?? [])
   const [seatInfo, setSeatInfo] = useState<SeatInfo>(entry.seatInfo ?? { fields: [] })
@@ -1003,6 +1004,7 @@ function EditModal({ entry, onClose, onSave, onRemove }: {
     onSave({
       customDate: customDate || undefined,
       customTime: customTime || undefined,
+      customTimeEnd: customTimeEnd || undefined,
       reservationNote: reservationNote || undefined,
       ticketImages,
       seatInfo,
@@ -1051,8 +1053,8 @@ function EditModal({ entry, onClose, onSave, onRemove }: {
           </div>
         </div>
 
-        {/* スクロール可能なコンテンツ */}
-        <div className="flex-1 overflow-y-auto px-4 py-4 flex flex-col gap-5">
+        {/* スクロール可能なコンテンツ (横ブレ防止: overflow-x-hidden) */}
+        <div className="flex-1 overflow-y-auto overflow-x-hidden px-4 py-4 flex flex-col gap-5">
 
           {/* 公演ポスター (events 側の image_url が先頭) — 縦長全体表示 */}
           {entry.images?.[0] && (
@@ -1077,10 +1079,17 @@ function EditModal({ entry, onClose, onSave, onRemove }: {
           {/* 時間 (CONCERT 以外、公演時刻は定刻なのでCONCERTは非表示) */}
           {editTag !== 'CONCERT' && (
             <EditSection label={t('My.time')}>
-              <input type="time" value={customTime}
-                onChange={(e) => setCustomTime(e.target.value)}
-                className="w-full px-3 py-2.5 rounded-xl text-sm outline-none"
-                style={{ background: '#FFFFFF', border: '1px solid #E5E5EA', color: '#1C1C1E' }} />
+              <div className="flex items-center gap-2 min-w-0">
+                <input type="time" value={customTime}
+                  onChange={(e) => setCustomTime(e.target.value)}
+                  className="flex-1 min-w-0 px-3 py-2.5 rounded-xl text-sm outline-none"
+                  style={{ background: '#FFFFFF', border: '1px solid #E5E5EA', color: '#1C1C1E' }} />
+                <span className="flex-shrink-0 text-xs" style={{ color: '#8E8E93' }}>〜</span>
+                <input type="time" value={customTimeEnd}
+                  onChange={(e) => setCustomTimeEnd(e.target.value)}
+                  className="flex-1 min-w-0 px-3 py-2.5 rounded-xl text-sm outline-none"
+                  style={{ background: '#FFFFFF', border: '1px solid #E5E5EA', color: '#1C1C1E' }} />
+              </div>
             </EditSection>
           )}
 

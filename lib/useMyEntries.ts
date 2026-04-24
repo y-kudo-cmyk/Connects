@@ -27,8 +27,10 @@ export type MyEntry = {
   venue?: string
   city?: string
   time?: string
+  timeEnd?: string
   dateEnd?: string
   customTime?: string
+  customTimeEnd?: string
   customDate?: string
   reservationNote?: string
   ticketImages?: string[]
@@ -127,6 +129,7 @@ function toApp(row: DbMyEntry): MyEntry {
     date: start?.slice(0, 10) ?? '',
     dateEnd: end?.slice(0, 10) ?? undefined,
     time: start?.slice(11, 16) ?? undefined,
+    timeEnd: end?.slice(11, 16) ?? undefined,
     venue,
     city,
     ticketImages: parseImageField(row.ticket_image_url),
@@ -209,27 +212,40 @@ export function useMyEntries() {
     if (updates.viewImages !== undefined) dbUpdates.view_image_url = updates.viewImages?.length ? JSON.stringify(updates.viewImages) : null
 
     // 時刻/日付の override: date / time / customDate / customTime 何が来ても user_start_date を組み立てる
-    // 既存値を保持するため、必要なら現在値を読み込む
+    // 終了時刻 (customTimeEnd / timeEnd) も user_end_date に組み込み
     const dateChanged = updates.date !== undefined || updates.customDate !== undefined
     const timeChanged = updates.time !== undefined || updates.customTime !== undefined
-    if (dateChanged || timeChanged) {
-      // 既存 user_start_date or event.start_date から現在値を取得
+    const endDateChanged = updates.dateEnd !== undefined
+    const endTimeChanged = updates.timeEnd !== undefined || updates.customTimeEnd !== undefined
+    if (dateChanged || timeChanged || endDateChanged || endTimeChanged) {
+      // 既存 user_start_date / user_end_date / event.start/end_date から現在値を取得
       const { data: cur } = await supabase.from('my_entries')
-        .select('user_start_date, start_date, event:events!my_entries_event_id_fkey(start_date)')
+        .select('user_start_date, user_end_date, start_date, end_date, event:events!my_entries_event_id_fkey(start_date, end_date)')
         .eq('id', id)
         .maybeSingle()
-      // event join は PostgREST で配列 or オブジェクトどちらも来うるため unknown 経由で受ける
       const evRaw = cur?.event as unknown
-      const evObj = Array.isArray(evRaw) ? (evRaw[0] as { start_date: string | null } | undefined) : (evRaw as { start_date: string | null } | null)
-      const baseIso = (cur?.user_start_date as string | null) ?? (cur?.start_date as string | null) ?? (evObj?.start_date ?? null)
-      const m = baseIso?.match(/^(\d{4}-\d{2}-\d{2})T(\d{2}:\d{2})/)
-      const curDate = m?.[1] ?? null
-      const curTime = m?.[2] ?? '00:00'
-      const newDate = updates.customDate ?? updates.date ?? curDate
-      const newTime = updates.customTime ?? updates.time ?? curTime
-      if (newDate) dbUpdates.user_start_date = `${newDate}T${newTime}:00`
+      const evObj = Array.isArray(evRaw) ? (evRaw[0] as { start_date: string | null; end_date: string | null } | undefined) : (evRaw as { start_date: string | null; end_date: string | null } | null)
+      // 開始
+      const baseStart = (cur?.user_start_date as string | null) ?? (cur?.start_date as string | null) ?? (evObj?.start_date ?? null)
+      const ms = baseStart?.match(/^(\d{4}-\d{2}-\d{2})T(\d{2}:\d{2})/)
+      const curStartDate = ms?.[1] ?? null
+      const curStartTime = ms?.[2] ?? '00:00'
+      const newStartDate = updates.customDate ?? updates.date ?? curStartDate
+      const newStartTime = updates.customTime ?? updates.time ?? curStartTime
+      if (dateChanged || timeChanged) {
+        if (newStartDate) dbUpdates.user_start_date = `${newStartDate}T${newStartTime}:00`
+      }
+      // 終了
+      const baseEnd = (cur?.user_end_date as string | null) ?? (cur?.end_date as string | null) ?? (evObj?.end_date ?? null)
+      const me = baseEnd?.match(/^(\d{4}-\d{2}-\d{2})T(\d{2}:\d{2})/)
+      const curEndDate = me?.[1] ?? null
+      const curEndTime = me?.[2] ?? '00:00'
+      const newEndDate = updates.dateEnd !== undefined ? (updates.dateEnd || null) : curEndDate
+      const newEndTime = updates.customTimeEnd ?? updates.timeEnd ?? curEndTime
+      if (endDateChanged || endTimeChanged) {
+        dbUpdates.user_end_date = newEndDate ? `${newEndDate}T${newEndTime}:00` : null
+      }
     }
-    if (updates.dateEnd !== undefined) dbUpdates.user_end_date = updates.dateEnd ? `${updates.dateEnd}T00:00:00` : null
 
     await supabase.from('my_entries').update(dbUpdates).eq('id', id)
     await fetchEntries()
