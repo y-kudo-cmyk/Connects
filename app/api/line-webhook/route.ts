@@ -50,6 +50,33 @@ function normalizeEmail(input: string): string {
     .trim()
 }
 
+// ── 連打レート制限: 同一 LINE user ID 直近 1秒 5件まで ──────────
+// user_activity.user_id は NOT NULL かつ profiles.id 参照のため、
+// LINE user ID 単位の記録には使えない。インスタンスメモリで軽量に実装。
+const LINE_RATE_WINDOW_MS = 1000
+const LINE_RATE_MAX = 5
+const lineRateHits = new Map<string, number[]>()
+function checkLineRateLimit(lineUserId: string): boolean {
+  const now = Date.now()
+  const cutoff = now - LINE_RATE_WINDOW_MS
+  const hits = (lineRateHits.get(lineUserId) ?? []).filter((t) => t > cutoff)
+  if (hits.length >= LINE_RATE_MAX) {
+    lineRateHits.set(lineUserId, hits)
+    return false
+  }
+  hits.push(now)
+  lineRateHits.set(lineUserId, hits)
+  // 雑にガベコレ: Map が 1000 超えたら古いキー削除
+  if (lineRateHits.size > 1000) {
+    for (const [k, v] of lineRateHits) {
+      const fresh = v.filter((t) => t > cutoff)
+      if (fresh.length === 0) lineRateHits.delete(k)
+      else lineRateHits.set(k, fresh)
+    }
+  }
+  return true
+}
+
 // ── LINE ID とメールアドレスの紐付け ─────────────────────────
 async function linkLineUserId(lineUserId: string, email: string) {
   const normalizedEmail = normalizeEmail(email)
@@ -105,6 +132,12 @@ export async function POST(request: NextRequest) {
     for (const event of events) {
       if (!event.source?.userId) continue
       const lineUserId = event.source.userId
+
+      // 同一 LINE user ID 連打防止 (1秒 5件超で弾く)
+      if (!checkLineRateLimit(lineUserId)) {
+        console.warn('[line-webhook] rate limited:', lineUserId)
+        continue
+      }
 
       if (event.type === 'message' && event.message?.type === 'text') {
         const inputText = event.message.text.trim()

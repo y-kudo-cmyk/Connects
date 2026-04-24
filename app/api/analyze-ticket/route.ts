@@ -1,8 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { GoogleGenerativeAI } from '@google/generative-ai'
 import { createClient } from '@/lib/supabase/server'
+import { createClient as createServiceClient } from '@supabase/supabase-js'
 
 const genAI = new GoogleGenerativeAI(process.env.GOOGLE_GENERATIVE_AI_API_KEY ?? '')
+
+// Gemini コスト保護: 同一ユーザー 60秒に 10回まで
+const RATE_LIMIT_WINDOW_SEC = 60
+const RATE_LIMIT_MAX = 10
 
 export async function POST(req: NextRequest) {
   // 認証必須（Gemini コスト保護）
@@ -11,6 +16,31 @@ export async function POST(req: NextRequest) {
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   try {
+    // レート制限: user_activity で直近 60秒の analyze_ticket アクションをカウント
+    const sb = createServiceClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    )
+    const since = new Date(Date.now() - RATE_LIMIT_WINDOW_SEC * 1000).toISOString()
+    const { count } = await sb
+      .from('user_activity')
+      .select('id', { count: 'exact', head: true })
+      .eq('user_id', user.id)
+      .eq('action', 'analyze_ticket')
+      .gte('created_at', since)
+    if ((count ?? 0) >= RATE_LIMIT_MAX) {
+      return NextResponse.json(
+        { error: 'Too many requests. Please wait a moment and try again.' },
+        { status: 429 },
+      )
+    }
+    // 呼び出し記録 (失敗しても本処理は止めない)
+    await sb.from('user_activity').insert({
+      user_id: user.id,
+      action: 'analyze_ticket',
+      detail: '',
+    })
+
     const { imageBase64, mimeType = 'image/jpeg' } = await req.json()
     if (!imageBase64) return NextResponse.json({ error: 'no image' }, { status: 400 })
 
