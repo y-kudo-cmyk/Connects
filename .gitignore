@@ -54,3 +54,14 @@ next-env.d.ts
 .playwright-mcp/
 *.png
 scripts/ec2/
+
+# 一時・作業用スクリプト (ファイル名先頭に _)
+scripts/_*.mjs
+scripts/_*.json
+scripts/_*.html
+scripts/_refs_ascii_*/
+scripts/_preview_*/
+scripts/_pilot_*/
+scripts/_album_templates/
+scripts/scraped/
+
