@@ -44,14 +44,16 @@ export default function SupabaseDataProvider({ children }: { children: React.Rea
     const now = new Date()
     const y = now.getFullYear()
     const m = now.getMonth() + 1
+    // 取得範囲: 先月1日 〜 4ヶ月先末 (将来の当選発表や公演本編も拾えるよう拡大)
     const prevM = m === 1 ? 12 : m - 1
     const prevY = m === 1 ? y - 1 : y
-    const nextM = m === 12 ? 1 : m + 1
-    const nextY = m === 12 ? y + 1 : y
+    const future = 4  // 何ヶ月先まで fetch するか
+    const endMRaw = m + future
+    const endM = ((endMRaw - 1) % 12) + 1
+    const endY = y + Math.floor((endMRaw - 1) / 12)
 
-    // 3ヶ月分の開始〜終了を1つのレンジにまとめて並列取得
     const { start } = getMonthRange(prevY, prevM)
-    const { end } = getMonthRange(nextY, nextM)
+    const { end } = getMonthRange(endY, endM)
 
     const [{ data: d1 }, { data: d2 }] = await Promise.all([
       // start_date がレンジ内
