@@ -940,6 +940,7 @@ function EditModal({ entry, onClose, onSave, onRemove }: {
   const [customTime, setCustomTime] = useState(entry.customTime ?? entry.time ?? '')
   const [customTimeEnd, setCustomTimeEnd] = useState(entry.customTimeEnd ?? entry.timeEnd ?? '')
   const [reservationNote, setReservationNote] = useState(entry.reservationNote ?? '')
+  const [ticketSource, setTicketSource] = useState(entry.ticketSource ?? '')
   const [ticketImages, setTicketImages] = useState<string[]>(entry.ticketImages ?? [])
   const [seatInfo, setSeatInfo] = useState<SeatInfo>(entry.seatInfo ?? { fields: [] })
   const [memo, setMemo] = useState(entry.memo ?? '')
@@ -1008,6 +1009,7 @@ function EditModal({ entry, onClose, onSave, onRemove }: {
       customTime: customTime || undefined,
       customTimeEnd: customTimeEnd || undefined,
       reservationNote: reservationNote || undefined,
+      ticketSource: ticketSource || undefined,
       ticketImages,
       seatInfo,
       memo,
@@ -1171,6 +1173,38 @@ function EditModal({ entry, onClose, onSave, onRemove }: {
                 >
                   ✓ チケットを確定
                 </button>
+              )}
+
+              {/* チケット入手経路 (日本 LIVE 系: CONCERT / LIVEVIEWING / TICKET 対象) */}
+              {(editTag === 'CONCERT' || editTag === 'LIVEVIEWING' || editTag === 'TICKET') && (
+                <div className="mt-3">
+                  <p className="text-[10px] font-bold mb-1" style={{ color: '#636366' }}>どのタイミングで当選？</p>
+                  <select
+                    value={ticketSource}
+                    onChange={(e) => setTicketSource(e.target.value)}
+                    className="w-full px-3 py-2.5 rounded-xl text-sm outline-none appearance-none"
+                    style={{
+                      background: '#FFFFFF',
+                      border: '1px solid #E5E5EA',
+                      color: ticketSource ? '#1C1C1E' : '#8E8E93',
+                      backgroundImage: 'url(\"data:image/svg+xml;utf8,<svg xmlns=%27http://www.w3.org/2000/svg%27 width=%2712%27 height=%2712%27 viewBox=%270 0 24 24%27 fill=%27none%27 stroke=%27%238E8E93%27 stroke-width=%272%27><polyline points=%276 9 12 15 18 9%27/></svg>\")',
+                      backgroundRepeat: 'no-repeat',
+                      backgroundPosition: 'right 12px center',
+                      paddingRight: 32,
+                    }}
+                  >
+                    <option value="">— 未設定 —</option>
+                    <option value="FC_1ST">FC 1次</option>
+                    <option value="MOBILE_1ST">モバ 1次</option>
+                    <option value="FC_2ND">FC 2次</option>
+                    <option value="MOBILE_2ND">モバ 2次</option>
+                    <option value="LAWSON_LOTTERY">ローチケ抽選</option>
+                    <option value="LAWSON_GENERAL">ローチケ一般</option>
+                    <option value="TICKET_SHARE">チケシェア</option>
+                    <option value="EQUIPMENT_RELEASE">機材解放</option>
+                    <option value="OTHER">その他</option>
+                  </select>
+                </div>
               )}
 
               {/* 座席情報（チケット画像アップで自動OCR→編集可） */}

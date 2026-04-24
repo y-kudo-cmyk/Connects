@@ -33,6 +33,7 @@ export type MyEntry = {
   customTimeEnd?: string
   customDate?: string
   reservationNote?: string
+  ticketSource?: string   // チケット入手経路 (FC_1ST / MOBILE_1ST / FC_2ND / MOBILE_2ND / LAWSON_LOTTERY / LAWSON_GENERAL / TICKET_SHARE / EQUIPMENT_RELEASE)
   ticketImages?: string[]
   seatInfo?: SeatInfo
   notes?: string
@@ -77,6 +78,7 @@ type DbMyEntry = {
   source_url: string | null
   notes: string | null
   reservation_note: string | null
+  ticket_source: string | null
   ticket_image_url: string | null
   view_image_url: string | null
   seat_info: SeatInfo | null
@@ -135,6 +137,7 @@ function toApp(row: DbMyEntry): MyEntry {
     ticketImages: parseImageField(row.ticket_image_url),
     seatInfo: row.seat_info ?? undefined,
     reservationNote: row.reservation_note ?? undefined,
+    ticketSource: row.ticket_source ?? undefined,
     notes,
     memo: row.memo ?? '',
     images,
@@ -193,6 +196,7 @@ export function useMyEntries() {
       ticket_image_url: entry.ticketImages?.length ? JSON.stringify(entry.ticketImages) : null,
       seat_info: entry.seatInfo || null,
       reservation_note: entry.reservationNote || null,
+      ticket_source: entry.ticketSource || null,
       memo: entry.memo || null,
     })
     await fetchEntries()
@@ -206,6 +210,7 @@ export function useMyEntries() {
     if (updates.memo !== undefined) dbUpdates.memo = updates.memo || null
     if (updates.notes !== undefined) dbUpdates.notes = updates.notes || null
     if (updates.reservationNote !== undefined) dbUpdates.reservation_note = updates.reservationNote || null
+    if (updates.ticketSource !== undefined) dbUpdates.ticket_source = updates.ticketSource || null
     if (updates.seatInfo !== undefined) dbUpdates.seat_info = updates.seatInfo || null
     if (updates.ticketImages !== undefined) dbUpdates.ticket_image_url = updates.ticketImages?.length ? JSON.stringify(updates.ticketImages) : null
     if (updates.images !== undefined) dbUpdates.image_url = updates.images?.length ? JSON.stringify(updates.images) : null
