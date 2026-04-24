@@ -1177,7 +1177,7 @@ function EditModal({ entry, onClose, onSave, onRemove }: {
 
               {/* チケット入手経路 (日本 LIVE 系: CONCERT / LIVEVIEWING / TICKET 対象) */}
               {(editTag === 'CONCERT' || editTag === 'LIVEVIEWING' || editTag === 'TICKET') && (() => {
-                const TICKET_ENUMS = new Set(['FC_1ST','MOBILE_1ST','FC_2ND','MOBILE_2ND','LAWSON_LOTTERY','LAWSON_FCFS','TICKET_SHARE','EQUIPMENT_RELEASE'])
+                const TICKET_ENUMS = new Set(['FC_1ST','CARATMOBILE_1ST','FC_2ND','CARATMOBILE_2ND','LAWSON_LOTTERY','LAWSON_FCFS','TICKET_SHARE','EQUIPMENT_RELEASE'])
                 const isOther = !!ticketSource && !TICKET_ENUMS.has(ticketSource)
                 const selectValue = !ticketSource ? '' : (TICKET_ENUMS.has(ticketSource) ? ticketSource : 'OTHER')
                 const otherText = isOther && ticketSource !== 'OTHER' ? ticketSource : ''
@@ -1203,9 +1203,9 @@ function EditModal({ entry, onClose, onSave, onRemove }: {
                     >
                       <option value="">— 未設定 —</option>
                       <option value="FC_1ST">FC 1次</option>
-                      <option value="MOBILE_1ST">モバ 1次</option>
+                      <option value="CARATMOBILE_1ST">カラモバ 1次</option>
                       <option value="FC_2ND">FC 2次</option>
-                      <option value="MOBILE_2ND">モバ 2次</option>
+                      <option value="CARATMOBILE_2ND">カラモバ 2次</option>
                       <option value="LAWSON_LOTTERY">ローチケ抽選</option>
                       <option value="LAWSON_FCFS">ローチケ先着</option>
                       <option value="TICKET_SHARE">チケシェア</option>
