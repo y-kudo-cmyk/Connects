@@ -1176,36 +1176,59 @@ function EditModal({ entry, onClose, onSave, onRemove }: {
               )}
 
               {/* チケット入手経路 (日本 LIVE 系: CONCERT / LIVEVIEWING / TICKET 対象) */}
-              {(editTag === 'CONCERT' || editTag === 'LIVEVIEWING' || editTag === 'TICKET') && (
-                <div className="mt-3">
-                  <p className="text-[10px] font-bold mb-1" style={{ color: '#636366' }}>どのタイミングで当選？</p>
-                  <select
-                    value={ticketSource}
-                    onChange={(e) => setTicketSource(e.target.value)}
-                    className="w-full px-3 py-2.5 rounded-xl text-sm outline-none appearance-none"
-                    style={{
-                      background: '#FFFFFF',
-                      border: '1px solid #E5E5EA',
-                      color: ticketSource ? '#1C1C1E' : '#8E8E93',
-                      backgroundImage: 'url(\"data:image/svg+xml;utf8,<svg xmlns=%27http://www.w3.org/2000/svg%27 width=%2712%27 height=%2712%27 viewBox=%270 0 24 24%27 fill=%27none%27 stroke=%27%238E8E93%27 stroke-width=%272%27><polyline points=%276 9 12 15 18 9%27/></svg>\")',
-                      backgroundRepeat: 'no-repeat',
-                      backgroundPosition: 'right 12px center',
-                      paddingRight: 32,
-                    }}
-                  >
-                    <option value="">— 未設定 —</option>
-                    <option value="FC_1ST">FC 1次</option>
-                    <option value="MOBILE_1ST">モバ 1次</option>
-                    <option value="FC_2ND">FC 2次</option>
-                    <option value="MOBILE_2ND">モバ 2次</option>
-                    <option value="LAWSON_LOTTERY">ローチケ抽選</option>
-                    <option value="LAWSON_GENERAL">ローチケ一般</option>
-                    <option value="TICKET_SHARE">チケシェア</option>
-                    <option value="EQUIPMENT_RELEASE">機材解放</option>
-                    <option value="OTHER">その他</option>
-                  </select>
-                </div>
-              )}
+              {(editTag === 'CONCERT' || editTag === 'LIVEVIEWING' || editTag === 'TICKET') && (() => {
+                const TICKET_ENUMS = new Set(['FC_1ST','MOBILE_1ST','FC_2ND','MOBILE_2ND','LAWSON_LOTTERY','LAWSON_FCFS','TICKET_SHARE','EQUIPMENT_RELEASE'])
+                const isOther = !!ticketSource && !TICKET_ENUMS.has(ticketSource)
+                const selectValue = !ticketSource ? '' : (TICKET_ENUMS.has(ticketSource) ? ticketSource : 'OTHER')
+                const otherText = isOther && ticketSource !== 'OTHER' ? ticketSource : ''
+                return (
+                  <div className="mt-3">
+                    <p className="text-[10px] font-bold mb-1" style={{ color: '#636366' }}>どのタイミングで当選？</p>
+                    <select
+                      value={selectValue}
+                      onChange={(e) => {
+                        const v = e.target.value
+                        setTicketSource(v === 'OTHER' ? (isOther ? ticketSource : 'OTHER') : v)
+                      }}
+                      className="w-full px-3 py-2.5 rounded-xl text-sm outline-none appearance-none"
+                      style={{
+                        background: '#FFFFFF',
+                        border: '1px solid #E5E5EA',
+                        color: selectValue ? '#1C1C1E' : '#8E8E93',
+                        backgroundImage: 'url(\"data:image/svg+xml;utf8,<svg xmlns=%27http://www.w3.org/2000/svg%27 width=%2712%27 height=%2712%27 viewBox=%270 0 24 24%27 fill=%27none%27 stroke=%27%238E8E93%27 stroke-width=%272%27><polyline points=%276 9 12 15 18 9%27/></svg>\")',
+                        backgroundRepeat: 'no-repeat',
+                        backgroundPosition: 'right 12px center',
+                        paddingRight: 32,
+                      }}
+                    >
+                      <option value="">— 未設定 —</option>
+                      <option value="FC_1ST">FC 1次</option>
+                      <option value="MOBILE_1ST">モバ 1次</option>
+                      <option value="FC_2ND">FC 2次</option>
+                      <option value="MOBILE_2ND">モバ 2次</option>
+                      <option value="LAWSON_LOTTERY">ローチケ抽選</option>
+                      <option value="LAWSON_FCFS">ローチケ先着</option>
+                      <option value="TICKET_SHARE">チケシェア</option>
+                      <option value="EQUIPMENT_RELEASE">機材解放</option>
+                      <option value="OTHER">その他 (自由入力)</option>
+                    </select>
+                    {selectValue === 'OTHER' && (
+                      <input
+                        type="text"
+                        value={otherText}
+                        placeholder="入手経路を入力"
+                        maxLength={60}
+                        onChange={(e) => {
+                          const v = e.target.value
+                          setTicketSource(v ? v : 'OTHER')
+                        }}
+                        className="w-full mt-2 px-3 py-2.5 rounded-xl text-sm outline-none"
+                        style={{ background: '#FFFFFF', border: '1px solid #E5E5EA', color: '#1C1C1E' }}
+                      />
+                    )}
+                  </div>
+                )
+              })()}
 
               {/* 座席情報（チケット画像アップで自動OCR→編集可） */}
               {ticketImages.length > 0 && (
