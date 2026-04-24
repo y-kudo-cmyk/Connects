@@ -9,6 +9,8 @@ const supabase = createClient()
  * DB から自分の紹介コード + 招待者コードを取得
  * 既存 profiles.ref_code / introduced_by を参照。
  */
+const PENDING_REF_KEY = 'cp-referred-by'  // /join?ref=XXX で保存、初回サインイン後に自動適用
+
 export function useReferral() {
   const [myCode, setMyCode] = useState<string>('')
   const [introducedBy, setIntroducedBy] = useState<string>('')
@@ -28,6 +30,25 @@ export function useReferral() {
       setMyCode(data?.ref_code || '')
       setIntroducedBy(data?.introduced_by || '')
       setLoading(false)
+
+      // 保留中の紹介コードを自動適用: /join?ref=XXX 経由で localStorage に保存されたものを
+      // introducedBy がまだ無いユーザーに 1回だけ紐付ける
+      if (!data?.introduced_by) {
+        try {
+          const pending = localStorage.getItem(PENDING_REF_KEY)
+          if (pending) {
+            const res = await fetch('/api/set-referrer', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ code: pending }),
+            })
+            if (res.ok) {
+              localStorage.removeItem(PENDING_REF_KEY)
+              if (!cancelled) setIntroducedBy(pending)
+            }
+          }
+        } catch { /* silent */ }
+      }
     })()
     return () => { cancelled = true }
   }, [])

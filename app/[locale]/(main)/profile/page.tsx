@@ -14,6 +14,7 @@ import { useMyEntries, MyEntry } from '@/lib/useMyEntries'
 import { useReferral } from '@/lib/useReferral'
 import { createClient } from '@/lib/supabase/client'
 import { seventeenMembers } from '@/lib/config/constants'
+import { QRCodeSVG } from 'qrcode.react'
 
 const LANGUAGES = [
   { code: 'ja' as const, flag: '\u{1F1EF}\u{1F1F5}', label: '\u65E5\u672C\u8A9E' },
@@ -1405,7 +1406,9 @@ function ReferralSection() {
 
   const handleCopy = async () => {
     if (!myCode) return
-    const text = `${APP_URL}\n紹介コード : ${myCode}`
+    // 紹介コード自動入力 URL をコピー (受け手は /join?ref= で自動紐付け)
+    const joinUrl = `${APP_URL}/join?ref=${myCode}`
+    const text = `Connects+ 招待\n${joinUrl}\n\n(紹介コード: ${myCode})`
     try {
       await navigator.clipboard.writeText(text)
       setCopied(true)
@@ -1449,17 +1452,31 @@ function ReferralSection() {
                 </button>
               </div>
 
-              {/* 登録URL — 紹介コードと同じレイアウト (ラベル外) */}
-              <p className="text-[10px] font-bold mt-2.5 mb-1" style={{ color: '#8E8E93' }}>登録URL</p>
+              {/* 登録URL (紹介コード付き、スキャンで自動適用) */}
+              <p className="text-[10px] font-bold mt-2.5 mb-1" style={{ color: '#8E8E93' }}>登録URL (紹介コード自動入力)</p>
               <a
-                href={APP_URL}
+                href={`${APP_URL}/join?ref=${myCode}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="block px-3 py-2 rounded-xl text-sm font-semibold break-all"
                 style={{ background: 'rgba(96,165,250,0.10)', color: '#60A5FA' }}
               >
-                {APP_URL}
+                {APP_URL}/join?ref={myCode}
               </a>
+
+              {/* QR コード */}
+              <div className="mt-3 flex flex-col items-center gap-2 py-3 rounded-xl" style={{ background: '#F8F9FA' }}>
+                <QRCodeSVG
+                  value={`${APP_URL}/join?ref=${myCode}`}
+                  size={160}
+                  bgColor="#F8F9FA"
+                  fgColor="#1C1C1E"
+                  level="M"
+                />
+                <p className="text-[10px]" style={{ color: '#8E8E93' }}>
+                  スキャンすると紹介コードが自動で入ります 📲
+                </p>
+              </div>
 
               <p className="text-[10px] mt-2" style={{ color: '#8E8E93' }}>
                 コピーボタンで URL + 紹介コードをまとめて共有できます
