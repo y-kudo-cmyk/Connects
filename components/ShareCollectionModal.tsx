@@ -97,13 +97,16 @@ export default function ShareCollectionModal({
 
   const tweetUrl = useMemo(() => {
     if (!shareUrl) return '#'
-    const text = `【SEVENTEEN トレカ交換】\nDMください🙏\n\n`
+    // X 公式 intent (日本語ハッシュタグは text 内に埋める、hashtags param は欧文前提)
+    const text = `【SEVENTEEN トレカ交換】
+DMください🙏
+
+#SEVENTEEN #セブチ #トレカ交換 #Connects`
     const params = new URLSearchParams({
       text,
       url: shareUrl,
-      hashtags: 'SEVENTEEN,セブチ,トレカ交換,Connects',
     })
-    return `https://twitter.com/intent/tweet?${params.toString()}`
+    return `https://x.com/intent/post?${params.toString()}`
   }, [shareUrl])
 
   const canShare = scope === 'all' || selectedIds.size > 0
@@ -297,23 +300,26 @@ export default function ShareCollectionModal({
               <>URL</>
             )}
           </button>
-          <a
-            href={canShare ? tweetUrl : '#'}
-            target="_blank"
-            rel="noopener noreferrer"
-            onClick={e => { if (!canShare) e.preventDefault() }}
-            className="flex-1 py-3 rounded-xl text-sm font-bold flex items-center justify-center gap-1.5"
-            style={{
-              background: '#1C1C1E',
-              color: '#FFFFFF',
-              opacity: canShare ? 1 : 0.4,
-            }}
-          >
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
-            </svg>
-            Xに投稿
-          </a>
+          {/* X に投稿ボタンは一旦非表示 (運用判断で後日復活予定) */}
+          {false && (
+            <a
+              href={canShare ? tweetUrl : '#'}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={e => { if (!canShare) e.preventDefault() }}
+              className="flex-1 py-3 rounded-xl text-sm font-bold flex items-center justify-center gap-1.5"
+              style={{
+                background: '#1C1C1E',
+                color: '#FFFFFF',
+                opacity: canShare ? 1 : 0.4,
+              }}
+            >
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+              </svg>
+              Xに投稿
+            </a>
+          )}
         </div>
       </div>
     </div>,

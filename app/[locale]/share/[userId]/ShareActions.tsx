@@ -24,13 +24,19 @@ export default function ShareActions({ nickname, offerCount, seekCount }: Props)
 
   const buildTweetUrl = () => {
     if (typeof window === 'undefined') return '#'
-    const text = `【SEVENTEEN トレカ交換】\n${nickname} です\n譲 ${offerCount}枚 / 求 ${seekCount}枚\nDMください🙏\n\n`
+    // X 公式の新 intent endpoint (twitter.com/intent/tweet は廃止予告あり)
+    // ハッシュタグは日本語を含むので text 内に直接埋める (hashtags パラメータは欧文前提)
+    const text = `【SEVENTEEN トレカ交換】
+${nickname} です
+譲 ${offerCount}枚 / 求 ${seekCount}枚
+DMください🙏
+
+#SEVENTEEN #セブチ #トレカ交換 #Connects`
     const params = new URLSearchParams({
       text,
       url: window.location.href,
-      hashtags: 'SEVENTEEN,セブチ,トレカ交換,Connects',
     })
-    return `https://twitter.com/intent/tweet?${params.toString()}`
+    return `https://x.com/intent/post?${params.toString()}`
   }
 
   return (
@@ -57,18 +63,21 @@ export default function ShareActions({ nickname, offerCount, seekCount }: Props)
           </>
         )}
       </button>
-      <a
-        href={buildTweetUrl()}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="flex-1 py-3 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5"
-        style={{ background: '#1C1C1E', color: '#FFFFFF' }}
-      >
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
-          <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
-        </svg>
-        Xに投稿
-      </a>
+      {/* X に投稿ボタンは一旦非表示 (運用判断で後日復活予定) */}
+      {false && (
+        <a
+          href={buildTweetUrl()}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex-1 py-3 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5"
+          style={{ background: '#1C1C1E', color: '#FFFFFF' }}
+        >
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+          </svg>
+          Xに投稿
+        </a>
+      )}
     </div>
   )
 }
