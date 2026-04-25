@@ -78,7 +78,7 @@ export function getCardAspect(cardType: string | null | undefined): string {
   if (t === 'postcard') return '3 / 2'           // 横長 葉書
   if (t === 'tear-off_poster') return '3 / 4'
   if (t === 'binder') return '4 / 5'
-  if (t === 'folding_card') return '10 / 3'       // 横長 二つ折りカード
+  if (t === 'folding_card') return '6 / 1'        // 細長い横長 (W300×H50 mm 等)
   if (t === 'paddle') return '7 / 3'              // 横長 パドル/うちわ系
   if (t === 'bookmark') return '1 / 2'            // ブックマーク (細長い縦)
   if (t === 'layer_card') return '1 / 1'          // 正方形ぽい

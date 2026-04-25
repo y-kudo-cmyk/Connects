@@ -552,9 +552,20 @@ export default function AlbumDetail({ product, userCards, onBack, onCardTap, onB
                                 )}
                               </button>
                             ) : null
-                            // 表タイル並び: col-span小(photocard等 2:3)を先、幅広(photobook/magnet等)を後ろに
-                            // → 幅広アイテムが自然と下の段に押し出される
-                            const sortedCards = [...sub.cards].sort((a, b) => getCardColSpan(a.card_type) - getCardColSpan(b.card_type))
+                            // 表タイル並び: photocard 系を最優先、次に postcard、最後に folding/paddle 等
+                            const TYPE_PRIORITY: Record<string, number> = {
+                              photocard: 0, luckydraw: 0, fotocard: 0, minicard: 0,
+                              postcard: 1, cd_plate: 1, bookmark: 1,
+                              sticker: 2, layer_card: 2,
+                              folding_card: 3, paddle: 3, poster: 3, 'tear-off_poster': 3,
+                              binder: 4, clear_file: 4,
+                            }
+                            const sortedCards = [...sub.cards].sort((a, b) => {
+                              const pa = TYPE_PRIORITY[(a.card_type || '').toLowerCase()] ?? 99
+                              const pb = TYPE_PRIORITY[(b.card_type || '').toLowerCase()] ?? 99
+                              if (pa !== pb) return pa - pb
+                              return getCardColSpan(a.card_type) - getCardColSpan(b.card_type)
+                            })
                             const frontTiles = sortedCards.map(card => {
                       const owned = ownedMap.get(card.id) || null
                       const hasQty = (owned?.quantity ?? 0) > 0
