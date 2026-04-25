@@ -119,10 +119,23 @@ export function isWideCard(cardType: string | null | undefined): boolean {
   return getCardColSpan(cardType) > 2
 }
 
-// 裏面が存在するタイプ。非トレカ系は裏なし扱い。
+// 裏面が存在するタイプ。CD/ポスター/ステッカー/コースター/マグネット等は片面のみ。
 export function hasBackSide(cardType: string | null | undefined): boolean {
   const t = (cardType || '').toLowerCase()
-  return !(t === 'magnet_sheet' || t === 'mega_jacket' || t === 'coaster' || t === 'sticker' || t === 'clear_file')
+  const oneSided = new Set([
+    'magnet_sheet',
+    'mega_jacket',
+    'coaster',
+    'sticker',
+    'clear_file',
+    'cd_plate',
+    'poster',
+    'paddle',
+    'puzzle',
+    'tear-off_poster',
+    'scratch_card',
+  ])
+  return !oneSided.has(t)
 }
 
 // True "trading card" types: use object-fit: cover (full-bleed frame).
