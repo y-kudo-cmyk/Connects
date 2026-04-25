@@ -20,32 +20,48 @@ export default async function UsersPage() {
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!,
   )
+  // 全件ページング取得 (Supabase の 1000件 cap 回避)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  async function fetchAll(buildQuery: () => any): Promise<any[]> {
+    const out: unknown[] = []
+    let from = 0
+    const PAGE = 1000
+    while (true) {
+      const { data, error } = await buildQuery().range(from, from + PAGE - 1)
+      if (error || !data || data.length === 0) break
+      out.push(...data)
+      if (data.length < PAGE) break
+      from += PAGE
+    }
+    return out
+  }
+
   // ユーザー本体 + 投稿数/承認数をリアルタイム集計 (post_count / approval_total 列は廃止)
   const [
     { data: users },
-    { data: events },
-    { data: spots },
-    { data: photos },
-    { data: urlSubs },
-    { data: evVotes },
-    { data: phVotes },
-    { data: editReqs },
-    { data: editActivities },
-    { data: glideUsers },
-    { data: activities },
+    events,
+    spots,
+    photos,
+    urlSubs,
+    evVotes,
+    phVotes,
+    editReqs,
+    editActivities,
+    glideUsers,
+    activities,
     { data: authList },
   ] = await Promise.all([
     sb.from("profiles").select("id, nickname, mail, role, is_verified, created_at, membership_number, ref_code, introduced_by").order("membership_number", { ascending: true, nullsFirst: false }).range(0, 4999),
-    sb.from("events").select("submitted_by").not("submitted_by", "is", null).range(0, 49999),
-    sb.from("spots").select("submitted_by").not("submitted_by", "is", null).range(0, 9999),
-    sb.from("spot_photos").select("submitted_by").not("submitted_by", "is", null).range(0, 9999),
-    sb.from("url_submissions").select("submitted_by").not("submitted_by", "is", null).range(0, 9999),
-    sb.from("event_votes").select("user_id").range(0, 9999),
-    sb.from("spot_photo_votes").select("user_id").range(0, 9999),
-    sb.from("edit_requests").select("submitted_by").not("submitted_by", "is", null).range(0, 9999),
-    sb.from("user_activity").select("user_id").eq("action", "edit").range(0, 99999),
-    sb.from("glide_users").select("mail, membership_number, join_date").range(0, 4999),
-    sb.from("user_activity").select("user_id, created_at").order("created_at", { ascending: false }).range(0, 19999),
+    fetchAll(() => sb.from("events").select("submitted_by").not("submitted_by", "is", null)),
+    fetchAll(() => sb.from("spots").select("submitted_by").not("submitted_by", "is", null)),
+    fetchAll(() => sb.from("spot_photos").select("submitted_by").not("submitted_by", "is", null)),
+    fetchAll(() => sb.from("url_submissions").select("submitted_by").not("submitted_by", "is", null)),
+    fetchAll(() => sb.from("event_votes").select("user_id")),
+    fetchAll(() => sb.from("spot_photo_votes").select("user_id")),
+    fetchAll(() => sb.from("edit_requests").select("submitted_by").not("submitted_by", "is", null)),
+    fetchAll(() => sb.from("user_activity").select("user_id").eq("action", "edit")),
+    fetchAll(() => sb.from("glide_users").select("mail, membership_number, join_date")),
+    fetchAll(() => sb.from("user_activity").select("user_id, created_at").order("created_at", { ascending: false })),
     sb.auth.admin.listUsers({ perPage: 2000 }).then(r => ({ data: r.data?.users || [] })),
   ])
 
