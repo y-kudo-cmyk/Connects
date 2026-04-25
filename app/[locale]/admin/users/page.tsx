@@ -29,6 +29,8 @@ export default async function UsersPage() {
     { data: evVotes },
     { data: phVotes },
     { data: glideUsers },
+    { data: activities },
+    { data: authList },
   ] = await Promise.all([
     sb.from("profiles").select("id, nickname, mail, role, is_verified, created_at, membership_number").order("membership_number", { ascending: true, nullsFirst: false }).limit(2000),
     sb.from("events").select("submitted_by").not("submitted_by", "is", null).neq("status", "deleted"),
@@ -37,6 +39,8 @@ export default async function UsersPage() {
     sb.from("event_votes").select("user_id"),
     sb.from("spot_photo_votes").select("user_id"),
     sb.from("glide_users").select("mail, membership_number, join_date"),
+    sb.from("user_activity").select("user_id, created_at").order("created_at", { ascending: false }).limit(20000),
+    sb.auth.admin.listUsers({ perPage: 2000 }).then(r => ({ data: r.data?.users || [] })),
   ])
 
   // 投稿カウント
@@ -60,6 +64,16 @@ export default async function UsersPage() {
     }
   }
 
+  // 最終アクセス: user_activity の最新, fallback に auth.users.last_sign_in_at
+  const lastActivity = new Map<string, string>()
+  for (const a of activities ?? []) {
+    if (!lastActivity.has(a.user_id)) lastActivity.set(a.user_id, a.created_at)
+  }
+  const lastSignIn = new Map<string, string>()
+  for (const u of authList ?? []) {
+    if (u.last_sign_in_at) lastSignIn.set(u.id, u.last_sign_in_at)
+  }
+
   const enriched = (users ?? []).map(u => ({
     ...u,
     post_count: postCount.get(u.id) || 0,
@@ -67,6 +81,7 @@ export default async function UsersPage() {
     glide_join_date: (u.membership_number && glideJoinByMember.get(u.membership_number))
       || (u.mail && glideJoinByMail.get(u.mail.toLowerCase().trim()))
       || null,
+    last_active_at: lastActivity.get(u.id) || lastSignIn.get(u.id) || null,
   }))
 
   return (
