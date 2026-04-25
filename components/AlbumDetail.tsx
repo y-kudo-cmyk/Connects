@@ -132,8 +132,12 @@ export default function AlbumDetail({ product, userCards, onBack, onCardTap, onB
       // ユニット共通カード: 代表 (リーダー) member_id に保存されているので、
       // 同ユニット内の他メンバーにも表示
       if (unitLeader && c.member_id === unitLeader && isUnitSharedCard(c.card_detail)) return true
-      // 団体カード (member_id null) はどのメンバータブからも表示
-      if (!c.member_id) return true
+      // 「集合」「団体」明示の null member_id カードのみ全タブから表示
+      // ユニット系の null member_id は (まだメンバー未紐付けの状態) 表示しない
+      if (!c.member_id) {
+        const d = (c.card_detail || '').trim()
+        if (d.includes('集合') || d.includes('団体')) return true
+      }
       return false
     })
   }, [cards, activeMemberId])
