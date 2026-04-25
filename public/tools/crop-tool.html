@@ -60,6 +60,9 @@
   <div class="bar">
     <button id="addBox" class="ok">+ 新規枠</button>
     <button id="dupBox">複製</button>
+    <button id="dupRow" title="同じ行のすべての枠を下に複製">↓ 行を下複製</button>
+    <button id="dupCol" title="同じ列のすべての枠を右に複製">→ 列を右複製</button>
+    <button id="unifySize" title="選択枠のサイズに全枠を揃える">枠サイズ統一</button>
     <button id="undoBox">↩ 戻す</button>
     <button class="danger" id="clearAll">全削除</button>
     <span style="flex: 1"></span>
@@ -298,6 +301,38 @@ document.getElementById('dupBox').onclick = () => {
   const b = boxes[selectedIdx]
   boxes.push({ ...b, left: b.left + 40, top: b.top + 40 })
   selectedIdx = boxes.length - 1; render()
+}
+// 行を下に複製: 選択枠と同じ行 (top が ±height/2 以内) の枠群を全部下に複製
+document.getElementById('dupRow').onclick = () => {
+  if (selectedIdx < 0) { alert('行の基準枠を選択してください'); return }
+  const sel = boxes[selectedIdx]
+  const tol = sel.height / 2
+  const row = boxes.filter(b => Math.abs(b.top - sel.top) <= tol)
+  const gap = 30 // 行間隔
+  const dy = sel.height + gap
+  const copies = row.map(b => ({ ...b, top: b.top + dy }))
+  boxes.push(...copies)
+  selectedIdx = -1; render()
+}
+// 列を右に複製: 選択枠と同じ列 (left が ±width/2 以内) の枠群を右に複製
+document.getElementById('dupCol').onclick = () => {
+  if (selectedIdx < 0) { alert('列の基準枠を選択してください'); return }
+  const sel = boxes[selectedIdx]
+  const tol = sel.width / 2
+  const col = boxes.filter(b => Math.abs(b.left - sel.left) <= tol)
+  const gap = 30
+  const dx = sel.width + gap
+  const copies = col.map(b => ({ ...b, left: b.left + dx }))
+  boxes.push(...copies)
+  selectedIdx = -1; render()
+}
+// 枠サイズ統一: 選択枠の width/height を他の全枠に適用
+document.getElementById('unifySize').onclick = () => {
+  if (selectedIdx < 0) { alert('基準にする枠を選択してください'); return }
+  const sel = boxes[selectedIdx]
+  if (!confirm(`全 ${boxes.length} 枠のサイズを ${sel.width}×${sel.height} に揃えますか？`)) return
+  for (const b of boxes) { b.width = sel.width; b.height = sel.height }
+  render()
 }
 document.getElementById('clearAll').onclick = () => { if (confirm('全枠を削除しますか？')) { boxes = []; selectedIdx = -1; render() } }
 
