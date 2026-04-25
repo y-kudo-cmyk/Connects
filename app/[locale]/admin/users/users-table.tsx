@@ -15,7 +15,6 @@ import {
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
 } from "@/components/ui/select"
 import { updateUserRole } from "../actions"
 
@@ -86,13 +85,12 @@ export function UsersTable({ users }: { users: User[] }) {
             <TableHead onClick={() => toggleSort('is_verified')} className="cursor-pointer select-none">認証{arrow('is_verified')}</TableHead>
             <TableHead onClick={() => toggleSort('join_date')} className="cursor-pointer select-none">登録日{arrow('join_date')}</TableHead>
             <TableHead onClick={() => toggleSort('last_active_at')} className="cursor-pointer select-none">最終アクセス{arrow('last_active_at')}</TableHead>
-            <TableHead>操作</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {sorted.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={10} className="text-center text-muted-foreground">
+              <TableCell colSpan={9} className="text-center text-muted-foreground">
                 ユーザーはいません
               </TableCell>
             </TableRow>
@@ -103,9 +101,27 @@ export function UsersTable({ users }: { users: User[] }) {
                 <TableCell className="font-medium">{user.nickname || "—"}</TableCell>
                 <TableCell className="text-sm">{user.mail || "—"}</TableCell>
                 <TableCell>
-                  <Badge variant={user.role === "admin" ? "default" : user.role === "banned" ? "destructive" : user.role === "fam" ? "outline" : "secondary"}>
-                    {user.role}
-                  </Badge>
+                  <Select
+                    defaultValue={user.role}
+                    onValueChange={(v) =>
+                      handleRoleChange(user.id, v as "user" | "fam" | "admin" | "banned")
+                    }
+                  >
+                    <SelectTrigger className="border-0 p-0 h-auto w-auto bg-transparent shadow-none focus:ring-0 [&>svg]:hidden cursor-pointer">
+                      <Badge
+                        variant={user.role === "admin" ? "default" : user.role === "banned" ? "destructive" : user.role === "fam" ? "outline" : "secondary"}
+                        className="hover:opacity-80"
+                      >
+                        {user.role}
+                      </Badge>
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="user">user</SelectItem>
+                      <SelectItem value="fam">fam</SelectItem>
+                      <SelectItem value="admin">admin</SelectItem>
+                      <SelectItem value="banned">banned</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </TableCell>
                 <TableCell>{user.post_count}</TableCell>
                 <TableCell>{user.approval_total}</TableCell>
@@ -119,24 +135,6 @@ export function UsersTable({ users }: { users: User[] }) {
                 </TableCell>
                 <TableCell className="text-xs">
                   {user.last_active_at ? formatRelative(user.last_active_at) : '—'}
-                </TableCell>
-                <TableCell>
-                  <Select
-                    defaultValue={user.role}
-                    onValueChange={(v) =>
-                      handleRoleChange(user.id, v as "user" | "fam" | "admin" | "banned")
-                    }
-                  >
-                    <SelectTrigger className="h-8 w-[110px]">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="user">user</SelectItem>
-                      <SelectItem value="fam">fam</SelectItem>
-                      <SelectItem value="admin">admin</SelectItem>
-                      <SelectItem value="banned">banned</SelectItem>
-                    </SelectContent>
-                  </Select>
                 </TableCell>
               </TableRow>
             ))
