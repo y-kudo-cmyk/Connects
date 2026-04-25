@@ -547,10 +547,10 @@ export default function AlbumDetail({ product, userCards, onBack, onCardTap, onB
                       const wantedOnly = owned && !hasQty  // qty=0, want-only
 
                       const cardAspect = getCardAspect(card.card_type)
-                      const bgSize = isTradingCardFit(card.card_type) ? 'cover' : 'contain'
-                      // 画像があれば qty=0 でも画像表示する（保存済み画像の反映）
-                      const bgStyle = hasImage
-                        ? `rgba(243,180,227,0.15) url(${displayImage}) center / ${bgSize} no-repeat`
+                      const isTradingCard = isTradingCardFit(card.card_type)
+                      // トレカは2:3固定 (cover)、それ以外は画像本来のアスペクトに追従 (img要素 + height auto)
+                      const bgStyle = isTradingCard && hasImage
+                        ? `rgba(243,180,227,0.15) url(${displayImage}) center / cover no-repeat`
                         : hasQty ? 'rgba(243,180,227,0.15)' : '#E5E5EA'
                       // 8-col grid 内での占有列 (高さ揃えのため比率逆算)
                       // Tailwind JIT 用 静的マップ: col-span-2 col-span-3 col-span-4 col-span-5 col-span-6
@@ -564,11 +564,22 @@ export default function AlbumDetail({ product, userCards, onBack, onCardTap, onB
                           className={`relative rounded-lg overflow-hidden transition-transform active:scale-95 ${spanClass}`}
                           style={{
                             width: '100%',
-                            aspectRatio: cardAspect,
+                            // トレカは固定枠、それ以外は画像なしor画像時に応じて
+                            ...(isTradingCard ? { aspectRatio: cardAspect } : (hasImage ? {} : { aspectRatio: cardAspect })),
                             background: bgStyle,
                             border: hasQty ? `2px solid ${accent}` : wantedOnly ? '2px dashed #60A5FA' : '2px solid transparent',
                           }}
                         >
+                          {/* トレカ以外: img 要素で natural aspect 表示 */}
+                          {!isTradingCard && hasImage && (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img
+                              src={displayImage}
+                              alt={card.card_detail || card.card_type || ''}
+                              className="block w-full h-auto"
+                              loading="lazy"
+                            />
+                          )}
                           {!hasImage && (
                             <div className="absolute inset-0 flex flex-col items-center justify-center p-1.5">
                               <svg
