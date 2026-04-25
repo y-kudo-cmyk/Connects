@@ -8,7 +8,7 @@ const TOKEN = process.env.LINE_CHANNEL_ACCESS_TOKEN
 
 const FANDOM = 'CARAT'
 const ARTIST = 'SEVENTEEN'
-const FOOTER = '\n━━━━━━━━━━\nConnect+\nhttps://connects-nu.vercel.app/'
+const FOOTER = '\n━━━━━━━━━━\nConnect+\nhttps://app.connectsplus.net/'
 const PREFIX = `✨ お知らせ\n\nただいま Connect+ をリニューアル中のため、\n朝のメッセージが一部の方に届かないケースがありました。\n改めて本日のスケジュールをお送りします🙏\n\n━━━━━━━━━━\n\n`
 
 function jstDate(offsetDays = 0) { const d = new Date(Date.now() + 9*60*60*1000 + offsetDays*86400000); return d.toISOString().slice(0, 10) }

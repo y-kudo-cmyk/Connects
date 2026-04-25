@@ -8,7 +8,7 @@ const LINE_TOKEN = process.env.LINE_CHANNEL_ACCESS_TOKEN
 
 const FANDOM = 'CARAT'
 const ARTIST = 'SEVENTEEN'
-const FOOTER = '\n━━━━━━━━━━\nConnect+\nhttps://connects-nu.vercel.app/'
+const FOOTER = '\n━━━━━━━━━━\nConnect+\nhttps://app.connectsplus.net/'
 const TAG_ICON = { LIVE: '🎤', TICKET: '🎫', CD: '💿', TV: '📺', POPUP: '🏪', MERCH: '🛒', MAGAZINE: '📖', EVENT: '❤️', LIVEVIEWING: '🎬', INFO: '📢', RADIO: '📻', YOUTUBE: '▶️', BIRTHDAY: '🎂' }
 
 function jstDate(offset = 0) {

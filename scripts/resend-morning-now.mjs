@@ -9,7 +9,7 @@ if (!TOKEN) { console.error('LINE_CHANNEL_ACCESS_TOKEN not set'); process.exit(1
 
 const FANDOM = 'CARAT'
 const ARTIST = 'SEVENTEEN'
-const FOOTER = '\n━━━━━━━━━━\nConnect+\nhttps://connects-nu.vercel.app/'
+const FOOTER = '\n━━━━━━━━━━\nConnect+\nhttps://app.connectsplus.net/'
 
 const PREFIX = `✨ お知らせ\n\nただいま Connect+ をリニューアル中のため、\n朝のメッセージが一部の方に届かないケースがありました。\n改めて本日のスケジュールをお送りします🙏\n\n━━━━━━━━━━\n\n`
 

@@ -3,7 +3,7 @@
 ## サービス概要
 K-POPファン向けのスケジュール管理＆聖地巡礼アプリ。現在SEVENTEENに特化、将来的に複数アーティスト対応予定。Glide（ノーコード）で運用中のアプリをNext.js + Supabaseでフルリビルド中。
 
-**本番URL**: https://connects-nu.vercel.app
+**本番URL**: https://app.connectsplus.net
 **GitHub**: https://github.com/y-kudo-cmyk/Connects
 
 ---
