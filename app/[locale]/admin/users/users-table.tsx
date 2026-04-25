@@ -23,10 +23,12 @@ type User = {
   nickname: string
   mail: string
   role: string
+  membership_number?: string | null
   post_count: number
   approval_total: number
   is_verified: boolean
   created_at: string
+  glide_join_date?: string | null
 }
 
 export function UsersTable({ users }: { users: User[] }) {
@@ -39,9 +41,13 @@ export function UsersTable({ users }: { users: User[] }) {
 
   return (
     <div className="rounded-md border">
+      <div className="px-3 py-2 text-sm font-bold border-b" style={{ background: '#F8F9FA' }}>
+        全 {users.length} 人
+      </div>
       <Table>
         <TableHeader>
           <TableRow>
+            <TableHead>会員番号</TableHead>
             <TableHead>ニックネーム</TableHead>
             <TableHead>メール</TableHead>
             <TableHead>ロール</TableHead>
@@ -55,13 +61,16 @@ export function UsersTable({ users }: { users: User[] }) {
         <TableBody>
           {users.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={8} className="text-center text-muted-foreground">
+              <TableCell colSpan={9} className="text-center text-muted-foreground">
                 ユーザーはいません
               </TableCell>
             </TableRow>
           ) : (
             users.map((user) => (
               <TableRow key={user.id}>
+                <TableCell className="text-xs font-mono">
+                  {user.membership_number || "—"}
+                </TableCell>
                 <TableCell className="font-medium">
                   {user.nickname || "—"}
                 </TableCell>
@@ -81,7 +90,10 @@ export function UsersTable({ users }: { users: User[] }) {
                   )}
                 </TableCell>
                 <TableCell className="text-xs">
-                  {new Date(user.created_at).toLocaleDateString("ja-JP")}
+                  {/* Glide登録日があれば優先表示 (古参ユーザーがいつから利用してるかが分かる) */}
+                  {user.glide_join_date
+                    ? new Date(user.glide_join_date).toLocaleDateString("ja-JP")
+                    : new Date(user.created_at).toLocaleDateString("ja-JP")}
                 </TableCell>
                 <TableCell>
                   <Select

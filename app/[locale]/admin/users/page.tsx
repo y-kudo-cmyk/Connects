@@ -28,13 +28,15 @@ export default async function UsersPage() {
     { data: photos },
     { data: evVotes },
     { data: phVotes },
+    { data: glideUsers },
   ] = await Promise.all([
-    sb.from("profiles").select("id, nickname, mail, role, is_verified, created_at").order("created_at", { ascending: false }).limit(500),
+    sb.from("profiles").select("id, nickname, mail, role, is_verified, created_at, membership_number").order("created_at", { ascending: false }).limit(500),
     sb.from("events").select("submitted_by").not("submitted_by", "is", null).neq("status", "deleted"),
     sb.from("spots").select("submitted_by").not("submitted_by", "is", null).neq("status", "deleted"),
     sb.from("spot_photos").select("submitted_by").not("submitted_by", "is", null).neq("status", "deleted"),
     sb.from("event_votes").select("user_id"),
     sb.from("spot_photo_votes").select("user_id"),
+    sb.from("glide_users").select("mail, membership_number, join_date"),
   ])
 
   // 投稿カウント
@@ -48,10 +50,23 @@ export default async function UsersPage() {
   for (const r of evVotes ?? []) approvalCount.set(r.user_id, (approvalCount.get(r.user_id) || 0) + 1)
   for (const r of phVotes ?? []) approvalCount.set(r.user_id, (approvalCount.get(r.user_id) || 0) + 1)
 
+  // Glide 登録日マップ (membership_number または mail でマッチ)
+  const glideJoinByMember = new Map<string, string>()
+  const glideJoinByMail = new Map<string, string>()
+  for (const g of glideUsers ?? []) {
+    if (g.join_date) {
+      if (g.membership_number) glideJoinByMember.set(g.membership_number, g.join_date)
+      if (g.mail) glideJoinByMail.set(g.mail.toLowerCase().trim(), g.join_date)
+    }
+  }
+
   const enriched = (users ?? []).map(u => ({
     ...u,
     post_count: postCount.get(u.id) || 0,
     approval_total: approvalCount.get(u.id) || 0,
+    glide_join_date: (u.membership_number && glideJoinByMember.get(u.membership_number))
+      || (u.mail && glideJoinByMail.get(u.mail.toLowerCase().trim()))
+      || null,
   }))
 
   return (
