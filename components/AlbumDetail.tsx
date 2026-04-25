@@ -132,6 +132,8 @@ export default function AlbumDetail({ product, userCards, onBack, onCardTap, onB
       // ユニット共通カード: 代表 (リーダー) member_id に保存されているので、
       // 同ユニット内の他メンバーにも表示
       if (unitLeader && c.member_id === unitLeader && isUnitSharedCard(c.card_detail)) return true
+      // 団体カード (member_id null) はどのメンバータブからも表示
+      if (!c.member_id) return true
       return false
     })
   }, [cards, activeMemberId])
