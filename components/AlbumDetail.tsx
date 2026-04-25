@@ -583,7 +583,11 @@ export default function AlbumDetail({ product, userCards, onBack, onCardTap, onB
                         : hasQty ? 'rgba(243,180,227,0.15)' : '#E5E5EA'
                       // 8-col grid 内での占有列 (高さ揃えのため比率逆算)
                       // Tailwind JIT 用 静的マップ: col-span-2 col-span-3 col-span-4 col-span-5 col-span-6
-                      const colSpan = getCardColSpan(card.card_type)
+                      let colSpan = getCardColSpan(card.card_type)
+                      // 団体ポストカード (横長クロップ) は個別 (縦長) と高さを揃えるため幅2倍
+                      const isGroupLandscape = (card.card_type || '').toLowerCase() === 'postcard'
+                        && (card.card_detail === '団体' || card.id.endsWith('_GROUP'))
+                      if (isGroupLandscape) colSpan = 4
                       const SPAN_CLASS: Record<number, string> = { 1: 'col-span-1', 2: 'col-span-2', 3: 'col-span-3', 4: 'col-span-4', 5: 'col-span-5', 6: 'col-span-6' }
                       const spanClass = SPAN_CLASS[colSpan] || 'col-span-2'
                       return (
