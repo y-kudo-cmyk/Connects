@@ -86,7 +86,6 @@ export function UsersTable({ users }: { users: User[] }) {
             <TableHead onClick={() => toggleSort('approval_total')} className="cursor-pointer select-none">承認{arrow('approval_total')}</TableHead>
             <TableHead onClick={() => toggleSort('edit_count')} className="cursor-pointer select-none">編集{arrow('edit_count')}</TableHead>
             <TableHead onClick={() => toggleSort('referral_count')} className="cursor-pointer select-none">紹介{arrow('referral_count')}</TableHead>
-            <TableHead onClick={() => toggleSort('is_verified')} className="cursor-pointer select-none">認証{arrow('is_verified')}</TableHead>
             <TableHead onClick={() => toggleSort('join_date')} className="cursor-pointer select-none">登録日{arrow('join_date')}</TableHead>
             <TableHead onClick={() => toggleSort('last_active_at')} className="cursor-pointer select-none">最終アクセス{arrow('last_active_at')}</TableHead>
           </TableRow>
@@ -94,7 +93,7 @@ export function UsersTable({ users }: { users: User[] }) {
         <TableBody>
           {sorted.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={11} className="text-center text-muted-foreground">
+              <TableCell colSpan={10} className="text-center text-muted-foreground">
                 ユーザーはいません
               </TableCell>
             </TableRow>
@@ -131,9 +130,6 @@ export function UsersTable({ users }: { users: User[] }) {
                 <TableCell>{user.approval_total}</TableCell>
                 <TableCell>{user.edit_count ?? 0}</TableCell>
                 <TableCell>{user.referral_count ?? 0}</TableCell>
-                <TableCell>
-                  {user.is_verified ? <Badge variant="default">済</Badge> : <Badge variant="outline">未</Badge>}
-                </TableCell>
                 <TableCell className="text-xs">
                   {user.glide_join_date
                     ? new Date(user.glide_join_date).toLocaleDateString("ja-JP")
