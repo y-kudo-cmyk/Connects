@@ -20,6 +20,15 @@ export default function LoginPage() {
     if (!loading && user) router.replace('/')
   }, [loading, user, router])
 
+  // 言語未選択ならオンボーディングへ。どこから流入しても言語を聞く。
+  useEffect(() => {
+    try {
+      if (!localStorage.getItem('cp-onboarding-lang-done')) {
+        router.replace('/onboarding')
+      }
+    } catch {}
+  }, [router])
+
   const handleEmailLogin = async () => {
     if (!email.trim() || !email.includes('@')) {
       setEmailError(t('Auth.loginEmailError'))

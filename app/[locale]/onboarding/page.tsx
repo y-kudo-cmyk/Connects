@@ -42,12 +42,11 @@ export default function OnboardingPage() {
       localStorage.setItem('cp-profile', JSON.stringify({ ...profile, language: l }))
       document.cookie = `NEXT_LOCALE=${l};path=/;max-age=31536000`
     } catch {}
-    // 招待コード検証済みならログインへ直行
-    if (verified) {
-      finishOnboarding()
-    } else {
-      setTimeout(() => setStep('code'), 150)
-    }
+    // 招待コード検証済みならログインへ直行。
+    // 直接アクセス (verified=false) は招待コードを持たない前提なので、
+    // 言語選択だけ済ませてログインへ。/join 経由の場合のみ verified=true で
+    // 別パスから来るので、ここはスキップ可。
+    finishOnboarding()
   }
 
   const finishOnboarding = () => {
