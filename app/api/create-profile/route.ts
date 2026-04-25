@@ -46,6 +46,10 @@ export async function POST(req: NextRequest) {
   const { data: glideUser } = await sb.from('glide_users').select('*').ilike('mail', normalized).limit(1)
   const g = glideUser?.[0]
 
+  // Glide 移行組で introduced_by が空なら info@ の紹介コードを自動付与
+  // (アプリ告知/X 投稿経由で来た人と区別するため)
+  const DEFAULT_INTRODUCER_CODE = 'U000018-0146'  // info@connectsplus.net
+
   // 会員番号: Glide にあればそれを引き継ぎ、なければ新規発行 (UXXXXXX 形式の連番)
   let membership_number = g?.membership_number || ''
   if (!membership_number) {
@@ -74,7 +78,7 @@ export async function POST(req: NextRequest) {
     membership_number,
     avatar_url: g?.avatar_url || user.user_metadata?.avatar_url || '',
     ref_code: g?.ref_code || '',          // Glide 紹介コード引継ぎ
-    introduced_by: g?.introduced_by || '', // 招待者
+    introduced_by: g?.introduced_by || (g ? DEFAULT_INTRODUCER_CODE : ''), // Glide 組で空なら info@
     is_verified: g?.is_verified || false,
     line_user_id: g?.line_user_id || '',  // Glide LINE ID 引継ぎ
     language: 'ja',
