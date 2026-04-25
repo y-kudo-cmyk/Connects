@@ -158,17 +158,17 @@ export function hasBackSide(cardType: string | null | undefined): boolean {
 // Non-trading types (photobook, magnet, mega_jacket, etc.) use object-fit: contain.
 export function isTradingCardFit(cardType: string | null | undefined): boolean {
   const t = (cardType || '').toLowerCase()
-  // photocard 系 + postcard / cd_plate / bookmark / 店舗特典系も固定枠で揃える
+  // 真のトレカ系のみ固定枠 (cover)。postcard / bookmark / 店舗特典は
+  // クロップ比率そのままで表示するため除外 (img + h-auto で自然サイズ)。
   return t === 'photocard' || t === 'luckydraw' || t === 'fotocard' || t === 'minicard'
-    || t === 'postcard' || t === 'cd_plate' || t === 'bookmark'
-    || t === 'ic_card' || t === 'clear_file' || t === 'coaster'
+    || t === 'cd_plate'
 }
 
 // 固定枠 (isTradingCardFit) の中で画像をどう収めるか。
-// 切り抜きが許容なら cover、画像全体を見せたい (店舗特典) なら contain でレターボックス。
+// トレカ系は cover で全面、それ以外はそもそも非固定枠 (この関数は使われない)。
 export function getCardImageFit(cardType: string | null | undefined): 'cover' | 'contain' {
   const t = (cardType || '').toLowerCase()
-  if (t === 'bookmark' || t === 'postcard' || t === 'ic_card' || t === 'clear_file' || t === 'coaster') return 'contain'
+  if (t === 'bookmark') return 'contain'
   return 'cover'
 }
 

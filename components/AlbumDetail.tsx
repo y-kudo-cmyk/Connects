@@ -665,7 +665,7 @@ export default function AlbumDetail({ product, userCards, onBack, onCardTap, onB
                         </button>
                       )
                       return showLabel ? (
-                        <div key={card.id} className={`${spanClass} flex flex-col gap-0.5`}>
+                        <div key={card.id} className={`${spanClass} flex flex-col gap-0.5 self-start`}>
                           {tileButton}
                           <span
                             className="text-[9px] text-center font-bold leading-tight px-0.5 truncate"
