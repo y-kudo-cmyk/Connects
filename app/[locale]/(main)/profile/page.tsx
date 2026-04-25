@@ -1089,7 +1089,7 @@ export default function ProfilePage() {
           onClick={() => setFcModal(null)}
         >
           <div
-            className="w-full max-w-lg rounded-t-2xl"
+            className="w-full max-w-lg rounded-t-2xl overflow-x-hidden"
             style={{ background: '#FFFFFF' }}
             onClick={(e) => e.stopPropagation()}
           >
@@ -1113,6 +1113,7 @@ export default function ProfilePage() {
               className="px-5"
               style={{
                 overflowY: 'auto',
+                overflowX: 'hidden',
                 WebkitOverflowScrolling: 'touch',
                 maxHeight: 'calc(70vh - 210px)',
               }}
@@ -1195,8 +1196,8 @@ function FcField({ label, value, placeholder, onChange, inputType = 'text' }: {
         value={value}
         placeholder={placeholder}
         onChange={(e) => onChange(e.target.value)}
-        className="w-full px-3 py-2.5 rounded-xl text-sm outline-none"
-        style={{ background: '#F8F9FA', border: '1px solid #E5E5EA', color: '#1C1C1E' }}
+        className="w-full min-w-0 px-3 py-2.5 rounded-xl text-sm outline-none"
+        style={{ background: '#F8F9FA', border: '1px solid #E5E5EA', color: '#1C1C1E', boxSizing: 'border-box', maxWidth: '100%' }}
       />
     </div>
   )
