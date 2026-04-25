@@ -590,7 +590,7 @@ export default function AlbumDetail({ product, userCards, onBack, onCardTap, onB
                         <button
                           key={card.id}
                           onClick={() => onCardTap(card, owned)}
-                          className={`relative rounded-lg overflow-hidden transition-transform active:scale-95 ${spanClass}`}
+                          className={`relative rounded-lg overflow-hidden transition-transform active:scale-95 ${spanClass}${!isTradingCard && hasImage ? ' self-start' : ''}`}
                           style={{
                             width: '100%',
                             // トレカは固定枠、それ以外は画像なしor画像時に応じて
