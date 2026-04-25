@@ -38,7 +38,8 @@ export type MyEntry = {
   seatInfo?: SeatInfo
   notes?: string
   memo: string
-  images: string[]
+  posterImage?: string   // 公演ポスター (events.image_url, read-only)
+  images: string[]       // 思い出写真 (ユーザーアップロード分のみ)
   viewImages?: string[]
   createdAt: string
   sourceUrl?: string
@@ -113,12 +114,13 @@ function toApp(row: DbMyEntry): MyEntry {
   const city = liveEvent?.spot_address ?? row.spot_address ?? undefined
   const sourceUrl = liveEvent?.source_url ?? row.source_url ?? undefined
   const notes = liveEvent?.notes ?? row.notes ?? undefined
-  // image_url: my_entries 側には user 画像を JSON 配列で保持、event 側は単一 URL
-  // → event 画像があれば images 配列の先頭に追加（表示優先）
-  const userImages = parseImageField(row.image_url)
-  const images = liveEvent?.image_url
-    ? [liveEvent.image_url, ...userImages.filter(u => u !== liveEvent.image_url)]
-    : userImages
+  // image_url: my_entries 側には user の思い出写真のみ、event 側のポスターは posterImage に分離
+  // 旧データ互換: user 配列にポスターが混入していたら除外
+  const rawUserImages = parseImageField(row.image_url)
+  const posterImage = liveEvent?.image_url ?? undefined
+  const images = posterImage
+    ? rawUserImages.filter(u => u !== posterImage)
+    : rawUserImages
 
   return {
     id: row.id,
@@ -140,6 +142,7 @@ function toApp(row: DbMyEntry): MyEntry {
     ticketSource: row.ticket_source ?? undefined,
     notes,
     memo: row.memo ?? '',
+    posterImage,
     images,
     viewImages: parseImageField(row.view_image_url),
     createdAt: row.created_at,

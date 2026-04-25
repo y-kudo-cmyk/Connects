@@ -740,7 +740,7 @@ function LiveHistorySection({ entries, onEdit }: {
 }
 
 function LiveHistoryRow({ entry, onEdit, isFuture }: { entry: MyEntry; onEdit: (e: MyEntry) => void; isFuture: boolean }) {
-  const mainImage = entry.images?.[0] ?? entry.ticketImages?.[0] ?? null
+  const mainImage = entry.posterImage ?? entry.images?.[0] ?? entry.ticketImages?.[0] ?? null
   const ds = entry.customDate ?? entry.date
   const dstr = ds ? `${ds.slice(5, 7)}/${ds.slice(8, 10)}` : ''
   const yr = ds ? ds.slice(0, 4) : ''
@@ -834,7 +834,7 @@ function EntryCard({ entry, onEdit, onRemove }: {
   const dateStr = entry.customDate
     ? fmtDateRange(entry.customDate, entry.customTime ?? entry.time)
     : fmtDateRange(entry.date, entry.time, entry.dateEnd)
-  const mainImage = entry.images?.[0] ?? entry.ticketImages?.[0] ?? null
+  const mainImage = entry.posterImage ?? entry.images?.[0] ?? entry.ticketImages?.[0] ?? null
 
   return (
     <>
@@ -1171,11 +1171,11 @@ function EditModal({ entry, onClose, onSave, onRemove }: {
         {/* スクロール可能なコンテンツ (横ブレ防止: overflow-x-hidden) */}
         <div className="flex-1 overflow-y-auto overflow-x-hidden px-4 py-4 flex flex-col gap-5">
 
-          {/* 公演ポスター (events 側の image_url が先頭) — 縦長全体表示 */}
-          {entry.images?.[0] && (
+          {/* 公演ポスター (events 側の image_url) — 縦長全体表示 */}
+          {entry.posterImage && (
             <div className="rounded-xl overflow-hidden w-full" style={{ background: '#E5E5EA', aspectRatio: '3 / 4' }}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={entry.images[0]} alt={entry.title} className="w-full h-full object-contain" loading="lazy" />
+              <img src={entry.posterImage} alt={entry.title} className="w-full h-full object-contain" loading="lazy" />
             </div>
           )}
 
@@ -1403,15 +1403,6 @@ function EditModal({ entry, onClose, onSave, onRemove }: {
             </EditSection>
           )}
 
-          {/* メモ */}
-          <EditSection label={t('My.memo')}>
-            <textarea value={memo} onChange={(e) => setMemo(e.target.value)}
-              placeholder={t('My.memoPlaceholder')}
-              rows={4}
-              className="w-full px-3 py-2.5 rounded-xl text-sm outline-none resize-none"
-              style={{ background: '#FFFFFF', border: '1px solid #E5E5EA', color: '#1C1C1E' }} />
-          </EditSection>
-
           {/* 思い出写真 */}
           <EditSection label={t('My.memoryPhotos')}>
             <div className="flex flex-wrap gap-2">
@@ -1440,6 +1431,15 @@ function EditModal({ entry, onClose, onSave, onRemove }: {
             </div>
             <input ref={photoFileRef} type="file" accept="image/*" multiple className="hidden"
               onChange={(e) => handlePhotoUpload(e.target.files)} />
+          </EditSection>
+
+          {/* メモ */}
+          <EditSection label={t('My.memo')}>
+            <textarea value={memo} onChange={(e) => setMemo(e.target.value)}
+              placeholder={t('My.memoPlaceholder')}
+              rows={4}
+              className="w-full px-3 py-2.5 rounded-xl text-sm outline-none resize-none"
+              style={{ background: '#FFFFFF', border: '1px solid #E5E5EA', color: '#1C1C1E' }} />
           </EditSection>
 
           {/* 削除 */}
