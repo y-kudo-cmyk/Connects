@@ -244,7 +244,7 @@ export default function MyPage() {
               ? { background: '#FFFFFF', color: '#1C1C1E' }
               : { color: '#8E8E93' }
             }>
-            CALENDAR
+            📅 CALENDAR
           </button>
           <button onClick={() => setTab('live')}
             className="flex-1 py-2.5 rounded-lg text-sm font-bold transition-all"
@@ -252,7 +252,7 @@ export default function MyPage() {
               ? { background: '#FFFFFF', color: '#1C1C1E' }
               : { color: '#8E8E93' }
             }>
-            CONCERT
+            🎤 CONCERT
           </button>
         </div>
       </div>
@@ -721,20 +721,10 @@ function LiveHistorySection({ entries, onEdit }: {
       </div>
 
       {/* これから */}
-      {upcoming.length > 0 && (
-        <>
-          <p className="text-[10px] font-bold tracking-wider mt-1" style={{ color: '#F3B4E3' }}>📅 これから</p>
-          {upcoming.map((e) => <LiveHistoryRow key={e.id} entry={e} onEdit={onEdit} isFuture />)}
-        </>
-      )}
+      {upcoming.map((e) => <LiveHistoryRow key={e.id} entry={e} onEdit={onEdit} isFuture />)}
 
       {/* 参戦済 */}
-      {past.length > 0 && (
-        <>
-          <p className="text-[10px] font-bold tracking-wider mt-3" style={{ color: '#8E8E93' }}>🎤 参戦済</p>
-          {past.map((e) => <LiveHistoryRow key={e.id} entry={e} onEdit={onEdit} isFuture={false} />)}
-        </>
-      )}
+      {past.map((e) => <LiveHistoryRow key={e.id} entry={e} onEdit={onEdit} isFuture={false} />)}
     </div>
   )
 }
