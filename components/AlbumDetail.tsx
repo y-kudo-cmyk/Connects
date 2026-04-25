@@ -3,7 +3,7 @@
 import { useState, useMemo, useEffect, Fragment } from 'react'
 import { useTranslations } from 'next-intl'
 import { useCardVersions, useCardMaster, type CardProduct, type CardMaster, type UserCard, productTypeLabels, HIDE_DATE_TYPES, getCardAspect, isTradingCardFit, getCardColSpan, hasBackSide } from '@/lib/useCardData'
-import { seventeenMembers, getUnitLeaderForMember, isUnitSharedCard } from '@/lib/config/constants'
+import { seventeenMembers, getUnitLeaderForMember, isUnitSharedCard, getAgeLineLeaderForMember, isAgeLineSharedCard } from '@/lib/config/constants'
 import { createClient } from '@/lib/supabase/client'
 
 interface AlbumDetailProps {
@@ -125,13 +125,16 @@ export default function AlbumDetail({ product, userCards, onBack, onCardTap, onB
 
   const memberCards = useMemo(() => {
     if (!activeMemberId) return []
-    // そのメンバーのカード + ユニット共通カード (M∞CARD等、所属ユニットのリーダー member_id で格納) を含める
+    // そのメンバーのカード + ユニット/年齢ライン共通カード (代表 member_id で格納) を含める
     const unitLeader = getUnitLeaderForMember(activeMemberId)
+    const ageLeader = getAgeLineLeaderForMember(activeMemberId)
     return cards.filter(c => {
       if (c.member_id === activeMemberId) return true
       // ユニット共通カード: 代表 (リーダー) member_id に保存されているので、
       // 同ユニット内の他メンバーにも表示
       if (unitLeader && c.member_id === unitLeader && isUnitSharedCard(c.card_detail)) return true
+      // 年齢ライン共通カード: 同ラインの代表 member_id に保存
+      if (ageLeader && c.member_id === ageLeader && isAgeLineSharedCard(c.card_detail)) return true
       // 「集合」「団体」明示の null member_id カードのみ全タブから表示
       // ユニット系の null member_id は (まだメンバー未紐付けの状態) 表示しない
       if (!c.member_id) {

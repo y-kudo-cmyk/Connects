@@ -57,6 +57,45 @@ export const UNIT_LEADERS = {
 
 export type SeventeenUnit = keyof typeof SEVENTEEN_UNITS
 
+// 年齢ライン (誕生年別グループ — Teen, Age 等のFolding Posterに使用)
+export const SEVENTEEN_AGE_LINES = {
+  '95':    ['A000001', 'A000002'],                                                // S.Coups, Jeonghan
+  '96':    ['A000003', 'A000004', 'A000005', 'A000006'],                          // Joshua, Jun, Hoshi, Wonwoo
+  '97':    ['A000007', 'A000008', 'A000009', 'A000010'],                          // Woozi, The8, Mingyu, DK
+  '98_99': ['A000011', 'A000012', 'A000013'],                                     // Seungkwan, Vernon, Dino
+} as const
+
+export const AGE_LINE_LEADERS = {
+  '95':    'A000001', // S.Coups (95年生最年長)
+  '96':    'A000003', // Joshua
+  '97':    'A000007', // Woozi
+  '98_99': 'A000011', // Seungkwan
+} as const
+
+export type SeventeenAgeLine = keyof typeof SEVENTEEN_AGE_LINES
+
+/** 指定 memberId が所属する年齢ライン */
+export function getMemberAgeLine(memberId: string): SeventeenAgeLine | null {
+  for (const [line, members] of Object.entries(SEVENTEEN_AGE_LINES)) {
+    if ((members as readonly string[]).includes(memberId)) return line as SeventeenAgeLine
+  }
+  return null
+}
+
+/** 指定 memberId と同じ年齢ラインの代表 member_id */
+export function getAgeLineLeaderForMember(memberId: string): string | null {
+  const line = getMemberAgeLine(memberId)
+  return line ? AGE_LINE_LEADERS[line] : null
+}
+
+/** カードが年齢ライン共通カードかどうか (card_detail で判定) */
+export function isAgeLineSharedCard(cardDetail?: string | null): boolean {
+  if (!cardDetail) return false
+  const d = cardDetail.toLowerCase()
+  // "95line" "96line" "97line" "98line" "99line" "98,99line" など
+  return /\d{2}\s*,?\s*\d{0,2}\s*line\b/i.test(cardDetail)
+}
+
 /** 指定 memberId が所属するユニットを返す (なければ null) */
 export function getMemberUnit(memberId: string): SeventeenUnit | null {
   for (const [unit, members] of Object.entries(SEVENTEEN_UNITS)) {
