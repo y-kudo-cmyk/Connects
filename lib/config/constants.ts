@@ -75,7 +75,16 @@ export function getUnitLeaderForMember(memberId: string): string | null {
 export function isUnitSharedCard(cardDetail?: string | null): boolean {
   if (!cardDetail) return false
   const d = cardDetail.toUpperCase()
-  return d.includes('M∞CARD') || d.includes('MCARD')
+  if (d.includes('M∞CARD') || d.includes('MCARD')) return true
+  // ユニット名キーワード (英/和)
+  if (d.includes('HIPHOP') || d.includes('HIP HOP') || d.includes('HIP-HOP')) return true
+  if (d.includes('PERFORMANCE') || d.includes('PERFOMANCE')) return true
+  if (d.includes('VOCAL')) return true
+  // 日本語略称
+  if (cardDetail.includes('ヒポチ') || cardDetail.includes('ヒップホップ')) return true
+  if (cardDetail.includes('パフォチ') || cardDetail.includes('パフォーマンス')) return true
+  if (cardDetail.includes('ボカチ') || cardDetail.includes('ボーカル')) return true
+  return false
 }
 
 export type EventType = 'concert' | 'fanmeet' | 'release' | 'broadcast' | 'birthday' | 'variety'
