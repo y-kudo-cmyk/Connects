@@ -30,7 +30,7 @@ export default async function UsersPage() {
     { data: phVotes },
     { data: glideUsers },
   ] = await Promise.all([
-    sb.from("profiles").select("id, nickname, mail, role, is_verified, created_at, membership_number").order("created_at", { ascending: false }).limit(500),
+    sb.from("profiles").select("id, nickname, mail, role, is_verified, created_at, membership_number").order("membership_number", { ascending: true, nullsFirst: false }).limit(2000),
     sb.from("events").select("submitted_by").not("submitted_by", "is", null).neq("status", "deleted"),
     sb.from("spots").select("submitted_by").not("submitted_by", "is", null).neq("status", "deleted"),
     sb.from("spot_photos").select("submitted_by").not("submitted_by", "is", null).neq("status", "deleted"),

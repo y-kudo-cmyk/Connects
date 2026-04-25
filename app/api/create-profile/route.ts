@@ -46,6 +46,22 @@ export async function POST(req: NextRequest) {
   const { data: glideUser } = await sb.from('glide_users').select('*').ilike('mail', normalized).limit(1)
   const g = glideUser?.[0]
 
+  // 会員番号: Glide にあればそれを引き継ぎ、なければ新規発行 (UXXXXXX 形式の連番)
+  let membership_number = g?.membership_number || ''
+  if (!membership_number) {
+    // profiles と glide_users 両方の最大番号 + 1 を新規発行
+    const [profMax, glideMax] = await Promise.all([
+      sb.from('profiles').select('membership_number').not('membership_number', 'is', null).neq('membership_number', '').order('membership_number', { ascending: false }).limit(1),
+      sb.from('glide_users').select('membership_number').order('membership_number', { ascending: false }).limit(1),
+    ])
+    let max = 0
+    for (const r of [...(profMax.data || []), ...(glideMax.data || [])]) {
+      const m = (r.membership_number || '').match(/U(\d+)/)
+      if (m) { const n = parseInt(m[1], 10); if (n > max) max = n }
+    }
+    membership_number = `U${String(max + 1).padStart(6, '0')}`
+  }
+
   // profile作成
   // nickname: Glide 側にあればそれを、それ以外はユーザーが後から設定するまで空。
   // email を勝手に nickname に入れない（MAP 等で個人情報が出る）。
@@ -55,7 +71,7 @@ export async function POST(req: NextRequest) {
     id: user.id,
     mail: email,
     nickname,
-    membership_number: g?.membership_number || '',
+    membership_number,
     avatar_url: g?.avatar_url || user.user_metadata?.avatar_url || '',
     ref_code: g?.ref_code || '',          // Glide 紹介コード引継ぎ
     introduced_by: g?.introduced_by || '', // 招待者
