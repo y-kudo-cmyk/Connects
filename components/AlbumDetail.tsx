@@ -6,6 +6,12 @@ import { useCardVersions, useCardMaster, type CardProduct, type CardMaster, type
 import { seventeenMembers, getUnitLeaderForMember, isUnitSharedCard, getAgeLineLeaderForMember, isAgeLineSharedCard, getGroupShotMembersForCardDetail } from '@/lib/config/constants'
 import { createClient } from '@/lib/supabase/client'
 
+// Tailwind JIT 用の static map (col-span-1〜6 をビルドに含める)
+const SPAN_CLASS_MAP: Record<number, string> = {
+  1: 'col-span-1', 2: 'col-span-2', 3: 'col-span-3',
+  4: 'col-span-4', 5: 'col-span-5', 6: 'col-span-6',
+}
+
 interface AlbumDetailProps {
   product: CardProduct
   userCards: UserCard[]
@@ -493,26 +499,39 @@ export default function AlbumDetail({ product, userCards, onBack, onCardTap, onB
                             const subBack = sub.cards
                               .map(c => ownedMap.get(c.id)?.back_image_url || c.back_image_url)
                               .find(u => !!u) || ''
+                            // 裏面タイルのサイズ/比率は表面カードと同じにする
+                            const backRefCard = sub.cards[0]
+                            const backCardType = backRefCard?.card_type || 'photocard'
+                            const backColSpan = getCardColSpan(backCardType)
+                            const backSpanClass = SPAN_CLASS_MAP[backColSpan] || 'col-span-2'
+                            const backIsTrading = isTradingCardFit(backCardType)
+                            const backAspect = getCardAspect(backCardType)
+                            const backImgFit = getCardImageFit(backCardType)
                             const backTile = subHasBack ? (
                               <button
                                 key={`${sub.versionId}-back`}
                                 title="裏面画像を登録"
                                 onClick={() => {
                                   if (!onBackTileTap) return
-                                  // 登録対象カード: 所持しているカードを優先、なければ先頭
                                   const rep = sub.cards.find(c => ownedMap.get(c.id)) || sub.cards[0]
                                   onBackTileTap(rep, ownedMap.get(rep.id) || null)
                                 }}
-                                className="relative rounded-lg overflow-hidden col-span-2 transition-transform active:scale-95"
+                                className={`relative rounded-lg overflow-hidden transition-transform active:scale-95 block ${backSpanClass}`}
                                 style={{
                                   width: '100%',
-                                  aspectRatio: '2 / 3',
-                                  background: subBack
-                                    ? `rgba(142,142,147,0.08) url(${subBack}) center / cover no-repeat`
+                                  // 表面と同じ枠ロジック: トレカは固定枠、それ以外は画像に追従
+                                  ...(backIsTrading ? { aspectRatio: backAspect } : (subBack ? {} : { aspectRatio: backAspect })),
+                                  background: backIsTrading && subBack
+                                    ? `rgba(142,142,147,0.08) url(${subBack}) center / ${backImgFit} no-repeat`
                                     : 'rgba(142,142,147,0.08)',
                                   border: '2px dotted #C7C7CC',
                                 }}
                               >
+                                {/* 非トレカ: img タグで自然アスペクト */}
+                                {!backIsTrading && subBack && (
+                                  // eslint-disable-next-line @next/next/no-img-element
+                                  <img src={subBack} alt="back" className="block w-full h-auto" loading="lazy" />
+                                )}
                                 <span
                                   className="absolute left-1 top-1 px-1.5 rounded-full text-[9px] font-bold"
                                   style={{ background: 'rgba(0,0,0,0.55)', color: '#FFFFFF' }}
@@ -577,8 +596,7 @@ export default function AlbumDetail({ product, userCards, onBack, onCardTap, onB
                       // 8-col grid 内での占有列 (高さ揃えのため比率逆算)
                       // Tailwind JIT 用 静的マップ: col-span-2 col-span-3 col-span-4 col-span-5 col-span-6
                       const colSpan = isGroupLandscape ? 3 : getCardColSpan(card.card_type)
-                      const SPAN_CLASS: Record<number, string> = { 1: 'col-span-1', 2: 'col-span-2', 3: 'col-span-3', 4: 'col-span-4', 5: 'col-span-5', 6: 'col-span-6' }
-                      const spanClass = SPAN_CLASS[colSpan] || 'col-span-2'
+                      const spanClass = SPAN_CLASS_MAP[colSpan] || 'col-span-2'
                       // トレカ以外はタイル下にカード種別ラベルを出す
                       const showLabel = shouldShowTypeLabel(card.card_type)
                       const typeLabel = card.card_type ? (cardTypeLabels[card.card_type.toLowerCase()] || card.card_type) : ''
