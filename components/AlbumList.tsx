@@ -75,13 +75,20 @@ export default function AlbumList({ onSelect, userCardProductIds, productCardCou
           const total = counts?.total ?? 0
           const hasAny = userCardProductIds.has(p.product_id)
 
+          const unpublished = p.is_published === false
           return (
             <button
               key={p.product_id}
               onClick={() => onSelect(p)}
-              className="text-left rounded-2xl overflow-hidden transition-transform active:scale-[0.97]"
-              style={{ background: '#FFFFFF', boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}
+              className="text-left rounded-2xl overflow-hidden transition-transform active:scale-[0.97] relative"
+              style={{ background: '#FFFFFF', boxShadow: '0 1px 4px rgba(0,0,0,0.06)', opacity: unpublished ? 0.55 : 1 }}
             >
+              {unpublished && (
+                <div className="absolute top-2 left-2 z-10 px-1.5 py-0.5 rounded-md text-[9px] font-bold"
+                  style={{ background: 'rgba(0,0,0,0.7)', color: '#FFFFFF' }}>
+                  未公開
+                </div>
+              )}
               {/* Album art placeholder */}
               <div
                 className="w-full aspect-square flex items-center justify-center relative"

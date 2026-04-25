@@ -14,6 +14,7 @@ export interface CardProduct {
   release_date: string | null
   artist_id: string
   image_url: string
+  is_published?: boolean
 }
 
 export type VersionTier = 'INCLUDED' | 'STORE_JP' | 'STORE_KR' | 'LUCKY_DRAW' | 'EVENT' | 'VENUE' | 'MERCH_BONUS'

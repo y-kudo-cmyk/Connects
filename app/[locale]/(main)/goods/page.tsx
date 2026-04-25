@@ -61,14 +61,20 @@ export default function GoodsPage() {
     )
   }
 
-  return <GoodsContent userId={user.id} isAdmin={role === 'admin'} />
+  const canSeeUnpublished = role === 'admin' || role === 'fam'
+  return <GoodsContent userId={user.id} isAdmin={role === 'admin'} canSeeUnpublished={canSeeUnpublished} />
 }
 
 // ── Main content (separated to avoid hooks-under-condition) ───
-function GoodsContent({ userId, isAdmin }: { userId: string; isAdmin: boolean }) {
+function GoodsContent({ userId, isAdmin, canSeeUnpublished }: { userId: string; isAdmin: boolean; canSeeUnpublished: boolean }) {
   const t = useTranslations('Goods')
   const locale = useLocale()
-  const { products } = useCardProducts()
+  const { products: allProducts } = useCardProducts()
+  // 一般ユーザーは is_published=true のアルバムのみ表示
+  const products = useMemo(() => {
+    if (canSeeUnpublished) return allProducts
+    return allProducts.filter(p => p.is_published === true)
+  }, [allProducts, canSeeUnpublished])
   const { userCards, refresh: refreshUserCards, deleteCard } = useUserCards(userId)
 
   const [selectedProduct, setSelectedProduct] = useState<CardProduct | null>(null)
