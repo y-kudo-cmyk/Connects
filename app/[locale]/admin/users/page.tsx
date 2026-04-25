@@ -26,33 +26,61 @@ export default async function UsersPage() {
     { data: events },
     { data: spots },
     { data: photos },
+    { data: urlSubs },
     { data: evVotes },
     { data: phVotes },
+    { data: editReqs },
+    { data: editActivities },
     { data: glideUsers },
     { data: activities },
     { data: authList },
   ] = await Promise.all([
-    sb.from("profiles").select("id, nickname, mail, role, is_verified, created_at, membership_number").order("membership_number", { ascending: true, nullsFirst: false }).limit(2000),
-    sb.from("events").select("submitted_by").not("submitted_by", "is", null).neq("status", "deleted"),
-    sb.from("spots").select("submitted_by").not("submitted_by", "is", null).neq("status", "deleted"),
-    sb.from("spot_photos").select("submitted_by").not("submitted_by", "is", null).neq("status", "deleted"),
+    sb.from("profiles").select("id, nickname, mail, role, is_verified, created_at, membership_number, ref_code, introduced_by").order("membership_number", { ascending: true, nullsFirst: false }).limit(2000),
+    sb.from("events").select("submitted_by").not("submitted_by", "is", null),
+    sb.from("spots").select("submitted_by").not("submitted_by", "is", null),
+    sb.from("spot_photos").select("submitted_by").not("submitted_by", "is", null),
+    sb.from("url_submissions").select("submitted_by").not("submitted_by", "is", null),
     sb.from("event_votes").select("user_id"),
     sb.from("spot_photo_votes").select("user_id"),
+    sb.from("edit_requests").select("submitted_by").not("submitted_by", "is", null),
+    sb.from("user_activity").select("user_id").eq("action", "edit"),
     sb.from("glide_users").select("mail, membership_number, join_date"),
     sb.from("user_activity").select("user_id, created_at").order("created_at", { ascending: false }).limit(20000),
     sb.auth.admin.listUsers({ perPage: 2000 }).then(r => ({ data: r.data?.users || [] })),
   ])
 
-  // 投稿カウント
+  // 投稿カウント (events + spots + spot_photos + url_submissions)
   const postCount = new Map<string, number>()
   for (const r of events ?? []) postCount.set(r.submitted_by!, (postCount.get(r.submitted_by!) || 0) + 1)
   for (const r of spots ?? []) postCount.set(r.submitted_by!, (postCount.get(r.submitted_by!) || 0) + 1)
   for (const r of photos ?? []) postCount.set(r.submitted_by!, (postCount.get(r.submitted_by!) || 0) + 1)
+  for (const r of urlSubs ?? []) postCount.set(r.submitted_by!, (postCount.get(r.submitted_by!) || 0) + 1)
 
   // 承認 (vote) カウント
   const approvalCount = new Map<string, number>()
   for (const r of evVotes ?? []) approvalCount.set(r.user_id, (approvalCount.get(r.user_id) || 0) + 1)
   for (const r of phVotes ?? []) approvalCount.set(r.user_id, (approvalCount.get(r.user_id) || 0) + 1)
+
+  // 編集カウント (edit_requests + user_activity action=edit)
+  const editCount = new Map<string, number>()
+  for (const r of editReqs ?? []) editCount.set(r.submitted_by!, (editCount.get(r.submitted_by!) || 0) + 1)
+  for (const r of editActivities ?? []) editCount.set(r.user_id, (editCount.get(r.user_id) || 0) + 1)
+
+  // 紹介カウント: ref_code を持つユーザーの紹介で登録した人数
+  const referralCount = new Map<string, number>()
+  // ref_code -> id マップ
+  const codeToUserId = new Map<string, string>()
+  for (const u of users ?? []) {
+    if (u.ref_code) codeToUserId.set(u.ref_code, u.id)
+  }
+  for (const u of users ?? []) {
+    // u.introduced_by は他人の ref_code 文字列
+    const introducedBy = (u as { introduced_by?: string }).introduced_by
+    if (introducedBy && codeToUserId.has(introducedBy)) {
+      const refUserId = codeToUserId.get(introducedBy)!
+      referralCount.set(refUserId, (referralCount.get(refUserId) || 0) + 1)
+    }
+  }
 
   // Glide 登録日マップ (membership_number または mail でマッチ)
   const glideJoinByMember = new Map<string, string>()
@@ -78,6 +106,8 @@ export default async function UsersPage() {
     ...u,
     post_count: postCount.get(u.id) || 0,
     approval_total: approvalCount.get(u.id) || 0,
+    edit_count: editCount.get(u.id) || 0,
+    referral_count: referralCount.get(u.id) || 0,
     glide_join_date: (u.membership_number && glideJoinByMember.get(u.membership_number))
       || (u.mail && glideJoinByMail.get(u.mail.toLowerCase().trim()))
       || null,
