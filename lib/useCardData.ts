@@ -98,7 +98,7 @@ export function getCardColSpan(cardType: string | null | undefined): number {
   if (t === 'id_card') return 5       // 5/8=62.5%, h=62.5%×5/8=39% ≈37.5
   if (t === 'scratch_card') return 2  // 2/8=25%, h=25%×2=50% (少し高めだが許容)
   if (t === 'fotocard') return 3      // 1:1 正方形 → span 3 で高さ揃え
-  if (t === 'postcard') return 5      // 5/8=62.5%, h=62.5%×2/3=42% 近似
+  if (t === 'postcard') return 3      // 3/8=37.5%, photocard ぽいサイズに揃える
   if (t === 'magnet_sheet' || t === 'mega_jacket' || t === 'photobook') return 3 // 3/8=37.5%, h=37.5% ✓
   if (t === 'coaster') return 3
   if (t === 'puzzle' || t === 'sticker') return 3
