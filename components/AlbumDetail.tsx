@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useEffect, Fragment } from 'react'
 import { useTranslations } from 'next-intl'
-import { useCardVersions, useCardMaster, type CardProduct, type CardMaster, type UserCard, productTypeLabels, HIDE_DATE_TYPES, getCardAspect, isTradingCardFit, getCardColSpan, hasBackSide } from '@/lib/useCardData'
+import { useCardVersions, useCardMaster, type CardProduct, type CardMaster, type UserCard, productTypeLabels, HIDE_DATE_TYPES, getCardAspect, isTradingCardFit, getCardColSpan, hasBackSide, cleanCardDetail } from '@/lib/useCardData'
 import { seventeenMembers, getUnitLeaderForMember, isUnitSharedCard, getAgeLineLeaderForMember, isAgeLineSharedCard, getGroupShotMembersForCardDetail } from '@/lib/config/constants'
 import { createClient } from '@/lib/supabase/client'
 
@@ -611,7 +611,7 @@ export default function AlbumDetail({ product, userCards, onBack, onCardTap, onB
                                 className="text-[11px] mt-1.5 font-bold text-center leading-tight"
                                 style={{ color: hasQty ? '#1C1C1E' : '#636366' }}
                               >
-                                {card.card_detail || card.card_type}
+                                {cleanCardDetail(card.card_detail) || card.card_type}
                               </span>
                             </div>
                           )}

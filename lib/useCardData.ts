@@ -124,6 +124,14 @@ export function isWideCard(cardType: string | null | undefined): boolean {
   return getCardColSpan(cardType) > 2
 }
 
+// card_detail から内部 ID 部分 [A000001,A000002,...] を除外して表示用テキストに整形
+export function cleanCardDetail(detail: string | null | undefined): string {
+  if (!detail) return ''
+  return detail
+    .replace(/\s*\[[A-Z0-9,]+\]/g, '')  // [A000001,A000002] 等を削除
+    .trim()
+}
+
 // 裏面が存在するタイプ。CD/ポスター/ステッカー/コースター/マグネット等は片面のみ。
 export function hasBackSide(cardType: string | null | undefined): boolean {
   const t = (cardType || '').toLowerCase()

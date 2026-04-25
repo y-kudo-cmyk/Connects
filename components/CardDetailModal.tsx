@@ -5,7 +5,7 @@ import { createPortal } from 'react-dom'
 import { useTranslations } from 'next-intl'
 import { createClient } from '@/lib/supabase/client'
 import type { CardMaster, UserCard } from '@/lib/useCardData'
-import { getCardAspect, isTradingCardFit } from '@/lib/useCardData'
+import { getCardAspect, isTradingCardFit, cleanCardDetail } from '@/lib/useCardData'
 import ImageCropModal from '@/components/ImageCropModal'
 import FreeCropModal from '@/components/FreeCropModal'
 
@@ -281,7 +281,7 @@ export default function CardDetailModal({ card, owned, userId, isBetaUser = fals
               {card.member_name}
             </h3>
             <span className="text-xs" style={{ color: '#8E8E93' }}>
-              {card.card_detail || card.card_type}
+              {cleanCardDetail(card.card_detail) || card.card_type}
             </span>
           </div>
 
