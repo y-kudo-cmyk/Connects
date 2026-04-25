@@ -62,6 +62,7 @@
     <button id="dupBox">複製</button>
     <button id="dupRow" title="同じ行のすべての枠を下に複製">↓ 行を下複製</button>
     <button id="dupCol" title="同じ列のすべての枠を右に複製">→ 列を右複製</button>
+    <button id="autoRow" title="同じ行の2枠から間隔検出して指定枚数まで右へ等間隔生成">⇢ 行を等間隔生成</button>
     <button id="unifySize" title="選択枠のサイズに全枠を揃える">枠サイズ統一</button>
     <button id="undoBox">↩ 戻す</button>
     <button class="danger" id="clearAll">全削除</button>
@@ -324,6 +325,23 @@ document.getElementById('dupCol').onclick = () => {
   const dx = sel.width + gap
   const copies = col.map(b => ({ ...b, left: b.left + dx }))
   boxes.push(...copies)
+  selectedIdx = -1; render()
+}
+// 行を等間隔生成: 同じ行に枠が2つ以上あれば、間隔から N 枚まで右に等間隔で増やす
+document.getElementById('autoRow').onclick = () => {
+  if (selectedIdx < 0) { alert('行の最初の枠を選択してください'); return }
+  const sel = boxes[selectedIdx]
+  const tol = sel.height / 2
+  const rowMembers = boxes.filter(b => Math.abs(b.top - sel.top) <= tol).sort((a, b) => a.left - b.left)
+  if (rowMembers.length < 2) { alert('同じ行に2枠以上必要 (間隔検出のため)'); return }
+  const dx = rowMembers[1].left - rowMembers[0].left
+  const total = parseInt(prompt('合計何枚にする？ (現在 ' + rowMembers.length + '枚)', '13'), 10)
+  if (!total || total <= rowMembers.length) return
+  const last = rowMembers[rowMembers.length - 1]
+  for (let i = rowMembers.length; i < total; i++) {
+    const newLeft = last.left + dx * (i - rowMembers.length + 1)
+    boxes.push({ ...last, left: newLeft })
+  }
   selectedIdx = -1; render()
 }
 // 枠サイズ統一: 選択枠の width/height を他の全枠に適用
