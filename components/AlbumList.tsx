@@ -111,7 +111,7 @@ export default function AlbumList({ onSelect, userCardProductIds, productCardCou
                 )}
               </div>
               <div className="p-3">
-                <p className="text-xs font-bold truncate" style={{ color: '#1C1C1E' }}>{p.product_name}</p>
+                <p className="text-xs font-bold leading-snug line-clamp-2" style={{ color: '#1C1C1E' }}>{p.product_name}</p>
                 <div className="flex items-center gap-1.5 mt-1">
                   <span className="text-[10px]" style={{ color: '#8E8E93' }}>{formatDate(p.release_date)}</span>
                   <span
