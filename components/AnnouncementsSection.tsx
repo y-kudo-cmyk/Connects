@@ -84,7 +84,7 @@ export default function AnnouncementsSection({ announcements }: { announcements:
   )
 }
 
-function CampaignCard({ onTap }: { onTap: () => void }) {
+export function CampaignCard({ onTap }: { onTap: () => void }) {
   const t = useTranslations('Campaign')
   return (
     <button

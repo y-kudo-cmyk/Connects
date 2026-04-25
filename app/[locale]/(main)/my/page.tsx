@@ -12,6 +12,10 @@ import { usePageView } from '@/lib/useActivityLog'
 import SeatInfoForm from '@/components/SeatInfoForm'
 import SeatViewPreview from '@/components/SeatViewPreview'
 import FreeCropModal from '@/components/FreeCropModal'
+import { CampaignCard } from '@/components/AnnouncementsSection'
+import ConcertCampaignModal from '@/components/ConcertCampaignModal'
+import { useAuth } from '@/lib/supabase/useAuth'
+import { createClient } from '@/lib/supabase/client'
 import { useToday } from '@/lib/useToday'
 
 // ── 日付ヘルパー ─────────────────────────────────────────────────
@@ -692,6 +696,22 @@ function LiveHistorySection({ entries, onEdit, onRemove }: {
   onRemove: (id: string) => void
 }) {
   const TODAY = useToday()
+  const { user } = useAuth()
+  const [campaignDone, setCampaignDone] = useState(true)
+  const [campaignOpen, setCampaignOpen] = useState(false)
+  const [role, setRole] = useState<string | null>(null)
+  useEffect(() => {
+    setCampaignDone(localStorage.getItem('cp-campaign-concert-done') === 'true')
+  }, [])
+  useEffect(() => {
+    if (!user) return
+    const supabase = createClient()
+    supabase.from('profiles').select('role').eq('id', user.id).maybeSingle()
+      .then(({ data }) => { if (data?.role) setRole(data.role) })
+  }, [user?.id])
+  const isAdmin = role === 'admin'
+  const isFam = role === 'fam'
+  const showCampaign = (isAdmin || isFam) && (!campaignDone || isAdmin)
   // CONCERT タグ の MY entries を日付降順で並べる (最新が TOP)
   const lives = entries
     .filter((e) => e.tags?.includes('CONCERT') || e.type === 'concert' || e.type === 'CONCERT')
@@ -702,18 +722,36 @@ function LiveHistorySection({ entries, onEdit, onRemove }: {
 
   if (lives.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center py-20 px-6 text-center">
-        <span className="text-5xl mb-4">🎤</span>
-        <p className="text-sm font-bold mb-2" style={{ color: '#1C1C1E' }}>参戦記録がまだありません</p>
-        <p className="text-[11px] leading-relaxed" style={{ color: '#8E8E93' }}>
-          HOME や スケジュールから<br />参戦したいコンサートを MY に追加すると<br />ここに蓄積されます
-        </p>
+      <div className="px-4 pb-6">
+        {showCampaign && (
+          <div className="mb-4">
+            <CampaignCard onTap={() => setCampaignOpen(true)} />
+          </div>
+        )}
+        <div className="flex flex-col items-center justify-center py-20 px-6 text-center">
+          <span className="text-5xl mb-4">🎤</span>
+          <p className="text-sm font-bold mb-2" style={{ color: '#1C1C1E' }}>参戦記録がまだありません</p>
+          <p className="text-[11px] leading-relaxed" style={{ color: '#8E8E93' }}>
+            HOME や スケジュールから<br />参戦したいコンサートを MY に追加すると<br />ここに蓄積されます
+          </p>
+        </div>
+        <ConcertCampaignModal
+          open={campaignOpen}
+          onClose={() => setCampaignOpen(false)}
+          onComplete={() => { localStorage.setItem('cp-campaign-concert-done', 'true'); setCampaignDone(true) }}
+        />
       </div>
     )
   }
 
   return (
     <div className="px-4 pb-6 flex flex-col gap-2">
+      {showCampaign && (
+        <div className="mb-2">
+          <CampaignCard onTap={() => setCampaignOpen(true)} />
+        </div>
+      )}
+
       {/* 統計 */}
       <div className="flex items-center gap-3 mb-2 px-1">
         <div className="text-[10px] font-bold tracking-wider" style={{ color: '#8E8E93' }}>
@@ -726,6 +764,12 @@ function LiveHistorySection({ entries, onEdit, onRemove }: {
 
       {/* 参戦済 */}
       {past.map((e) => <LiveHistoryRow key={e.id} entry={e} onEdit={onEdit} onRemove={onRemove} isFuture={false} />)}
+
+      <ConcertCampaignModal
+        open={campaignOpen}
+        onClose={() => setCampaignOpen(false)}
+        onComplete={() => { localStorage.setItem('cp-campaign-concert-done', 'true'); setCampaignDone(true) }}
+      />
     </div>
   )
 }
