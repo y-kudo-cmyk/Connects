@@ -43,7 +43,8 @@
   <p class="hint">
     ① 画像を選択 → ② <strong>枠をドラッグ</strong>で追加 / 四隅を引っ張って調整 / タップで選択 →
     ③ 右パネルで <strong>versionId / detail / cardType</strong> を入力 →
-    ④ <strong>📋 JSONコピー</strong>で工藤さんに送る
+    ④ <strong>📋 JSONコピー</strong>で工藤さんに送る<br/>
+    💡 <strong>Shift/Ctrl+クリック</strong>で複数選択。選択枠は緑色 → ドラッグ or 矢印キーで一括移動。Ctrl/Cmd+A で全選択
   </p>
   <div class="bar">
     <label><strong>画像:</strong> <input id="fileInput" type="file" accept="image/*" /></label>
@@ -98,6 +99,7 @@ const ctx = canvas.getContext('2d')
 let img = null, imgW = 0, imgH = 0
 let boxes = []
 let selectedIdx = -1
+let selected = new Set()  // 複数選択 (indices)
 let drag = null
 let prodId = ''
 
@@ -204,15 +206,32 @@ canvas.addEventListener('pointerdown', e => {
   canvas.setPointerCapture(e.pointerId)
   const { x, y } = getPointerPos(e)
   const p = pick(x, y)
+  const additive = e.shiftKey || e.ctrlKey || e.metaKey
   if (p) {
-    selectedIdx = p.idx
+    if (additive) {
+      // 追加/解除
+      if (selected.has(p.idx)) selected.delete(p.idx)
+      else selected.add(p.idx)
+      selectedIdx = p.idx
+    } else {
+      // 既に選択中の枠をクリックなら維持、そうでなければ単独選択
+      if (!selected.has(p.idx)) {
+        selected.clear(); selected.add(p.idx)
+      }
+      selectedIdx = p.idx
+    }
     if (p.handle) {
       drag = { mode: 'resize', handle: p.handle, init: { ...boxes[p.idx] }, startX: x, startY: y }
     } else {
-      drag = { mode: 'move', dx: x - boxes[p.idx].left, dy: y - boxes[p.idx].top }
+      // 複数選択時は全 selected の初期座標を保持
+      drag = {
+        mode: 'move',
+        startX: x, startY: y,
+        initial: Array.from(selected).map(i => ({ idx: i, left: boxes[i].left, top: boxes[i].top })),
+      }
     }
   } else {
-    selectedIdx = -1
+    if (!additive) { selected.clear(); selectedIdx = -1 }
     drag = { mode: 'draw', x0: x, y0: y, x1: x, y1: y }
   }
   render()
@@ -225,9 +244,13 @@ canvas.addEventListener('pointermove', e => {
   e.preventDefault()
   if (drag.mode === 'draw') { drag.x1 = x; drag.y1 = y }
   else if (drag.mode === 'move') {
-    const b = boxes[selectedIdx]
-    b.left = Math.max(0, Math.min(imgW - b.width, x - drag.dx))
-    b.top = Math.max(0, Math.min(imgH - b.height, y - drag.dy))
+    const dx = x - drag.startX
+    const dy = y - drag.startY
+    for (const item of drag.initial) {
+      const b = boxes[item.idx]
+      b.left = Math.max(0, Math.min(imgW - b.width, item.left + dx))
+      b.top = Math.max(0, Math.min(imgH - b.height, item.top + dy))
+    }
   }
   else if (drag.mode === 'resize') {
     const b = boxes[selectedIdx]; const h = drag.handle; const i = drag.init
@@ -263,27 +286,43 @@ function updateCursor(x, y) {
 
 document.addEventListener('keydown', e => {
   if (document.activeElement && document.activeElement.tagName === 'INPUT') return
-  if ((e.key === 'Delete' || e.key === 'Backspace') && selectedIdx >= 0) {
-    boxes.splice(selectedIdx, 1); selectedIdx = -1; render()
+  if ((e.key === 'Delete' || e.key === 'Backspace') && selected.size > 0) {
+    // 選択された全枠を削除 (降順 index で削除して shift 影響回避)
+    const sorted = Array.from(selected).sort((a, b) => b - a)
+    for (const i of sorted) boxes.splice(i, 1)
+    selected.clear(); selectedIdx = -1; render()
   }
-  if (e.key === 'Escape') { selectedIdx = -1; render() }
-  if (selectedIdx >= 0 && ['ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].includes(e.key)) {
+  if (e.key === 'Escape') { selected.clear(); selectedIdx = -1; render() }
+  if (selected.size > 0 && ['ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].includes(e.key)) {
     e.preventDefault()
     const step = e.shiftKey ? 10 : 1
-    const b = boxes[selectedIdx]
-    if (e.key === 'ArrowLeft') b.left -= step
-    if (e.key === 'ArrowRight') b.left += step
-    if (e.key === 'ArrowUp') b.top -= step
-    if (e.key === 'ArrowDown') b.top += step
+    let dx = 0, dy = 0
+    if (e.key === 'ArrowLeft') dx = -step
+    if (e.key === 'ArrowRight') dx = step
+    if (e.key === 'ArrowUp') dy = -step
+    if (e.key === 'ArrowDown') dy = step
+    for (const i of selected) {
+      const b = boxes[i]
+      b.left = Math.max(0, Math.min(imgW - b.width, b.left + dx))
+      b.top = Math.max(0, Math.min(imgH - b.height, b.top + dy))
+    }
+    render()
+  }
+  // Ctrl/Cmd + A で全選択
+  if ((e.ctrlKey || e.metaKey) && e.key === 'a') {
+    e.preventDefault()
+    selected = new Set(boxes.map((_, i) => i))
     render()
   }
 })
 
 function moveSel(dx, dy) {
-  if (selectedIdx < 0) return
-  const b = boxes[selectedIdx]
-  b.left = Math.max(0, Math.min(imgW - b.width, b.left + dx))
-  b.top = Math.max(0, Math.min(imgH - b.height, b.top + dy))
+  if (selected.size === 0) return
+  for (const i of selected) {
+    const b = boxes[i]
+    b.left = Math.max(0, Math.min(imgW - b.width, b.left + dx))
+    b.top = Math.max(0, Math.min(imgH - b.height, b.top + dy))
+  }
   render()
 }
 document.getElementById('mvLeft').onclick = () => moveSel(-5, 0)
@@ -367,14 +406,15 @@ function render() {
   const s = sc()
   for (let i = 0; i < boxes.length; i++) {
     const b = boxes[i]
-    const isSel = i === selectedIdx
-    ctx.strokeStyle = isSel ? '#ff6b00' : '#ff0000'
+    const isSel = selected.has(i)
+    const isPrimary = i === selectedIdx
+    ctx.strokeStyle = isPrimary ? '#ff6b00' : isSel ? '#22C55E' : '#ff0000'
     ctx.lineWidth = isSel ? 3 : 2
     ctx.strokeRect(b.left * s, b.top * s, b.width * s, b.height * s)
-    ctx.fillStyle = isSel ? '#ff6b00' : 'rgba(255,0,0,0.85)'
+    ctx.fillStyle = isPrimary ? '#ff6b00' : isSel ? '#16A34A' : 'rgba(255,0,0,0.85)'
     ctx.font = 'bold 13px sans-serif'
     ctx.fillText(`${i+1}: ${b.detail||''}`, b.left * s + 4, b.top * s + 14)
-    if (isSel) {
+    if (isPrimary) {
       const pts = [[b.left, b.top], [b.left+b.width, b.top], [b.left, b.top+b.height], [b.left+b.width, b.top+b.height]]
       ctx.fillStyle = '#ffffff'
       for (const [x, y] of pts) {
