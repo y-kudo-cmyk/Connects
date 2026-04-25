@@ -75,6 +75,7 @@ export function getCardAspect(cardType: string | null | undefined): string {
   if (t === 'id_card') return '8 / 5'
   if (t === 'scratch_card') return '1 / 2'       // HB は縦長narrow
   if (t === 'fotocard') return '1 / 1'           // HB のfotocardは正方形近い
+  if (t === 'polaroid') return '5 / 6'           // ポラロイド (写真+下書き欄、photocard より横広)
   if (t === 'postcard') return '5 / 7'           // 葉書 (個別=縦長、団体は画像側で横向きに回転)
   if (t === 'tear-off_poster') return '3 / 4'
   if (t === 'binder') return '4 / 5'
@@ -167,6 +168,7 @@ export function shouldShowTypeLabel(cardType: string | null | undefined): boolea
 }
 
 export const cardTypeLabels: Record<string, string> = {
+  polaroid: 'Polaroid',
   ic_card: 'IC Card',
   clear_file: 'Clear File',
   coaster: 'Coaster',
