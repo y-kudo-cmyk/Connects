@@ -432,24 +432,8 @@ export default function AlbumDetail({ product, userCards, onBack, onCardTap, onB
     return (hasBack ? 2 : 0) + cardsCols
   }
   function groupSubsToParagraphs(subs: { store: string; versionId: string; cards: CardMaster[] }[]) {
-    const paragraphs: typeof subs[] = []
-    let current: typeof subs = []
-    let currentCols = 0
-    for (const sub of subs) {
-      const c = subCols(sub)
-      if (c >= 8) {
-        if (current.length > 0) { paragraphs.push(current); current = []; currentCols = 0 }
-        paragraphs.push([sub])
-        continue
-      }
-      if (currentCols + c <= 8) {
-        current.push(sub); currentCols += c
-      } else {
-        paragraphs.push(current); current = [sub]; currentCols = c
-      }
-    }
-    if (current.length > 0) paragraphs.push(current)
-    return paragraphs
+    // VER が違っても横に並べられるなら同じ段落にまとめ、はみ出したら CSS grid 任せで自動改行
+    return subs.length > 0 ? [subs] : []
   }
 
   function renderBaseBlock(base: string, subs: { store: string; versionId: string; cards: CardMaster[] }[], tier: string, compact = false) {
