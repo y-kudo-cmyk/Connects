@@ -292,12 +292,19 @@ export default function ProfilePage() {
           <>
             <div className="flex items-center gap-2 flex-wrap mb-1">
               <button className="flex items-center gap-1.5" onClick={startEditNickname}>
-                <span className="text-lg font-bold leading-tight" style={{ color: '#1C1C1E' }}>{profile.nickname}</span>
+                {profile.nickname ? (
+                  <span className="text-lg font-bold leading-tight" style={{ color: '#1C1C1E' }}>{profile.nickname}</span>
+                ) : (
+                  <span className="text-sm font-bold leading-tight" style={{ color: '#8E8E93' }}>
+                    {profile.membershipNumber ? `${profile.membershipNumber} さん` : '(ニックネーム未設定)'}
+                    <span className="ml-1 text-[10px]" style={{ color: '#F3B4E3' }}>変更してください</span>
+                  </span>
+                )}
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#636366" strokeWidth="2">
                   <path d="M12 20h9" /><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z" />
                 </svg>
               </button>
-              {profile.membershipNumber && (
+              {profile.membershipNumber && profile.nickname && (
                 <span className="text-[11px] font-mono font-semibold px-1.5 py-0.5 rounded" style={{ color: '#636366', background: '#F0F0F5' }}>
                   {profile.membershipNumber}
                 </span>

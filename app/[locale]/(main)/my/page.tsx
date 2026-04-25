@@ -258,7 +258,7 @@ export default function MyPage() {
       </div>
 
       {/* ── 参戦記録 タブ (CONCERT の MY エントリをリスト表示) ── */}
-      {tab === 'live' && <LiveHistorySection entries={entries} onEdit={setEditEntry} />}
+      {tab === 'live' && <LiveHistorySection entries={entries} onEdit={setEditEntry} onRemove={removeEntry} />}
 
       {/* ── スケジュール記録タブ ── */}
       {tab === 'entries' && (
@@ -686,9 +686,10 @@ export default function MyPage() {
 
 // ── ImageViewer ───────────────────────────────────────────────
 // ── 参戦記録 (LIVE History) セクション ─────────────────────────
-function LiveHistorySection({ entries, onEdit }: {
+function LiveHistorySection({ entries, onEdit, onRemove }: {
   entries: MyEntry[]
   onEdit: (entry: MyEntry) => void
+  onRemove: (id: string) => void
 }) {
   const TODAY = useToday()
   // CONCERT タグ の MY entries を日付降順で並べる (最新が TOP)
@@ -721,15 +722,15 @@ function LiveHistorySection({ entries, onEdit }: {
       </div>
 
       {/* これから */}
-      {upcoming.map((e) => <LiveHistoryRow key={e.id} entry={e} onEdit={onEdit} isFuture />)}
+      {upcoming.map((e) => <LiveHistoryRow key={e.id} entry={e} onEdit={onEdit} onRemove={onRemove} isFuture />)}
 
       {/* 参戦済 */}
-      {past.map((e) => <LiveHistoryRow key={e.id} entry={e} onEdit={onEdit} isFuture={false} />)}
+      {past.map((e) => <LiveHistoryRow key={e.id} entry={e} onEdit={onEdit} onRemove={onRemove} isFuture={false} />)}
     </div>
   )
 }
 
-function LiveHistoryRow({ entry, onEdit, isFuture }: { entry: MyEntry; onEdit: (e: MyEntry) => void; isFuture: boolean }) {
+function LiveHistoryRow({ entry, onEdit, onRemove, isFuture }: { entry: MyEntry; onEdit: (e: MyEntry) => void; onRemove: (id: string) => void; isFuture: boolean }) {
   const mainImage = entry.posterImage ?? entry.images?.[0] ?? entry.ticketImages?.[0] ?? null
   const ds = entry.customDate ?? entry.date
   const dstr = ds ? `${ds.slice(5, 7)}/${ds.slice(8, 10)}` : ''
@@ -740,12 +741,39 @@ function LiveHistoryRow({ entry, onEdit, isFuture }: { entry: MyEntry; onEdit: (
   const venueStr = entry.venue ?? ''
   const subStr = entry.subTitle ?? ''
   const hideVenue = !!venueStr && !!subStr && subStr.includes(venueStr)
+  // スワイプ削除
+  const [translateX, setTranslateX] = useState(0)
+  const [confirming, setConfirming] = useState(false)
+  const startX = useRef<number | null>(null)
+  const onPointerDown = (e: React.PointerEvent) => { startX.current = e.clientX }
+  const onPointerMove = (e: React.PointerEvent) => {
+    if (startX.current === null) return
+    const dx = e.clientX - startX.current
+    if (dx < 0) setTranslateX(Math.max(dx, -100))
+  }
+  const onPointerUp = () => {
+    startX.current = null
+    if (translateX < -60) setConfirming(true)
+    else setTranslateX(0)
+  }
   return (
-    <button
-      onClick={() => onEdit(entry)}
-      className="flex items-center gap-3 p-3 rounded-xl text-left"
-      style={{ background: '#FFFFFF' }}
-    >
+    <div className="relative overflow-hidden rounded-xl">
+      {/* 削除ボタン (背景) */}
+      <div className="absolute inset-y-0 right-0 flex items-center pr-3" style={{ background: '#EF4444', borderRadius: 12 }}>
+        <button onClick={() => { onRemove(entry.id); setConfirming(false); setTranslateX(0) }}
+          className="px-3 py-2 text-xs font-bold text-white">
+          {confirming ? '削除確定' : '削除'}
+        </button>
+      </div>
+      <button
+        onClick={() => { if (translateX === 0) onEdit(entry); else { setTranslateX(0); setConfirming(false) } }}
+        onPointerDown={onPointerDown}
+        onPointerMove={onPointerMove}
+        onPointerUp={onPointerUp}
+        onPointerCancel={() => { startX.current = null; setTranslateX(0) }}
+        className="relative flex items-center gap-3 p-3 rounded-xl text-left w-full"
+        style={{ background: '#FFFFFF', transform: `translateX(${translateX}px)`, transition: startX.current === null ? 'transform 0.2s' : 'none', touchAction: 'pan-y' }}
+      >
       <div className="flex-shrink-0 w-14 h-14 rounded-lg overflow-hidden" style={{ background: '#E5E5EA' }}>
         {mainImage ? (
           // eslint-disable-next-line @next/next/no-img-element
@@ -780,6 +808,7 @@ function LiveHistoryRow({ entry, onEdit, isFuture }: { entry: MyEntry; onEdit: (
         <path d="M9 18l6-6-6-6" />
       </svg>
     </button>
+    </div>
   )
 }
 
