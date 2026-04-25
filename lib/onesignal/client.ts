@@ -28,11 +28,40 @@ export async function initOneSignal(): Promise<boolean> {
       }
     }
 
+    // アプリの locale (ja/ko/en) を OneSignal UI 言語に渡す
+    // next-intl が <html lang="..."> を設定するのでそこから取得
+    const htmlLang = document.documentElement.lang || 'ja'
+    const osLang = htmlLang.startsWith('ko') ? 'ko'
+      : htmlLang.startsWith('en') ? 'en'
+      : 'ja'
+
     await OneSignal.init({
       appId: APP_ID,
       safari_web_id: 'web.onesignal.auto.2068edc0-2ec7-4d8d-bc37-83913e3acbff',
       allowLocalhostAsSecureOrigin: process.env.NODE_ENV === 'development',
       serviceWorkerPath: '/OneSignalSDKWorker.js',
+      language: osLang,
+      promptOptions: {
+        slidedown: {
+          prompts: [{
+            type: 'push',
+            autoPrompt: false,
+            text: osLang === 'ja' ? {
+              actionMessage: 'SEVENTEEN の最新スケジュール・応募締切をお知らせします',
+              acceptButton: '許可する',
+              cancelButton: '後で',
+            } : osLang === 'ko' ? {
+              actionMessage: 'SEVENTEEN 최신 일정 · 응모 마감을 알려드립니다',
+              acceptButton: '허용',
+              cancelButton: '나중에',
+            } : {
+              actionMessage: 'Get notified about the latest SEVENTEEN schedules and ticket deadlines.',
+              acceptButton: 'Allow',
+              cancelButton: 'Later',
+            },
+          }],
+        },
+      },
     } as any)
 
     return true
