@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useMemo, useCallback, useEffect } from 'react'
+import { useRouter, useSearchParams, usePathname } from 'next/navigation'
 import { useTranslations, useLocale } from 'next-intl'
 import { useAuth } from '@/lib/supabase/useAuth'
 import { createClient } from '@/lib/supabase/client'
@@ -69,6 +70,9 @@ export default function GoodsPage() {
 function GoodsContent({ userId, isAdmin, canSeeUnpublished }: { userId: string; isAdmin: boolean; canSeeUnpublished: boolean }) {
   const t = useTranslations('Goods')
   const locale = useLocale()
+  const router = useRouter()
+  const pathname = usePathname()
+  const searchParams = useSearchParams()
   const { products: allProducts } = useCardProducts()
   // 一般ユーザーは is_published=true のアルバムのみ表示
   const products = useMemo(() => {
@@ -77,7 +81,19 @@ function GoodsContent({ userId, isAdmin, canSeeUnpublished }: { userId: string; 
   }, [allProducts, canSeeUnpublished])
   const { userCards, refresh: refreshUserCards, deleteCard } = useUserCards(userId)
 
-  const [selectedProduct, setSelectedProduct] = useState<CardProduct | null>(null)
+  // ?album=... を URL 同期して、リロード時にアルバム詳細を復元
+  const albumParam = searchParams?.get('album') ?? null
+  const selectedProduct = useMemo(() => {
+    if (!albumParam) return null
+    return products.find(p => p.product_id === albumParam) ?? null
+  }, [albumParam, products])
+  const setSelectedProduct = useCallback((p: CardProduct | null) => {
+    const params = new URLSearchParams(searchParams?.toString() ?? '')
+    if (p) params.set('album', p.product_id)
+    else params.delete('album')
+    const qs = params.toString()
+    router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false })
+  }, [pathname, router, searchParams])
   const [modalCard, setModalCard] = useState<{ card: CardMaster; owned: UserCard | null; focusBack?: boolean } | null>(null)
   const [shareModal, setShareModal] = useState<{ initialProductId?: string } | null>(null)
   const [favMemberIds, setFavMemberIds] = useState<string[]>([])
