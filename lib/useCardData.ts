@@ -157,15 +157,16 @@ export function hasBackSide(cardType: string | null | undefined): boolean {
 export function isTradingCardFit(cardType: string | null | undefined): boolean {
   const t = (cardType || '').toLowerCase()
   // photocard 系 + postcard / cd_plate / bookmark など固定枠で揃えたい types
+  // postcard は枠を固定せず画像本来のアスペクトに追従 (個別=縦/団体=横 を画像側で吸収)。
   return t === 'photocard' || t === 'luckydraw' || t === 'fotocard' || t === 'minicard'
-    || t === 'postcard' || t === 'cd_plate' || t === 'bookmark'
+    || t === 'cd_plate' || t === 'bookmark'
 }
 
 // 固定枠 (isTradingCardFit) の中で画像をどう収めるか。
-// 切り抜きが許容なら cover、画像全体を見せたい (postcard/bookmark) なら contain。
+// 切り抜きが許容なら cover、画像全体を見せたい (bookmark) なら contain。
 export function getCardImageFit(cardType: string | null | undefined): 'cover' | 'contain' {
   const t = (cardType || '').toLowerCase()
-  if (t === 'postcard' || t === 'bookmark') return 'contain'
+  if (t === 'bookmark') return 'contain'
   return 'cover'
 }
 
