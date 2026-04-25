@@ -156,7 +156,9 @@ export function hasBackSide(cardType: string | null | undefined): boolean {
 // Non-trading types (photobook, magnet, mega_jacket, etc.) use object-fit: contain.
 export function isTradingCardFit(cardType: string | null | undefined): boolean {
   const t = (cardType || '').toLowerCase()
+  // photocard 系 + postcard / cd_plate / bookmark など固定枠で揃えたい types
   return t === 'photocard' || t === 'luckydraw' || t === 'fotocard' || t === 'minicard'
+    || t === 'postcard' || t === 'cd_plate' || t === 'bookmark'
 }
 
 // ── Product type labels ─────────────────────────────────────────
