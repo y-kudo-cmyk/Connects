@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { createClient as createServiceClient } from '@supabase/supabase-js'
+import { normalizeGlideTag, findEventId } from '@/lib/migration/glideTagMap'
 
 export async function POST(req: NextRequest) {
   try {
@@ -66,16 +67,19 @@ export async function POST(req: NextRequest) {
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 
-  // glide_my_entriesの移行
+  // glide_my_entriesの移行 — タグ正規化 + events 紐付け
   if (g) {
     const { data: entries } = await sb.from('glide_my_entries').select('*').ilike('mail', normalized).eq('migrated', false)
     if (entries && entries.length > 0) {
       for (const e of entries) {
+        const tag = normalizeGlideTag(e.tag)
+        const eventId = await findEventId(sb as never, e.event_title || '', e.start_date)
         const { error: insErr } = await sb.from('my_entries').insert({
           user_id: user.id,
+          event_id: eventId,             // events と紐付け (無ければ null でスナップ)
           event_title: e.event_title,
           sub_event_title: e.sub_event_title || null,
-          tag: e.tag || null,
+          tag,
           start_date: e.start_date || null,
           end_date: e.end_date || null,
           spot_name: e.spot_name || null,
