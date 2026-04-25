@@ -13,7 +13,7 @@ interface AlbumListProps {
 function formatDate(d: string | null) {
   if (!d) return ''
   const date = new Date(d)
-  return `${date.getFullYear()}.${String(date.getMonth() + 1).padStart(2, '0')}`
+  return `${date.getFullYear()}.${String(date.getMonth() + 1).padStart(2, '0')}.${String(date.getDate()).padStart(2, '0')}`
 }
 
 export default function AlbumList({ onSelect, userCardProductIds, productCardCounts }: AlbumListProps) {
