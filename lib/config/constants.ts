@@ -96,6 +96,22 @@ export function isAgeLineSharedCard(cardDetail?: string | null): boolean {
   return /\d{2}\s*,?\s*\d{0,2}\s*line\b/i.test(cardDetail)
 }
 
+// 集合写真 (グループショット) — 1枚に複数メンバー、13人を任意のグループに分割
+// あとで実際の写真に応じて変更可能
+export const GROUP_SHOT_SPLITS: Record<string, readonly string[]> = {
+  '1': ['A000001', 'A000002', 'A000003', 'A000004', 'A000005', 'A000006', 'A000007'], // 集合 1: 7人
+  '2': ['A000008', 'A000009', 'A000010', 'A000011', 'A000012', 'A000013'],             // 集合 2: 6人
+}
+
+/** card_detail "集合 N" / "集合N" / "団体 N" に対応する membership member_id 集合を返す */
+export function getGroupShotMembersForCardDetail(cardDetail?: string | null): Set<string> | null {
+  if (!cardDetail) return null
+  const m = cardDetail.match(/(?:集合|団体)\s*([0-9])\b/)
+  if (!m) return null
+  const ids = GROUP_SHOT_SPLITS[m[1]]
+  return ids ? new Set(ids) : null
+}
+
 /** 指定 memberId が所属するユニットを返す (なければ null) */
 export function getMemberUnit(memberId: string): SeventeenUnit | null {
   for (const [unit, members] of Object.entries(SEVENTEEN_UNITS)) {

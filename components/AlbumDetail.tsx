@@ -3,7 +3,7 @@
 import { useState, useMemo, useEffect, Fragment } from 'react'
 import { useTranslations } from 'next-intl'
 import { useCardVersions, useCardMaster, type CardProduct, type CardMaster, type UserCard, productTypeLabels, HIDE_DATE_TYPES, getCardAspect, isTradingCardFit, getCardColSpan, hasBackSide } from '@/lib/useCardData'
-import { seventeenMembers, getUnitLeaderForMember, isUnitSharedCard, getAgeLineLeaderForMember, isAgeLineSharedCard } from '@/lib/config/constants'
+import { seventeenMembers, getUnitLeaderForMember, isUnitSharedCard, getAgeLineLeaderForMember, isAgeLineSharedCard, getGroupShotMembersForCardDetail } from '@/lib/config/constants'
 import { createClient } from '@/lib/supabase/client'
 
 interface AlbumDetailProps {
@@ -135,11 +135,14 @@ export default function AlbumDetail({ product, userCards, onBack, onCardTap, onB
       if (unitLeader && c.member_id === unitLeader && isUnitSharedCard(c.card_detail)) return true
       // 年齢ライン共通カード: 同ラインの代表 member_id に保存
       if (ageLeader && c.member_id === ageLeader && isAgeLineSharedCard(c.card_detail)) return true
-      // 「集合」「団体」明示の null member_id カードのみ全タブから表示
-      // ユニット系の null member_id は (まだメンバー未紐付けの状態) 表示しない
+      // 集合写真 N (member_id は問わず、card_detail "集合 1"等 で対象メンバー判定)
+      const groupShotMembers = getGroupShotMembersForCardDetail(c.card_detail)
+      if (groupShotMembers && groupShotMembers.has(activeMemberId)) return true
+      // 番号無し「集合」「団体」明示の null member_id カードは全タブから表示
       if (!c.member_id) {
         const d = (c.card_detail || '').trim()
-        if (d.includes('集合') || d.includes('団体')) return true
+        // 番号付き「集合 N」「団体 N」は上の処理で判定済 (該当メンバーのみ表示)
+        if ((d.includes('集合') || d.includes('団体')) && !groupShotMembers) return true
       }
       return false
     })
