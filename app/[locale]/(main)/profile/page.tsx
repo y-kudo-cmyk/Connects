@@ -525,8 +525,8 @@ export default function ProfilePage() {
         )}
       </div>
 
-      {/* --- Referral code (admin / fam のみ) --- */}
-      {(profile.role === 'admin' || profile.role === 'fam') && <ReferralSection />}
+      {/* --- Referral code (全ユーザー開放) --- */}
+      <ReferralSection />
 
       {/* 参戦記録は MY の CONCERT タブへ完全移行 */}
 
@@ -1284,11 +1284,19 @@ function ReferralSection() {
           )}
         </div>
 
-        {/* 紹介者入力 — 未設定時のみ表示、登録後は非表示 */}
-        {!introducedBy && (
+        {/* 紹介者 — 登録済みなら確認表示、未登録なら入力欄 */}
         <div className="pt-3" style={{ borderTop: '1px solid #F0F0F5' }}>
           <p className="text-[10px] font-bold mb-1" style={{ color: '#8E8E93' }}>紹介してくれた人のコード</p>
-          <>
+          {introducedBy ? (
+            <div className="flex items-center gap-2 px-3 py-2 rounded-xl" style={{ background: 'rgba(34,197,94,0.08)', border: '1px solid rgba(34,197,94,0.25)' }}>
+              <span className="text-sm" style={{ color: '#22C55E' }}>✓</span>
+              <div className="flex-1 min-w-0">
+                <p className="text-[10px] font-bold" style={{ color: '#22C55E' }}>登録済み</p>
+                <p className="text-xs font-mono font-bold truncate" style={{ color: '#1C1C1E' }}>{introducedBy}</p>
+              </div>
+            </div>
+          ) : (
+            <>
               <div className="flex items-center gap-2">
                 <input
                   value={inputCode}
@@ -1321,8 +1329,8 @@ function ReferralSection() {
                 紹介してくれた人がいる場合のみ入力してください (一度だけ設定可能)
               </p>
             </>
+          )}
         </div>
-        )}
       </div>
     </div>
   )
