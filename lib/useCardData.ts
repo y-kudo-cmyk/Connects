@@ -148,15 +148,16 @@ export function isTradingCardFit(cardType: string | null | undefined): boolean {
   const t = (cardType || '').toLowerCase()
   // 真のトレカ系のみ固定枠 (cover)。postcard / bookmark / 店舗特典は
   // クロップ比率そのままで表示するため除外 (img + h-auto で自然サイズ)。
+  // tear-off_poster は枠サイズが揃わず格好悪いので 3/4 固定枠 + contain で統一。
   return t === 'photocard' || t === 'luckydraw' || t === 'fotocard' || t === 'minicard'
-    || t === 'cd_plate'
+    || t === 'cd_plate' || t === 'tear-off_poster'
 }
 
 // 固定枠 (isTradingCardFit) の中で画像をどう収めるか。
-// トレカ系は cover で全面、それ以外はそもそも非固定枠 (この関数は使われない)。
+// トレカ系は cover で全面、tear-off_poster は contain で全体表示 (枠サイズ統一)。
 export function getCardImageFit(cardType: string | null | undefined): 'cover' | 'contain' {
   const t = (cardType || '').toLowerCase()
-  if (t === 'bookmark') return 'contain'
+  if (t === 'bookmark' || t === 'tear-off_poster') return 'contain'
   return 'cover'
 }
 
