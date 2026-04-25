@@ -161,6 +161,14 @@ export function isTradingCardFit(cardType: string | null | undefined): boolean {
     || t === 'postcard' || t === 'cd_plate' || t === 'bookmark'
 }
 
+// 固定枠 (isTradingCardFit) の中で画像をどう収めるか。
+// 切り抜きが許容なら cover、画像全体を見せたい (postcard/bookmark) なら contain。
+export function getCardImageFit(cardType: string | null | undefined): 'cover' | 'contain' {
+  const t = (cardType || '').toLowerCase()
+  if (t === 'postcard' || t === 'bookmark') return 'contain'
+  return 'cover'
+}
+
 // ── Product type labels ─────────────────────────────────────────
 export const productTypeLabels: Record<string, string> = {
   mini_album: 'Mini Album',

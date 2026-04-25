@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useEffect, Fragment } from 'react'
 import { useTranslations } from 'next-intl'
-import { useCardVersions, useCardMaster, type CardProduct, type CardMaster, type UserCard, productTypeLabels, HIDE_DATE_TYPES, getCardAspect, isTradingCardFit, getCardColSpan, hasBackSide, cleanCardDetail } from '@/lib/useCardData'
+import { useCardVersions, useCardMaster, type CardProduct, type CardMaster, type UserCard, productTypeLabels, HIDE_DATE_TYPES, getCardAspect, isTradingCardFit, getCardImageFit, getCardColSpan, hasBackSide, cleanCardDetail } from '@/lib/useCardData'
 import { seventeenMembers, getUnitLeaderForMember, isUnitSharedCard, getAgeLineLeaderForMember, isAgeLineSharedCard, getGroupShotMembersForCardDetail } from '@/lib/config/constants'
 import { createClient } from '@/lib/supabase/client'
 
@@ -576,9 +576,10 @@ export default function AlbumDetail({ product, userCards, onBack, onCardTap, onB
 
                       const cardAspect = getCardAspect(card.card_type)
                       const isTradingCard = isTradingCardFit(card.card_type)
-                      // トレカは2:3固定 (cover)、それ以外は画像本来のアスペクトに追従 (img要素 + height auto)
+                      const imgFit = getCardImageFit(card.card_type)
+                      // トレカは固定枠 (cover/contain は型ごと)、それ以外は画像本来のアスペクトに追従 (img要素 + height auto)
                       const bgStyle = isTradingCard && hasImage
-                        ? `rgba(243,180,227,0.15) url(${displayImage}) center / cover no-repeat`
+                        ? `rgba(243,180,227,0.15) url(${displayImage}) center / ${imgFit} no-repeat`
                         : hasQty ? 'rgba(243,180,227,0.15)' : '#E5E5EA'
                       // 8-col grid 内での占有列 (高さ揃えのため比率逆算)
                       // Tailwind JIT 用 静的マップ: col-span-2 col-span-3 col-span-4 col-span-5 col-span-6
