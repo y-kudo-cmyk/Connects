@@ -143,6 +143,8 @@ export default function AlbumDetail({ product, userCards, onBack, onCardTap, onB
         const d = (c.card_detail || '').trim()
         // 番号付き「集合 N」「団体 N」は上の処理で判定済 (該当メンバーのみ表示)
         if ((d.includes('集合') || d.includes('団体')) && !groupShotMembers) return true
+        // 未紐付けユニットカード (placeholder) — 全タブに見せて後でメンバー紐付け可能に
+        if (d.includes('ユニット')) return true
       }
       return false
     })
