@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useEffect, Fragment } from 'react'
 import { useTranslations } from 'next-intl'
-import { useCardVersions, useCardMaster, type CardProduct, type CardMaster, type UserCard, productTypeLabels, HIDE_DATE_TYPES, getCardAspect, isTradingCardFit, getCardImageFit, getCardColSpan, hasBackSide, cleanCardDetail } from '@/lib/useCardData'
+import { useCardVersions, useCardMaster, type CardProduct, type CardMaster, type UserCard, productTypeLabels, HIDE_DATE_TYPES, getCardAspect, isTradingCardFit, getCardImageFit, getCardColSpan, hasBackSide, cleanCardDetail, shouldShowTypeLabel, cardTypeLabels } from '@/lib/useCardData'
 import { seventeenMembers, getUnitLeaderForMember, isUnitSharedCard, getAgeLineLeaderForMember, isAgeLineSharedCard, getGroupShotMembersForCardDetail } from '@/lib/config/constants'
 import { createClient } from '@/lib/supabase/client'
 
@@ -595,11 +595,14 @@ export default function AlbumDetail({ product, userCards, onBack, onCardTap, onB
                       const colSpan = isGroupLandscape ? 3 : getCardColSpan(card.card_type)
                       const SPAN_CLASS: Record<number, string> = { 1: 'col-span-1', 2: 'col-span-2', 3: 'col-span-3', 4: 'col-span-4', 5: 'col-span-5', 6: 'col-span-6' }
                       const spanClass = SPAN_CLASS[colSpan] || 'col-span-2'
-                      return (
+                      // トレカ以外はタイル下にカード種別ラベルを出す
+                      const showLabel = shouldShowTypeLabel(card.card_type)
+                      const typeLabel = card.card_type ? (cardTypeLabels[card.card_type.toLowerCase()] || card.card_type) : ''
+                      const tileButton = (
                         <button
                           key={card.id}
                           onClick={() => onCardTap(card, owned)}
-                          className={`relative rounded-lg overflow-hidden transition-transform active:scale-95 ${spanClass}`}
+                          className={`relative rounded-lg overflow-hidden transition-transform active:scale-95 block${showLabel ? '' : ' ' + spanClass}`}
                           style={{
                             width: '100%',
                             // トレカは固定枠、それ以外は画像なしor画像時に応じて
@@ -661,6 +664,17 @@ export default function AlbumDetail({ product, userCards, onBack, onCardTap, onB
                           )}
                         </button>
                       )
+                      return showLabel ? (
+                        <div key={card.id} className={`${spanClass} flex flex-col gap-0.5`}>
+                          {tileButton}
+                          <span
+                            className="text-[9px] text-center font-bold leading-tight px-0.5 truncate"
+                            style={{ color: '#8E8E93' }}
+                          >
+                            {typeLabel}
+                          </span>
+                        </div>
+                      ) : tileButton
                             })
                             return backTile ? [...frontTiles, backTile] : frontTiles
                           })}

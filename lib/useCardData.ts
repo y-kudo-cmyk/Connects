@@ -83,6 +83,7 @@ export function getCardAspect(cardType: string | null | undefined): string {
   if (t === 'bookmark') return '1 / 2'            // ブックマーク (細長い縦)
   if (t === 'layer_card') return '1 / 1'          // 正方形ぽい
   if (t === 'clear_file') return '5 / 7'          // A5 縦
+  if (t === 'ic_card') return '5 / 7'             // IC Card (店舗特典は縦長デザインが多いため統一)
   if (t === 'coaster') return '1 / 1'
   if (t === 'magnet_sheet' || t === 'mega_jacket' || t === 'photobook') return '1 / 1'
   if (t === 'puzzle' || t === 'sticker') return '1 / 1'
@@ -107,6 +108,7 @@ export function getCardColSpan(cardType: string | null | undefined): number {
   if (t === 'bookmark') return 2      // 2/8=25%, photocard と同じ幅 (細長い縦は高さで吸収)
   if (t === 'layer_card') return 3    // 1:1 → span-3
   if (t === 'clear_file') return 2    // 25% × 7/5 = 35%
+  if (t === 'ic_card') return 2       // 5/7 縦、photocard と同サイズ
   if (t === 'tear-off_poster') return 2 // 25% × 4/3 = 33%
   if (t === 'binder') return 2          // 25% × 5/4 = 31%
   // default photocard: 2/8 = 25%, h = 37.5% 基準
@@ -156,18 +158,47 @@ export function hasBackSide(cardType: string | null | undefined): boolean {
 // Non-trading types (photobook, magnet, mega_jacket, etc.) use object-fit: contain.
 export function isTradingCardFit(cardType: string | null | undefined): boolean {
   const t = (cardType || '').toLowerCase()
-  // photocard 系 + postcard / cd_plate / bookmark など固定枠で揃えたい types
-  // postcard も固定枠 (5/7 縦) に統一。中の画像は contain で縦/横に応じて縮小表示。
+  // photocard 系 + postcard / cd_plate / bookmark / 店舗特典系も固定枠で揃える
   return t === 'photocard' || t === 'luckydraw' || t === 'fotocard' || t === 'minicard'
     || t === 'postcard' || t === 'cd_plate' || t === 'bookmark'
+    || t === 'ic_card' || t === 'clear_file' || t === 'coaster'
 }
 
 // 固定枠 (isTradingCardFit) の中で画像をどう収めるか。
-// 切り抜きが許容なら cover、画像全体を見せたい (bookmark) なら contain。
+// 切り抜きが許容なら cover、画像全体を見せたい (店舗特典) なら contain でレターボックス。
 export function getCardImageFit(cardType: string | null | undefined): 'cover' | 'contain' {
   const t = (cardType || '').toLowerCase()
-  if (t === 'bookmark') return 'contain'
+  if (t === 'bookmark' || t === 'postcard' || t === 'ic_card' || t === 'clear_file' || t === 'coaster') return 'contain'
   return 'cover'
+}
+
+// トレカ以外 (画像だけだと種類が分かりにくい) はタイル下にラベルを出す
+export function shouldShowTypeLabel(cardType: string | null | undefined): boolean {
+  const t = (cardType || '').toLowerCase()
+  if (!t) return false
+  return t !== 'photocard' && t !== 'luckydraw' && t !== 'fotocard' && t !== 'minicard'
+}
+
+export const cardTypeLabels: Record<string, string> = {
+  ic_card: 'IC Card',
+  clear_file: 'Clear File',
+  coaster: 'Coaster',
+  postcard: 'Post Card',
+  bookmark: 'Bookmark',
+  cd_plate: 'CD Plate',
+  sticker: 'Sticker',
+  magnet_sheet: 'Magnet',
+  mega_jacket: 'Mega Jacket',
+  'tear-off_poster': 'Poster',
+  paddle: 'Paddle',
+  puzzle: 'Puzzle',
+  folding_card: 'Folding Card',
+  binder: 'Binder',
+  photobook: 'Photo Book',
+  layer_card: 'Layer Card',
+  scratch_card: 'Scratch Card',
+  id_card: 'ID Card',
+  entry_card: 'Entry Card',
 }
 
 // ── Product type labels ─────────────────────────────────────────
