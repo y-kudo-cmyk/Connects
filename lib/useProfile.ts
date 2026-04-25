@@ -229,5 +229,5 @@ export function useProfile() {
     await fetchProfile()
   }, [user, fetchProfile])
 
-  return { profile, update, save, addFanClub, updateFanClub, removeFanClub, incrementStat }
+  return { profile, update, save, addFanClub, updateFanClub, removeFanClub, incrementStat, refresh: fetchProfile }
 }

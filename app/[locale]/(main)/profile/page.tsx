@@ -43,7 +43,7 @@ function md(s: string) {
 
 export default function ProfilePage() {
   usePageView('profile')
-  const { profile, update, addFanClub, updateFanClub, removeFanClub } = useProfile()
+  const { profile, update, addFanClub, updateFanClub, removeFanClub, refresh: refreshProfile } = useProfile()
   const { signOut, user } = useAuth()
   const t = useTranslations()
 
@@ -718,16 +718,26 @@ export default function ProfilePage() {
                   </div>
                 )}
 
-                {/* LINE 連携 — 全ユーザー公開 (TODO: 本番切替時に LINE 公式アカウント URL を更新) */}
+                {/* LINE 連携 — 全ユーザー公開。URL リンク (line.me/R/ti/p/@529grkxp) で友だち追加画面へ直行 */}
                 <div className="flex items-center gap-3 px-4 py-3.5" style={{ borderTop: '1px solid #F0F0F5' }}>
                   <div className="w-6 h-6 rounded flex items-center justify-center text-[10px] font-black flex-shrink-0"
                     style={{ background: '#06C755', color: '#FFFFFF' }}>L</div>
                   <span className="flex-1 text-sm font-medium" style={{ color: '#1C1C1E' }}>{t('Profile.linkLine')}</span>
                   {profile.lineLinked ? (
-                    <span className="px-3 py-1.5 rounded-full text-xs font-bold"
+                    <button
+                      onClick={async () => {
+                        if (!window.confirm('LINE連携を解除します。よろしいですか？')) return
+                        const res = await fetch('/api/unlink-line', { method: 'POST' })
+                        if (res.ok) {
+                          await refreshProfile()
+                        } else {
+                          alert('解除に失敗しました')
+                        }
+                      }}
+                      className="px-3 py-1.5 rounded-full text-xs font-bold transition-transform active:scale-95"
                       style={{ background: '#06C75520', color: '#06C755' }}>
                       {t('Profile.linked')}
-                    </span>
+                    </button>
                   ) : (
                     <a href="https://line.me/R/ti/p/@529grkxp" target="_blank" rel="noopener noreferrer"
                       className="px-3 py-1.5 rounded-full text-xs font-bold"
