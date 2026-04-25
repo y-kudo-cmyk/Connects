@@ -560,10 +560,17 @@ export default function AlbumDetail({ product, userCards, onBack, onCardTap, onB
                               folding_card: 3, paddle: 3, poster: 3, 'tear-off_poster': 3,
                               binder: 4, clear_file: 4,
                             }
+                            const isGroupPostcard = (c: typeof sub.cards[number]) =>
+                              (c.card_type || '').toLowerCase() === 'postcard'
+                              && (c.card_detail === '団体' || c.id.endsWith('_GROUP'))
                             const sortedCards = [...sub.cards].sort((a, b) => {
                               const pa = TYPE_PRIORITY[(a.card_type || '').toLowerCase()] ?? 99
                               const pb = TYPE_PRIORITY[(b.card_type || '').toLowerCase()] ?? 99
                               if (pa !== pb) return pa - pb
+                              // 団体ポストカード (横長枠) は postcard 群の最後尾へ並べて行を独立させる
+                              const ga = isGroupPostcard(a) ? 1 : 0
+                              const gb = isGroupPostcard(b) ? 1 : 0
+                              if (ga !== gb) return ga - gb
                               return getCardColSpan(a.card_type) - getCardColSpan(b.card_type)
                             })
                             const frontTiles = sortedCards.map(card => {
@@ -574,7 +581,9 @@ export default function AlbumDetail({ product, userCards, onBack, onCardTap, onB
                       const accent = memberColorMap.get(card.member_id) || memberColor
                       const wantedOnly = owned && !hasQty  // qty=0, want-only
 
-                      const cardAspect = getCardAspect(card.card_type)
+                      const isGroupLandscape = isGroupPostcard(card)
+                      // 団体ポストカードは個別と同じ長方形を 90° 回した横長枠 (5/7 → 7/5, col-span 2 → 3)
+                      const cardAspect = isGroupLandscape ? '7 / 5' : getCardAspect(card.card_type)
                       const isTradingCard = isTradingCardFit(card.card_type)
                       const imgFit = getCardImageFit(card.card_type)
                       // トレカは固定枠 (cover/contain は型ごと)、それ以外は画像本来のアスペクトに追従 (img要素 + height auto)
@@ -583,7 +592,7 @@ export default function AlbumDetail({ product, userCards, onBack, onCardTap, onB
                         : hasQty ? 'rgba(243,180,227,0.15)' : '#E5E5EA'
                       // 8-col grid 内での占有列 (高さ揃えのため比率逆算)
                       // Tailwind JIT 用 静的マップ: col-span-2 col-span-3 col-span-4 col-span-5 col-span-6
-                      const colSpan = getCardColSpan(card.card_type)
+                      const colSpan = isGroupLandscape ? 3 : getCardColSpan(card.card_type)
                       const SPAN_CLASS: Record<number, string> = { 1: 'col-span-1', 2: 'col-span-2', 3: 'col-span-3', 4: 'col-span-4', 5: 'col-span-5', 6: 'col-span-6' }
                       const spanClass = SPAN_CLASS[colSpan] || 'col-span-2'
                       return (

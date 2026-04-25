@@ -163,10 +163,10 @@ export function isTradingCardFit(cardType: string | null | undefined): boolean {
 }
 
 // 固定枠 (isTradingCardFit) の中で画像をどう収めるか。
-// 切り抜きが許容なら cover、画像全体を見せたい (postcard/bookmark) なら contain。
+// 切り抜きが許容なら cover、画像全体を見せたい (bookmark) なら contain。
 export function getCardImageFit(cardType: string | null | undefined): 'cover' | 'contain' {
   const t = (cardType || '').toLowerCase()
-  if (t === 'bookmark' || t === 'postcard') return 'contain'
+  if (t === 'bookmark') return 'contain'
   return 'cover'
 }
 
