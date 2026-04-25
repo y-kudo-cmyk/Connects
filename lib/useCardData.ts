@@ -75,7 +75,7 @@ export function getCardAspect(cardType: string | null | undefined): string {
   if (t === 'id_card') return '8 / 5'
   if (t === 'scratch_card') return '1 / 2'       // HB は縦長narrow
   if (t === 'fotocard') return '1 / 1'           // HB のfotocardは正方形近い
-  if (t === 'postcard') return '3 / 2'           // 横長 葉書
+  if (t === 'postcard') return '5 / 7'           // 葉書 (個別=縦長、団体は画像側で横向きに回転)
   if (t === 'tear-off_poster') return '3 / 4'
   if (t === 'binder') return '4 / 5'
   if (t === 'folding_card') return '6 / 1'        // 細長い横長 (W300×H50 mm 等)
