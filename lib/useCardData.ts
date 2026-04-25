@@ -104,7 +104,7 @@ export function getCardColSpan(cardType: string | null | undefined): number {
   if (t === 'puzzle' || t === 'sticker') return 3
   if (t === 'folding_card') return 6  // 6/8=75%, h=22.5% (横長のため高さ小)
   if (t === 'paddle') return 6        // 6/8=75%, 横長
-  if (t === 'bookmark') return 1      // 1/8=12.5%, h=12.5%×2=25% (細長い縦)
+  if (t === 'bookmark') return 2      // 2/8=25%, photocard と同じ幅 (細長い縦は高さで吸収)
   if (t === 'layer_card') return 3    // 1:1 → span-3
   if (t === 'clear_file') return 2    // 25% × 7/5 = 35%
   if (t === 'tear-off_poster') return 2 // 25% × 4/3 = 33%
