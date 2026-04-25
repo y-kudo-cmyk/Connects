@@ -138,13 +138,20 @@ export default function AlbumDetail({ product, userCards, onBack, onCardTap, onB
       // 集合写真 N (member_id は問わず、card_detail "集合 1"等 で対象メンバー判定)
       const groupShotMembers = getGroupShotMembersForCardDetail(c.card_detail)
       if (groupShotMembers && groupShotMembers.has(activeMemberId)) return true
+      // card_detail 内に [A000001,A000002] 形式で複数 member_id が記載されたカード (ユニットペア等)
+      const inlineMatch = (c.card_detail || '').match(/\[([A-Z0-9,]+)\]/)
+      if (inlineMatch) {
+        const ids = inlineMatch[1].split(',').map(x => x.trim())
+        if (ids.includes(activeMemberId)) return true
+      }
       // 番号無し「集合」「団体」明示の null member_id カードは全タブから表示
       if (!c.member_id) {
         const d = (c.card_detail || '').trim()
         // 番号付き「集合 N」「団体 N」は上の処理で判定済 (該当メンバーのみ表示)
         if ((d.includes('集合') || d.includes('団体')) && !groupShotMembers) return true
         // 未紐付けユニットカード (placeholder) — 全タブに見せて後でメンバー紐付け可能に
-        if (d.includes('ユニット')) return true
+        // ※ inlineMatch ([A000xxx,...]) で紐付け済の場合は上の処理で判定済
+        if (d.includes('ユニット') && !inlineMatch) return true
       }
       return false
     })
