@@ -88,6 +88,12 @@ export function getCardAspect(cardType: string | null | undefined): string {
   if (t === 'coaster') return '1 / 1'
   if (t === 'magnet_sheet' || t === 'mega_jacket' || t === 'photobook') return '1 / 1'
   if (t === 'puzzle' || t === 'sticker') return '1 / 1'
+  if (t === 'cd_plate') return '1 / 1'             // CD プレートは正方形
+  if (t === 'desktop_stand') return '5 / 8'        // 縦長スタンド
+  if (t === 'lenticular') return '2 / 3'           // photocard と同じ縦長
+  if (t === 'xmas_card') return '2 / 3'            // ハガキ系縦長
+  if (t === 'qr') return '2 / 3'                   // QRカード photocard と同サイズ
+  if (t === 'poster') return '3 / 4'               // ポスター
   // default: trading card
   return '2 / 3'
 }
@@ -146,19 +152,22 @@ export function hasBackSide(cardType: string | null | undefined): boolean {
 // Non-trading types (photobook, magnet, mega_jacket, etc.) use object-fit: contain.
 export function isTradingCardFit(cardType: string | null | undefined): boolean {
   const t = (cardType || '').toLowerCase()
-  // 真のトレカ系のみ固定枠 (cover)。postcard / bookmark / 店舗特典は
-  // クロップ比率そのままで表示するため除外 (img + h-auto で自然サイズ)。
-  // tear-off_poster は枠サイズが揃わず格好悪いので 3/4 固定枠 + contain で統一。
-  return t === 'photocard' || t === 'luckydraw' || t === 'fotocard' || t === 'minicard'
-    || t === 'cd_plate' || t === 'tear-off_poster'
+  // 「4枚/行 + 揃った高さ」を担保するため、形が安定してる type は基本すべて固定枠。
+  // 例外 (img + h-auto 自然アスペクト): postcard / bookmark / 店舗特典 (ic_card /
+  // clear_file / coaster) — トリミング比率そのままで見せたい (ユーザー要望)。
+  return t !== 'postcard' && t !== 'bookmark'
+    && t !== 'ic_card' && t !== 'clear_file' && t !== 'coaster'
+    && !!t
 }
 
 // 固定枠 (isTradingCardFit) の中で画像をどう収めるか。
-// トレカ系は cover で全面、tear-off_poster は contain で全体表示 (枠サイズ統一)。
+// 切り抜き OK なトレカ系は cover、画像全体を見せたい (アスペクトが画像とズレる
+// 可能性がある: tear-off_poster / cd_plate / desktop_stand 等) は contain。
 export function getCardImageFit(cardType: string | null | undefined): 'cover' | 'contain' {
   const t = (cardType || '').toLowerCase()
-  if (t === 'bookmark' || t === 'tear-off_poster') return 'contain'
-  return 'cover'
+  if (t === 'photocard' || t === 'luckydraw' || t === 'fotocard' || t === 'minicard'
+      || t === 'lenticular' || t === 'xmas_card' || t === 'qr') return 'cover'
+  return 'contain'
 }
 
 // トレカ以外 (画像だけだと種類が分かりにくい) はタイル下にラベルを出す

@@ -516,7 +516,7 @@ export default function AlbumDetail({ product, userCards, onBack, onCardTap, onB
                                   const rep = sub.cards.find(c => ownedMap.get(c.id)) || sub.cards[0]
                                   onBackTileTap(rep, ownedMap.get(rep.id) || null)
                                 }}
-                                className={`relative rounded-lg overflow-hidden transition-transform active:scale-95 block ${backSpanClass}`}
+                                className={`relative rounded-lg overflow-hidden transition-transform active:scale-95 block self-start ${backSpanClass}`}
                                 style={{
                                   width: '100%',
                                   // 表面と同じ枠ロジック: トレカは固定枠、それ以外は画像に追従
@@ -604,7 +604,7 @@ export default function AlbumDetail({ product, userCards, onBack, onCardTap, onB
                         <button
                           key={card.id}
                           onClick={() => onCardTap(card, owned)}
-                          className={`relative rounded-lg overflow-hidden transition-transform active:scale-95 block${showLabel ? '' : ' ' + spanClass}`}
+                          className={`relative rounded-lg overflow-hidden transition-transform active:scale-95 block self-start${showLabel ? '' : ' ' + spanClass}`}
                           style={{
                             width: '100%',
                             // トレカは固定枠、それ以外は画像なしor画像時に応じて
