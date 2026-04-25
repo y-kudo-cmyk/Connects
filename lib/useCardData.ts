@@ -134,6 +134,7 @@ export function hasBackSide(cardType: string | null | undefined): boolean {
     'puzzle',
     'tear-off_poster',
     'scratch_card',
+    'desktop_stand',
   ])
   return !oneSided.has(t)
 }
