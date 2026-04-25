@@ -80,7 +80,7 @@ export default async function ApprovalsPage() {
                           {v.events?.event_title ?? "—"}
                         </TableCell>
                         <TableCell className="text-sm">
-                          {v.profiles?.nickname || v.profiles?.mail || "—"}
+                          {v.profiles?.nickname || "(未設定)"}
                         </TableCell>
                         <TableCell>
                           <Badge
