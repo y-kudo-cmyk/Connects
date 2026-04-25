@@ -2,6 +2,8 @@ import { createClient } from "@/lib/supabase/server"
 import { AdminHeader } from "./components/admin-header"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
+
+export const dynamic = 'force-dynamic'  // 毎リクエストで集計
 import {
   FileText,
   Users,
