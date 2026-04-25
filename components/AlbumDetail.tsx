@@ -572,7 +572,7 @@ export default function AlbumDetail({ product, userCards, onBack, onCardTap, onB
                       // 8-col grid 内での占有列 (高さ揃えのため比率逆算)
                       // Tailwind JIT 用 静的マップ: col-span-2 col-span-3 col-span-4 col-span-5 col-span-6
                       const colSpan = getCardColSpan(card.card_type)
-                      const SPAN_CLASS: Record<number, string> = { 2: 'col-span-2', 3: 'col-span-3', 4: 'col-span-4', 5: 'col-span-5', 6: 'col-span-6' }
+                      const SPAN_CLASS: Record<number, string> = { 1: 'col-span-1', 2: 'col-span-2', 3: 'col-span-3', 4: 'col-span-4', 5: 'col-span-5', 6: 'col-span-6' }
                       const spanClass = SPAN_CLASS[colSpan] || 'col-span-2'
                       return (
                         <button
