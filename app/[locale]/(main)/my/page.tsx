@@ -1171,11 +1171,11 @@ function EditModal({ entry, onClose, onSave, onRemove }: {
         {/* スクロール可能なコンテンツ (横ブレ防止: overflow-x-hidden) */}
         <div className="flex-1 overflow-y-auto overflow-x-hidden px-4 py-4 flex flex-col gap-5">
 
-          {/* 公演ポスター (events 側の image_url) — 縦長全体表示 */}
-          {entry.posterImage && (
+          {/* 公演ポスター — events 側の image_url が優先、なければユーザー思い出の先頭を代用 */}
+          {(entry.posterImage || images[0]) && (
             <div className="rounded-xl overflow-hidden w-full" style={{ background: '#E5E5EA', aspectRatio: '3 / 4' }}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={entry.posterImage} alt={entry.title} className="w-full h-full object-contain" loading="lazy" />
+              <img src={entry.posterImage ?? images[0]} alt={entry.title} className="w-full h-full object-contain" loading="lazy" />
             </div>
           )}
 
