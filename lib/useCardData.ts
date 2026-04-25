@@ -96,22 +96,9 @@ export function getCardAspect(cardType: string | null | undefined): string {
 // 他タイプは高さ 37.5% 前後になるよう span 決定
 export function getCardColSpan(cardType: string | null | undefined): number {
   const t = (cardType || '').toLowerCase()
-  if (t === 'id_card') return 5       // 5/8=62.5%, h=62.5%×5/8=39% ≈37.5
-  if (t === 'scratch_card') return 2  // 2/8=25%, h=25%×2=50% (少し高めだが許容)
-  if (t === 'fotocard') return 3      // 1:1 正方形 → span 3 で高さ揃え
-  if (t === 'postcard') return 2      // 2/8=25%, photocard と同じ幅 (4枚/行で揃う)
-  if (t === 'magnet_sheet' || t === 'mega_jacket' || t === 'photobook') return 3 // 3/8=37.5%, h=37.5% ✓
-  if (t === 'coaster') return 3
-  if (t === 'puzzle' || t === 'sticker') return 3
-  if (t === 'folding_card') return 6  // 6/8=75%, h=22.5% (横長のため高さ小)
-  if (t === 'paddle') return 6        // 6/8=75%, 横長
-  if (t === 'bookmark') return 2      // 2/8=25%, photocard と同じ幅 (細長い縦は高さで吸収)
-  if (t === 'layer_card') return 3    // 1:1 → span-3
-  if (t === 'clear_file') return 2    // 25% × 7/5 = 35%
-  if (t === 'ic_card') return 2       // 5/7 縦、photocard と同サイズ
-  if (t === 'tear-off_poster') return 2 // 25% × 4/3 = 33%
-  if (t === 'binder') return 2          // 25% × 5/4 = 31%
-  // default photocard: 2/8 = 25%, h = 37.5% 基準
+  // 縦スクロール量を抑えるため基本 4枚/行 (col-span 2)。
+  // 細長い横長 (folding_card / paddle) だけは枠が小さすぎるので col-span 4 (= 2枚/行)。
+  if (t === 'folding_card' || t === 'paddle') return 4
   return 2
 }
 
