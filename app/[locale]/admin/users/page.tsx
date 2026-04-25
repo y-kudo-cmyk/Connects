@@ -20,77 +20,40 @@ export default async function UsersPage() {
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!,
   )
-  // 全件ページング取得 (Supabase の 1000件 cap 回避)
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  async function fetchAll(buildQuery: () => any): Promise<any[]> {
-    const out: unknown[] = []
-    let from = 0
-    const PAGE = 1000
-    while (true) {
-      const { data, error } = await buildQuery().range(from, from + PAGE - 1)
-      if (error || !data || data.length === 0) break
-      out.push(...data)
-      if (data.length < PAGE) break
-      from += PAGE
-    }
-    return out
-  }
-
-  // ユーザー本体 + 投稿数/承認数をリアルタイム集計 (post_count / approval_total 列は廃止)
+  // SQL RPC で集計 (DB 側で完結 → 1000件cap 影響なし、高速)
   const [
     { data: users },
-    events,
-    spots,
-    photos,
-    urlSubs,
-    evVotes,
-    phVotes,
-    editReqs,
-    editActivities,
-    glideUsers,
-    activities,
+    { data: stats },
+    glideRes,
     { data: authList },
   ] = await Promise.all([
     sb.from("profiles").select("id, nickname, mail, role, is_verified, created_at, membership_number, ref_code, introduced_by").order("membership_number", { ascending: true, nullsFirst: false }).range(0, 4999),
-    fetchAll(() => sb.from("events").select("submitted_by").not("submitted_by", "is", null)),
-    fetchAll(() => sb.from("spots").select("submitted_by").not("submitted_by", "is", null)),
-    fetchAll(() => sb.from("spot_photos").select("submitted_by").not("submitted_by", "is", null)),
-    fetchAll(() => sb.from("url_submissions").select("submitted_by").not("submitted_by", "is", null)),
-    fetchAll(() => sb.from("event_votes").select("user_id")),
-    fetchAll(() => sb.from("spot_photo_votes").select("user_id")),
-    fetchAll(() => sb.from("edit_requests").select("submitted_by").not("submitted_by", "is", null)),
-    fetchAll(() => sb.from("user_activity").select("user_id").eq("action", "edit")),
-    fetchAll(() => sb.from("glide_users").select("mail, membership_number, join_date")),
-    fetchAll(() => sb.from("user_activity").select("user_id, created_at").order("created_at", { ascending: false })),
+    sb.rpc("user_stats"),
+    sb.from("glide_users").select("mail, membership_number, join_date").range(0, 4999),
     sb.auth.admin.listUsers({ perPage: 2000 }).then(r => ({ data: r.data?.users || [] })),
   ])
+  const glideUsers = glideRes.data
 
-  // 投稿カウント (events + spots + spot_photos + url_submissions)
+  // 集計マップ化
   const postCount = new Map<string, number>()
-  for (const r of events ?? []) postCount.set(r.submitted_by!, (postCount.get(r.submitted_by!) || 0) + 1)
-  for (const r of spots ?? []) postCount.set(r.submitted_by!, (postCount.get(r.submitted_by!) || 0) + 1)
-  for (const r of photos ?? []) postCount.set(r.submitted_by!, (postCount.get(r.submitted_by!) || 0) + 1)
-  for (const r of urlSubs ?? []) postCount.set(r.submitted_by!, (postCount.get(r.submitted_by!) || 0) + 1)
-
-  // 承認 (vote) カウント
   const approvalCount = new Map<string, number>()
-  for (const r of evVotes ?? []) approvalCount.set(r.user_id, (approvalCount.get(r.user_id) || 0) + 1)
-  for (const r of phVotes ?? []) approvalCount.set(r.user_id, (approvalCount.get(r.user_id) || 0) + 1)
-
-  // 編集カウント (edit_requests + user_activity action=edit)
   const editCount = new Map<string, number>()
-  for (const r of editReqs ?? []) editCount.set(r.submitted_by!, (editCount.get(r.submitted_by!) || 0) + 1)
-  for (const r of editActivities ?? []) editCount.set(r.user_id, (editCount.get(r.user_id) || 0) + 1)
+  const lastActivity = new Map<string, string>()
+  type StatsRow = { user_id: string; post_count: number; approval_count: number; edit_count: number; last_active_at: string | null }
+  for (const r of (stats ?? []) as StatsRow[]) {
+    postCount.set(r.user_id, Number(r.post_count) || 0)
+    approvalCount.set(r.user_id, Number(r.approval_count) || 0)
+    editCount.set(r.user_id, Number(r.edit_count) || 0)
+    if (r.last_active_at) lastActivity.set(r.user_id, r.last_active_at)
+  }
 
   // 紹介カウント: ref_code を持つユーザーの紹介で登録した人数
   const referralCount = new Map<string, number>()
-  // ref_code -> id マップ
   const codeToUserId = new Map<string, string>()
   for (const u of users ?? []) {
     if (u.ref_code) codeToUserId.set(u.ref_code, u.id)
   }
   for (const u of users ?? []) {
-    // u.introduced_by は他人の ref_code 文字列
     const introducedBy = (u as { introduced_by?: string }).introduced_by
     if (introducedBy && codeToUserId.has(introducedBy)) {
       const refUserId = codeToUserId.get(introducedBy)!
@@ -108,11 +71,8 @@ export default async function UsersPage() {
     }
   }
 
-  // 最終アクセス: user_activity の最新, fallback に auth.users.last_sign_in_at
-  const lastActivity = new Map<string, string>()
-  for (const a of activities ?? []) {
-    if (!lastActivity.has(a.user_id)) lastActivity.set(a.user_id, a.created_at)
-  }
+  // 最終アクセス: RPC からの user_activity 最新, fallback に auth.users.last_sign_in_at
+  // (lastActivity は上で RPC から取得済)
   const lastSignIn = new Map<string, string>()
   for (const u of authList ?? []) {
     if (u.last_sign_in_at) lastSignIn.set(u.id, u.last_sign_in_at)
