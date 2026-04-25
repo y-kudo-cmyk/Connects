@@ -135,15 +135,17 @@ export default function AlbumDetail({ product, userCards, onBack, onCardTap, onB
       if (unitLeader && c.member_id === unitLeader && isUnitSharedCard(c.card_detail)) return true
       // 年齢ライン共通カード: 同ラインの代表 member_id に保存
       if (ageLeader && c.member_id === ageLeader && isAgeLineSharedCard(c.card_detail)) return true
-      // 集合写真 N (member_id は問わず、card_detail "集合 1"等 で対象メンバー判定)
-      const groupShotMembers = getGroupShotMembersForCardDetail(c.card_detail)
-      if (groupShotMembers && groupShotMembers.has(activeMemberId)) return true
-      // card_detail 内に [A000001,A000002] 形式で複数 member_id が記載されたカード (ユニットペア等)
+      // card_detail 内に [A000001,A000002,...] 形式で member_id が記載されたカード (優先)
       const inlineMatch = (c.card_detail || '').match(/\[([A-Z0-9,]+)\]/)
       if (inlineMatch) {
         const ids = inlineMatch[1].split(',').map(x => x.trim())
         if (ids.includes(activeMemberId)) return true
+        // inline match がある場合はそれ以外のメンバーには表示しない (個別指定優先)
+        // ただし他のルール (member_id 一致 / unitLeader / ageLeader) は上で判定済
       }
+      // 集合写真 N (inline 指定がない場合、card_detail "集合 1"等 で global default 判定)
+      const groupShotMembers = !inlineMatch ? getGroupShotMembersForCardDetail(c.card_detail) : null
+      if (groupShotMembers && groupShotMembers.has(activeMemberId)) return true
       // 番号無し「集合」「団体」明示の null member_id カードは全タブから表示
       if (!c.member_id) {
         const d = (c.card_detail || '').trim()
